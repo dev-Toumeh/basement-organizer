@@ -1,4 +1,5 @@
 # basement-organizer
+Overview, detailed information and decisions can be found in [ Technical Documentation ](Technical_Documentation.md).
 
 ## The Problem
 - When sorting things into boxes at home and storing them in the basement, over time it's hard to remember where things are and in which box. I also don't want to constantly go to the basement to open every box searching for something.
@@ -25,9 +26,14 @@
 - Ability to see what's inside a container.
 - Ability to assign contents to containers.
 - Ability to add and change descriptions to contents (maybe also images, documents like manuals, documentation, invoices, etc.).
+- offline use (no internet acces) ? https://github.com/dev-Toumeh/basement-organizer/issues/3
 
 ## Goal
 - To develop a simple way to quickly enter and find things.
 - For home use.
 - Not overloaded with features.
 - Whether on the go with a smartphone or at home on a PC.
+- 
+
+
+
