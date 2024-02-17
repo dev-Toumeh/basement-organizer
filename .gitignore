@@ -7,7 +7,6 @@
 *.dll
 *.so
 *.dylib
-
 # Test binary, built with `go test -c`
 *.test
 
@@ -19,3 +18,9 @@
 
 # Go workspace file
 go.work
+
+#phpstorm config
+.idea/*
+
+#docker-compose enviroment file
+.env
