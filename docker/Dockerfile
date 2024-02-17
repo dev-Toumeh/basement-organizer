@@ -1,7 +1,7 @@
 FROM golang:1.22
 
 # User variabels
-ARG USERNAME=naseem91
+ARG USERNAME=go-user
 ARG GID=1000
 ARG UID=1000
 
