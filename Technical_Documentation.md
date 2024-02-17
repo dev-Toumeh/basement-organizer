@@ -1,3 +1,14 @@
+# Start Development 
+Start container in background
+
+    docker-compose up -d
+    docker-compose exec app /bin/bash
+
+Run build:
+
+    cd hello
+    go run .
+
 # Decisions
 - project's main focus is learning `Go` in backend and frontend in general (starting with `HTMX` as a lightweight library)
 - solve a real world problem
