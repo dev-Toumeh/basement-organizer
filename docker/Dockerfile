@@ -15,4 +15,4 @@ CMD ["tail", "-f", "/dev/null"]
 
 # create new User inside the Conrainer
 RUN groupadd -g ${APP_CONTAINER_GID} ${APP_CONTAINER_USERNAME} \
-    && useradd -m -r -u ${APP_:qqCONTAINER_UID} -g ${APP_CONTAINER_USERNAME} ${APP_CONTAINER_USERNAME}
+    && useradd -m -r -u ${APP_CONTAINER_UID} -g ${APP_CONTAINER_USERNAME} ${APP_CONTAINER_USERNAME}
