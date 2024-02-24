@@ -1,4 +1,5 @@
-# Technical Documentation# Start Development 
+# Technical Documentation
+## Start Development 
 
 Run build:
     cd hello
@@ -30,7 +31,7 @@ Run build:
 
 ## Development Environment Configuration
 ### Tree
-- the environment tree look ike the following
+- the environment tree look like the following:
 
 
     .
