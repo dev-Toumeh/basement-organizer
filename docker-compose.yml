@@ -1,10 +1,16 @@
-version: "3"
-services:
+version: "3.8"
 
+services:
   app:
     build:
       dockerfile: ./docker/Dockerfile
-    container_name: go-container
-    user: ${CONTAINER_USER}:${CONTAINER_USER}
+      args:
+        - APP_CONTAINER_USERNAME=${APP_CONTAINER_USERNAME}
+        - APP_CONTAINER_UID=${APP_CONTAINER_UID}
+        - APP_CONTAINER_GID=${APP_CONTAINER_GID}
+    user: ${APP_CONTAINER_USERNAME}:${APP_CONTAINER_USERNAME}
+    ports:
+      - ${APP_CONTAINER_PORT_1}
+    container_name: APP_CONTAINER_NAME
     volumes:
       - ./:/usr/src/app
