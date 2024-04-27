@@ -12,9 +12,7 @@ func main() {
 
 	http.HandleFunc("/login", login)
 
-	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Welcome to my register")
-	})
+	http.HandleFunc("/register", register)
 
 	http.ListenAndServe(":8000", nil)
 }
