@@ -23,6 +23,32 @@ Run build:
         - ability to use CI/CD (Github Actions) at a later time if necessary
 
 ## Overview
+- Login Page
+    - userame/pw
+    - login process
+        - requests?
+        - form?
+        - direct/json?
+- Register user
+    - initial super admin account?
+    - process?
+    - db connections?
+        - db schema?
+    - error responses?
+- Main Page (overview)
+    - Create items
+        - json/db ?
+        - Ability to add and change descriptions to contents (maybe also images, documents like manuals, documentation, invoices, etc.).
+    - create Boxes (or any kind of container) can be assigned to any location.
+    - define places, like rooms.
+    - Ability to see what's inside a container.
+
+    - Ability to assign contents/items to containers?
+
+
+- Ability to search for contents (e.g., searching for `keyboard` should return the box and its location).
+- Capable of printing labels with a label printer (preferably not manually).
+- Ability to generate QR codes or read and import existing QR codes.
 
 ## Technologies used
 - Go backend
