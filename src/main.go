@@ -10,9 +10,7 @@ func main() {
         fmt.Fprintf(w, "Welcome to my website!")
     })
 
-    http.HandleFunc("/login", func (w http.ResponseWriter, r *http.Request) {
-        fmt.Fprintf(w, "Welcome to my login")
-    })
+	http.HandleFunc("/login", login)
 
     http.HandleFunc("/register", func (w http.ResponseWriter, r *http.Request) {
         fmt.Fprintf(w, "Welcome to my register")
