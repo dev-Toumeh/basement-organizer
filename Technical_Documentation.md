@@ -30,6 +30,11 @@ Run build:
         - form?
         - direct/json?
 - Register user
+    1. check if users.json exsits
+    2. check if username exists
+    3. hash password
+    4. insert user in users.json and save
+
     - initial super admin account?
     - process?
     - db connections?
