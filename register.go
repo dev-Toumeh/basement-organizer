@@ -3,12 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"text/template"
-  "github.com/google/uuid"
 )
 
 const (
@@ -27,7 +27,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		NewUsername := r.PostFormValue(Username)
 		NewPassword := r.PostFormValue(Password)
-//		fmt.Printf("the usernmae is %s \n and the password is %s", username, password)
+		//		fmt.Printf("the usernmae is %s \n and the password is %s", username, password)
 
 		if NewUsername == "" {
 			log.Println("Missing username")
@@ -73,35 +73,35 @@ func register(w http.ResponseWriter, r *http.Request) {
 			if dbUser.Username == NewUsername {
 				log.Printf("the username %s is already token", NewUsername)
 				fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-        return
+				return
 			}
 		}
-    
-    // hash the password
-    NewHashedPassword, err := HashPassword(NewPassword)
-    if err != nil{
-				log.Fatal(err)
-				fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-    }  
-    // create new Record
-    newUser := DBUser {
-      Id: uuid.New(),
-      Username: NewUsername,
-      PassHash: NewHashedPassword,
-    }
 
-    dbUsers = append(dbUsers, newUser)
+		// hash the password
+		NewHashedPassword, err := HashPassword(NewPassword)
+		if err != nil {
+			log.Fatal(err)
+			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
+		}
+		// create new Record
+		newUser := DBUser{
+			Id:       uuid.New(),
+			Username: NewUsername,
+			PassHash: NewHashedPassword,
+		}
 
-    // Convert the updated users list back to JSON
-    updatedJSON, err := json.Marshal(dbUsers)
+		dbUsers = append(dbUsers, newUser)
+
+		// Convert the updated users list back to JSON
+		updatedJSON, err := json.Marshal(dbUsers)
 		if err != nil {
 			log.Println("Error marshalling new user data:", err)
 			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
 			return
 		}
-    
-    // Write the updated JSON back to the File
-    err = os.WriteFile("users.json", updatedJSON, 0644)
+
+		// Write the updated JSON back to the File
+		err = os.WriteFile("users.json", updatedJSON, 0644)
 		if err != nil {
 			log.Println("Error writing to users.json:", err)
 			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
@@ -110,8 +110,8 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 		log.Println("User registered successfully:", newUser.Username)
 		fmt.Fprintln(w, "User registered successfully")
-    
-    return
+
+		return
 	}
 
 	tmpl, err := template.ParseFiles("./register.html")

@@ -3,17 +3,17 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"internal/util"
 	"log"
 	"net/http"
 	"os"
-  "github.com/google/uuid"
 )
 
 type DBUser struct {
-	Id       uuid.UUID    `json:"id"`
-	Username string `json:"username"`
-	PassHash string `json:"pass_hash"`
+	Id       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
+	PassHash string    `json:"pass_hash"`
 }
 
 const LOGIN_FAILED_MESSAGE string = "Login failed"
