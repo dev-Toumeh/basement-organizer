@@ -7,9 +7,15 @@ import (
 	"net/http"
 )
 
+func createDB() *auth.AuthJsonDB {
+	db := auth.AuthJsonDB{&util.JsonDB{}}
+	db.Connect("./internal/auth/users2.json")
+	return &db
+}
+
 func main() {
-	db := util.JsonDB{}
-	db.Connect("./users2.json")
+	db := createDB()
+
 	fmt.Println(db.User("alex"))
 	fmt.Println(db.User("alx"))
 	// fmt.Println(uuid.New())
@@ -17,7 +23,7 @@ func main() {
 		fmt.Fprintf(w, "Welcome to my website!")
 	})
 
-	http.HandleFunc("/login", auth.Login)
+	http.HandleFunc("/login", db.LoginHandler)
 
 	http.HandleFunc("/register", auth.Register)
 

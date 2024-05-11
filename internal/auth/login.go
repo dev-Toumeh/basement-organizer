@@ -18,7 +18,11 @@ type DBUser struct {
 
 const LOGIN_FAILED_MESSAGE string = "Login failed"
 
-func Login(w http.ResponseWriter, r *http.Request) {
+type AuthJsonDB struct {
+	*util.JsonDB
+}
+
+func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
