@@ -24,8 +24,11 @@ type registerPage struct {
 
 type DBUsers []DBUser
 
-// Implement this method
-func (db *AuthJsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {}
+// 1. Implement this method to satisfy AuthDatabaseHandler interface
+// 2. execute `go fmt` inside `internal/auth` before pushing
+func (db *AuthJsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Implement me")
+}
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {

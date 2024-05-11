@@ -39,7 +39,7 @@ func main() {
 	})
 
 	http.HandleFunc("/login", db.LoginHandler)
-
+	// Change auth.Register to db.RegisterHandler
 	http.HandleFunc("/register", auth.Register)
 
 	http.ListenAndServe(":8000", nil)
