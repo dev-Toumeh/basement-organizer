@@ -1,13 +1,11 @@
 package auth
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
 	"internal/util"
 	"log"
 	"net/http"
-	"os"
 )
 
 type DBUser struct {
@@ -39,17 +37,9 @@ func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, err := os.Open("users.json")
-	if err != nil {
-		log.Println("Error happened while opening users.json file: ", err)
-		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
-		return
-	}
+	user := db.User(username)
 
-	var usersFile DBUser
-	json.NewDecoder(file).Decode(&usersFile)
-
-	if !util.CheckPasswordHash(password, usersFile.PassHash) {
+	if !util.CheckPasswordHash(password, user.PasswordHash) {
 		log.Println("pw hash doesnt match")
 		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
 		return
