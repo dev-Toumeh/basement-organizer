@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	// "github.com/google/uuid"
+	"internal/auth"
 	"internal/util"
 	"net/http"
 )
@@ -17,9 +17,9 @@ func main() {
 		fmt.Fprintf(w, "Welcome to my website!")
 	})
 
-	http.HandleFunc("/login", login)
+	http.HandleFunc("/login", auth.Login)
 
-	http.HandleFunc("/register", register)
+	http.HandleFunc("/register", auth.Register)
 
 	http.ListenAndServe(":8000", nil)
 }

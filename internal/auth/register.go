@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"encoding/json"
@@ -24,7 +24,7 @@ type registerPage struct {
 
 type DBUsers []DBUser
 
-func register(w http.ResponseWriter, r *http.Request) {
+func Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		NewUsername := r.PostFormValue(Username)
 		NewPassword := r.PostFormValue(Password)
