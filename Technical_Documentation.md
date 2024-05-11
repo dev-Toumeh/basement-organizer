@@ -22,7 +22,16 @@ Run build:
         - less searching
         - ability to use CI/CD (Github Actions) at a later time if necessary
 
+## Open questions/tasks
+- integrate HTMX and `html/template`
+    - https://raphael-p.medium.com/explaining-go-htmx-with-examples-b80718ee379d
+    - https://gowebexamples.com/templates/
+- auth session (if user is authorized) https://gowebexamples.com/sessions/
+- api design for functions [](/architecture_overview.md#functions)
+
 ## Overview
+[Architecture Overview](/architecture_overview.md#architecture-overview)
+
 - Login Page
     - userame/pw
     - login process
