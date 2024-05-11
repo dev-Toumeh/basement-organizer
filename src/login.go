@@ -6,10 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+  "github.com/google/uuid"
 )
 
 type DBUser struct {
-	Id       string `json:"id"`
+	Id       uuid.UUID    `json:"id"`
 	Username string `json:"username"`
 	PassHash string `json:"pass_hash"`
 }
