@@ -16,6 +16,12 @@ type DBUser struct {
 
 const LOGIN_FAILED_MESSAGE string = "Login failed"
 
+type AuthDatabaseHandler interface {
+	User(string) util.DBUser2
+	LoginHandler(w http.ResponseWriter, r *http.Request)
+	RegisterHandler(w http.ResponseWriter, r *http.Request)
+}
+
 type AuthJsonDB struct {
 	*util.JsonDB
 }

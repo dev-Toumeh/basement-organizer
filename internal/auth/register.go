@@ -24,6 +24,9 @@ type registerPage struct {
 
 type DBUsers []DBUser
 
+// Implement this method
+func (db *AuthJsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {}
+
 func Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		NewUsername := r.PostFormValue(Username)
