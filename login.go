@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"internal/util"
 	"log"
 	"net/http"
 	"os"
@@ -15,8 +16,9 @@ type DBUser struct {
 	PassHash string `json:"pass_hash"`
 }
 
+const LOGIN_FAILED_MESSAGE string = "Login failed"
+
 func login(w http.ResponseWriter, r *http.Request) {
-	const LOGIN_FAILED_MESSAGE string = "Login failed"
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
@@ -40,10 +42,10 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var users_file DBUser
-	json.NewDecoder(file).Decode(&users_file)
+	var usersFile DBUser
+	json.NewDecoder(file).Decode(&usersFile)
 
-	if !CheckPasswordHash(password, users_file.PassHash) {
+	if !util.CheckPasswordHash(password, usersFile.PassHash) {
 		log.Println("pw hash doesnt match")
 		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
 		return

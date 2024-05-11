@@ -5,7 +5,7 @@ Run build:
     cd hello
     go run .
 
-# Decisions
+## Decisions
 - project's main focus is learning `Go` in backend and frontend in general (starting with `HTMX` as a lightweight library)
 - solve a real world problem
 - other goals are simplicity, fast and simple development, desktop and mobile support
@@ -64,13 +64,14 @@ Run build:
 ### Tree
 - the environment tree look like the following:
 
-
-    .
-    └── basment-organizer/
-        ├── docker/
-        │   └── Dockerfile
-        ├── docker-compose.yml
-        └── .env
+```
+.
+└── basment-organizer/
+    ├── docker/
+    │   └── Dockerfile
+    ├── docker-compose.yml
+    └── .env
+```
 
 ### Modifications Process
 - To modify the development environment, first switch to the **setup-maintenance-dev-env** branch, commit your changes,
