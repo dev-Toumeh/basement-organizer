@@ -11,6 +11,6 @@ services:
     user: ${APP_CONTAINER_USERNAME}:${APP_CONTAINER_USERNAME}
     ports:
       - ${APP_CONTAINER_PORT_1}
-    container_name: $[APP_CONTAINER_NAME}
+    container_name: ${APP_CONTAINER_NAME}
     volumes:
       - ./:/usr/src/app
