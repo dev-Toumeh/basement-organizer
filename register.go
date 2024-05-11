@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"internal/util"
 )
 
 const (
@@ -78,7 +79,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// hash the password
-		NewHashedPassword, err := HashPassword(NewPassword)
+		NewHashedPassword, err := util.HashPassword(NewPassword)
 		if err != nil {
 			log.Fatal(err)
 			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
