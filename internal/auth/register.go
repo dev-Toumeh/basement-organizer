@@ -1,40 +1,30 @@
 package auth
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	"io"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"text/template"
 	"basement/main/internal/util"
 )
 
 const (
 	REGISTER_FAILED_MESSAGE string = "register failed"
-	Username                       = "username"
-	Password                       = "password"
+	REGISTER_TEMPLATE_PATH  string = "internal/templates/register.html"
+	USERNAME                string = "username"
+	PASSWORD                string = "password"
 )
 
 type registerPage struct {
 	Title string
 }
 
-type DBUsers []DBUser
-
-// 1. Implement this method to satisfy AuthDatabaseHandler interface
-// 2. execute `go fmt` inside `internal/auth` before pushing
 func (db *AuthJsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("Implement me")
-}
-
-func Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		NewUsername := r.PostFormValue(Username)
-		NewPassword := r.PostFormValue(Password)
-		//		fmt.Printf("the usernmae is %s \n and the password is %s", username, password)
+		NewUsername := r.PostFormValue(USERNAME)
+		NewPassword := r.PostFormValue(PASSWORD)
 
 		if NewUsername == "" {
 			log.Println("Missing username")
@@ -46,42 +36,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
 			return
 		}
-		// check the Database
-
-		// open the json file
-		file, err := os.Open("users.json")
-		if err != nil {
-			log.Println("Error opening users.json:", err)
-			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-			return
-		}
-
-		// turn into bytes
-		byteValue, err := io.ReadAll(file)
-		if err != nil {
-			log.Println("Error happened while opening users.json file: ", err)
-			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-			return
-		}
-
-		defer file.Close()
-
-		// convert json File to array of DBuser.
-		var dbUsers DBUsers
-		err = json.Unmarshal(byteValue, &dbUsers)
-		if err != nil {
-			log.Println("Error reading users.json:", err)
-			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-			return
-		}
 
 		//check the if the username is exist
-		for _, dbUser := range dbUsers {
-			if dbUser.Username == NewUsername {
-				log.Printf("the username %s is already token", NewUsername)
-				fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-				return
-			}
+		_, exist := db.User(NewUsername)
+
+		if exist {
+			log.Default().Fatalf("the user %s is already exist", NewUsername)
+			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
+			return
 		}
 
 		// hash the password
@@ -90,39 +52,33 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
 		}
-		// create new Record
-		newUser := DBUser{
-			Id:       uuid.New(),
-			Username: NewUsername,
-			PassHash: NewHashedPassword,
-		}
-
-		dbUsers = append(dbUsers, newUser)
-
-		// Convert the updated users list back to JSON
-		updatedJSON, err := json.Marshal(dbUsers)
+    
+    // add the new user to the Databse
+		err = db.AddUser(NewUsername, NewHashedPassword)
 		if err != nil {
-			log.Println("Error marshalling new user data:", err)
+			fmt.Println(err)
 			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
+			fmt.Fprintln(w, "the problem is inside of the addUser function")
 			return
 		}
 
-		// Write the updated JSON back to the File
-		err = os.WriteFile("users.json", updatedJSON, 0644)
-		if err != nil {
-			log.Println("Error writing to users.json:", err)
-			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-			return
-		}
-
-		log.Println("User registered successfully:", newUser.Username)
+		log.Printf("User %s registered successfully:", NewUsername)
 		fmt.Fprintln(w, "User registered successfully")
 
 		return
 	}
 
-	tmpl, err := template.ParseFiles("./register.html")
+	pwd, err := os.Getwd()
 	if err != nil {
+		fmt.Println(err)
+		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
+	}
+
+	filePath := filepath.Join(pwd, REGISTER_TEMPLATE_PATH)
+	tmpl, err := template.ParseFiles(filePath)
+
+	if err != nil {
+		log.Fatal(err)
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
 		return
 	}

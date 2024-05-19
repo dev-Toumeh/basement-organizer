@@ -8,6 +8,25 @@ import (
 	"net/http"
 )
 
+
+func main() {
+	var db auth.AuthDatabaseHandler
+	var err error
+	db, err = createDB()
+	if err != nil {
+		log.Fatalf("Can't create DB, shutting server down")
+	}
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Welcome to my website!")
+	})
+
+	http.HandleFunc("/login", db.LoginHandler)
+	http.HandleFunc("/register", db.RegisterHandler)
+
+	http.ListenAndServe(":8000", nil)
+}
+
 func createDB() (auth.AuthDatabaseHandler, error) {
 	var db util.DBWithFileConnector
 	db = &util.JsonDB{}
@@ -21,26 +40,4 @@ func createDB() (auth.AuthDatabaseHandler, error) {
 	authDBHandler = &auth.AuthJsonDB{db.(*util.JsonDB)}
 
 	return authDBHandler, nil
-}
-
-func main() {
-	var db auth.AuthDatabaseHandler
-	var err error
-	db, err = createDB()
-	if err != nil {
-		log.Fatalf("Can't create DB, shutting server down")
-	}
-
-	fmt.Println(db.User("alex"))
-	fmt.Println(db.User("alx"))
-	// fmt.Println(uuid.New())
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Welcome to my website!")
-	})
-
-	http.HandleFunc("/login", db.LoginHandler)
-	// Change auth.Register to db.RegisterHandler
-	http.HandleFunc("/register", auth.Register)
-
-	http.ListenAndServe(":8000", nil)
 }

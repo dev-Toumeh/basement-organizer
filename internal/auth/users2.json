@@ -1,1 +1,14 @@
-{"alex":{"uuid":"df", "passwordhash":"$2a$14$T5bwlX2LyDZkB1euaTy0ZuUI3R1FFXbgl4IW5zJJFM00euzG6Xci2"}}
+{
+  "alex": {
+    "uuid": "550e8400-e29b-41d4-a716-446655440000",
+    "passwordhash": "$2a$14$T5bwlX2LyDZkB1euaTy0ZuUI3R1FFXbgl4IW5zJJFM00euzG6Xci2"
+  },
+  "bojamal": {
+    "uuid": "4957024a-8191-4d5e-8d9a-baf7c7778cce",
+    "passwordhash": "$2a$14$BSmdZLb.oGb2vQQvkVhQgO2ZzHhmew5G9mtViSwmVSX3sbi2/CbJe"
+  },
+  "bassem": {
+    "uuid": "5e7653a8-a831-4834-b3c4-32a3ad700223",
+    "passwordhash": "$2a$14$SPA5LkxU9bbAb5wfPnLvEea3FZslYDkmeEOmzg9o9uFq3zu2tniqK"
+  }
+}
