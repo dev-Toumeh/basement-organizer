@@ -3,7 +3,7 @@ package auth
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"internal/util"
+	"basement/main/internal/util"
 	"log"
 	"net/http"
 )
