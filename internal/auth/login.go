@@ -2,22 +2,15 @@ package auth
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"basement/main/internal/util"
 	"log"
 	"net/http"
 )
 
-type DBUser struct {
-	Id       uuid.UUID `json:"id"`
-	Username string    `json:"username"`
-	PassHash string    `json:"pass_hash"`
-}
-
 const LOGIN_FAILED_MESSAGE string = "Login failed"
 
 type AuthDatabaseHandler interface {
-	User(string) util.DBUser2
+	User(string) (util.DBUser2, bool)
 	LoginHandler(w http.ResponseWriter, r *http.Request)
 	RegisterHandler(w http.ResponseWriter, r *http.Request)
 }
@@ -43,7 +36,7 @@ func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := db.User(username)
+	user,_ := db.User(username)
 
 	if !util.CheckPasswordHash(password, user.PasswordHash) {
 		log.Println("pw hash doesnt match")
