@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"internal/auth"
-	"internal/util"
+	"basement/main/internal/auth"
+	"basement/main/internal/util"
 	"log"
 	"net/http"
 )
