@@ -1,13 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"basement/main/internal/auth"
 	"basement/main/internal/util"
+	"fmt"
 	"log"
 	"net/http"
 )
-
 
 func main() {
 	var db auth.AuthDatabaseHandler
@@ -21,10 +20,11 @@ func main() {
 		fmt.Fprintf(w, "Welcome to my website!")
 	})
 
-	http.HandleFunc("/login", db.LoginHandler)
+	http.HandleFunc("/login", auth.LoginPage)
+	http.HandleFunc("/login/user", db.LoginHandler)
 	http.HandleFunc("/register", db.RegisterHandler)
 
-	http.ListenAndServe(":8000", nil)
+	http.ListenAndServe("localhost:8000", nil)
 }
 
 func createDB() (auth.AuthDatabaseHandler, error) {
