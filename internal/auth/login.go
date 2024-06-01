@@ -65,6 +65,6 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 	terr := tmpl.Execute(w, data)
 	if terr != nil {
 		log.Printf("loginPage: %v\n", terr)
-		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE, terr)
+		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
 	}
 }

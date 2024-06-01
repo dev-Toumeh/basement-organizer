@@ -1,20 +1,69 @@
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Title}}</title>
-</head>
-<script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.js" integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS" crossorigin="anonymous"></script>
-<body>
-    <form action="/login/user" method="POST">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-        </br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        </br>
-        <button type="submit">Login</button>
-    </form>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+        .lds-dual-ring,
+        .lds-dual-ring:after {
+            box-sizing: border-box;
+        }
+        .lds-dual-ring {
+            display: inline-block;
+            height: 0.9rem;
+            width: 0.9rem;
+        }
+        .lds-dual-ring:after {
+            content: " ";
+            display: block;
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+            border-radius: 90%;
+            border: 1.4px solid currentColor;
+            border-color: currentColor transparent currentColor transparent;
+            animation: lds-dual-ring 1.2s linear infinite;
+        }
+        @keyframes lds-dual-ring {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        </style>
+
+        <title>{{.Title}}</title>
+    </head>
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.js" integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS" crossorigin="anonymous"></script>
+    <body>
+        <form>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+            </br>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            </br>
+            <div>
+                <button 
+                    style="display: flex"
+                    hx-post="login/user"
+                    hx-swap="innerHTML"
+                    hx-target="#responseLabel"
+                    hx-indicator="#responseIndicator"
+                    hx-disabled-elt="this"
+                    onclick="document.querySelector('#responseLabel').textContent = 'logging in...'"
+                >Login
+                    <div 
+                        id="responseIndicator" 
+                        class="htmx-indicator lds-dual-ring" 
+                        style="margin-left: 5px"
+                    ></div>
+
+            </div>
+            </button>
+        </form>
+        <label id="responseLabel"></label>
+    </body>
 </html>
 
