@@ -1,3 +1,8 @@
+{{ define "body"}}
+    {{with .Title}}Welcome to {{.}} page{{end}}
+{{end}}
+
+{{ define "index" }}
 <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -34,9 +39,10 @@
         </style>
 
         <title>{{.Title}}</title>
+        <script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.js" integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS" crossorigin="anonymous"></script>
     </head>
-    <script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.js" integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS" crossorigin="anonymous"></script>
     <body>
-        Welcome
+        {{ template "body" }}
     </body>
 </html>
+{{end}}

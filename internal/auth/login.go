@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"basement/main/internal/templates"
 	"basement/main/internal/util"
 	"fmt"
 	"log"
@@ -49,22 +50,18 @@ func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome %v\n", username)
 }
 
-type logindata struct {
-	Title string
-}
-
 func LoginPage(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("internal/templates/login.html")
+	tmpl, err := template.ParseFiles("internal/templates/index.html", "internal/templates/login.html")
 	if err != nil {
 		log.Printf("loginPage: %v\n", err)
-		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE, err)
+		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
 		return
 	}
 
-	data := logindata{"login"}
-	terr := tmpl.Execute(w, data)
-	if terr != nil {
-		log.Printf("loginPage: %v\n", terr)
+	templateData := templates.IndexTemplate{Title: "login"}
+
+	if err := tmpl.ExecuteTemplate(w, "index", templateData); err != nil {
+		log.Printf("loginPage: %v\n", err)
 		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
 	}
 }
