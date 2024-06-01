@@ -82,6 +82,19 @@ Run build:
     └── .env
 ```
 
+### Server Auto-Restart
+Using nodemon: https://www.npmjs.com/package/nodemon
+
+**Install**:
+```bash
+npm install -g nodemon # or using yarn: yarn global add nodemon
+```
+
+**Run**:
+```bash
+nodemon --watch './**/*.go' --signal SIGTERM --exec 'go' run main.go
+```
+
 ### Modifications Process
 - To modify the development environment, first switch to the **setup-maintenance-dev-env** branch, commit your changes,
   and then merge those changes into the main branch.
