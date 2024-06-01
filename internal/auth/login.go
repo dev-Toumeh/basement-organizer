@@ -51,16 +51,16 @@ func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginPage(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("internal/templates/index.html", "internal/templates/login.html")
+	tmpl, err := template.ParseFiles(templates.ROOT_PAGE_TEMPLATE_FILE, "internal/templates/login.html")
 	if err != nil {
-		log.Printf("loginPage: %v\n", err)
+		log.Printf("%v or %v: %v\n", templates.ROOT_PAGE_TEMPLATE, "login.html", err)
 		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
 		return
 	}
 
-	templateData := templates.IndexTemplate{Title: "login"}
+	templateData := templates.RootPageTemplate{Title: "login"}
 
-	if err := tmpl.ExecuteTemplate(w, "index", templateData); err != nil {
+	if err := tmpl.ExecuteTemplate(w, templates.ROOT_PAGE_TEMPLATE, templateData); err != nil {
 		log.Printf("loginPage: %v\n", err)
 		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
 	}

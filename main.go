@@ -16,7 +16,7 @@ func main() {
 		log.Fatalf("Can't create DB, shutting server down")
 	}
 
-	http.HandleFunc("/", templates.IndexHandler)
+	http.HandleFunc("/", templates.HomeHandler)
 	http.HandleFunc("/login", auth.LoginPage)
 	http.HandleFunc("/login/user", db.LoginHandler)
 	http.HandleFunc("/register", db.RegisterHandler)
