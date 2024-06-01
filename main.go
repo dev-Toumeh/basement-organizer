@@ -2,8 +2,8 @@ package main
 
 import (
 	"basement/main/internal/auth"
+	"basement/main/internal/templates"
 	"basement/main/internal/util"
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -16,10 +16,7 @@ func main() {
 		log.Fatalf("Can't create DB, shutting server down")
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Welcome to my website!")
-	})
-
+	http.HandleFunc("/", templates.IndexHandler)
 	http.HandleFunc("/login", auth.LoginPage)
 	http.HandleFunc("/login/user", db.LoginHandler)
 	http.HandleFunc("/register", db.RegisterHandler)
