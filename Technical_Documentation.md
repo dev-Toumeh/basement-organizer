@@ -82,6 +82,27 @@ Run build:
     └── .env
 ```
 
+### Server Auto-Restart
+Using nodemon: https://www.npmjs.com/package/nodemon
+
+**Install**:
+```bash
+npm install -g nodemon # or using yarn: yarn global add nodemon
+```
+
+**Run**:
+```bash
+nodemon
+````
+
+This will auto start and restart the go main server.
+By default it uses `nodemon.json` config.
+
+Running without config:
+```bash
+nodemon -e 'go,html' --signal SIGTERM --exec 'go' run main.go
+``` 
+
 ### Modifications Process
 - To modify the development environment, first switch to the **setup-maintenance-dev-env** branch, commit your changes,
   and then merge those changes into the main branch.

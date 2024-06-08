@@ -1,10 +1,12 @@
 package auth
 
 import (
-	"fmt"
+	"basement/main/internal/templates"
 	"basement/main/internal/util"
+	"fmt"
 	"log"
 	"net/http"
+	"text/template"
 )
 
 const LOGIN_FAILED_MESSAGE string = "Login failed"
@@ -36,7 +38,7 @@ func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user,_ := db.User(username)
+	user, _ := db.User(username)
 
 	if !util.CheckPasswordHash(password, user.PasswordHash) {
 		log.Println("pw hash doesnt match")
@@ -46,4 +48,20 @@ func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("login successful")
 	fmt.Fprintf(w, "Welcome %v\n", username)
+}
+
+func LoginPage(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles(templates.ROOT_PAGE_TEMPLATE_FILE, "internal/templates/login.html")
+	if err != nil {
+		log.Printf("%v or %v: %v\n", templates.ROOT_PAGE_TEMPLATE, "login.html", err)
+		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
+		return
+	}
+
+	templateData := templates.RootPageTemplate{Title: "login"}
+
+	if err := tmpl.ExecuteTemplate(w, templates.ROOT_PAGE_TEMPLATE, templateData); err != nil {
+		log.Printf("loginPage: %v\n", err)
+		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
+	}
 }

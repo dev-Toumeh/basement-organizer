@@ -1,0 +1,18 @@
+{{ define "body"}}
+<div>Welcome to {{.}} page </div>
+<button
+    id="login-btn"
+    type="button"
+    hx-get="/login" 
+    hx-swap="outerHTML" 
+    hx-target="body" 
+    hx-push-url="true"
+>Login</button>
+<label for="#login-btn"></label>
+
+<button
+    id="register-btn"
+    type="button"
+>Register</button>
+<label for="#register-btn"></label>
+{{end}}

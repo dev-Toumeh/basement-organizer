@@ -1,0 +1,28 @@
+{{define "body"}}
+<form>
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+    </br>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+    </br>
+    <div>
+        <button 
+            style="display: flex"
+            hx-post="login/user"
+            hx-swap="innerHTML"
+            hx-target="#responseLabel"
+            hx-indicator="#responseIndicator"
+            hx-disabled-elt="this"
+            onclick="document.querySelector('#responseLabel').textContent = 'logging in...'"
+        >Login
+            <div 
+                id="responseIndicator" 
+                class="htmx-indicator lds-dual-ring" 
+                style="margin-left: 5px"
+            ></div>
+    </div>
+    </button>
+</form>
+<label id="responseLabel"></label>
+{{end}}
