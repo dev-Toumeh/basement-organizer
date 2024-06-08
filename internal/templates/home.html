@@ -19,4 +19,12 @@
     hx-push-url="true"
 >Register</button>
 <label for="#register-btn"></label>
+
+<button
+    id="logout-btn"
+    type="button"
+    hx-get="/logout"
+    hx-target="#logout-label"
+>Logout</button>
+<label id="logout-label" for="#logout-btn"></label>
 {{end}}

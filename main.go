@@ -20,6 +20,7 @@ func main() {
 	http.HandleFunc("/", templates.HomePage)
 	http.HandleFunc("/login", auth.LoginPage)
 	http.HandleFunc("/login/user", db.LoginHandler)
+	http.HandleFunc("/logout", auth.LogoutHandler)
 	http.HandleFunc("/register", db.RegisterHandler)
 
 	http.ListenAndServe("localhost:8000", nil)

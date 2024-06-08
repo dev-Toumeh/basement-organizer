@@ -7,9 +7,18 @@ import (
 	"log"
 	"net/http"
 	"text/template"
+
+	"github.com/gorilla/sessions"
 )
 
 const LOGIN_FAILED_MESSAGE string = "Login failed"
+const COOKIE_NAME string = "mycookie"
+
+var (
+	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
+	key   = []byte("super-secret-key")
+	store = sessions.NewCookieStore(key)
+)
 
 type AuthDatabaseHandler interface {
 	User(string) (util.DBUser2, bool)
@@ -22,6 +31,17 @@ type AuthJsonDB struct {
 }
 
 func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, COOKIE_NAME)
+	authenticated, ok := session.Values["authenticated"].(bool)
+
+	if ok {
+		if authenticated {
+			log.Printf("LoginHandler - ok: %v authenticated: %v", ok, authenticated)
+			fmt.Fprint(w, "already logged in")
+			return
+		}
+	}
+
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
@@ -45,6 +65,10 @@ func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
 		return
 	}
+
+	session.Values["authenticated"] = true
+	session.Save(r, w)
+	log.Println("session authenticated", session.Values["authenticated"])
 
 	log.Println("login successful")
 	fmt.Fprintf(w, "Welcome %v\n", username)
