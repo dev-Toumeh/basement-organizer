@@ -1,41 +1,13 @@
 {{ define "page" }}
 <html lang="en">
     <head>
+        <title>{{.Title}}</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-        .lds-dual-ring,
-        .lds-dual-ring:after {
-            box-sizing: border-box;
-        }
-        .lds-dual-ring {
-            display: inline-block;
-            height: 0.9rem;
-            width: 0.9rem;
-        }
-        .lds-dual-ring:after {
-            content: " ";
-            display: block;
-            width: 100%;
-            height: 100%;
-            margin: 0px;
-            border-radius: 90%;
-            border: 1.4px solid currentColor;
-            border-color: currentColor transparent currentColor transparent;
-            animation: lds-dual-ring 1.2s linear infinite;
-        }
-        @keyframes lds-dual-ring {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-        </style>
-
-        <title>{{.Title}}</title>
+        <!-- @TODO: Replace external source with internal static -->
         <script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.js" integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS" crossorigin="anonymous"></script>
+        <script src="static/custom-functions.js"></script>
+        <link rel="stylesheet" href="static/layout.css">
     </head>
     <body>
         {{ template "body" }}
