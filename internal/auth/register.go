@@ -1,14 +1,12 @@
 package auth
 
 import (
+	"basement/main/internal/templates"
+	"basement/main/internal/util"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"text/template"
-
-	"basement/main/internal/util"
 )
 
 const (
@@ -18,77 +16,74 @@ const (
 	PASSWORD                string = "password"
 )
 
-type registerPage struct {
-	Title string
-}
-
+// this function will check the type of the request 
+// if it is from type post it will register the user otherwise it will generate the register template
 func (db *AuthJsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		NewUsername := r.PostFormValue(USERNAME)
-		NewPassword := r.PostFormValue(PASSWORD)
+		db.registerUser(w, r)
+	}
 
-		if NewUsername == "" {
-			log.Println("Missing username")
-			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-			return
-		}
-		if NewPassword == "" {
-			log.Println("Missing password")
-			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-			return
-		}
+	generateRegisterPage(w)
+}
 
-		//check the if the username is exist
-		_, exist := db.User(NewUsername)
-
-		if exist {
-			log.Default().Fatalf("the user %s is already exist", NewUsername)
-			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-			return
-		}
-
-		// hash the password
-		NewHashedPassword, err := util.HashPassword(NewPassword)
-		if err != nil {
-			log.Fatal(err)
-			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-		}
-
-		// add the new user to the Databse
-		err = db.AddUser(NewUsername, NewHashedPassword)
-		if err != nil {
-			fmt.Println(err)
-			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-			fmt.Fprintln(w, "the problem is inside of the addUser function")
-			return
-		}
-
-		log.Printf("User %s registered successfully:", NewUsername)
-		fmt.Fprintln(w, "User registered successfully")
-
+func generateRegisterPage(w http.ResponseWriter) {
+	tmpl, err := template.ParseFiles(templates.ROOT_PAGE_TEMPLATE_FILE, "internal/templates/register.html")
+	if err != nil {
+		log.Printf("%v or %v: %v\n", templates.ROOT_PAGE_TEMPLATE, "register.html", err)
+		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
 		return
 	}
 
-	pwd, err := os.Getwd()
+	templateData := templates.RootPageTemplate{Title: "Register"}
+
+	if err := tmpl.ExecuteTemplate(w, templates.ROOT_PAGE_TEMPLATE, templateData); err != nil {
+		log.Printf("Error executing  register Template: %v", err)
+		http.Error(w, "Error rendering  register page", http.StatusInternalServerError)
+	}
+}
+
+func (db *AuthJsonDB) registerUser(w http.ResponseWriter, r *http.Request) {
+	NewUsername := r.PostFormValue(USERNAME)
+	NewPassword := r.PostFormValue(PASSWORD)
+
+	if NewUsername == "" {
+		log.Println("Missing username")
+		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
+		return
+	}
+	if NewPassword == "" {
+		log.Println("Missing password")
+		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
+		return
+	}
+
+	//check the if the username is exist
+	_, exist := db.User(NewUsername)
+
+	if exist {
+		log.Printf("the user %s is already exist", NewUsername)
+		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
+		return
+	}
+
+	// hash the password
+	NewHashedPassword, err := util.HashPassword(NewPassword)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
 	}
 
-	filePath := filepath.Join(pwd, REGISTER_TEMPLATE_PATH)
-	tmpl, err := template.ParseFiles(filePath)
-
+	// add the new user to the Databse
+	err = db.AddUser(NewUsername, NewHashedPassword)
 	if err != nil {
-		log.Fatal(err)
-		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		fmt.Println(err)
+		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
+		fmt.Fprintln(w, "the problem is inside of the addUser function")
 		return
 	}
-	data := registerPage{
-		Title: "Register",
-	}
-	err = tmpl.Execute(w, data)
-	if err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Error rendering page", http.StatusInternalServerError)
-	}
+
+	log.Printf("User %s registered successfully:", NewUsername)
+	fmt.Fprintln(w, "User registered successfully")
+
+	return
 }

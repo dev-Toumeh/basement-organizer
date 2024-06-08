@@ -1,11 +1,5 @@
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Title}}</title>
-</head>
-<body>
-    <form action="/register" method="POST">
+{{define "body"}}
+   <form hx-post="register" id="form">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>
         </br>
@@ -13,10 +7,10 @@
         <input type="password" id="password" name="password" required>
         </br>
         <label for="password-confirm">Confirm Password:</label>
-        <input ype="password" id="password-confirm" name="password-confirm" required>
+        <input type="password" id="password-confirm" name="password-confirm" placeholder="Confirm Password" required>    
+        <button type="submit"
 
-        <button type="submit">Register</button>
+      >Register</button>
     </form>
-</body>
-</html>
+{{end}}
 

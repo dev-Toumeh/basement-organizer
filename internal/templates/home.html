@@ -13,6 +13,10 @@
 <button
     id="register-btn"
     type="button"
+    hx-get="/register" 
+    hx-swap="outerHTML" 
+    hx-target="body" 
+    hx-push-url="true"
 >Register</button>
 <label for="#register-btn"></label>
 {{end}}
