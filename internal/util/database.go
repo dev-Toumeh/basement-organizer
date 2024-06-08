@@ -3,10 +3,10 @@ package util
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"io"
 	"log"
 	"os"
-	"github.com/google/uuid"
 )
 
 type DBUser2 struct {
@@ -23,7 +23,6 @@ type JsonDB struct {
 	Users map[string]DBUser2
 }
 
-
 func (db *JsonDB) Connect(filepath string) error {
 	var err error
 
@@ -32,7 +31,7 @@ func (db *JsonDB) Connect(filepath string) error {
 		log.Printf("Error opening file '%v': %v", filepath, err)
 		return err
 	}
-	log.Printf("Opened JsonDB: %v\n", filepath)
+	log.Printf(" Opened JsonDB: %v\n", filepath)
 
 	err = json.NewDecoder(db.File).Decode(&db.Users)
 	if err != nil {
@@ -42,7 +41,6 @@ func (db *JsonDB) Connect(filepath string) error {
 
 	return nil
 }
-
 
 // User retrieves a DBUser2 from the JsonDB by username.
 // If the user is found, it logs the user details and returns the user.
@@ -59,21 +57,18 @@ func (db *JsonDB) User(username string) (DBUser2, bool) {
 // this function will check if there is existing user withe same name and if not it will
 // create new one at the end it will save it
 func (db *JsonDB) AddUser(username string, passwordHash string) error {
-	if _, exist := db.Users[username]; exist {
-      return fmt.Errorf("user %s already exists", username)
-    }
-
-	newUser := DBUser2{
-		Uuid:         uuid.New(),
-		PasswordHash: passwordHash,
+	if dbUser, exist := db.User(username); exist {
+		return fmt.Errorf("user %s already exists", username)
+	} else {
+		dbUser.Uuid = uuid.New()
+		dbUser.PasswordHash = passwordHash
+		db.Users[username] = dbUser
 	}
-	db.Users[username] = newUser
 
 	return db.save()
 }
 
-
-//this function is responsible of saving the new Record inside of the Database (user2.json) 
+// this function is responsible of saving the new Record inside of the Database (user2.json)
 func (db *JsonDB) save() error {
 
 	_, err := db.File.Seek(0, io.SeekStart)

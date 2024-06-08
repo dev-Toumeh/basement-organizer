@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"text/template"
+
 	"basement/main/internal/util"
 )
 
@@ -52,8 +53,8 @@ func (db *AuthJsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 			fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
 		}
-    
-    // add the new user to the Databse
+
+		// add the new user to the Databse
 		err = db.AddUser(NewUsername, NewHashedPassword)
 		if err != nil {
 			fmt.Println(err)

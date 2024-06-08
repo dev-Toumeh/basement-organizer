@@ -16,6 +16,7 @@ func main() {
 		log.Fatalf("Can't create DB, shutting server down")
 	}
 
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
 	http.HandleFunc("/", templates.HomePage)
 	http.HandleFunc("/login", auth.LoginPage)
 	http.HandleFunc("/login/user", db.LoginHandler)
