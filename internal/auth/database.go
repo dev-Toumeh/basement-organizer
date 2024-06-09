@@ -10,25 +10,29 @@ import (
 	"os"
 )
 
+// JsonDB handles a JSON file as a simple storage solution to hold user information
 type JsonDB struct {
 	File  *os.File
 	Users map[string]DBUser2
 }
 
+// DBUser2 represents user entries in a database
 type DBUser2 struct {
 	Uuid         uuid.UUID `json:"uuid"`
 	PasswordHash string    `json:"passwordhash"`
 }
 
+// AuthDatabase is for authentication handler functions that need database access
 type AuthDatabase interface {
 	User(string) (DBUser2, bool)
 	LoginHandler(w http.ResponseWriter, r *http.Request)
 	RegisterHandler(w http.ResponseWriter, r *http.Request)
 }
 
+// CreateJsonDB an object from a JSON file to be used as simple storage
 func CreateJsonDB() (*JsonDB, error) {
 	db := JsonDB{}
-	err := db.Connect("internal/auth/users2.json")
+	err := db.connect("internal/auth/users2.json")
 	if err != nil {
 		log.Println("createDB() error", err)
 		return &JsonDB{}, err
@@ -37,7 +41,7 @@ func CreateJsonDB() (*JsonDB, error) {
 	return &db, nil
 }
 
-func (db *JsonDB) Connect(filepath string) error {
+func (db *JsonDB) connect(filepath string) error {
 	var err error
 
 	db.File, err = os.OpenFile(filepath, os.O_RDWR|os.O_CREATE, 0666)
@@ -68,7 +72,7 @@ func (db *JsonDB) User(username string) (DBUser2, bool) {
 	return DBUser2{}, false
 }
 
-// this function will check if there is existing user withe same name and if not it will
+// AddUser will check if there is existing user withe same name and if not it will
 // create new one at the end it will save it
 func (db *JsonDB) AddUser(username string, passwordHash string) error {
 	if dbUser, exist := db.User(username); exist {
