@@ -34,6 +34,8 @@ var (
 	key   = []byte("super-secret-key")
 	store = sessions.NewCookieStore(key)
 )
+
+// this function will check the type of the request
 // if it is from type post it will register the user otherwise it will generate the register template
 func (db *AuthJsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
