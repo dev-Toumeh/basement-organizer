@@ -8,9 +8,10 @@ import (
 )
 
 func main() {
-	var db auth.AuthDatabaseHandler
+	var db auth.AuthDatabase
 	var err error
-	db, err = createDB()
+
+	db, err = auth.CreateJsonDB()
 	if err != nil {
 		log.Fatalf("Can't create DB, shutting server down")
 	}
@@ -18,19 +19,4 @@ func main() {
 	routes.RegisterRoutes(db)
 
 	http.ListenAndServe("localhost:8000", nil)
-}
-
-func createDB() (auth.AuthDatabaseHandler, error) {
-	var db util.DBWithFileConnector
-	db = &util.JsonDB{}
-	err := db.Connect("./internal/auth/users2.json")
-	if err != nil {
-		log.Println("createDB() error", err)
-		return nil, err
-	}
-
-	var authDBHandler auth.AuthDatabaseHandler
-	authDBHandler = &auth.AuthJsonDB{db.(*util.JsonDB)}
-
-	return authDBHandler, nil
 }

@@ -14,10 +14,6 @@ type DBUser2 struct {
 	PasswordHash string    `json:"passwordhash"`
 }
 
-type DBWithFileConnector interface {
-	Connect(string) error
-}
-
 type JsonDB struct {
 	File  *os.File
 	Users map[string]DBUser2
