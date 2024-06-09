@@ -12,9 +12,13 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok || !authenticated {
 		log.Printf("LogloutHandler - ok: %v authenticated: %v", ok, authenticated)
 		fmt.Fprint(w, "logout failed")
+		return
 	}
 	session.Values["authenticated"] = false
 	session.Save(r, w)
 	log.Println("LogoutHandler logged out")
+
+	w.Header().Add("HX-Location", "/")
+	w.WriteHeader(204)
 	fmt.Fprint(w, "logged out")
 }
