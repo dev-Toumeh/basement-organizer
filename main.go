@@ -2,8 +2,7 @@ package main
 
 import (
 	"basement/main/internal/auth"
-	"basement/main/internal/templates"
-	"basement/main/internal/util"
+	"basement/main/internal/routes"
 	"log"
 	"net/http"
 )
@@ -16,12 +15,7 @@ func main() {
 		log.Fatalf("Can't create DB, shutting server down")
 	}
 
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
-	http.HandleFunc("/", templates.HomePage)
-	http.HandleFunc("/login", auth.LoginPage)
-	http.HandleFunc("/login/user", db.LoginHandler)
-	http.HandleFunc("/logout", auth.LogoutHandler)
-	http.HandleFunc("/register", db.RegisterHandler)
+	routes.RegisterRoutes(db)
 
 	http.ListenAndServe("localhost:8000", nil)
 }

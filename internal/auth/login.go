@@ -20,19 +20,17 @@ var (
 	store = sessions.NewCookieStore(key)
 )
 
-type AuthDatabaseHandler interface {
-	User(string) (util.DBUser2, bool)
-	LoginHandler(w http.ResponseWriter, r *http.Request)
-	RegisterHandler(w http.ResponseWriter, r *http.Request)
-}
-
-type AuthJsonDB struct {
-	*util.JsonDB
-}
-
 func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, COOKIE_NAME)
-	authenticated, ok := session.Values["authenticated"].(bool)
+	if r.Method == http.MethodPost {
+		db.loginUser(w, r)
+	}
+	if r.Method == http.MethodGet {
+		db.loginPage(w, r)
+	}
+}
+
+func (db *AuthJsonDB) loginUser(w http.ResponseWriter, r *http.Request) {
+	authenticated, ok := Authenticated(r)
 
 	if ok {
 		if authenticated {
@@ -66,26 +64,36 @@ func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session.Values["authenticated"] = true
-	session.Save(r, w)
-	log.Println("session authenticated", session.Values["authenticated"])
+	saveSession(w, r)
 
 	log.Println("login successful")
+
+	// https://htmx.org/headers/hx-location/
+	w.Header().Add("HX-Location", "/")
 	fmt.Fprintf(w, "Welcome %v\n", username)
 }
 
-func LoginPage(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles(templates.ROOT_PAGE_TEMPLATE_FILE, "internal/templates/login.html")
-	if err != nil {
-		log.Printf("%v or %v: %v\n", templates.ROOT_PAGE_TEMPLATE, "login.html", err)
-		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
+func (db *AuthJsonDB) loginPage(w http.ResponseWriter, r *http.Request) {
+	authenticated, _ := Authenticated(r)
+	data := templates.PageTemplate{
+		Title:         "login",
+		Authenticated: authenticated,
+	}
+	if err := templates.ApplyPageTemplate(w, "internal/templates/login.html", data); err != nil {
+		fmt.Fprintln(w, "failed")
 		return
 	}
+}
 
-	templateData := templates.RootPageTemplate{Title: "login"}
+func Authenticated(r *http.Request) (bool, bool) {
+	session, _ := store.Get(r, COOKIE_NAME)
+	authenticated, ok := session.Values["authenticated"].(bool)
+	log.Println("session authenticated", session.Values["authenticated"])
+	return authenticated, ok
+}
 
-	if err := tmpl.ExecuteTemplate(w, templates.ROOT_PAGE_TEMPLATE, templateData); err != nil {
-		log.Printf("loginPage: %v\n", err)
-		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
-	}
+func saveSession(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, COOKIE_NAME)
+	session.Values["authenticated"] = true
+	session.Save(r, w)
 }
