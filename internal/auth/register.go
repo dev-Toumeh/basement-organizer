@@ -86,7 +86,7 @@ func (db *AuthJsonDB) registerUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// hash the password
-	NewHashedPassword, err := util.HashPassword(NewPassword)
+	NewHashedPassword, err := hashPassword(NewPassword)
 	if err != nil {
 		log.Fatal(err)
 		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)

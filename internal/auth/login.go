@@ -2,7 +2,6 @@ package auth
 
 import (
 	"basement/main/internal/templates"
-	"basement/main/internal/util"
 	"fmt"
 	"log"
 	"net/http"
@@ -48,7 +47,7 @@ func (db *AuthJsonDB) loginUser(w http.ResponseWriter, r *http.Request) {
 
 	user, _ := db.User(username)
 
-	if !util.CheckPasswordHash(password, user.PasswordHash) {
+	if !checkPasswordHash(password, user.PasswordHash) {
 		log.Println("pw hash doesnt match")
 		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
 		return
