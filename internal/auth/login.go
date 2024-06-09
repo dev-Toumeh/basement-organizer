@@ -6,19 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"text/template"
-
-	"github.com/gorilla/sessions"
 )
 
 const LOGIN_FAILED_MESSAGE string = "Login failed"
-const COOKIE_NAME string = "mycookie"
-
-var (
-	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
-	key   = []byte("super-secret-key")
-	store = sessions.NewCookieStore(key)
-)
 
 func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
