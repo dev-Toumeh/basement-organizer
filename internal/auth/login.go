@@ -9,7 +9,7 @@ import (
 
 const LOGIN_FAILED_MESSAGE string = "Login failed"
 
-func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (db *JsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		db.loginUser(w, r)
 	}
@@ -18,7 +18,7 @@ func (db *AuthJsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (db *AuthJsonDB) loginUser(w http.ResponseWriter, r *http.Request) {
+func (db *JsonDB) loginUser(w http.ResponseWriter, r *http.Request) {
 	authenticated, ok := Authenticated(r)
 
 	if ok {
@@ -62,7 +62,7 @@ func (db *AuthJsonDB) loginUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome %v\n", username)
 }
 
-func (db *AuthJsonDB) loginPage(w http.ResponseWriter, r *http.Request) {
+func (db *JsonDB) loginPage(w http.ResponseWriter, r *http.Request) {
 	authenticated, _ := Authenticated(r)
 	data := templates.PageTemplate{
 		Title:         "login",

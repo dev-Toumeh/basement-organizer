@@ -15,7 +15,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Can't create DB, shutting server down")
 	}
-
 	routes.RegisterRoutes(db)
 
 	http.ListenAndServe("localhost:8000", nil)

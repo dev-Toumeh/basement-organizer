@@ -2,7 +2,6 @@ package auth
 
 import (
 	"basement/main/internal/templates"
-	"basement/main/internal/util"
 	"fmt"
 	"github.com/gorilla/sessions"
 	"log"
@@ -18,17 +17,6 @@ const (
 	COOKIE_NAME             string = "mycookie"
 )
 
-// this function will check the type of the request 
-type AuthDatabase interface {
-	User(string) (util.DBUser2, bool)
-	LoginHandler(w http.ResponseWriter, r *http.Request)
-	RegisterHandler(w http.ResponseWriter, r *http.Request)
-}
-
-type AuthJsonDB struct {
-	util.JsonDB
-}
-
 var (
 	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
 	key   = []byte("super-secret-key")
@@ -37,7 +25,7 @@ var (
 
 // this function will check the type of the request
 // if it is from type post it will register the user otherwise it will generate the register template
-func (db *AuthJsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (db *JsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		db.registerUser(w, r)
 	}
@@ -61,7 +49,7 @@ func generateRegisterPage(w http.ResponseWriter) {
 	}
 }
 
-func (db *AuthJsonDB) registerUser(w http.ResponseWriter, r *http.Request) {
+func (db *JsonDB) registerUser(w http.ResponseWriter, r *http.Request) {
 	NewUsername := r.PostFormValue(USERNAME)
 	NewPassword := r.PostFormValue(PASSWORD)
 
