@@ -41,7 +41,7 @@ func CreateJsonDB() (*JsonDB, error) {
 	return &db, nil
 }
 
-func (db *JsonDB) connect(filepath string) error {
+func (db *JsonDB) connect(filepath string) error { // @TODO: Change filepath string to io.Reader for more flexibility
 	var err error
 
 	db.File, err = os.OpenFile(filepath, os.O_RDWR|os.O_CREATE, 0666)
