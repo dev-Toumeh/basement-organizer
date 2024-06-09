@@ -27,16 +27,16 @@ func (db *AuthJsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func generateRegisterPage(w http.ResponseWriter) {
-	tmpl, err := template.ParseFiles(templates.ROOT_PAGE_TEMPLATE_FILE, "internal/templates/register.html")
+	tmpl, err := template.ParseFiles(templates.PAGE_TEMPLATE_FILE, "internal/templates/register.html")
 	if err != nil {
-		log.Printf("%v or %v: %v\n", templates.ROOT_PAGE_TEMPLATE, "register.html", err)
+		log.Printf("%v or %v: %v\n", templates.PAGE_TEMPLATE, "register.html", err)
 		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
 		return
 	}
 
-	templateData := templates.RootPageTemplate{Title: "Register"}
+	templateData := templates.PageTemplate{Title: "Register"}
 
-	if err := tmpl.ExecuteTemplate(w, templates.ROOT_PAGE_TEMPLATE, templateData); err != nil {
+	if err := tmpl.ExecuteTemplate(w, templates.PAGE_TEMPLATE, templateData); err != nil {
 		log.Printf("Error executing  register Template: %v", err)
 		http.Error(w, "Error rendering  register page", http.StatusInternalServerError)
 	}
