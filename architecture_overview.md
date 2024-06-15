@@ -115,22 +115,35 @@ usersjson .. N1
 ** search for item/box
 ** create QR code for item/box
 
-* place
-** room
+*[#lightgreen] place
+**[#lightgreen] room
 ***[#Orange] label 
 ***[#Orange] description
-***[#Orange] items
-** box
-***[#Orange] label 
-***[#Orange] description
-***[#Orange] items
-***[#lightgreen] picture
-***[#lightgreen] QR code
-* item 
-** label 
-** description
+***[#lightblue] items
+***[#lightgreen] boxes
+***[#lightgreen] shelves
+'**** shelve 
+****[#Orange] label 
+****[#Orange] description
+****[#lightblue] items
+**** rows/columns
+**** picture
+****[#yellow] QR code
+****[#yellow] height/width/length?
+****[#lightgreen] boxes
+*****[#Orange] label 
+*****[#Orange] description
+*****[#lightblue] items
+*****[#lightgreen] boxes
+***** picture
+*****[#yellow] QR code
+
+*[#lightblue] item 
+**[#Orange] label 
+**[#Orange] description
 ** picture
 ** quantity
+** weight?
 ** QR code
 
 @endmindmap
