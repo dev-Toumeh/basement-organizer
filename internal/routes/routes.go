@@ -19,8 +19,8 @@ func RegisterRoutes(db auth.AuthDatabase) {
 	http.HandleFunc("/api/v1/create/item", CreateItem)
 	http.HandleFunc("/api/v1/read/items", ReadItems)
 	http.HandleFunc("/api/v1/read/item/id", ReadItem)
-	http.HandleFunc("api/v1/update/item/id", UpdateItem)
-	http.HandleFunc("api/v1/delete/itemh", DeleteItem)
+	http.HandleFunc("/api/v1/update/item/id", UpdateItem)
+	http.HandleFunc("/api/v1/delete/item", DeleteItem)
 }
 
 func CreateItem(w http.ResponseWriter, r *http.Request) {
