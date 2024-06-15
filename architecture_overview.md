@@ -96,24 +96,14 @@ usersjson .. N1
 * functions 
 ** login 
 ** register
-** view, create, modify item
-*** label 
-*** description
-*** quantity
-*** picture
-** delete item
-** create, modify box
-*** label 
-*** description
-*** picture
-** view items in box/area
-** move items in / out of box
-** move boxes in / out of box
-** delete box
-** view, create, modify room or area
-***_ whats difference between box?
-** search for item/box
-** create QR code for item/box
+** view, create, modify item/box/shelve/area
+** delete box/shelve/area
+***_ what to do with items?
+** view items in box/area/shelve
+** move items in / out of box/area/shelve
+** search for item/box/shelve/area
+**[#yellow] create QR code for item/box/(shelve?)
+**[#yellow] export data as json
 
 *[#lightgreen] place
 **[#lightgreen] room
