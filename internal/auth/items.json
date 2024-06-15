@@ -1,0 +1,53 @@
+[
+  {
+    "item": {
+      "label": "Book",
+      "description": "A hardcover novel.",
+      "picture": "book_image_url",
+      "quantity": 5,
+      "weight": "1.2 kg",
+      "QR code": "book_qr_code_url"
+    }
+  },
+  {
+    "item": {
+      "label": "Laptop",
+      "description": "A 15-inch gaming laptop.",
+      "picture": "laptop_image_url",
+      "quantity": 2,
+      "weight": "2.5 kg",
+      "QR code": "laptop_qr_code_url"
+    }
+  },
+  {
+    "item": {
+      "label": "Water Bottle",
+      "description": "A 1-liter stainless steel water bottle.",
+      "picture": "water_bottle_image_url",
+      "quantity": 10,
+      "weight": "0.3 kg",
+      "QR code": "water_bottle_qr_code_url"
+    }
+  },
+  {
+    "item": {
+      "label": "Headphones",
+      "description": "Wireless noise-cancelling headphones.",
+      "picture": "headphones_image_url",
+      "quantity": 7,
+      "weight": "0.25 kg",
+      "QR code": "headphones_qr_code_url"
+    }
+  },
+  {
+    "item": {
+      "label": "Notebook",
+      "description": "A spiral-bound notebook with 200 pages.",
+      "picture": "notebook_image_url",
+      "quantity": 15,
+      "weight": "0.5 kg",
+      "QR code": "notebook_qr_code_url"
+    }
+  }
+]
+
