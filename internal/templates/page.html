@@ -1,16 +1,42 @@
+{{ define "body" }}{{ end }}
 {{ define "page" }}
 <html lang="en">
-    <head>
-        <title>{{.Title}}</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- @TODO: Replace external source with internal static -->
-        <script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.js" integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS" crossorigin="anonymous"></script>
-        <script src="static/custom-functions.js"></script>
-        <link rel="stylesheet" href="static/layout.css">
-    </head>
-    <body>
-        {{ template "body" }}
-    </body>
+
+<head>
+    <title>{{ with .Title}}{{.}}{{else}}no title{{end}}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- @TODO: Replace external source with internal static -->
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.js"
+        integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="static/layout.css">
+</head>
+
+<body>
+    <div class="status-bar">
+        <div hx-boost="true" hx-push-url="true">
+            <nav>
+                <a id="home" href="/">Home</a>
+            </nav>
+        </div>
+        <div id="authentication-status">
+            {{with .Authenticated }}
+                <label id="auth-label">logged in</label>
+                <button
+                    id="logout-btn"
+                    type="button"
+                    hx-get="/logout"
+                    hx-target="#auth-label"
+                >Logout</button>
+            {{else}}
+                <label id="auth-label">logged out</label>
+            {{end}}
+        </div>
+    </div>
+    {{ template "body" . }}
+</body>
+
+<script src="static/custom-functions.js"></script>
 </html>
 {{end}}

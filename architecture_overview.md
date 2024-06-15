@@ -96,41 +96,44 @@ usersjson .. N1
 * functions 
 ** login 
 ** register
-** view, create, modify item
-*** label 
-*** description
-*** quantity
-*** picture
-** delete item
-** create, modify box
-*** label 
-*** description
-*** picture
-** view items in box/area
-** move items in / out of box
-** move boxes in / out of box
-** delete box
-** view, create, modify room or area
-***_ whats difference between box?
-** search for item/box
-** create QR code for item/box
+** view, create, modify item/box/shelve/area
+** delete box/shelve/area
+***_ what to do with items?
+** view items in box/area/shelve
+** move items in / out of box/area/shelve
+** search for item/box/shelve/area
+**[#yellow] create QR code for item/box/(shelve?)
+**[#yellow] export data as json
 
-* place
-** room
+*[#lightgreen] place
+**[#lightgreen] room
 ***[#Orange] label 
 ***[#Orange] description
-***[#Orange] items
-** box
-***[#Orange] label 
-***[#Orange] description
-***[#Orange] items
-***[#lightgreen] picture
-***[#lightgreen] QR code
-* item 
-** label 
-** description
+***[#lightblue] items
+***[#lightgreen] boxes
+***[#lightgreen] shelves
+'**** shelve 
+****[#Orange] label 
+****[#Orange] description
+****[#lightblue] items
+**** rows/columns
+**** picture
+****[#yellow] QR code
+****[#yellow] height/width/length?
+****[#lightgreen] boxes
+*****[#Orange] label 
+*****[#Orange] description
+*****[#lightblue] items
+*****[#lightgreen] boxes
+***** picture
+*****[#yellow] QR code
+
+*[#lightblue] item 
+**[#Orange] label 
+**[#Orange] description
 ** picture
 ** quantity
+** weight?
 ** QR code
 
 @endmindmap

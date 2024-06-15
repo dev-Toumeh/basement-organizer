@@ -2,8 +2,8 @@ package auth
 
 import (
 	"basement/main/internal/templates"
-	"basement/main/internal/util"
 	"fmt"
+	"github.com/gorilla/sessions"
 	"log"
 	"net/http"
 	"text/template"
@@ -14,11 +14,18 @@ const (
 	REGISTER_TEMPLATE_PATH  string = "internal/templates/register.html"
 	USERNAME                string = "username"
 	PASSWORD                string = "password"
+	COOKIE_NAME             string = "mycookie"
 )
 
-// this function will check the type of the request 
+var (
+	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
+	key   = []byte("super-secret-key")
+	store = sessions.NewCookieStore(key)
+)
+
+// this function will check the type of the request
 // if it is from type post it will register the user otherwise it will generate the register template
-func (db *AuthJsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (db *JsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		db.registerUser(w, r)
 	}
@@ -27,22 +34,22 @@ func (db *AuthJsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func generateRegisterPage(w http.ResponseWriter) {
-	tmpl, err := template.ParseFiles(templates.ROOT_PAGE_TEMPLATE_FILE, "internal/templates/register.html")
+	tmpl, err := template.ParseFiles(templates.PAGE_TEMPLATE_FILE, "internal/templates/register.html")
 	if err != nil {
-		log.Printf("%v or %v: %v\n", templates.ROOT_PAGE_TEMPLATE, "register.html", err)
+		log.Printf("%v or %v: %v\n", templates.PAGE_TEMPLATE, "register.html", err)
 		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
 		return
 	}
 
-	templateData := templates.RootPageTemplate{Title: "Register"}
+	templateData := templates.PageTemplate{Title: "Register"}
 
-	if err := tmpl.ExecuteTemplate(w, templates.ROOT_PAGE_TEMPLATE, templateData); err != nil {
+	if err := tmpl.ExecuteTemplate(w, templates.PAGE_TEMPLATE, templateData); err != nil {
 		log.Printf("Error executing  register Template: %v", err)
 		http.Error(w, "Error rendering  register page", http.StatusInternalServerError)
 	}
 }
 
-func (db *AuthJsonDB) registerUser(w http.ResponseWriter, r *http.Request) {
+func (db *JsonDB) registerUser(w http.ResponseWriter, r *http.Request) {
 	NewUsername := r.PostFormValue(USERNAME)
 	NewPassword := r.PostFormValue(PASSWORD)
 
@@ -67,7 +74,7 @@ func (db *AuthJsonDB) registerUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// hash the password
-	NewHashedPassword, err := util.HashPassword(NewPassword)
+	NewHashedPassword, err := hashPassword(NewPassword)
 	if err != nil {
 		log.Fatal(err)
 		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)

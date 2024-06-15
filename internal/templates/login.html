@@ -1,20 +1,27 @@
 {{define "body"}}
 <form>
     <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required>
+    <input 
+        {{ if .Authenticated }}disabled{{ end }}
+        type="text"
+        id="username"
+        name="username"
+        required>
     </br>
     <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required>
+    <input 
+        {{ if .Authenticated }}disabled{{ end }}
+        type="password" id="password" name="password" required>
     </br>
     <div>
         <button 
             style="display: flex"
-            hx-post="login/user"
-            hx-swap="innerHTML"
-            hx-target="#responseLabel"
+            hx-post="login"
             hx-indicator="#responseIndicator"
             hx-disabled-elt="this"
-            onclick="document.querySelector('#responseLabel').textContent = 'logging in...'"
+            hx-target="#auth-label"
+            onclick="document.querySelector('#auth-label').textContent = 'logging in...'"
+            {{ if .Authenticated }}disabled{{ end }}
         >Login
             <div 
                 id="responseIndicator" 

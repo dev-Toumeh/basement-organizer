@@ -1,5 +1,9 @@
-{{ define "body"}}
-<div>Welcome to {{.}} page </div>
+{{ define "body" }}
+<div>Welcome to {{ with .Title }}{{ . }}{{end}} page </div>
+
+{{ with .Authenticated }}
+You are logged in
+{{ else }}
 <button
     id="login-btn"
     type="button"
@@ -19,12 +23,6 @@
     hx-push-url="true"
 >Register</button>
 <label for="#register-btn"></label>
+{{end}}
 
-<button
-    id="logout-btn"
-    type="button"
-    hx-get="/logout"
-    hx-target="#logout-label"
->Logout</button>
-<label id="logout-label" for="#logout-btn"></label>
 {{end}}
