@@ -3,23 +3,36 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/google/uuid"
 )
 
 // JsonDB handles a JSON file as a simple storage solution to hold user information
 type JsonDB struct {
-	File  *os.File
-	Users map[string]DBUser2
+	File       *os.File
+	Users      map[string]DBUser2
+	FileReader io.Reader
+	Items      map[string]Item
 }
 
 // DBUser2 represents user entries in a database
 type DBUser2 struct {
 	Uuid         uuid.UUID `json:"uuid"`
 	PasswordHash string    `json:"passwordhash"`
+}
+
+type Item struct {
+	Id          uuid.UUID   `json:"id"`
+	Label       string      `json:"label"`
+	Description string      `json:"description"`
+	Picture     string      `json:"picture"`
+	Quantity    json.Number `json:"quantity"`
+	Weight      string      `json:"weight"`
+	QRcode      string      `json:"qrcode"`
 }
 
 // AuthDatabase is for authentication handler functions that need database access
@@ -56,6 +69,32 @@ func (db *JsonDB) connect(filepath string) error { // @TODO: Change filepath str
 		log.Printf("Error decoding JSON from file '%v': %v", filepath, err)
 		return err
 	}
+
+	return nil
+}
+
+// InitItemsFromFile reads JSON file from disk to populate Items field.
+func (db *JsonDB) InitItemsFromFile(filepath string) error {
+	file, err := os.OpenFile(filepath, os.O_RDWR|os.O_CREATE, 0666)
+	db.File = file
+	if err != nil {
+		log.Printf("Error opening file '%v': %v", file.Name(), err)
+		return err
+	}
+
+	_ = db.InitItems(file)
+	return nil
+}
+
+// InitItems reads data to populate Items field.
+func (db *JsonDB) InitItems(data io.Reader) error {
+	db.FileReader = data
+	err := json.NewDecoder(data).Decode(&db.Items)
+	if err != nil {
+		log.Printf("Error decoding JSON from file '%v': %v", data, err)
+		return err
+	}
+	log.Printf(" Opened JsonDB: %v\n", data)
 
 	return nil
 }
