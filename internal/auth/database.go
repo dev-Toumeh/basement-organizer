@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"reflect"
 
 	"github.com/google/uuid"
 )
@@ -60,7 +61,7 @@ func (db *JsonDB) connect(filepath string) error { // @TODO: Change filepath str
 		log.Printf("Error opening file '%v': %v", filepath, err)
 		return err
 	}
-	log.Printf(" Opened JsonDB: %v\n", filepath)
+	log.Printf("Opened JsonDB: %v\n", filepath)
 
 	err = json.NewDecoder(db.File).Decode(&db.Users)
 	if err != nil {
@@ -101,7 +102,7 @@ func (db *JsonDB) InitField(data io.Reader, field any) error {
 		log.Printf("Error decoding JSON from file '%v': %v", data, err)
 		return err
 	}
-	log.Printf(" Opened JsonDB: %v\n", data)
+	log.Printf("InitField: %v\n", reflect.TypeOf(field))
 
 	return nil
 }
