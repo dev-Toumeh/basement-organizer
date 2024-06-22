@@ -73,8 +73,13 @@ func (db *JsonDB) connect(filepath string) error { // @TODO: Change filepath str
 	return nil
 }
 
-// InitItemsFromFile reads JSON file from disk to populate Items field.
-func (db *JsonDB) InitItemsFromFile(filepath string) error {
+// InitFieldFromFile reads JSON file from disk to populate field.
+//
+// `field` must be an internal field of the database instance.
+//
+// Example: InitFieldFromFile("file.json", &db.Items)
+func (db *JsonDB) InitFieldFromFile(filepath string, field interface{}) error {
+	// reflect
 	file, err := os.OpenFile(filepath, os.O_RDWR|os.O_CREATE, 0666)
 	db.File = file
 	if err != nil {
@@ -82,14 +87,18 @@ func (db *JsonDB) InitItemsFromFile(filepath string) error {
 		return err
 	}
 
-	_ = db.InitItems(file)
+	_ = db.InitField(file, field)
 	return nil
 }
 
-// InitItems reads data to populate Items field.
-func (db *JsonDB) InitItems(data io.Reader) error {
+// InitField reads data to populate Items field.
+//
+// `field` must be an internal field of the database instance.
+//
+// Example: InitFieldFromFile("file.json", &db.Items)
+func (db *JsonDB) InitField(data io.Reader, field any) error {
 	db.FileReader = data
-	err := json.NewDecoder(data).Decode(&db.Items)
+	err := json.NewDecoder(data).Decode(field)
 	if err != nil {
 		log.Printf("Error decoding JSON from file '%v': %v", data, err)
 		return err

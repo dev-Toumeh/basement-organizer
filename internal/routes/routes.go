@@ -2,7 +2,6 @@ package routes
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"basement/main/internal/auth"
@@ -11,6 +10,7 @@ import (
 const (
 	STATIC           string = "/static/"
 	ITEMS_FILE_PATH  string = "internal/auth/items.json"
+	USERS_FILE_PATH  string = "internal/auth/users2.json"
 	API_V1_READ_ITEM string = "/api/v1/read/item/id"
 )
 
@@ -30,8 +30,12 @@ func RegisterRoutes(db auth.AuthDatabase) {
 // CreateItemsJsonDB creates DB instance by reading or creating "items.json" file from disk.
 func CreateItemsJsonDB() (*auth.JsonDB, error) {
 	db := &auth.JsonDB{}
-	db.InitItemsFromFile(ITEMS_FILE_PATH)
-	log.Println("")
+	db.InitFieldFromFile(ITEMS_FILE_PATH, &db.Items)
+	db.InitFieldFromFile(USERS_FILE_PATH, &db.Users)
+	// sss := reflect.VisibleFields(reflect.TypeOf(*db))
+	// for _, v := range sss {
+	// 	log.Println(v.Type)
+	// }
 	return db, nil
 }
 
