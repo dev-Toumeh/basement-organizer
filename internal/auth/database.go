@@ -2,7 +2,6 @@ package auth
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -118,50 +117,4 @@ func (db *JsonDB) User(username string) (DBUser2, bool) {
 		return userRecord, true
 	}
 	return DBUser2{}, false
-}
-
-// AddUser will check if there is existing user withe same name and if not it will
-// create new one at the end it will save it
-func (db *JsonDB) AddUser(username string, passwordHash string) error {
-	if dbUser, exist := db.User(username); exist {
-		return fmt.Errorf("user %s already exists", username)
-	} else {
-		dbUser.Uuid = uuid.New()
-		dbUser.PasswordHash = passwordHash
-		db.Users[username] = dbUser
-	}
-
-	return db.save()
-}
-
-// this function is responsible of saving the new Record inside of the Database (user2.json)
-func (db *JsonDB) save() error {
-
-	_, err := db.File.Seek(0, io.SeekStart)
-	if err != nil {
-		log.Printf("Error seeking to start of file: %v", err)
-		return err
-	}
-
-	encoder := json.NewEncoder(db.File)
-
-	err = encoder.Encode(db.Users)
-	if err != nil {
-		log.Printf("Error encoding users to JSON: %v", err)
-		return err
-	}
-
-	currentPos, err := db.File.Seek(0, io.SeekCurrent)
-	if err != nil {
-		log.Printf("Error getting current file position: %v", err)
-		return err
-	}
-
-	err = db.File.Truncate(currentPos)
-	if err != nil {
-		log.Printf("Error truncating file: %v", err)
-		return err
-	}
-
-	return nil
 }
