@@ -34,6 +34,11 @@ type Item struct {
 	QRcode      string      `json:"qrcode"`
 }
 
+const (
+	ITEMS_FILE_PATH string = "internal/auth/items.json"
+	USERS_FILE_PATH string = "internal/auth/users2.json"
+)
+
 // AuthDatabase is for authentication handler functions that need database access
 // type AuthDatabase interface {
 // 	User(string) (DBUser2, bool)
@@ -44,10 +49,11 @@ type Item struct {
 // CreateJsonDB an object from a JSON file to be used as simple storage
 func CreateJsonDB() (*JsonDB, error) {
 	db := JsonDB{}
-	err := db.connect("internal/auth/users2.json")
-	if err != nil {
-		log.Println("createDB() error", err)
-		return &JsonDB{}, err
+	err1 := db.InitFieldFromFile(ITEMS_FILE_PATH, &db.Items)
+	err2 := db.InitFieldFromFile(USERS_FILE_PATH, &db.Users)
+
+	if err1 != nil || err2 != nil {
+		log.Fatal("createDB() error")
 	}
 
 	return &db, nil
@@ -78,7 +84,6 @@ func (db *JsonDB) connect(filepath string) error { // @TODO: Change filepath str
 //
 // Example: InitFieldFromFile("file.json", &db.Items)
 func (db *JsonDB) InitFieldFromFile(filepath string, field interface{}) error {
-	// reflect
 	file, err := os.OpenFile(filepath, os.O_RDWR|os.O_CREATE, 0666)
 	db.File = file
 	if err != nil {
