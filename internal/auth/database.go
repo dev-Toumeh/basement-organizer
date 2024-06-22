@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/google/uuid"
@@ -35,11 +34,11 @@ type Item struct {
 }
 
 // AuthDatabase is for authentication handler functions that need database access
-type AuthDatabase interface {
-	User(string) (DBUser2, bool)
-	LoginHandler(w http.ResponseWriter, r *http.Request)
-	RegisterHandler(w http.ResponseWriter, r *http.Request)
-}
+// type AuthDatabase interface {
+// 	User(string) (DBUser2, bool)
+// 	LoginHandler(w http.ResponseWriter, r *http.Request)
+// 	RegisterHandler(w http.ResponseWriter, r *http.Request)
+// }
 
 // CreateJsonDB an object from a JSON file to be used as simple storage
 func CreateJsonDB() (*JsonDB, error) {

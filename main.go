@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	var db auth.AuthDatabase
+	var db *auth.JsonDB 
 	var err error
 
 	db, err = auth.CreateJsonDB()

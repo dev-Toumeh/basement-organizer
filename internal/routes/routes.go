@@ -14,12 +14,13 @@ const (
 	API_V1_READ_ITEM string = "/api/v1/read/item/id"
 )
 
-func RegisterRoutes(db auth.AuthDatabase) {
+func RegisterRoutes(db *auth.JsonDB) {
 	http.Handle(STATIC, http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
 	http.HandleFunc("/", HomePage)
 	http.HandleFunc("/login", db.LoginHandler)
-	http.HandleFunc("/register", db.RegisterHandler)
+	http.HandleFunc("/register", auth.RegisterHandler(db))
 	http.HandleFunc("/logout", auth.LogoutHandler)
+
 	http.HandleFunc("/api/v1/create/item", CreateItem)
 	http.HandleFunc("/api/v1/read/items", ReadItems)
 	http.HandleFunc(API_V1_READ_ITEM, ReadItem)

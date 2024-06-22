@@ -29,12 +29,14 @@ var (
 
 // this function will check the type of the request
 // if it is from type post it will register the user otherwise it will generate the register template
-func (db *JsonDB) RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		db.registerUser(w, r)
-	}
+func RegisterHandler(db *JsonDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			db.registerUser(w, r)
+		}
 
-	generateRegisterPage(w)
+		generateRegisterPage(w)
+	}
 }
 
 func generateRegisterPage(w http.ResponseWriter) {
