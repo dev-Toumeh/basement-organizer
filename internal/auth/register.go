@@ -15,7 +15,7 @@ import (
 
 const (
 	REGISTER_FAILED_MESSAGE string = "register failed"
-	REGISTER_TEMPLATE_PATH  string = "internal/templates/register.html"
+	REGISTER_TEMPLATE_PATH  string = "internal/templates/auth/register.html"
 	USERNAME                string = "username"
 	PASSWORD                string = "password"
 	COOKIE_NAME             string = "mycookie"
@@ -40,7 +40,7 @@ func RegisterHandler(db *JsonDB) func(w http.ResponseWriter, r *http.Request) {
 }
 
 func generateRegisterPage(w http.ResponseWriter) {
-	tmpl, err := template.ParseFiles(templates.PAGE_TEMPLATE_FILE, "internal/templates/register.html")
+	tmpl, err := template.ParseFiles(templates.PAGE_TEMPLATE_FILE, REGISTER_TEMPLATE_PATH)
 	if err != nil {
 		log.Printf("%v or %v: %v\n", templates.PAGE_TEMPLATE, "register.html", err)
 		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
@@ -101,7 +101,7 @@ func (db *JsonDB) registerUser(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// AddUser will check if there is existing user withe same name and if not it will
+// this function will check if there is existing user withe same name and if not it will
 // create new one at the end it will save it
 func (db *JsonDB) AddUser(username string, passwordHash string) error {
 	if dbUser, exist := db.User(username); exist {

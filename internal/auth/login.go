@@ -1,13 +1,17 @@
 package auth
 
 import (
-	"basement/main/internal/templates"
 	"fmt"
 	"log"
 	"net/http"
+
+	"basement/main/internal/templates"
 )
 
-const LOGIN_FAILED_MESSAGE string = "Login failed"
+const (
+	LOGIN_FAILED_MESSAGE string = "Login failed"
+	LOGIN_TEMPLATE_PATH  string = "internal/templates/auth/login.html"
+)
 
 func (db *JsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
@@ -68,7 +72,7 @@ func (db *JsonDB) loginPage(w http.ResponseWriter, r *http.Request) {
 		Title:         "login",
 		Authenticated: authenticated,
 	}
-	if err := templates.ApplyPageTemplate(w, "internal/templates/login.html", data); err != nil {
+	if err := templates.ApplyPageTemplate(w, LOGIN_TEMPLATE_PATH, data); err != nil {
 		fmt.Fprintln(w, "failed")
 		return
 	}
