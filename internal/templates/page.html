@@ -18,6 +18,9 @@
         <div hx-boost="true" hx-push-url="true">
             <nav>
                 <a id="home" href="/">Home</a>
+                {{with .Authenticated }}
+                <a id="home" href="/personal-page">Personal Page</a>
+                {{end}}
             </nav>
         </div>
         <div id="authentication-status">

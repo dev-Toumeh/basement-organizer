@@ -1,0 +1,16 @@
+{{ define "body" }}
+<div>Welcome to {{ with .Title }}{{ . }}{{ end }} Page </div>
+
+Hello {{ with .User }}{{ . }}{{ end }}, how is things going? </br>
+<button
+    id="login-btn"
+    type="button"
+    hx-get="/api/v1/create/item" 
+    hx-swap="outerHTML" 
+    hx-target="body" 
+    hx-push-url="true"
+>Add new Item</button>
+<label for="login-btn"></label>
+
+{{ end }}
+

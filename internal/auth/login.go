@@ -10,7 +10,6 @@ import (
 
 const (
 	LOGIN_FAILED_MESSAGE string = "Login failed"
-	LOGIN_TEMPLATE_PATH  string = "internal/templates/auth/login.html"
 )
 
 func (db *JsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -60,9 +59,10 @@ func (db *JsonDB) loginUser(w http.ResponseWriter, r *http.Request) {
 	saveSession(w, r)
 
 	log.Println("login successful")
+  http.RedirectHandler("/personal-page", http.StatusOK)
 
 	// https://htmx.org/headers/hx-location/
-	w.Header().Add("HX-Location", "/")
+	w.Header().Add("HX-Location", "/personal-page")
 	fmt.Fprintf(w, "Welcome %v\n", username)
 }
 
@@ -72,7 +72,7 @@ func (db *JsonDB) loginPage(w http.ResponseWriter, r *http.Request) {
 		Title:         "login",
 		Authenticated: authenticated,
 	}
-	if err := templates.ApplyPageTemplate(w, LOGIN_TEMPLATE_PATH, data); err != nil {
+	if err := templates.ApplyPageTemplate(w, templates.LOGIN_TEMPLATE_FILE_WITH_PATH, data); err != nil {
 		fmt.Fprintln(w, "failed")
 		return
 	}
@@ -88,5 +88,17 @@ func Authenticated(r *http.Request) (bool, bool) {
 func saveSession(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, COOKIE_NAME)
 	session.Values["authenticated"] = true
+	session.Values["username"] = r.FormValue("username")
 	session.Save(r, w)
+}
+
+func Username(r *http.Request) string {
+
+	session, _ := store.Get(r, COOKIE_NAME)
+	usernmae, ok := session.Values["username"].(string)
+	if !ok {
+		log.Println("Username not found in session or not a string")
+		return ""
+	}
+	return usernmae
 }

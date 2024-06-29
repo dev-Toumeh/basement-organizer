@@ -1,12 +1,14 @@
 package routes
 
 import (
-	"basement/main/internal/auth"
-	"basement/main/internal/templates"
 	"fmt"
 	"net/http"
+
+	"basement/main/internal/auth"
+	"basement/main/internal/templates"
 )
 
+// this is the first route inside of the application, so this page will open by Default
 func HomePage(w http.ResponseWriter, r *http.Request) {
 	authenticated, _ := auth.Authenticated(r)
 	data := templates.PageTemplate{
@@ -18,3 +20,4 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+

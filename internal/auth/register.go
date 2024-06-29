@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"text/template"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
@@ -15,7 +14,6 @@ import (
 
 const (
 	REGISTER_FAILED_MESSAGE string = "register failed"
-	REGISTER_TEMPLATE_PATH  string = "internal/templates/auth/register.html"
 	USERNAME                string = "username"
 	PASSWORD                string = "password"
 	COOKIE_NAME             string = "mycookie"
@@ -35,24 +33,22 @@ func RegisterHandler(db *JsonDB) func(w http.ResponseWriter, r *http.Request) {
 			db.registerUser(w, r)
 		}
 
-		generateRegisterPage(w)
+		generateRegisterPage(w,r)
 	}
 }
 
-func generateRegisterPage(w http.ResponseWriter) {
-	tmpl, err := template.ParseFiles(templates.PAGE_TEMPLATE_FILE, REGISTER_TEMPLATE_PATH)
-	if err != nil {
-		log.Printf("%v or %v: %v\n", templates.PAGE_TEMPLATE, "register.html", err)
-		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
+func generateRegisterPage(w http.ResponseWriter, r *http.Request) {
+	authenticated, _ := Authenticated(r)
+	data := templates.PageTemplate{
+		Title:         "Register",
+		Authenticated: authenticated,
+    User: Username(r),
+	}
+
+	if err := templates.ApplyPageTemplate(w, templates.REGISTER_TEMPLATE_FILE_WITH_PATH, data); err != nil {
+		fmt.Fprintln(w, "failed")
 		return
-	}
-
-	templateData := templates.PageTemplate{Title: "Register"}
-
-	if err := tmpl.ExecuteTemplate(w, templates.PAGE_TEMPLATE, templateData); err != nil {
-		log.Printf("Error executing  register Template: %v", err)
-		http.Error(w, "Error rendering  register page", http.StatusInternalServerError)
-	}
+}
 }
 
 func (db *JsonDB) registerUser(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +87,6 @@ func (db *JsonDB) registerUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-		fmt.Fprintln(w, "the problem is inside of the addUser function")
 		return
 	}
 

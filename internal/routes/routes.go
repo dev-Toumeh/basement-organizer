@@ -5,45 +5,53 @@ import (
 	"net/http"
 
 	"basement/main/internal/auth"
+	"basement/main/internal/items"
+	"basement/main/internal/templates"
 )
 
 const (
 	STATIC           string = "/static/"
-	API_V1_READ_ITEM string = "/api/v1/read/item/{id}"
+	ITEMS_FILE_PATH  string = "internal/auth/items.json"
+	USERS_FILE_PATH  string = "internal/auth/users2.json"
+	API_V1_READ_ITEM string = "/api/v1/read/item/id"
+  PERSONAL_PAGE_ROUTE string = "/personal-page" 
+  PERSONAL_PAGE_TEMPLATE_PATH string = "internal/templates/personal-page.html"
 )
 
 func RegisterRoutes(db *auth.JsonDB) {
 	http.Handle(STATIC, http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
 	http.HandleFunc("/", HomePage)
+	http.HandleFunc(PERSONAL_PAGE_ROUTE, PersonalPage)
+
+	authRoutes(db)
+	apiRoutes(db)
+}
+
+func authRoutes(db *auth.JsonDB) {
 	http.HandleFunc("/login", db.LoginHandler)
 	http.HandleFunc("/register", auth.RegisterHandler(db))
 	http.HandleFunc("/logout", auth.LogoutHandler)
+}
 
-	http.HandleFunc("/api/v1/create/item", CreateItem)
+func apiRoutes(db *auth.JsonDB) {
+	http.HandleFunc("/api/v1/create/item", items.CreateItemHandler(db))
 	http.HandleFunc("/api/v1/read/items", ReadItems)
-	http.HandleFunc(API_V1_READ_ITEM, ReadItem(db))
-	http.HandleFunc("/api/v1/update/item/{id}", UpdateItem)
-	http.HandleFunc("/api/v1/delete/item/{id}", DeleteItem)
+	http.HandleFunc(API_V1_READ_ITEM, ReadItem)
+	http.HandleFunc("/api/v1/update/item/id", UpdateItem)
+	http.HandleFunc("/api/v1/delete/item", DeleteItem)
 }
 
-func CreateItem(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
-}
 
-func ReadItems(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
-}
-
-func ReadItem(db *auth.JsonDB) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, db.Items[r.PathValue("id")])
+func PersonalPage(w http.ResponseWriter, r *http.Request) {
+	authenticated, _ := auth.Authenticated(r)
+	data := templates.PageTemplate{
+		Title:         "Personal",
+		Authenticated: authenticated,
+		User:          auth.Username(r),
 	}
-}
 
-func DeleteItem(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
-}
-
-func UpdateItem(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
+	if err := templates.ApplyPageTemplate(w, PERSONAL_PAGE_TEMPLATE_PATH, data); err != nil {
+		fmt.Fprintln(w, "failed")
+		return
+	}
 }
