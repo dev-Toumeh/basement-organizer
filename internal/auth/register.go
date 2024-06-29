@@ -33,7 +33,7 @@ func RegisterHandler(db *JsonDB) func(w http.ResponseWriter, r *http.Request) {
 			db.registerUser(w, r)
 		}
 
-		generateRegisterPage(w,r)
+		generateRegisterPage(w, r)
 	}
 }
 
@@ -42,13 +42,13 @@ func generateRegisterPage(w http.ResponseWriter, r *http.Request) {
 	data := templates.PageTemplate{
 		Title:         "Register",
 		Authenticated: authenticated,
-    User: Username(r),
+		User:          Username(r),
 	}
 
 	if err := templates.ApplyPageTemplate(w, templates.REGISTER_TEMPLATE_FILE_WITH_PATH, data); err != nil {
 		fmt.Fprintln(w, "failed")
 		return
-}
+	}
 }
 
 func (db *JsonDB) registerUser(w http.ResponseWriter, r *http.Request) {

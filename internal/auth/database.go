@@ -25,13 +25,13 @@ type DBUser2 struct {
 }
 
 type Item struct {
-    Id          uuid.UUID   `json:"id"`
-    Label       string      `json:"label"      validate:"required,alphanumunicode,gte=3,lte=15"`
-    Description string      `json:"description" validate:"alphanumunicode,lte=255"`
-    Picture     string      `json:"picture"    validate:"base64"`
-    Quantity    json.Number `json:"quantity"   validate:"numeric,gte=0,lte=15"`
-    Weight      string      `json:"weight"     validate:"numeric,lte=15"`
-    QRcode      string      `json:"qrcode"     validate:"alphanumunicode"`
+	Id          uuid.UUID   `json:"id"`
+	Label       string      `json:"label"      validate:"required,alphanumunicode,gte=3,lte=15"`
+	Description string      `json:"description" validate:"alphanumunicode,lte=255"`
+	Picture     string      `json:"picture"    validate:"base64"`
+	Quantity    json.Number `json:"quantity"   validate:"numeric,gte=0,lte=15"`
+	Weight      string      `json:"weight"     validate:"numeric,lte=15"`
+	QRcode      string      `json:"qrcode"     validate:"alphanumunicode"`
 }
 
 const (

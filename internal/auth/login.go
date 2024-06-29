@@ -59,7 +59,7 @@ func (db *JsonDB) loginUser(w http.ResponseWriter, r *http.Request) {
 	saveSession(w, r)
 
 	log.Println("login successful")
-  http.RedirectHandler("/personal-page", http.StatusOK)
+	http.RedirectHandler("/personal-page", http.StatusOK)
 
 	// https://htmx.org/headers/hx-location/
 	w.Header().Add("HX-Location", "/personal-page")
@@ -73,9 +73,9 @@ func (db *JsonDB) loginPage(w http.ResponseWriter, r *http.Request) {
 		Authenticated: authenticated,
 	}
 	if err := templates.ApplyPageTemplate(w, templates.LOGIN_TEMPLATE_FILE_WITH_PATH, data); err != nil {
-	// t := templates.CreateTemplates()
-	// t.ExecuteTemplate("")
-	if err := templates.ApplyPageTemplate(w, "internal/templates/login.html", data); err != nil {
+		// t := templates.CreateTemplates()
+		// t.ExecuteTemplate("")
+		// if err := templates.ApplyPageTemplate(w, "internal/templates/login.html", data); err != nil {
 		fmt.Fprintln(w, "failed")
 		return
 	}
@@ -84,7 +84,7 @@ func (db *JsonDB) loginPage(w http.ResponseWriter, r *http.Request) {
 func Authenticated(r *http.Request) (bool, bool) {
 	session, _ := store.Get(r, COOKIE_NAME)
 	authenticated, ok := session.Values["authenticated"].(bool)
-	log.Println("session authenticated", session.Values["authenticated"])
+	// log.Println("session authenticated", session.Values["authenticated"])
 	return authenticated, ok
 }
 
