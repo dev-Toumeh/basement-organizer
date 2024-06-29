@@ -1,7 +1,15 @@
-{{ define "body" }}{{ end }}
 {{ define "page" }}
 <html lang="en">
+{{ template "head" . }}
+<body>
+    {{ template "statusbar" . }}
+    {{ template "body" . }}
+</body>
+    {{ template "script" . }}
+</html>
+{{end}}
 
+{{ define "head" }}
 <head>
     <title>{{ with .Title}}{{.}}{{else}}no title{{end}}</title>
     <meta charset="UTF-8">
@@ -12,34 +20,36 @@
         crossorigin="anonymous"></script>
     <link rel="stylesheet" href="static/layout.css">
 </head>
-
-<body>
-    <div class="status-bar">
-        <div hx-boost="true" hx-push-url="true">
-            <nav>
-                <a id="home" href="/">Home</a>
-                {{with .Authenticated }}
-                <a id="home" href="/personal-page">Personal Page</a>
-                {{end}}
-            </nav>
-        </div>
-        <div id="authentication-status">
-            {{with .Authenticated }}
-                <label id="auth-label">logged in</label>
-                <button
-                    id="logout-btn"
-                    type="button"
-                    hx-get="/logout"
-                    hx-target="#auth-label"
-                >Logout</button>
-            {{else}}
-                <label id="auth-label">logged out</label>
-            {{end}}
-        </div>
-    </div>
-    {{ template "body" . }}
-</body>
-
-<script src="static/custom-functions.js"></script>
-</html>
 {{end}}
+
+{{ define "statusbar" }}
+<div class="status-bar">
+    <div hx-boost="true" hx-push-url="true">
+        <nav>
+            <a id="home" href="/">Home</a>
+            {{with .Authenticated }}
+            <a id="home" href="/personal-page">Personal Page</a>
+            {{end}}
+        </nav>
+    </div>
+    <div id="authentication-status">
+        {{with .Authenticated }}
+            <label id="auth-label">logged in</label>
+            <button
+                id="logout-btn"
+                type="button"
+                hx-get="/logout"
+                hx-target="#auth-label"
+            >Logout</button>
+        {{else}}
+            <label id="auth-label">logged out</label>
+        {{end}}
+    </div>
+</div>
+{{end}}
+
+{{ define "script" }}
+<script src="static/custom-functions.js"></script>
+{{ end }}
+
+{{ define "body" }}{{ end }}

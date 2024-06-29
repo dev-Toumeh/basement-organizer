@@ -1,4 +1,15 @@
-{{define "body"}}
+{{ define "login-page" }}
+<html lang="en">
+{{ template "head" . }}
+<body>
+    {{ template "statusbar" . }}
+    {{ template "login-form" . }}
+</body>
+    {{ template "script" . }}
+</html>
+{{ end }}
+
+{{ define "login-form" }}
 <form>
     <label for="username">Username:</label>
     <input 
@@ -32,4 +43,4 @@
     </button>
 </form>
 <label id="responseLabel"></label>
-{{end}}
+{{ end }}
