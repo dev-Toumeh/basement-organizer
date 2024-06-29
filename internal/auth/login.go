@@ -73,6 +73,9 @@ func (db *JsonDB) loginPage(w http.ResponseWriter, r *http.Request) {
 		Authenticated: authenticated,
 	}
 	if err := templates.ApplyPageTemplate(w, templates.LOGIN_TEMPLATE_FILE_WITH_PATH, data); err != nil {
+	// t := templates.CreateTemplates()
+	// t.ExecuteTemplate("")
+	if err := templates.ApplyPageTemplate(w, "internal/templates/login.html", data); err != nil {
 		fmt.Fprintln(w, "failed")
 		return
 	}
