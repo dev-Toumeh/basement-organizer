@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"basement/main/internal/auth"
+	"basement/main/internal/database"
 	"basement/main/internal/items"
 	"basement/main/internal/templates"
 )
@@ -18,7 +19,7 @@ const (
 	PERSONAL_PAGE_TEMPLATE_PATH string = "internal/templates/personal-page.html"
 )
 
-func RegisterRoutes(db *auth.JsonDB) {
+func RegisterRoutes(db *database.JsonDB) {
 	http.Handle(STATIC, http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
 	http.HandleFunc("/", HomePage)
 	http.HandleFunc(PERSONAL_PAGE_ROUTE, PersonalPage)
@@ -27,13 +28,13 @@ func RegisterRoutes(db *auth.JsonDB) {
 	apiRoutes(db)
 }
 
-func authRoutes(db *auth.JsonDB) {
-	http.HandleFunc("/login", db.LoginHandler)
+func authRoutes(db *database.JsonDB) {
+	http.HandleFunc("/login", auth.LoginHandler(db))
 	http.HandleFunc("/register", auth.RegisterHandler(db))
 	http.HandleFunc("/logout", auth.LogoutHandler)
 }
 
-func apiRoutes(db *auth.JsonDB) {
+func apiRoutes(db *database.JsonDB) {
 	http.HandleFunc("/api/v1/create/item", items.CreateItemHandler(db))
 	http.HandleFunc("/api/v1/read/items", ReadItems)
 	http.HandleFunc(API_V1_READ_ITEM, ReadItem)

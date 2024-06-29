@@ -1,14 +1,14 @@
 package routes
 
 import (
-	"basement/main/internal/auth"
+	"basement/main/internal/database"
 	"fmt"
 	"net/http"
 )
 
 // CreateItemsJsonDB creates DB instance by reading or creating "items.json" file from disk.
-func CreateItemsJsonDB() (*auth.JsonDB, error) {
-	db := &auth.JsonDB{}
+func CreateItemsJsonDB() (*database.JsonDB, error) {
+	db := &database.JsonDB{}
 	db.InitFieldFromFile(ITEMS_FILE_PATH, &db.Items)
 	db.InitFieldFromFile(USERS_FILE_PATH, &db.Users)
 	// sss := reflect.VisibleFields(reflect.TypeOf(*db))

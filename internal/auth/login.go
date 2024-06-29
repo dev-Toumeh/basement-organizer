@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"basement/main/internal/database"
 	"basement/main/internal/templates"
 )
 
@@ -12,16 +13,17 @@ const (
 	LOGIN_FAILED_MESSAGE string = "Login failed"
 )
 
-func (db *JsonDB) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		db.loginUser(w, r)
-	}
-	if r.Method == http.MethodGet {
-		db.loginPage(w, r)
+func LoginHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			loginUser(w, r, db)
+		}
+		if r.Method == http.MethodGet {
+			loginPage(w, r, db)
+		}
 	}
 }
-
-func (db *JsonDB) loginUser(w http.ResponseWriter, r *http.Request) {
+func loginUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	authenticated, ok := Authenticated(r)
 
 	if ok {
@@ -66,7 +68,7 @@ func (db *JsonDB) loginUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome %v\n", username)
 }
 
-func (db *JsonDB) loginPage(w http.ResponseWriter, r *http.Request) {
+func loginPage(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	authenticated, _ := Authenticated(r)
 	data := templates.PageTemplate{
 		Title:         "login",

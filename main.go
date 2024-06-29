@@ -1,17 +1,17 @@
 package main
 
 import (
-	"basement/main/internal/auth"
+	"basement/main/internal/database"
 	"basement/main/internal/routes"
 	"log"
 	"net/http"
 )
 
 func main() {
-	var db *auth.JsonDB
+	var db *database.JsonDB
 	var err error
 
-	db, err = auth.CreateJsonDB()
+	db, err = database.CreateJsonDB()
 	if err != nil {
 		log.Fatalf("Can't create DB, shutting server down")
 	}
