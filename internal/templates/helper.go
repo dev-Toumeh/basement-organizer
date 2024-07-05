@@ -81,11 +81,11 @@ func allFilePathsInDirectory(dirpath string) ([]string, error) {
 }
 
 // Render applies data to a defined template and writes result back to the writer.
-func Render(wr io.Writer, name string, data any) error {
-	err := internalTemplate.ExecuteTemplate(wr, name, data)
+func Render(w io.Writer, name string, data any) error {
+	err := internalTemplate.ExecuteTemplate(w, name, data)
 	if err != nil {
 		log.Println(err)
-		fmt.Fprintln(wr, err)
+		fmt.Fprintln(w, err)
 		return err
 	}
 	return nil
