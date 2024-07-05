@@ -1,13 +1,13 @@
 {{ define "login-page" }}
-<html lang="en">
+{{ template "open-html-tag" . }}
 {{ template "head" . }}
 <body>
     {{ template "statusbar" . }}
     {{ template "login-form" . }}
 </body>
-    {{ template "script" . }}
-</html>
-{{ end }}
+{{ template "script" . }}
+{{ template "close-html-tag" . }}
+{{end}}
 
 {{ define "login-form" }}
 <form>
