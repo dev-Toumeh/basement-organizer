@@ -1,13 +1,17 @@
 {{ define "page" }}
-<html lang="en">
+{{ template "open-html-tag" . }}
 {{ template "head" . }}
 <body>
     {{ template "statusbar" . }}
-    {{ template "body" . }}
+    {{ block "body" . }}{{end}}
 </body>
-    {{ template "script" . }}
-</html>
+{{ template "script" . }}
+{{ template "close-html-tag" . }}
 {{end}}
+
+{{ define "open-html-tag" }}<html lang="en">{{ end }}
+{{ define "close-html-tag" }}</html>{{ end }}
+{{ define "script" }}<script src="static/custom-functions.js"></script>{{end}}
 
 {{ define "head" }}
 <head>
@@ -21,16 +25,21 @@
     <link rel="stylesheet" href="static/layout.css">
     <link rel="manifest" href="static/manifest.json" />
     <link rel="icon" href="static/basement-organizer-icon512.png" type="image/png">
+    {{ block "head-extras" . }}{{end}}
+    {{ block "style" . }}{{end}}
 </head>
-{{end}}
+{{ end }}
+
+{{ define "default-style" }}<style></style>{{end}}
 
 {{ define "statusbar" }}
 <div class="status-bar">
+    <!-- hx-boost upgrades all a tags to use hx-get and reposnses target the body-->
     <div hx-boost="true" hx-push-url="true">
         <nav>
             <a id="home" href="/">Home</a>
             {{with .Authenticated }}
-            <a id="home" href="/personal-page">Personal Page</a>
+            <a id="personal-page" href="/personal-page">Personal Page</a>
             {{end}}
             <a 
                 id="sample-page" 
@@ -61,8 +70,3 @@
 </div>
 {{end}}
 
-{{ define "script" }}
-<script src="static/custom-functions.js"></script>
-{{ end }}
-
-{{ define "body" }}{{ end }}
