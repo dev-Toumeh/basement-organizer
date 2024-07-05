@@ -81,11 +81,12 @@ func loginPage(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	}
 }
 
-func Authenticated(r *http.Request) (bool, bool) {
+// Authenticated shows if user is authenticated and has "authenticated" value in session cookie.
+func Authenticated(r *http.Request) (authenticated bool, hasAuthenticatedCookieValue bool) {
 	session, _ := store.Get(r, COOKIE_NAME)
-	authenticated, ok := session.Values["authenticated"].(bool)
+	authenticated, hasAuthenticatedCookieValue = session.Values["authenticated"].(bool)
 	// log.Println("session authenticated", session.Values["authenticated"])
-	return authenticated, ok
+	return
 }
 
 func saveSession(w http.ResponseWriter, r *http.Request) {
