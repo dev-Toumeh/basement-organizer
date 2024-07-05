@@ -17,12 +17,23 @@ const (
 	REGISTER_TEMPLATE_FILE_WITH_PATH    string = "internal/templates/auth/register.html"
 	LOGIN_TEMPLATE_FILE_WITH_PATH       string = "internal/templates/auth/login.html"
 	CREATE_ITEM_TEMPLATE_FILE_WITH_PATH string = "internal/templates/items/create-item.html"
+	DEBUG_STYLE                         bool   = true
 )
 
 type PageTemplate struct {
 	Title         string
 	Authenticated bool
 	User          string
+	Debug         bool
+}
+
+func NewPageTemplate() PageTemplate {
+	return PageTemplate{
+		Title:         "Default Page",
+		Authenticated: false,
+		User:          "Default User",
+		Debug:         DEBUG_STYLE,
+	}
 }
 
 // ApplyPageTemplate generates a complete page from the "page.html" template.

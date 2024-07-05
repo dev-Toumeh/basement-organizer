@@ -23,6 +23,8 @@ func RegisterRoutes(db *database.JsonDB) {
 	http.Handle(STATIC, http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
 	http.HandleFunc("/", HomePage)
 	http.HandleFunc(PERSONAL_PAGE_ROUTE, PersonalPage)
+	http.HandleFunc("/sample-page", SamplePage)
+	http.HandleFunc("/test-style", TestStyle)
 
 	authRoutes(db)
 	apiRoutes(db)
@@ -54,4 +56,19 @@ func PersonalPage(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "failed")
 		return
 	}
+}
+
+var testStyle = false
+
+func TestStyle(w http.ResponseWriter, r *http.Request) {
+	if testStyle {
+		templates.InitTemplates()
+		templates.RedefineFromOtherTemplateDefinition("style", templates.InternalTemplate(), "style-test", templates.InternalTemplate())
+		templates.Render(w, "style", nil)
+	} else {
+		templates.InitTemplates()
+		templates.RedefineTemplateDefinition(templates.InternalTemplate(), "style", "<style></style>")
+		templates.Render(w, "style", nil)
+	}
+	testStyle = !testStyle
 }

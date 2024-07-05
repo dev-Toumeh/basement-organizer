@@ -70,9 +70,9 @@ func loginUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 
 func loginPage(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	authenticated, _ := Authenticated(r)
-	data := templates.PageTemplate{
-		Title:         "login",
-		Authenticated: authenticated,
+	data := templates.NewPageTemplate()
+	data.Title = "login"
+	data.Authenticated = authenticated
 	}
 	err := templates.Render(w, "login-page", data)
 	if err != nil {

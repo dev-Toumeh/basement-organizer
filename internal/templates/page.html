@@ -32,6 +32,13 @@
             {{with .Authenticated }}
             <a id="home" href="/personal-page">Personal Page</a>
             {{end}}
+            {{ with .Debug }}
+            <button 
+                hx-boost="false"
+                hx-get="/test-style"
+                hx-target="style"
+            >Switch Debug Style</button>
+            {{ end }}
         </nav>
     </div>
     <div id="authentication-status">
