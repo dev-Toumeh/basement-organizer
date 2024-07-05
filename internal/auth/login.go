@@ -73,8 +73,8 @@ func loginPage(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	data := templates.NewPageTemplate()
 	data.Title = "login"
 	data.Authenticated = authenticated
-	}
-	err := templates.Render(w, "login-page", data)
+
+	err := templates.RenderPage(w, "login-page", data)
 	if err != nil {
 		fmt.Fprintln(w, "failed")
 		return
