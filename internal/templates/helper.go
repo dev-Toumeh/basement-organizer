@@ -93,7 +93,7 @@ func allFilePathsInDirectory(dirpath string) ([]string, error) {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() {
+		if !info.IsDir() && (filepath.Ext(info.Name()) == ".html") {
 			paths = append(paths, path)
 		}
 		return nil
