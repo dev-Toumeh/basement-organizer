@@ -1,0 +1,42 @@
+{{ define "sample-page" }}
+{{ template "open-html-tag" . }}
+{{ template "head" . }}
+<body>
+    {{ template "statusbar" . }}
+    {{ template "sample-page-body" . }}
+</body>
+{{ template "script" . }}
+{{ template "close-html-tag" . }}
+{{end}}
+
+{{ define "sample-page-body" }}
+<body>
+    <div>Body Text inside div</div>
+    <h1>H1 Header</h1>
+    <div style="display:flex">
+        <p>Paragraph text</p>
+        <div>Body Text inside div</div>
+    </div>
+    <h2>H2 Header</h2>
+    <h3>H3 Header</h3>
+    <h4>H4 Header</h4>
+    <h5>H5 Header</h5>
+    <h6>H6 Header</h6>
+</body>
+{{end}}
+
+{{ define "style-test" }}
+<style>
+* {
+    outline: 1px #000 dashed;
+}
+</style>
+{{end}}
+
+{{ define "atest-style" }}
+<style hx-swap-oob="true:style">
+* {
+    outline: 1px #000 dashed;
+}
+</style>
+{{ end }}

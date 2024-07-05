@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
 	"io"
@@ -53,10 +54,23 @@ func ApplyPageTemplate(w http.ResponseWriter, bodyTemplateFile string, data inte
 
 var internalTemplate *template.Template
 
+func InternalTemplate() *template.Template {
+	return internalTemplate
+}
+
+var PageTemplates = map[string]*template.Template{}
+
 // InitTemplates loads all templates from "internal/templates" directory.
 func InitTemplates() {
 	var err error
 	internalTemplate, err = parseDirectory("internal/templates")
+	if err != nil {
+		log.Fatal(err)
+	}
+	PageTemplates["sample-page"], err = internalTemplate.Clone()
+	PageTemplates["home-page"], err = internalTemplate.Clone()
+	PageTemplates["login-page"], err = internalTemplate.Clone()
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -91,6 +105,22 @@ func allFilePathsInDirectory(dirpath string) ([]string, error) {
 	return paths, nil
 }
 
+// RenderPage creates a complete html page with templates from "PageTemplates" variable.
+func RenderPage(w io.Writer, name string, data any) error {
+	tmpl, ok := PageTemplates[name]
+	log.Println("Render:", name, tmpl.Name(), ok)
+	if !ok {
+		panic(name + " not in PageTemplates[`" + name + "`]")
+	}
+	err := tmpl.ExecuteTemplate(w, name, data)
+	if err != nil {
+		log.Println(err)
+		fmt.Fprintln(w, err)
+		return err
+	}
+	return nil
+}
+
 // Render applies data to a defined template and writes result back to the writer.
 func Render(w io.Writer, name string, data any) error {
 	err := internalTemplate.ExecuteTemplate(w, name, data)
@@ -100,4 +130,50 @@ func Render(w io.Writer, name string, data any) error {
 		return err
 	}
 	return nil
+}
+
+/*
+RedefineTemplateDefinition redefines "targetDefinitionName" template in "tmpl" by using the new definition from "definitionTemplate".
+
+(experimental function)
+*/
+func RedefineTemplateDefinition(tmpl *template.Template, targetDefinitionName string, definitionTemplate string) {
+	// log.Println()
+	// tmpl = template.Must(tmpl.New(.Clone())
+	newdef := fmt.Sprintf("{{ define `%s`}}%s{{end}}", targetDefinitionName, definitionTemplate)
+	template.Must(tmpl.Parse(newdef))
+}
+
+/*
+RedefineFromOtherTemplateDefinition redefines "targetDefinitionName" template in "targetTmpl" by using the new definition from "sourceDefinitionName"
+
+(experimental function)
+
+Example:
+
+	template1 (source): {{ define "a" }}source definition{{end}}
+
+	template2 (target): {{ define "b" }}to redefine source definition "a"{{end}}
+
+	RedefineFromOtherTemplateDefinition("a", template1, "b", template2)
+
+	remplate2 will become: {{ define "a" }}to redefine source definition "a"{{end}}
+*/
+func RedefineFromOtherTemplateDefinition(targetDefinitionName string, sourceTmpl *template.Template, sourceDefinitionName string, targetTmpl *template.Template) {
+	log.Printf("oldTemplate.Name():%s, oldTemplateDefinitionName:%s, newTemplate.Name():%s, newTemplateDefintionName:%s)", sourceTmpl.Name(), targetDefinitionName, targetTmpl.Name(), sourceDefinitionName)
+
+	var err error
+
+	// newTemplateContent := bytes.NewBufferString("{{define `tyle`}}aaaa{{end}}")
+	newTemplateContent := bytes.NewBufferString("")
+	tmpTmpl := template.Must(sourceTmpl.Clone())
+	err = tmpTmpl.ExecuteTemplate(newTemplateContent, sourceDefinitionName, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	newdef := fmt.Sprintf("{{ define `%s`}}%s{{end}}", targetDefinitionName, newTemplateContent)
+	log.Println("newcontent\n", newdef)
+
+	template.Must(targetTmpl.Parse(newdef))
 }
