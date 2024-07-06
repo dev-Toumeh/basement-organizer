@@ -6,18 +6,6 @@ import (
 	"net/http"
 )
 
-// CreateItemsJsonDB creates DB instance by reading or creating "items.json" file from disk.
-func CreateItemsJsonDB() (*database.JsonDB, error) {
-	db := &database.JsonDB{}
-	db.InitFieldFromFile(ITEMS_FILE_PATH, &db.Items)
-	db.InitFieldFromFile(USERS_FILE_PATH, &db.Users)
-	// sss := reflect.VisibleFields(reflect.TypeOf(*db))
-	// for _, v := range sss {
-	// 	log.Println(v.Type)
-	// }
-	return db, nil
-}
-
 func ReadItems(w http.ResponseWriter, r *http.Request) {
 	panic("unimplemented")
 }
