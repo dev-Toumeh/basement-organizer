@@ -14,7 +14,7 @@ const (
 	STATIC                      string = "/static/"
 	ITEMS_FILE_PATH             string = "internal/auth/items.json"
 	USERS_FILE_PATH             string = "internal/auth/users2.json"
-	API_V1_READ_ITEM            string = "/api/v1/read/item/id"
+	API_V1_READ_ITEM            string = "/api/v1/read/item/{id}"
 	PERSONAL_PAGE_ROUTE         string = "/personal-page"
 	PERSONAL_PAGE_TEMPLATE_PATH string = "internal/templates/personal-page.html"
 )
@@ -40,7 +40,7 @@ func authRoutes(db *database.JsonDB) {
 func apiRoutes(db *database.JsonDB) {
 	http.HandleFunc("/api/v1/create/item", items.CreateItemHandler(db))
 	http.HandleFunc("/api/v1/read/items", ReadItems)
-	http.HandleFunc(API_V1_READ_ITEM, ReadItem)
+	http.HandleFunc(API_V1_READ_ITEM, ApiReadItemHandler(db))
 	http.HandleFunc("/api/v1/update/item/id", UpdateItem)
 	http.HandleFunc("/api/v1/delete/item", DeleteItem)
 }

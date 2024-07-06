@@ -10,11 +10,15 @@ func ReadItems(w http.ResponseWriter, r *http.Request) {
 	panic("unimplemented")
 }
 
-func ReadItem(w http.ResponseWriter, r *http.Request) {
-	db, _ := CreateItemsJsonDB()
-	// get "Water Bottle"
-	fmt.Fprint(w, db.Items["123e4567-e89b-12d3-a456-426614174002"])
-	return
+func ApiReadItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			id := r.PathValue("id")
+			fmt.Fprint(w, db.Items[id])
+			return
+		}
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
 }
 
 func DeleteItem(w http.ResponseWriter, r *http.Request) {
