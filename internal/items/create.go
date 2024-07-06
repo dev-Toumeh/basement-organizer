@@ -3,7 +3,9 @@ package items
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"text/template"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -11,6 +13,16 @@ import (
 	"basement/main/internal/auth"
 	"basement/main/internal/database"
 	"basement/main/internal/templates"
+)
+
+const (
+	ID         string = "id"
+	LABEL      string = "label"
+	DESCRIPTIO string = "description"
+	PICTURE    string = "picture"
+	QUANTITY   string = "quantity"
+	WEIGHT     string = "weight"
+	QRCODE     string = "qrcode"
 )
 
 var validate *validator.Validate
@@ -28,7 +40,16 @@ func CreateItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.
 }
 
 func createNewItem(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
-	validateItem(r)
+	_, err := validateItem(r)
+	if err != nil {
+		htmlstring := fmt.Sprintf("<dev>%s</dev>", err)
+		tmp, err := template.New("dev").Parse(htmlstring)
+		if err != nil {
+			fmt.Fprintln(w, "something wrong happened please comeback later")
+		}
+		tmp.Execute(w, nil)
+	}
+
 	return
 }
 
@@ -48,25 +69,26 @@ func generateAddItemForm(w http.ResponseWriter, r *http.Request) {
 
 // this function will validate the item request and will return ether true will a Struct full of data
 // or false with an empty Struct
-func validateItem(r *http.Request) database.Item {
+func validateItem(r *http.Request) (database.Item, error) {
 
 	validate = validator.New(validator.WithRequiredStructEnabled())
 	newItem := database.Item{
 		Id:          uuid.New(),
-		Label:       "ExampleItem",
-		Description: "ExampleDescription",
-		Picture:     "iVBORw0KGgoAAAANSUhEUgAAAAUA",
-		Quantity:    json.Number("10"),
-		Weight:      "5",
-		QRcode:      "QRCODE123",
+		Label:       r.PostFormValue(LABEL),
+		Description: r.PostFormValue(DESCRIPTIO),
+		Picture:     r.PostFormValue(PICTURE),
+		Quantity:    json.Number(r.PostFormValue(QUANTITY)),
+		Weight:      r.PostFormValue(WEIGHT),
+		QRcode:      r.PostFormValue(QRCODE),
 	}
 
 	// Validate the item
 	if err := validate.Struct(newItem); err != nil {
-		fmt.Println("Validation failed:", err)
-	} else {
-		fmt.Println("Validation succeeded")
+		log.Println("Validation failed:", err)
+		return database.Item{}, err
 	}
-	return newItem
+
+	log.Println("Validation succeeded")
+	return newItem, nil
 
 }

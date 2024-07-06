@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+	"net/http"
+
 	"basement/main/internal/database"
 	"basement/main/internal/routes"
 	"basement/main/internal/templates"
-	"log"
-	"net/http"
 )
 
 func main() {
