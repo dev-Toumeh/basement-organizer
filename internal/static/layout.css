@@ -1,3 +1,8 @@
+html {
+    scrollbar-gutter: stable;
+    scroll-behavior: smoot
+}
+
 .status-bar nav a{
     font-size: 1.2em;
 }
