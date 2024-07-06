@@ -18,7 +18,7 @@ const (
 	REGISTER_TEMPLATE_FILE_WITH_PATH    string = "internal/templates/auth/register.html"
 	LOGIN_TEMPLATE_FILE_WITH_PATH       string = "internal/templates/auth/login.html"
 	CREATE_ITEM_TEMPLATE_FILE_WITH_PATH string = "internal/templates/items/create-item.html"
-	DEBUG_STYLE                         bool   = true
+	DEBUG_STYLE                         bool   = false // When true, will show DebugStyle button with "SwitchDebugStyle()"
 )
 
 type PageTemplate struct {
