@@ -1,0 +1,13 @@
+{{ define "item-container" }}
+   <ul>Id {{ .Id }}</ul>
+   <ul>Label {{ .Label }}</ul>
+   <ul>Description{{ .Description}}</ul>
+   <ul>Quantity {{ .Quantity }}</ul>
+   <ul>Weight {{ .Weight }}</ul>
+   <ul>QRcode {{ .QRcode }}</ul>
+   <ul>
+      <img 
+         src="data:image/png;base64,{{ .Picture}}" 
+         alt="{{.Label}}">
+   </ul>
+{{ end }}

@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
 
 	"basement/main/internal/auth"
@@ -24,6 +23,7 @@ func RegisterRoutes(db *database.JsonDB) {
 	http.HandleFunc("/", HomePage)
 	http.HandleFunc(PERSONAL_PAGE_ROUTE, PersonalPage)
 	http.HandleFunc("/sample-page", SamplePage)
+	http.HandleFunc("/item/{id}", ItemHandler(db))
 	http.HandleFunc("/switch-debug-style", SwitchDebugStyle)
 	http.HandleFunc("/login-form", auth.LoginForm)
 
@@ -43,20 +43,6 @@ func apiRoutes(db *database.JsonDB) {
 	http.HandleFunc(API_V1_READ_ITEM, ApiReadItemHandler(db))
 	http.HandleFunc("/api/v1/update/item/id", UpdateItem)
 	http.HandleFunc("/api/v1/delete/item", DeleteItem)
-}
-
-func PersonalPage(w http.ResponseWriter, r *http.Request) {
-	authenticated, _ := auth.Authenticated(r)
-	data := templates.PageTemplate{
-		Title:         "Personal",
-		Authenticated: authenticated,
-		User:          auth.Username(r),
-	}
-
-	if err := templates.ApplyPageTemplate(w, PERSONAL_PAGE_TEMPLATE_PATH, data); err != nil {
-		fmt.Fprintln(w, "failed")
-		return
-	}
 }
 
 var testStyle = templates.DEBUG_STYLE
