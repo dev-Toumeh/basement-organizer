@@ -7,14 +7,14 @@
 //    }
 //});
 
-document.querySelectorAll("a")
-    .forEach(e => {
-        e.addEventListener('htmx:beforeRequest', stopRequestToSamePath)
-    })
-
-function stopRequestToSamePath(/** @type Event*/ event){
-    console.log(event.detail.pathInfo.requestPath, document.location.pathname)
-    if (event.detail.pathInfo.requestPath === document.location.pathname) {
-        event.preventDefault()
-    }
-}
+//document.querySelectorAll("a")
+//    .forEach(e => {
+//        e.addEventListener('htmx:beforeRequest', stopRequestToSamePath)
+//    })
+//
+//function stopRequestToSamePath(/** @type Event*/ event){
+//    console.log(event.detail.pathInfo.requestPath, document.location.pathname)
+//    if (event.detail.pathInfo.requestPath === document.location.pathname) {
+//        event.preventDefault()
+//    }
+//}
