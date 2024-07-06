@@ -58,7 +58,7 @@ func PersonalPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var testStyle = false
+var testStyle = templates.DEBUG_STYLE
 
 func SwitchDebugStyle(w http.ResponseWriter, r *http.Request) {
 	if testStyle {
