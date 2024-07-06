@@ -39,30 +39,30 @@ You are logged in
 
 {{ define "home-page-body" }}
 {{ template "statusbar" . }}
-<div>Welcome to {{ with .Title }}{{ . }}{{end}} page </div>
+<div id="content">
+    <div id="welcome-div">Welcome to {{ with .Title }}{{ . }}{{end}} page </div>
+    {{ with .Authenticated }}
+    You are logged in
+    {{ else }}
+    <button
+        id="login-btn"
+        type="button"
+        hx-get="/login-form" 
+        hx-target="#content" 
+    >Login</button>
+        <!--hx-swap="outerHTML" -->
+    <label for="#login-btn"></label>
 
-{{ with .Authenticated }}
-You are logged in
-{{ else }}
-<button
-    id="login-btn"
-    type="button"
-    hx-get="/login" 
-    hx-swap="outerHTML" 
-    hx-target="body" 
-    hx-push-url="true"
->Login</button>
-<label for="#login-btn"></label>
-
-<button
-    id="register-btn"
-    type="button"
-    hx-get="/register" 
-    hx-swap="outerHTML" 
-    hx-target="body" 
-    hx-push-url="true"
->Register</button>
-<label for="#register-btn"></label>
+    <button
+        id="register-btn"
+        type="button"
+        hx-get="/register" 
+        hx-swap="outerHTML" 
+        hx-target="body" 
+        hx-push-url="true"
+    >Register</button>
+    <label for="#register-btn"></label>
+</div>
 {{end}}
 
 {{end}}

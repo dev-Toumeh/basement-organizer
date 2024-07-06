@@ -10,7 +10,7 @@
 {{end}}
 
 {{ define "login-form" }}
-<form>
+<form id="login-form">
     <label for="username">Username:</label>
     <input 
         {{ if .Authenticated }}disabled{{ end }}

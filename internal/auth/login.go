@@ -81,6 +81,19 @@ func loginPage(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	}
 }
 
+func LoginForm(w http.ResponseWriter, r *http.Request) {
+	authenticated, _ := Authenticated(r)
+	data := templates.NewPageTemplate()
+	data.Title = "login"
+	data.Authenticated = authenticated
+
+	err := templates.Render(w, "login-form", data)
+	if err != nil {
+		fmt.Fprintln(w, "failed")
+		return
+	}
+}
+
 // Authenticated shows if user is authenticated and has "authenticated" value in session cookie.
 func Authenticated(r *http.Request) (authenticated bool, hasAuthenticatedCookieValue bool) {
 	session, _ := store.Get(r, COOKIE_NAME)
