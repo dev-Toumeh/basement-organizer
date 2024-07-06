@@ -19,6 +19,4 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "failed")
 		return
 	}
-	// @TODO
-	// templates.RenderPage(w, "home-page", data)
 }

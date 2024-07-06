@@ -58,8 +58,6 @@ func InternalTemplate() *template.Template {
 	return internalTemplate
 }
 
-var PageTemplates = map[string]*template.Template{}
-
 // InitTemplates loads all templates from "internal/templates" directory.
 func InitTemplates() {
 	var err error
@@ -67,13 +65,7 @@ func InitTemplates() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	PageTemplates["sample-page"], err = internalTemplate.Clone()
-	PageTemplates["home-page"], err = internalTemplate.Clone()
-	PageTemplates["login-page"], err = internalTemplate.Clone()
 
-	if err != nil {
-		log.Fatal(err)
-	}
 	log.Println("Templates initialized")
 }
 
@@ -103,22 +95,6 @@ func allFilePathsInDirectory(dirpath string) ([]string, error) {
 	}
 
 	return paths, nil
-}
-
-// RenderPage creates a complete html page with templates from "PageTemplates" variable.
-func RenderPage(w io.Writer, name string, data any) error {
-	tmpl, ok := PageTemplates[name]
-	log.Println("Render:", name, tmpl.Name(), ok)
-	if !ok {
-		panic(name + " not in PageTemplates[`" + name + "`]")
-	}
-	err := tmpl.ExecuteTemplate(w, name, data)
-	if err != nil {
-		log.Println(err)
-		fmt.Fprintln(w, err)
-		return err
-	}
-	return nil
 }
 
 // Render applies data to a defined template and writes result back to the writer.
