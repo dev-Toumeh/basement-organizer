@@ -70,22 +70,23 @@ func loginUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 
 func loginPage(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	authenticated, _ := Authenticated(r)
-	data := templates.PageTemplate{
-		Title:         "login",
-		Authenticated: authenticated,
-	}
-	err := templates.Render(w, "login-page", data)
+	data := templates.NewPageTemplate()
+	data.Title = "login"
+	data.Authenticated = authenticated
+
+	err := templates.RenderPage(w, "login-page", data)
 	if err != nil {
 		fmt.Fprintln(w, "failed")
 		return
 	}
 }
 
-func Authenticated(r *http.Request) (bool, bool) {
+// Authenticated shows if user is authenticated and has "authenticated" value in session cookie.
+func Authenticated(r *http.Request) (authenticated bool, hasAuthenticatedCookieValue bool) {
 	session, _ := store.Get(r, COOKIE_NAME)
-	authenticated, ok := session.Values["authenticated"].(bool)
+	authenticated, hasAuthenticatedCookieValue = session.Values["authenticated"].(bool)
 	// log.Println("session authenticated", session.Values["authenticated"])
-	return authenticated, ok
+	return
 }
 
 func saveSession(w http.ResponseWriter, r *http.Request) {
