@@ -5,6 +5,7 @@ import (
 	"basement/main/internal/database"
 	"basement/main/internal/templates"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -25,8 +26,8 @@ func PersonalPage(w http.ResponseWriter, r *http.Request) {
 func ItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			id := r.PathValue("id")
-			// get "Water Bottle" "123e4567-e89b-12d3-a456-426614174002"
+			id := r.FormValue("id")
+			log.Println(id)
 			data := db.Items[id]
 			templates.Render(w, "item-container", data)
 			return

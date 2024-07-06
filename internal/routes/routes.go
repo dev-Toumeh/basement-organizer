@@ -23,7 +23,7 @@ func RegisterRoutes(db *database.JsonDB) {
 	http.HandleFunc("/", HomePage)
 	http.HandleFunc(PERSONAL_PAGE_ROUTE, PersonalPage)
 	http.HandleFunc("/sample-page", SamplePage)
-	http.HandleFunc("/item/{id}", ItemHandler(db))
+	http.HandleFunc("/item", ItemHandler(db))
 	http.HandleFunc("/switch-debug-style", SwitchDebugStyle)
 	http.HandleFunc("/login-form", auth.LoginForm)
 
