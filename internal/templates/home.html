@@ -1,3 +1,4 @@
+<!--Used with ApplyPageTemplate() function to redefine "body" template inside "page.html" template-->
 {{ define "body" }}
 <div>Welcome to {{ with .Title }}{{ . }}{{end}} page </div>
 
@@ -29,14 +30,15 @@ You are logged in
 
 {{ define "home-page" }}
 {{ template "open-html-tag" .}}
+{{ template "head" . }}
 <body>
-{{ template "statusbar" . }}
-{{ template "home-page-body" }}
+{{ template "home-page-body" . }}
 </body>
 {{ template "close-html-tag" .}}
 {{ end }}
 
 {{ define "home-page-body" }}
+{{ template "statusbar" . }}
 <div>Welcome to {{ with .Title }}{{ . }}{{end}} page </div>
 
 {{ with .Authenticated }}
