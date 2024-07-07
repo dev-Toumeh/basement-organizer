@@ -88,9 +88,7 @@ func registerUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 		return
 	}
 
-
-
-	 log.Printf("User %s registered successfully:", NewUsername)
+	log.Printf("User %s registered successfully:", NewUsername)
 	fmt.Fprintln(w, "User registered successfully")
 
 	return

@@ -39,7 +39,7 @@ func authRoutes(db *database.JsonDB) {
 
 func apiRoutes(db *database.JsonDB) {
 	http.HandleFunc("/api/v1/create/item", items.CreateItemHandler(db))
-	http.HandleFunc("/api/v1/read/items", ReadItems)
+	http.HandleFunc("/api/v1/read/items", ApiReadItemsHandler(db))
 	http.HandleFunc(API_V1_READ_ITEM, ApiReadItemHandler(db))
 	http.HandleFunc("/api/v1/update/item/id", UpdateItem)
 	http.HandleFunc("/api/v1/delete/item", DeleteItem)

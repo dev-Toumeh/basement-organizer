@@ -6,8 +6,15 @@ import (
 	"net/http"
 )
 
-func ReadItems(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
+func ApiReadItemsHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			fmt.Fprint(w, db.Items)
+			return
+		}
+		w.Header().Add("Allowed", http.MethodGet)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
 }
 
 func ApiReadItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.Request) {
@@ -17,6 +24,7 @@ func ApiReadItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http
 			fmt.Fprint(w, db.Items[id])
 			return
 		}
+		w.Header().Add("Allowed", http.MethodGet)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
