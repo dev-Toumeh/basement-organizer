@@ -1,10 +1,11 @@
 package routes
 
 import (
-	"basement/main/internal/auth"
-	"basement/main/internal/templates"
 	"fmt"
 	"net/http"
+
+	"basement/main/internal/auth"
+	"basement/main/internal/templates"
 )
 
 // PersonalPage renders full HTML page.
