@@ -2,7 +2,8 @@
   "restartable": "rs",
   "ignore": [
     ".git",
-    "node_modules/**/node_modules"
+    "node_modules/**/node_modules",
+    "internal/templates/constants.go"
   ],
   "verbose": false,
   "exec": "go run main.go",

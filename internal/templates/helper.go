@@ -19,6 +19,8 @@ const (
 	LOGIN_TEMPLATE_FILE_WITH_PATH       string = "internal/templates/auth/login.html"
 	CREATE_ITEM_TEMPLATE_FILE_WITH_PATH string = "internal/templates/items/create-item.html"
 	DEBUG_STYLE                         bool   = false // When true, will show DebugStyle button with "SwitchDebugStyle()"
+	TEMPLATE_CONSTANTS_PATH             string = "internal/templates/constants.go"
+	TEMPLATE_DIR                        string = "internal/templates/"
 )
 
 type PageTemplate struct {
@@ -61,7 +63,7 @@ func InternalTemplate() *template.Template {
 // InitTemplates loads all templates from "internal/templates" directory.
 func InitTemplates() {
 	var err error
-	internalTemplate, err = parseDirectory("internal/templates")
+	internalTemplate, _, err = ParseDirectory("internal/templates")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,12 +72,16 @@ func InitTemplates() {
 }
 
 // Recursively parse all files in directory, including sub-directories.
-func parseDirectory(dirpath string) (*template.Template, error) {
+func ParseDirectory(dirpath string) (*template.Template, []string, error) {
 	paths, err := allFilePathsInDirectory(dirpath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return template.ParseFiles(paths...)
+	tmpl, err := template.ParseFiles(paths...)
+	if err != nil {
+		return nil, nil, err
+	}
+	return tmpl, paths, nil
 }
 
 // Recursively get all file paths in directory, including sub-directories.
