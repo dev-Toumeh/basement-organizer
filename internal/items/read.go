@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 // ResponseWriter should implement a function to write a template response or normal response.
@@ -29,7 +31,7 @@ func ReadItemHandler(db *database.JsonDB, responseWriter ResponseWriter) http.Ha
 			if id == "" {
 				id = r.PathValue("id")
 			}
-			data := db.Items[id]
+			data := uuid.Must(uuid.FromString(r.PathValue("id")))
 			responseWriter(w, data)
 			return
 		}
@@ -43,6 +45,8 @@ func ReadItemHandler(db *database.JsonDB, responseWriter ResponseWriter) http.Ha
 // ReadItemsHandler returns a list of items or list of item IDs.
 //
 // Accepts "/items" to return all items with all information.
+//
+//	id := uuid.must(uuid.fromstring(r.FormValue("query")),)
 //
 // Accepts "/items?query=id" to only return item IDs.
 func ReadItemsHandler(db *database.JsonDB, responseWriter ResponseWriter) http.HandlerFunc {
