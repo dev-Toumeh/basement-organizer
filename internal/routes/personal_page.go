@@ -24,7 +24,7 @@ func PersonalPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.Request) {
+func ItemHandler(db *database.JsonDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			id := r.FormValue("id")
@@ -40,7 +40,7 @@ func ItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-// ResponseWriterFuncType should implement a function to write a template response or normal response.
+// ResponseWriter should implement a function to write a template response or normal response.
 //
 // Example:
 //
@@ -50,9 +50,9 @@ func ItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.Reques
 //		// Fprint
 //		fmt.Fprint(w, data)
 //	})
-type ResponseWriterFuncType func(w io.Writer, data any)
+type ResponseWriter func(w io.Writer, data any)
 
-func ReadItemHandler(db *database.JsonDB, responseWriter ResponseWriterFuncType) func(w http.ResponseWriter, r *http.Request) {
+func ReadItemHandler(db *database.JsonDB, responseWriter ResponseWriter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			id := r.FormValue("id")
@@ -72,7 +72,7 @@ func ReadItemHandler(db *database.JsonDB, responseWriter ResponseWriterFuncType)
 	}
 }
 
-func ReadItemsHandler(db *database.JsonDB, responseWriter ResponseWriterFuncType) func(w http.ResponseWriter, r *http.Request) {
+func ReadItemsHandler(db *database.JsonDB, responseWriter ResponseWriter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			id := r.FormValue("query")
