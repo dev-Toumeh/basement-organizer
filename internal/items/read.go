@@ -31,7 +31,9 @@ func ReadItemHandler(db *database.JsonDB, responseWriter ResponseWriter) http.Ha
 			if id == "" {
 				id = r.PathValue("id")
 			}
-			data := uuid.Must(uuid.FromString(r.PathValue("id")))
+
+			Id := uuid.Must(uuid.FromString(id))
+			data := db.Items[Id]
 			responseWriter(w, data)
 			return
 		}
