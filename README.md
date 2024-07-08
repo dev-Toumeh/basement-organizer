@@ -1,4 +1,16 @@
 # basement-organizer
+
+
+<!--toc:start-->
+- [basement-organizer](#basement-organizer)
+  - [The Problem](#the-problem)
+  - [The Idea](#the-idea)
+  - [Example](#example)
+  - [What it Should Do](#what-it-should-do)
+  - [Goal](#goal)
+  - [Start Development](#start-development)
+<!--toc:end-->
+
 Overview, detailed information and decisions can be found in [ Technical Documentation ](Technical_Documentation.md).
 
 ## The Problem
@@ -33,7 +45,7 @@ Overview, detailed information and decisions can be found in [ Technical Documen
 - For home use.
 - Not overloaded with features.
 - Whether on the go with a smartphone or at home on a PC.
-- 
 
-
+## Start Development
+For development see [Getting Started](getting_started.md)
 
