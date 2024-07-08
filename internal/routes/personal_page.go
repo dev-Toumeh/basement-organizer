@@ -24,22 +24,6 @@ func PersonalPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ItemHandler(db *database.JsonDB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			id := r.FormValue("id")
-			log.Println(id)
-			data := db.Items[id]
-			templates.Render(w, "item-container", data)
-			return
-		}
-		w.Header().Add("Allow", http.MethodGet)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		fmt.Fprint(w, "Method:'", r.Method, "' not allowed")
-		return
-	}
-}
-
 // ResponseWriter should implement a function to write a template response or normal response.
 //
 // Example:
