@@ -6,10 +6,10 @@ import (
 	"basement/main/internal/templates"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 )
 
+// PersonalPage renders full HTML page.
 func PersonalPage(w http.ResponseWriter, r *http.Request) {
 	authenticated, _ := auth.Authenticated(r)
 	data := templates.PageTemplate{
@@ -36,14 +36,15 @@ func PersonalPage(w http.ResponseWriter, r *http.Request) {
 //	})
 type ResponseWriter func(w io.Writer, data any)
 
+// ReadItemHandler returns a single item.
+//
+// Accepts "/item?id=" and "/item/id"
 func ReadItemHandler(db *database.JsonDB, responseWriter ResponseWriter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			id := r.FormValue("id")
-			log.Println("r.FormValue: ", id)
 			if id == "" {
 				id = r.PathValue("id")
-				log.Println("r.PathValue: ", id)
 			}
 			data := db.Items[id]
 			responseWriter(w, data)
@@ -56,14 +57,20 @@ func ReadItemHandler(db *database.JsonDB, responseWriter ResponseWriter) http.Ha
 	}
 }
 
+// ReadItemsHandler returns a list of items or list of item IDs.
+//
+// Accepts "/items" to return all items with all information.
+//
+// Accepts "/items?query=id" to only return item IDs.
 func ReadItemsHandler(db *database.JsonDB, responseWriter ResponseWriter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			id := r.FormValue("query")
-			log.Println(r.Form)
 			switch id {
+			// return all item IDs
 			case "id":
 				responseWriter(w, Keys(db.Items))
+			// return all items
 			default:
 				responseWriter(w, db.Items)
 			}
