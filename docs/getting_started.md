@@ -36,6 +36,19 @@ nodemon -e 'go,html' --signal SIGTERM --exec 'go' run main.go
 #### Manual
 Run `go run .`
 
+### Generate Template constants
+Manually generate with:
+```bash
+cd ./tools
+go run ./template_constants_generator.go
+```
+
+Or automatically on html change with:
+```bash
+cd ./tools
+nodemon
+```
+
 ## Development Environment Configuration
 ### Tree
 - the environment tree look like the following:

@@ -11,7 +11,7 @@
   - [Start Development](#start-development)
 <!--toc:end-->
 
-Overview, detailed information and decisions can be found in [ Technical Documentation ](doc/Technical_Documentation.md).
+Overview, detailed information and decisions can be found in [ Technical Documentation ](docs/Technical_Documentation.md).
 
 ## The Problem
 - When sorting things into boxes at home and storing them in the basement, over time it's hard to remember where things are and in which box. I also don't want to constantly go to the basement to open every box searching for something.
@@ -47,5 +47,5 @@ Overview, detailed information and decisions can be found in [ Technical Documen
 - Whether on the go with a smartphone or at home on a PC.
 
 ## Start Development
-For development see [Getting Started](doc/getting_started.md)
+For development see [Getting Started](docs/getting_started.md)
 
