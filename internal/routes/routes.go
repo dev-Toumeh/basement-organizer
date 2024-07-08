@@ -25,14 +25,12 @@ func RegisterRoutes(db *database.JsonDB) {
 	http.HandleFunc("/", HomePage)
 	http.HandleFunc(PERSONAL_PAGE_ROUTE, PersonalPage)
 	http.HandleFunc("/sample-page", SamplePage)
-	http.HandleFunc("/item", ReadItemHandler(db,
-		func(w io.Writer, data any) {
-			templates.Render(w, "item-container", data)
-		}))
-	http.HandleFunc("/items",
-		ReadItemsHandler(db, func(w io.Writer, data any) {
-			templates.Render(w, "items-container", data)
-		}))
+	http.HandleFunc("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
+		templates.Render(w, "item-container", data)
+	}))
+	http.HandleFunc("/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
+		templates.Render(w, "items-container", data)
+	}))
 	http.HandleFunc("/switch-debug-style", SwitchDebugStyle)
 	http.HandleFunc("/login-form", auth.LoginForm)
 
@@ -48,12 +46,12 @@ func authRoutes(db *database.JsonDB) {
 
 func apiRoutes(db *database.JsonDB) {
 	http.HandleFunc("/api/v1/create/item", items.CreateItemHandler(db))
-	http.HandleFunc(API_V1_READ_ITEM, ReadItemHandler(db, func(w io.Writer, data any) {
+	http.HandleFunc(API_V1_READ_ITEM, items.ReadItemHandler(db, func(w io.Writer, data any) {
 		fmt.Fprint(w, data)
 	}))
 	http.HandleFunc("/api/v1/update/item/id", UpdateItem)
 	http.HandleFunc("/api/v1/delete/item", DeleteItem)
-	http.HandleFunc("/api/v1/read/items", ReadItemsHandler(db, func(w io.Writer, data any) {
+	http.HandleFunc("/api/v1/read/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
 		fmt.Fprint(w, data)
 	}))
 }
