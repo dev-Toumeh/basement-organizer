@@ -26,10 +26,10 @@ func RegisterRoutes(db *database.JsonDB) {
 	http.HandleFunc(PERSONAL_PAGE_ROUTE, PersonalPage)
 	http.HandleFunc("/sample-page", SamplePage)
 	http.HandleFunc("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
-		templates.Render(w, "item-container", data)
+		templates.Render(w, templates.ITEM_CONTAINER, data)
 	}))
 	http.HandleFunc("/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
-		templates.Render(w, "items-container", data)
+		templates.Render(w, templates.ITEMS_CONTAINER, data)
 	}))
 	http.HandleFunc("/switch-debug-style", SwitchDebugStyle)
 	http.HandleFunc("/login-form", auth.LoginForm)
@@ -62,11 +62,11 @@ func SwitchDebugStyle(w http.ResponseWriter, r *http.Request) {
 	if testStyle {
 		templates.InitTemplates()
 		templates.RedefineFromOtherTemplateDefinition("style", templates.InternalTemplate(), "style-debug", templates.InternalTemplate())
-		templates.Render(w, "style", nil)
+		templates.Render(w, templates.STYLE, nil)
 	} else {
 		templates.InitTemplates()
 		templates.RedefineTemplateDefinition(templates.InternalTemplate(), "style", "<style></style>")
-		templates.Render(w, "style", nil)
+		templates.Render(w, templates.STYLE, nil)
 	}
 	testStyle = !testStyle
 }
