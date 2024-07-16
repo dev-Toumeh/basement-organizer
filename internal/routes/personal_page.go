@@ -17,7 +17,7 @@ func PersonalPage(w http.ResponseWriter, r *http.Request) {
 		User:          auth.Username(r),
 	}
 
-	if err := templates.ApplyPageTemplate(w, PERSONAL_PAGE_TEMPLATE_PATH, data); err != nil {
+	if err := templates.ApplyPageTemplate(w, templates.TEMPLATE_PERSONAL_PAGE_PATH, data); err != nil {
 		fmt.Fprintln(w, "failed")
 		return
 	}

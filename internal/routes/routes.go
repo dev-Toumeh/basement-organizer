@@ -12,12 +12,11 @@ import (
 )
 
 const (
-	STATIC                      string = "/static/"
-	ITEMS_FILE_PATH             string = "internal/auth/items.json"
-	USERS_FILE_PATH             string = "internal/auth/users2.json"
-	API_V1_READ_ITEM            string = "/api/v1/read/item/{id}"
-	PERSONAL_PAGE_ROUTE         string = "/personal-page"
-	PERSONAL_PAGE_TEMPLATE_PATH string = "internal/templates/personal-page.html"
+	STATIC              string = "/static/"
+	ITEMS_FILE_PATH     string = "internal/auth/items.json"
+	USERS_FILE_PATH     string = "internal/auth/users2.json"
+	API_V1_READ_ITEM    string = "/api/v1/read/item/{id}"
+	PERSONAL_PAGE_ROUTE string = "/personal-page"
 )
 
 func RegisterRoutes(db *database.JsonDB) {
