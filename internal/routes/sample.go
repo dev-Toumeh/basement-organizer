@@ -13,5 +13,5 @@ func SamplePage(w http.ResponseWriter, r *http.Request) {
 	data.Authenticated = authenticated
 	data.User = auth.Username(r)
 
-	templates.Render(w, templates.SAMPLE_PAGE, data)
+	templates.Render(w, templates.TEMPLATE_SAMPLE_PAGE, data)
 }

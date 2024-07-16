@@ -46,7 +46,8 @@ func GenerateTemplateNames(template *template.Template, parsedPaths []string) er
 	}
 
 	cleanTemplateNames := make([]string, len(templates3))
-	cleanTemplateConstVariables := make([]string, len(templates3))
+	cleanTemplateConstVariables := make([]string, 2*len(templates3))
+	cleanTemplatePathConstVariables := make([]string, len(templates3))
 	parsedPathsMap := map[string]string{}
 	// log.Println("Base paths:")
 	for _, v := range parsedPaths {
@@ -108,14 +109,20 @@ func GenerateTemplateNames(template *template.Template, parsedPaths []string) er
 		// 	panic(err)
 		// }
 		// log.Println("asdfasdfk:", p)
-		constVariable := fmt.Sprintf(`const %s string = %s // "%s"`, upperCase, s, targetPath)
+		// constVariable := fmt.Sprintf(`const TEMPLATE_%s string = %s // "%s"`, upperCase, s, targetPath)
+		// constVariable := fmt.Sprintf(`const TEMPLATE_%s string = %s`, upperCase, s)
+		constVariable := fmt.Sprintf(`TEMPLATE_%s string = %s`, upperCase, s)
+		// constPathVariable := fmt.Sprintf(`const TEMPLATE_%s_PATH string = "%s"`, upperCase, targetPath)
+		constPathVariable := fmt.Sprintf(`TEMPLATE_%s_PATH string = "%s"`, upperCase, targetPath)
 
 		// log.Println(constVariable)
 		cleanTemplateConstVariables[i] = constVariable
+		cleanTemplatePathConstVariables[i] = constPathVariable
 	}
 	// log.Println(parsedPaths)
 	// log.Println()
 	log.Println()
+	cleanTemplateConstVariables = append(cleanTemplateConstVariables, cleanTemplatePathConstVariables...)
 	// p, err := filepath.Rel(".", "internal/templates/")
 	// // filepath.re
 	// if err != nil {
@@ -149,10 +156,10 @@ func GenerateTemplateNames(template *template.Template, parsedPaths []string) er
 	log.Println("eof:", eof)
 	// log.Println("file contents:\n", string(buf))
 
-	newFileContentBegin := "// THIS FILE IS AUTO GENERATED!\npackage templates\n\n"
+	newFileContentBegin := "// THIS FILE IS AUTO GENERATED!\n// TEMPLATE_<name> is the definition name of that template\n// TEMPLATE_<name>_PATH is the file where this definition is\n\npackage templates\n\nconst("
 	newFileContentConstVariables := strings.Join(cleanTemplateConstVariables, "\n")
-	// newFileContentEnd := ")"
-	newFileContentEnd := ""
+	newFileContentEnd := ")"
+	// newFileContentEnd := ""
 	newFileContent := newFileContentBegin + newFileContentConstVariables + newFileContentEnd
 	newFileContentFormatted, err := format.Source([]byte(newFileContent))
 	if err != nil {

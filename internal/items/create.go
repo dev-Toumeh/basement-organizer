@@ -77,7 +77,7 @@ func generateAddItemForm(w http.ResponseWriter, r *http.Request) {
 		User:          auth.Username(r),
 	}
 
-	if err := templates.ApplyPageTemplate(w, templates.CREATE_ITEM_TEMPLATE_FILE_WITH_PATH, data); err != nil {
+	if err := templates.ApplyPageTemplate(w, templates.TEMPLATE_CREATE_ITEM_HTML_PATH, data); err != nil {
 		fmt.Fprintln(w, "failed")
 		return
 	}

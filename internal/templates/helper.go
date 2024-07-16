@@ -12,15 +12,12 @@ import (
 )
 
 const (
-	PAGE_TEMPLATE                       string = "page"
-	PAGE_TEMPLATE_FILENAME              string = PAGE_TEMPLATE + ".html"
-	PAGE_TEMPLATE_FILE_WTH_PATH         string = "internal/templates/" + PAGE_TEMPLATE_FILENAME
-	REGISTER_TEMPLATE_FILE_WITH_PATH    string = "internal/templates/auth/register.html"
-	LOGIN_TEMPLATE_FILE_WITH_PATH       string = "internal/templates/auth/login.html"
-	CREATE_ITEM_TEMPLATE_FILE_WITH_PATH string = "internal/templates/items/create-item.html"
-	DEBUG_STYLE                         bool   = false // When true, will show DebugStyle button with "SwitchDebugStyle()"
-	TEMPLATE_CONSTANTS_PATH             string = "internal/templates/constants.go"
-	TEMPLATE_DIR                        string = "internal/templates/"
+	// If set to true, will show DebugStyle button with "SwitchDebugStyle()"
+	DEBUG_STYLE bool = false
+	// TEMPLATE_CONSTANTS_PATH points to auto generated constants.go file
+	TEMPLATE_CONSTANTS_PATH string = "internal/templates/constants.go"
+	// TEMPLATE_DIR defines directory for all HTML templates
+	TEMPLATE_DIR string = "internal/templates/"
 )
 
 type PageTemplate struct {
@@ -41,14 +38,14 @@ func NewPageTemplate() PageTemplate {
 
 // ApplyPageTemplate generates a complete page from the "page.html" template.
 func ApplyPageTemplate(w http.ResponseWriter, bodyTemplateFile string, data interface{}) error {
-	tmpl, err := template.ParseFiles(PAGE_TEMPLATE_FILE_WTH_PATH, bodyTemplateFile)
+	tmpl, err := template.ParseFiles(TEMPLATE_PAGE_PATH, bodyTemplateFile)
 	if err != nil {
-		log.Printf("%v, %v: %v\n", PAGE_TEMPLATE, bodyTemplateFile, err)
+		log.Printf("%v, %v: %v\n", TEMPLATE_PAGE, bodyTemplateFile, err)
 		return err
 	}
 
-	if err := tmpl.ExecuteTemplate(w, PAGE_TEMPLATE, data); err != nil {
-		log.Printf("%v: %v\n", PAGE_TEMPLATE, err)
+	if err := tmpl.ExecuteTemplate(w, TEMPLATE_PAGE, data); err != nil {
+		log.Printf("%v: %v\n", TEMPLATE_PAGE, err)
 		return err
 	}
 	return nil

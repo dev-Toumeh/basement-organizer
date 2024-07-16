@@ -43,7 +43,7 @@ func generateRegisterPage(w http.ResponseWriter, r *http.Request) {
 		User:          Username(r),
 	}
 
-	if err := templates.ApplyPageTemplate(w, templates.REGISTER_TEMPLATE_FILE_WITH_PATH, data); err != nil {
+	if err := templates.ApplyPageTemplate(w, templates.TEMPLATE_REGISTER_HTML_PATH, data); err != nil {
 		fmt.Fprintln(w, "failed")
 		return
 	}

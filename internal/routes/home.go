@@ -15,7 +15,7 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	data.Title = "home"
 	data.Authenticated = authenticated
 
-	err := templates.Render(w, templates.HOME_PAGE, data)
+	err := templates.Render(w, templates.TEMPLATE_HOME_PAGE, data)
 	if err != nil {
 		fmt.Fprintln(w, "failed")
 		return
