@@ -48,7 +48,7 @@ func apiRoutes(db *database.JsonDB) {
 	http.HandleFunc(API_V1_READ_ITEM, items.ReadItemHandler(db, func(w io.Writer, data any) {
 		fmt.Fprint(w, data)
 	}))
-	http.HandleFunc("/api/v1/update/item/id", UpdateItem)
+	http.HandleFunc("/api/v1/update/item", items.UpdateItemHandler(db))
 	http.HandleFunc("/api/v1/delete/item", DeleteItem)
 	http.HandleFunc("/api/v1/read/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
 		fmt.Fprint(w, data)

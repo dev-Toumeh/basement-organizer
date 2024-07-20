@@ -46,26 +46,15 @@ func createNewItem(w http.ResponseWriter, r *http.Request, db *database.JsonDB) 
 	var errorMessages []string
 	newItem := item(r)
 
-	if _, exist := db.ItemByLabel(newItem.Label); exist {
-		responseGenerator(
-			w,
-			[]string{"<div> the Label you have chosen is already selected</div>"},
-			false,
-		)
-	}
-
 	if valiedItem, err := validateItem(newItem, &errorMessages); err != nil {
 		responseGenerator(w, errorMessages, false)
 	} else {
-
-		fmt.Println(valiedItem)
-		if err := db.AddItem(valiedItem); err != nil {
-			responseGenerator(w, []string{"<div>we was not able to add the new Item please comeback later</div>"}, false)
+		if responseMessage, err := db.AddItem(valiedItem); err != nil {
+			responseGenerator(w, responseMessage, false)
 		} else {
-			responseGenerator(w, []string{"<div>The Item has been added successfully</div>"}, true)
+			responseGenerator(w, responseMessage, true)
 		}
 	}
-	return
 }
 
 // this function will generate a new from if the request was from type GET
@@ -193,10 +182,14 @@ func responseGenerator(w http.ResponseWriter, responseMessage []string, success 
 
 // this function will pack the request into struct from type Item, so it will be easier to handle it
 func item(r *http.Request) database.Item {
-
-	newId, _ := uuid.NewV4()
+	var id uuid.UUID
+	if updatedId, err := uuid.FromString(r.PostFormValue(ID)); err != nil {
+		id, _ = uuid.NewV4()
+	} else {
+		id = updatedId
+	}
 	newItem := database.Item{
-		Id:          newId,
+		Id:          id,
 		Label:       r.PostFormValue(LABEL),
 		Description: r.PostFormValue(DESCRIPTIO),
 		Picture:     r.PostFormValue(PICTURE),

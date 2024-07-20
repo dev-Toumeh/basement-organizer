@@ -2,6 +2,7 @@ package database
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -27,8 +28,9 @@ type DBUser2 struct {
 }
 
 const (
-	ITEMS_FILE_PATH string = "internal/database/items.json"
-	USERS_FILE_PATH string = "internal/database/users2.json"
+	ITEMS_FILE_PATH            string = "internal/database/items.json"
+	USERS_FILE_PATH            string = "internal/database/users2.json"
+	ITEM_ERROR_GENERAL_MESSAGE string = "<div>we were not able to update the item, please come back later</div>"
 )
 
 type Item struct {
@@ -119,11 +121,11 @@ func AddUser(username string, passwordHash string, db *JsonDB) error {
 		db.Users[username] = dbUser
 	}
 
-	return db.save()
+	return db.saveUser()
 }
 
 // this function is responsible of saving the new Record inside of the Database (user2.json)
-func (db *JsonDB) save() error {
+func (db *JsonDB) saveUser() error {
 
 	_, err := db.UserFile.Seek(0, io.SeekStart)
 	if err != nil {
@@ -178,17 +180,48 @@ func (db *JsonDB) ItemById(id uuid.UUID) (Item, bool) {
 	return Item{}, false
 }
 
-func (db *JsonDB) AddItem(newItem Item) error {
+// this function will add new Record to the database
+func (db *JsonDB) AddItem(newItem Item) ([]string, error) {
+	var responseMessage []string
+	if _, exist := db.ItemByLabel(newItem.Label); exist {
+		err := errors.New("the Label exist in the Database")
+		responseMessage = append(responseMessage, "<div>the Label exist in the Database please choice another label</div>")
+		return responseMessage, err
+	} else {
+		db.Items[newItem.Id] = newItem
+		if err := db.saveItem(); err != nil {
+			responseMessage = append(responseMessage, ITEM_ERROR_GENERAL_MESSAGE)
+			return responseMessage, err
+		}
+		responseMessage = append(responseMessage, "<div>The Item has been added successfully</div>")
+		return responseMessage, nil
+	}
+}
 
-	fmt.Println(newItem)
-	db.Items[newItem.Id] = newItem
+// this function will update the Item Record
+func (db *JsonDB) UpdateItem(updatedItem Item) ([]string, error) {
+	var responseMessage []string
+	if _, exist := db.ItemById(updatedItem.Id); !exist {
+		err := errors.New("the Id doesn't not exist in the Database")
+		responseMessage = append(responseMessage, ITEM_ERROR_GENERAL_MESSAGE)
+		return responseMessage, err
+	} else {
+		db.Items[updatedItem.Id] = updatedItem
+		if err := db.saveItem(); err != nil {
+			responseMessage = append(responseMessage, ITEM_ERROR_GENERAL_MESSAGE)
+			return responseMessage, err
+		}
+		responseMessage = append(responseMessage, "<div>The Item has been updated successfully</div>")
+		return responseMessage, nil
+	}
+}
 
+func (db *JsonDB) saveItem() error {
 	_, err := db.ItemFile.Seek(0, io.SeekStart)
 	if err != nil {
 		log.Printf("Error seeking to start of file: %v", err)
 		return err
 	}
-
 	encoder := json.NewEncoder(db.ItemFile)
 
 	err = encoder.Encode(db.Items)
