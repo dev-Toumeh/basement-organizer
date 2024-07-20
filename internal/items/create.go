@@ -77,7 +77,7 @@ func generateAddItemForm(w http.ResponseWriter, r *http.Request) {
 		User:          auth.Username(r),
 	}
 
-	if err := templates.ApplyPageTemplate(w, templates.TEMPLATE_CREATE_ITEM_HTML_PATH, data); err != nil {
+	if err := templates.Render(w,templates.TEMPLATE_CREATE_ITEM_PAGE, data); err != nil {
 		fmt.Fprintln(w, "failed")
 		return
 	}
@@ -193,7 +193,7 @@ func responseGenerator(w http.ResponseWriter, responseMessage []string, success 
 
 // this function will pack the request into struct from type Item, so it will be easier to handle it
 func item(r *http.Request) database.Item {
-	fmt.Println("Type of myString:")
+
 	newId, _ := uuid.NewV4()
 	newItem := database.Item{
 		Id:          newId,

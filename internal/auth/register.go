@@ -43,7 +43,7 @@ func generateRegisterPage(w http.ResponseWriter, r *http.Request) {
 		User:          Username(r),
 	}
 
-	if err := templates.ApplyPageTemplate(w, templates.TEMPLATE_REGISTER_HTML_PATH, data); err != nil {
+	if err := templates.Render(w, templates.TEMPLATE_REGISTER_PAGE, data); err != nil {
 		fmt.Fprintln(w, "failed")
 		return
 	}
@@ -65,9 +65,7 @@ func registerUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	}
 
 	//check the if the username is exist
-	_, exist := db.User(NewUsername)
-
-	if exist {
+	if _, exist := db.User(NewUsername); exist {
 		log.Printf("the user %s is already exist", NewUsername)
 		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
 		return
@@ -80,7 +78,7 @@ func registerUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
 	}
 
-	// add the new user to the Databse
+	// add the new user to the Database
 	err = database.AddUser(NewUsername, NewHashedPassword, db)
 	if err != nil {
 		fmt.Println(err)
@@ -88,8 +86,10 @@ func registerUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 		return
 	}
 
+	// https://htmx.org/headers/hx-location/
+	http.RedirectHandler("/login", http.StatusOK)
+	w.Header().Add("HX-Location", "/login")
 	log.Printf("User %s registered successfully:", NewUsername)
-	fmt.Fprintln(w, "User registered successfully")
 
 	return
 }

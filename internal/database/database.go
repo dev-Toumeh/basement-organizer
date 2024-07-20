@@ -33,11 +33,11 @@ const (
 
 type Item struct {
 	Id          uuid.UUID   `json:"id"`
-	Label       string      `json:"label"       validate:"required,lte=15"`
-	Description string      `json:"description" validate:"omitempty,lte=255"`
+	Label       string      `json:"label"       validate:"required,lte=128"`
+	Description string      `json:"description" validate:"omitempty,lte=256"`
 	Picture     string      `json:"picture"     validate:"omitempty,base64"`
-	Quantity    json.Number `json:"quantity"    validate:"omitempty,numeric,gte=1,lte=15"`
-	Weight      string      `json:"weight"      validate:"omitempty,numeric,lte=15"`
+	Quantity    json.Number `json:"quantity"    validate:"omitempty,numeric,gte=1"`
+	Weight      string      `json:"weight"      validate:"omitempty,numeric"`
 	QRcode      string      `json:"qrcode"      validate:"omitempty,alphanumunicode"`
 }
 
@@ -54,6 +54,18 @@ func CreateJsonDB() (*JsonDB, error) {
 	return &db, nil
 }
 
+func (db *JsonDB) InitFieldFromUserFile(field *JsonDB) error {
+	file, err := os.OpenFile(USERS_FILE_PATH, os.O_RDWR|os.O_CREATE, 0666)
+	db.UserFile = file
+	if err != nil {
+		log.Printf("Error opening file '%v': %v", file.Name(), err)
+		return err
+	}
+
+	_ = db.InitField(file, &field.Users)
+	return nil
+}
+
 // InitFieldFromFile reads JSON file from disk to populate field.
 // `field` must be an internal field of the database instance.
 // Example: InitFieldFromFile("file.json", &db.Items)
@@ -66,18 +78,6 @@ func (db *JsonDB) InitFieldFromItemFile(field *JsonDB) error {
 	}
 
 	_ = db.InitField(file, &field.Items)
-	return nil
-}
-
-func (db *JsonDB) InitFieldFromUserFile(field *JsonDB) error {
-	file, err := os.OpenFile(USERS_FILE_PATH, os.O_RDWR|os.O_CREATE, 0666)
-	db.UserFile = file
-	if err != nil {
-		log.Printf("Error opening file '%v': %v", file.Name(), err)
-		return err
-	}
-
-	_ = db.InitField(file, &field.Users)
 	return nil
 }
 
