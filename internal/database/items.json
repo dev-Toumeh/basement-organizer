@@ -1,1 +1,65 @@
-{"00cf13c0-da89-4844-81c7-45c5ad4c108e":{"id":"00cf13c0-da89-4844-81c7-45c5ad4c108e","label":"xycxy1","description":"this   ","picture":"","quantity":1,"weight":"10","qrcode":""},"123e4567-e89b-12d3-a456-426614174000":{"id":"123e4567-e89b-12d3-a456-426614174000","label":"Book","description":"A hardcover novel.","picture":"","quantity":1,"weight":"2","qrcode":""},"32cdf437-3841-433a-829d-5768dc5ff8d9":{"id":"32cdf437-3841-433a-829d-5768dc5ff8d9","label":"sex game","description":"this is great why to fight the sommer","picture":"","quantity":2,"weight":"2","qrcode":""},"4ebb78a3-7d5b-410d-8c79-89b55ff8db08":{"id":"4ebb78a3-7d5b-410d-8c79-89b55ff8db08","label":"xycxy","description":"this","picture":"","quantity":1,"weight":"10","qrcode":""},"b3fa7d27-aebd-4e24-909c-74129cfb5468":{"id":"b3fa7d27-aebd-4e24-909c-74129cfb5468","label":"xycxy12","description":"this   ","picture":"","quantity":1,"weight":"10","qrcode":""},"e4f57a5f-f516-4858-b73d-3d5cc1c2fe40":{"id":"e4f57a5f-f516-4858-b73d-3d5cc1c2fe40","label":"xycxy","description":"this","picture":"","quantity":1,"weight":"10","qrcode":""}}
+{
+  "00cf13c0-da89-4844-81c7-45c5ad4c108e": {
+    "id": "00cf13c0-da89-4844-81c7-45c5ad4c108e",
+    "label": "xycxy1",
+    "description": "this   ",
+    "picture": "",
+    "quantity": 1,
+    "weight": "10",
+    "qrcode": ""
+  },
+  "123e4567-e89b-12d3-a456-426614174000": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "label": "Book",
+    "description": "A hardcover novel.",
+    "picture": "",
+    "quantity": 1,
+    "weight": "2",
+    "qrcode": ""
+  },
+  "32cdf437-3841-433a-829d-5768dc5ff8d9": {
+    "id": "32cdf437-3841-433a-829d-5768dc5ff8d9",
+    "label": "sex game",
+    "description": "this is great why to fight the sommer",
+    "picture": "",
+    "quantity": 2,
+    "weight": "2",
+    "qrcode": ""
+  },
+  "4ebb78a3-7d5b-410d-8c79-89b55ff8db08": {
+    "id": "4ebb78a3-7d5b-410d-8c79-89b55ff8db08",
+    "label": "xycxy",
+    "description": "this",
+    "picture": "",
+    "quantity": 1,
+    "weight": "10",
+    "qrcode": ""
+  },
+  "b124316c-063d-4d4b-b7e4-0ffc33e50fab": {
+    "id": "b124316c-063d-4d4b-b7e4-0ffc33e50fab",
+    "label": "hi from",
+    "description": "this is another items to check if things works will",
+    "picture": "",
+    "quantity": 2,
+    "weight": "12",
+    "qrcode": ""
+  },
+  "b3fa7d27-aebd-4e24-909c-74129cfb5468": {
+    "id": "b3fa7d27-aebd-4e24-909c-74129cfb5468",
+    "label": "xycxy12",
+    "description": "this   ",
+    "picture": "",
+    "quantity": 1,
+    "weight": "10",
+    "qrcode": ""
+  },
+  "e4f57a5f-f516-4858-b73d-3d5cc1c2fe40": {
+    "id": "e4f57a5f-f516-4858-b73d-3d5cc1c2fe40",
+    "label": "xycxy",
+    "description": "this",
+    "picture": "",
+    "quantity": 1,
+    "weight": "10",
+    "qrcode": ""
+  }
+}
