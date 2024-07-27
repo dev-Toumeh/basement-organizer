@@ -42,6 +42,8 @@ const (
 	TEMPLATE_LOGIN_HTML_PATH         string = "internal/templates/auth/login.html"
 	TEMPLATE_LOGIN_PAGE              string = "login-page"
 	TEMPLATE_LOGIN_PAGE_PATH         string = "internal/templates/auth/login.html"
+	TEMPLATE_OOB_SNACKBAR            string = "oob-snackbar"
+	TEMPLATE_OOB_SNACKBAR_PATH       string = "internal/templates/page.html"
 	TEMPLATE_OPEN_HTML_TAG           string = "open-html-tag"
 	TEMPLATE_OPEN_HTML_TAG_PATH      string = "internal/templates/page.html"
 	TEMPLATE_PAGE                    string = "page"

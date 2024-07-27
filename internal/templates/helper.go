@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -110,6 +111,41 @@ func Render(w io.Writer, name string, data any) error {
 	}
 	return nil
 }
+
+// RenderErrorSnackbar shows a brief error notification.
+func RenderErrorSnackbar(w io.Writer, message string) error {
+	data := NewErrorOobSnackbarData(message)
+	err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_SNACKBAR, data)
+	if err != nil {
+		log.Println(err)
+		fmt.Fprintln(w, err)
+		return err
+	}
+	return nil
+}
+
+type oobSnackbarData struct {
+	Message    string
+	SnackbarId int
+	Duration   int
+	Type       snackbarType
+}
+
+// NewErrorOobSnackbarData creates oobSnackbarData for error snackbar with default values.
+//
+// Defaut Duration = 2000 // 2 seconds
+func NewErrorOobSnackbarData(message string) oobSnackbarData {
+	return oobSnackbarData{
+		Message:    message,
+		SnackbarId: rand.Int(),
+		Duration:   2000,
+		Type:       errorSnackbar,
+	}
+}
+
+type snackbarType string
+
+const errorSnackbar snackbarType = "error"
 
 /*
 RedefineTemplateDefinition redefines "targetDefinitionName" template in "tmpl" by using the new definition from "definitionTemplate".

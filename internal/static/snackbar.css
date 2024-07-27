@@ -1,0 +1,65 @@
+div.snackbar-container {
+    position: absolute;
+    transition: opacity 0.2s;
+    width: 33%;
+    margin-left: auto;
+    right: 1em;
+}
+
+div.snackbar {
+    min-width: 50%;
+    text-align: center;
+    background-color: #3a6fff;
+    color: #fff;
+    border-radius: 2px;
+    padding: 0.5em;
+    position: relative;
+    z-index: 1;
+    transition: opacity 0.2s ease;
+    opacity: 0;
+    margin-bottom: 0.5em;
+
+    /* for animation */
+    /*visibility: hidden; /* Hidden by default. Visible on click */*/
+}
+
+div.snackbar.error {
+    background-color: red;
+    color: #fff;
+}
+
+div.snackbar.noshow {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+div.snackbar.show {
+    opacity: 1;
+    transition: opacity 0.2s ease;
+
+    /* for animation */
+    /*visibility: visible;*/
+    /*-webkit-animation: fadein 0.2s, fadeout 0.2s 2s;*/
+    /*animation: fadein 0.2s, fadeout 0.2s 2s;*/
+}
+
+/* Animations to fade the snackbar in and out */
+@-webkit-keyframes fadein {
+from {bottom: 0; opacity: 0;}
+to {bottom: 30px; opacity: 1;}
+}
+
+@keyframes fadein {
+from {bottom: 0; opacity: 0;}
+to {bottom: 30px; opacity: 1;}
+}
+
+@-webkit-keyframes fadeout {
+from {bottom: 30px; opacity: 1;}
+to {bottom: 0; opacity: 0;}
+}
+
+@keyframes fadeout {
+from {bottom: 30px; opacity: 1;}
+to {bottom: 0; opacity: 0;}
+}

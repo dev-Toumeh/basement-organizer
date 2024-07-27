@@ -2,8 +2,10 @@ package items
 
 import (
 	"basement/main/internal/database"
+	"basement/main/internal/templates"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/gofrs/uuid/v5"
@@ -32,8 +34,15 @@ func ReadItemHandler(db *database.JsonDB, responseWriter ResponseWriter) http.Ha
 				id = r.PathValue("id")
 			}
 
-			Id := uuid.Must(uuid.FromString(id))
+			Id, err := uuid.FromString(id)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				templates.RenderErrorSnackbar(w, err.Error())
+				log.Println("ReadItemHandler error:", err)
+				return
+			}
 			data := db.Items[Id]
+			log.Println(data)
 			responseWriter(w, data)
 			return
 		}
