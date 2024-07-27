@@ -1,73 +1,82 @@
-{{ define "page" }} {{ template "open-html-tag" . }} {{ template "head" . }}
+{{ define "page" }}
+{{ template "open-html-tag" . }} 
+{{ template "head" . }}
 <body>
-  {{ template "statusbar" . }} {{ block "body" . }}{{end}}
+    {{ template "statusbar" . }} {{ block "body" . }}{{end}}
 </body>
-{{ template "script" . }} {{ template "close-html-tag" . }} {{end}} {{ define
-"open-html-tag" }}
-<html lang="en">
-  {{ end }} {{ define "close-html-tag" }}
-</html>
-{{ end }} {{ define "script" }}
-<script src="static/custom-functions.js"></script>
-{{end}} {{ define "head" }}
+{{ template "script" . }}
+{{ template "close-html-tag" . }}
+{{end}} 
+
+{{ define "open-html-tag" }}<html lang="en">{{ end }}
+{{ define "close-html-tag" }}</html>{{ end }}
+
+{{ define "script" }}<script src="static/custom-functions.js"></script>{{end}}
+
+{{ define "head" }}
 <head>
-  <title>{{ with .Title}}{{.}}{{else}}no title{{end}}</title>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- @TODO: Replace external source with internal static -->
-  <script
-    src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.js"
-    integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS"
-    crossorigin="anonymous"
-  ></script>
-  <link rel="stylesheet" href="static/layout.css" />
-  <link rel="manifest" href="static/manifest.json" />
-  <link
-    rel="icon"
-    href="static/basement-organizer-icon512.png"
-    type="image/png"
-  />
-  {{ block "head-extras" . }}{{end}} {{ block "style" . }}{{end}}
+    <title>{{ with .Title}}{{.}}{{else}}no title{{end}}</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- @TODO: Replace external source with internal static -->
+    <script
+        src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.js"
+        integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS"
+        crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" href="static/layout.css" />
+    <link rel="manifest" href="static/manifest.json" />
+    <link
+        rel="icon"
+        href="static/basement-organizer-icon512.png"
+        type="image/png"
+    />
+    {{ block "head-extras" . }}{{end}}
+    {{ block "style" . }}{{end}}
 </head>
-{{ end }} {{ define "default-style" }}<style></style>{{end}} {{ define
-"statusbar" }}
+{{ end }}
+
+{{ define "default-style" }}<style></style>{{end}} 
+
+{{ define "statusbar" }}
 <div class="status-bar">
-  <!-- hx-boost upgrades all a tags to use hx-get and reposnses target the body-->
-  <div hx-boost="true" hx-push-url="true">
-    <nav>
-      <a id="home" href="/">Home</a>
-      {{with .Authenticated }}
-      <a id="personal-page" href="/personal-page">Personal Page</a>
-      {{end}}
-      <a id="sample-page" href="/sample-page" hx-swap="innerHTML show:html:top"
-        >Sample Page</a
-      >
-      {{ with .Debug }}
-      <button
-        hx-boost="false"
-        hx-get="/switch-debug-style"
-        hx-target="style"
-        hx-push-url="false"
-      >
-        Switch Debug Style
-      </button>
-      {{ end }}
-    </nav>
-  </div>
-  <div id="authentication-status">
-    {{with .Authenticated }}
-    <label id="auth-label">logged in</label>
-    <button
-      id="logout-btn"
-      type="button"
-      hx-get="/logout"
-      hx-target="#auth-label"
-    >
-      Logout
-    </button>
-    {{else}}
-    <label id="auth-label">logged out</label>
-    {{end}}
-  </div>
+    <!-- hx-boost upgrades all a tags to use hx-get and reposnses target the body-->
+    <div hx-boost="true" hx-push-url="true">
+        <nav>
+            <a id="home" href="/">Home</a>
+            {{with .Authenticated }}
+            <a id="personal-page" href="/personal-page">Personal Page</a>
+            {{end}}
+            <a id="sample-page" 
+                href="/sample-page" 
+                hx-swap="innerHTML show:html:top"
+            >Sample Page</a>
+            {{ with .Debug }}
+            <button
+                hx-boost="false"
+                hx-get="/switch-debug-style"
+                hx-target="style"
+                hx-push-url="false"
+            >
+                Switch Debug Style
+            </button>
+            {{ end }}
+        </nav>
+    </div>
+    <div id="authentication-status">
+        {{with .Authenticated }}
+            <label id="auth-label">logged in</label>
+            <button
+                id="logout-btn"
+                type="button"
+                hx-get="/logout"
+                hx-target="#auth-label"
+            >
+                Logout
+            </button>
+        {{else}}
+            <label id="auth-label">logged out</label>
+        {{end}}
+    </div>
 </div>
 {{end}}

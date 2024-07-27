@@ -33,10 +33,7 @@ Hello {{ with .User }}{{ . }}{{ end }}, how is things going? </br>
     hx-target="#item-container">
     <label for="id">Search ID</label>
     <input type="text" name="id">
-    <button 
-        type="submit"
-        
-    >Get</button>
+    <button type="submit">Get</button>
 </form>
 
 <form 
@@ -45,10 +42,7 @@ Hello {{ with .User }}{{ . }}{{ end }}, how is things going? </br>
     hx-target="#item-container">
     <label for="id">Search Query</label>
     <input type="text" name="query" value="id">
-    <button 
-        type="submit"
-        
-    >Get</button>
+    <button type="submit">Get</button>
 </form>
 <div id="item-container"></div>
 {{end}}
