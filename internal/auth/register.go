@@ -3,6 +3,8 @@ package auth
 import (
 	"basement/main/internal/database"
 	"basement/main/internal/templates"
+	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -25,7 +27,7 @@ var (
 
 // this function will check the type of the request
 // if it is from type post it will register the user otherwise it will generate the register template
-func RegisterHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.Request) {
+func RegisterHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			registerUser(w, r, db)
@@ -49,7 +51,7 @@ func generateRegisterPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func registerUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
+func registerUser(w http.ResponseWriter, r *http.Request, db *database.DB) {
 	NewUsername := r.PostFormValue(USERNAME)
 	NewPassword := r.PostFormValue(PASSWORD)
 
@@ -63,33 +65,25 @@ func registerUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
 		return
 	}
-
-	//check the if the username is exist
-	if _, exist := db.User(NewUsername); exist {
-		log.Printf("the user %s is already exist", NewUsername)
-		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
-		return
-	}
-
-	// hash the password
 	NewHashedPassword, err := hashPassword(NewPassword)
 	if err != nil {
 		log.Fatal(err)
 		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
 	}
 
-	// add the new user to the Database
-	err = database.AddUser(NewUsername, NewHashedPassword, db)
-	if err != nil {
-		fmt.Println(err)
-		fmt.Fprintln(w, REGISTER_FAILED_MESSAGE)
+	ctx := context.TODO() // i don't now which kind of context we need to use so i keep it todo for now
+	if err := db.CreateNewUser(ctx, NewUsername, NewHashedPassword); err != nil {
+		if err == sql.ErrNoRows {
+			templates.Render(w, templates.TEMPLATE_REGISTER_PAGE, "")
+		} else {
+			templates.Render(w, "404.html", "")
+		}
+	} else {
+		// https://htmx.org/headers/hx-location/
+		http.RedirectHandler("/login-form", http.StatusOK)
+		w.Header().Add("HX-Location", "/login")
+		log.Printf("User %s registered successfully:", NewUsername)
+
 		return
 	}
-
-	// https://htmx.org/headers/hx-location/
-	http.RedirectHandler("/login", http.StatusOK)
-	w.Header().Add("HX-Location", "/login")
-	log.Printf("User %s registered successfully:", NewUsername)
-
-	return
 }

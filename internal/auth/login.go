@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,17 +14,17 @@ const (
 	LOGIN_FAILED_MESSAGE string = "Login failed"
 )
 
-func LoginHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.Request) {
+func LoginHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			loginUser(w, r, db)
 		}
 		if r.Method == http.MethodGet {
-			loginPage(w, r, db)
+			loginPage(w, r)
 		}
 	}
 }
-func loginUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
+func loginUser(w http.ResponseWriter, r *http.Request, db *database.DB) {
 	authenticated, ok := Authenticated(r)
 
 	if ok {
@@ -49,8 +50,8 @@ func loginUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
 		return
 	}
-
-	user, _ := db.User(username)
+	ctx := context.TODO()
+	user, _ := db.User(ctx, username)
 
 	if !checkPasswordHash(password, user.PasswordHash) {
 		log.Println("pw hash doesnt match")
@@ -68,7 +69,7 @@ func loginUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	fmt.Fprintf(w, "Welcome %v\n", username)
 }
 
-func loginPage(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
+func loginPage(w http.ResponseWriter, r *http.Request) {
 	authenticated, _ := Authenticated(r)
 	data := templates.NewPageTemplate()
 	data.Title = "login"
