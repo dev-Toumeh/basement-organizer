@@ -8,8 +8,6 @@ package templates
 const (
 	TEMPLATE_ATEST_STYLE             string = "atest-style"
 	TEMPLATE_ATEST_STYLE_PATH        string = "internal/templates/sample-page.html"
-	TEMPLATE_BODY                    string = "body"
-	TEMPLATE_BODY_PATH               string = "internal/templates/personal-page.html"
 	TEMPLATE_CLOSE_HTML_TAG          string = "close-html-tag"
 	TEMPLATE_CLOSE_HTML_TAG_PATH     string = "internal/templates/page.html"
 	TEMPLATE_CREATE_ITEM_FORM        string = "create_item_form"

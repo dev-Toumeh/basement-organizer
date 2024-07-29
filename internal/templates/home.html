@@ -1,33 +1,3 @@
-<!--Used with ApplyPageTemplate() function to redefine "body" template inside "page.html" template-->
-{{ define "body" }}
-<div>Welcome to {{ with .Title }}{{ . }}{{end}} page </div>
-
-{{ with .Authenticated }}
-You are logged in
-{{ else }}
-<button
-    id="login-btn"
-    type="button"
-    hx-get="/login" 
-    hx-swap="outerHTML" 
-    hx-target="body" 
-    hx-push-url="true"
->Login</button>
-<label for="#login-btn"></label>
-
-<button
-    id="register-btn"
-    type="button"
-    hx-get="/register" 
-    hx-swap="outerHTML" 
-    hx-target="body" 
-    hx-push-url="true"
->Register</button>
-<label for="#register-btn"></label>
-{{end}}
-
-{{end}}
-
 {{ define "home-page" }}
 {{ template "open-html-tag" .}}
 {{ template "head" . }}
