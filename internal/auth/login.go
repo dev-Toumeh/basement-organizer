@@ -2,10 +2,10 @@ package auth
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"basement/main/internal/database"
+	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 )
 
@@ -28,7 +28,7 @@ func loginUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 
 	if ok {
 		if authenticated {
-			log.Printf("LoginHandler - ok: %v authenticated: %v", ok, authenticated)
+			logg.Debugf("LoginHandler - ok: %v authenticated: %v", ok, authenticated)
 			fmt.Fprint(w, "already logged in")
 			return
 		}
@@ -37,16 +37,16 @@ func loginUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-	log.Printf("%v %v ", r.URL, r.Form.Encode())
+	logg.Debugf("%v %v ", r.URL, r.Form.Encode())
 
 	if username == "" {
-		log.Println("Missing username")
+		logg.Err("Missing username")
 		w.WriteHeader(http.StatusBadRequest)
 		templates.RenderErrorSnackbar(w, LOGIN_FAILED_MESSAGE)
 		return
 	}
 	if password == "" {
-		log.Println("Missing password")
+		logg.Err("Missing password")
 		w.WriteHeader(http.StatusBadRequest)
 		templates.RenderErrorSnackbar(w, LOGIN_FAILED_MESSAGE)
 		return
@@ -55,7 +55,7 @@ func loginUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	user, _ := db.User(username)
 
 	if !checkPasswordHash(password, user.PasswordHash) {
-		log.Println("pw hash doesnt match")
+		logg.Err("pw hash doesnt match")
 		w.WriteHeader(http.StatusBadRequest)
 		templates.RenderErrorSnackbar(w, LOGIN_FAILED_MESSAGE)
 		return
@@ -64,7 +64,7 @@ func loginUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	saveSession(w, r)
 
 	log.Println("login successful")
-	http.RedirectHandler("/personal-page", http.StatusOK)
+	logg.Info("login successful")
 
 	// https://htmx.org/headers/hx-location/
 	w.Header().Add("HX-Location", "/personal-page")
@@ -80,7 +80,7 @@ func loginPage(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	err := templates.Render(w, templates.TEMPLATE_LOGIN_PAGE, data)
 	if err != nil {
 		templates.RenderErrorSnackbar(w, err.Error())
-		log.Println("loginPage error:", err)
+		logg.Err(err)
 		return
 	}
 }
@@ -118,7 +118,7 @@ func Username(r *http.Request) string {
 	session, _ := store.Get(r, COOKIE_NAME)
 	usernmae, ok := session.Values["username"].(string)
 	if !ok {
-		log.Println("Username not found in session or not a string")
+		logg.Err("Username not found in session or not a string")
 		return ""
 	}
 	return usernmae
