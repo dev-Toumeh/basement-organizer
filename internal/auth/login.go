@@ -41,12 +41,14 @@ func loginUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 
 	if username == "" {
 		log.Println("Missing username")
-		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
+		w.WriteHeader(http.StatusBadRequest)
+		templates.RenderErrorSnackbar(w, LOGIN_FAILED_MESSAGE)
 		return
 	}
 	if password == "" {
 		log.Println("Missing password")
-		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
+		w.WriteHeader(http.StatusBadRequest)
+		templates.RenderErrorSnackbar(w, LOGIN_FAILED_MESSAGE)
 		return
 	}
 
@@ -54,7 +56,8 @@ func loginUser(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 
 	if !checkPasswordHash(password, user.PasswordHash) {
 		log.Println("pw hash doesnt match")
-		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
+		w.WriteHeader(http.StatusBadRequest)
+		templates.RenderErrorSnackbar(w, LOGIN_FAILED_MESSAGE)
 		return
 	}
 
@@ -76,7 +79,8 @@ func loginPage(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 
 	err := templates.Render(w, templates.TEMPLATE_LOGIN_PAGE, data)
 	if err != nil {
-		fmt.Fprintln(w, "failed")
+		templates.RenderErrorSnackbar(w, err.Error())
+		log.Println("loginPage error:", err)
 		return
 	}
 }

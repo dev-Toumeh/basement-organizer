@@ -11,7 +11,8 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	authenticated, ok := session.Values["authenticated"].(bool)
 	if !ok || !authenticated {
 		log.Printf("LogloutHandler - ok: %v authenticated: %v", ok, authenticated)
-		fmt.Fprint(w, "logout failed")
+		w.WriteHeader(http.StatusBadRequest)
+		templates.RenderErrorSnackbar(w, "logout failed")
 		return
 	}
 	session.Values["authenticated"] = false
@@ -19,6 +20,6 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("LogoutHandler logged out")
 
 	w.Header().Add("HX-Location", "/")
-	w.WriteHeader(204)
+	w.WriteHeader(http.StatusNoContent)
 	fmt.Fprint(w, "logged out")
 }
