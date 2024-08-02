@@ -33,16 +33,6 @@ const (
 	ITEM_ERROR_GENERAL_MESSAGE string = "<div>we were not able to update the item, please come back later</div>"
 )
 
-type Item struct {
-	Id          uuid.UUID   `json:"id"`
-	Label       string      `json:"label"       validate:"required,lte=128"`
-	Description string      `json:"description" validate:"omitempty,lte=256"`
-	Picture     string      `json:"picture"     validate:"omitempty,base64"`
-	Quantity    json.Number `json:"quantity"    validate:"omitempty,numeric,gte=1"`
-	Weight      string      `json:"weight"      validate:"omitempty,numeric"`
-	QRcode      string      `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-}
-
 // CreateJsonDB an object from a JSON file to be used as simple storage
 func CreateJsonDB() (*JsonDB, error) {
 	db := JsonDB{}
@@ -98,6 +88,7 @@ func (db *JsonDB) InitField(data io.Reader, field any) error {
 	return nil
 }
 
+// deprecated
 // User retrieves a DBUser2 from the JsonDB by username.
 // If the user is found, it logs the user details and returns the user.
 // If the user is not found, it returns an empty DBUser2 struct.
@@ -110,6 +101,7 @@ func (db *JsonDB) User(username string) (DBUser2, bool) {
 	return DBUser2{}, false
 }
 
+// deprecated
 // this function will check if there is existing user withe same name and if not it will
 // create new one at the end it will save it
 func AddUser(username string, passwordHash string, db *JsonDB) error {
@@ -124,6 +116,7 @@ func AddUser(username string, passwordHash string, db *JsonDB) error {
 	return db.saveUser()
 }
 
+// deprecated
 // this function is responsible of saving the new Record inside of the Database (user2.json)
 func (db *JsonDB) saveUser() error {
 

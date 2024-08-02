@@ -1,11 +1,12 @@
 package items
 
 import (
-	"encoding/json"
+	"context"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -31,7 +32,7 @@ var validate *validator.Validate
 
 // this function will check the type of the request
 // if it is from type post it will create the item otherwise it will generate the  create title  template
-func CreateItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.Request) {
+func CreateItemHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			createNewItem(w, r, db)
@@ -41,17 +42,25 @@ func CreateItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.
 	}
 }
 
-func createNewItem(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
+func createNewItem(w http.ResponseWriter, r *http.Request, db *database.DB) {
 
-	var errorMessages []string
+	var responseMessage []string
 	newItem := item(r)
 
-	if valiedItem, err := validateItem(newItem, &errorMessages); err != nil {
-		responseGenerator(w, errorMessages, false)
+	if valiedItem, err := validateItem(newItem, &responseMessage); err != nil {
+		responseGenerator(w, responseMessage, false)
 	} else {
-		if responseMessage, err := db.AddItem(valiedItem); err != nil {
-			responseGenerator(w, responseMessage, false)
+		ctx := context.TODO()
+		if err := db.CreateNewItem(ctx, valiedItem); err != nil {
+			if err == database.ErrExist {
+				responseMessage = append(responseMessage, "the Label is already token please choice another one")
+				responseGenerator(w, responseMessage, false)
+			} else {
+				responseMessage = append(responseMessage, "Unable to add new item due to technical issues. Please try again later.")
+				responseGenerator(w, responseMessage, false)
+			}
 		} else {
+			responseMessage = append(responseMessage, "your Item was added successfully")
 			responseGenerator(w, responseMessage, true)
 		}
 	}
@@ -193,9 +202,18 @@ func item(r *http.Request) database.Item {
 		Label:       r.PostFormValue(LABEL),
 		Description: r.PostFormValue(DESCRIPTIO),
 		Picture:     r.PostFormValue(PICTURE),
-		Quantity:    json.Number(r.PostFormValue(QUANTITY)),
+		Quantity:    stringToInt64(r.PostFormValue(QUANTITY)),
 		Weight:      r.PostFormValue(WEIGHT),
 		QRcode:      r.PostFormValue(QRCODE),
 	}
 	return newItem
+}
+
+func stringToInt64(value string) int64 {
+	intValue, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		log.Printf("Error converting string to int64: %v", err)
+		return 0
+	}
+	return intValue
 }

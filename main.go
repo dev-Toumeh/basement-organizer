@@ -9,13 +9,16 @@ import (
 )
 
 func main() {
-	var db *database.JsonDB
-	var err error
 
-	db, err = database.CreateJsonDB()
+	db := &database.DB{}
+
+	err := db.Connect()
 	if err != nil {
 		log.Fatalf("Can't create DB, shutting server down")
 	}
+	defer db.Sql.Close()
+	//  db.PrintItemRecords()
+
 	routes.RegisterRoutes(db)
 	templates.InitTemplates()
 

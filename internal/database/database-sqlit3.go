@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"os"
 
@@ -15,6 +16,8 @@ const (
                             description TEXT, picture TEXT, quantity INTEGER, weight TEXT, qrcode TEXT);`
 	DATABASE_FILE_PATH = "./internal/database/sqlite-database.db"
 )
+
+var ErrExist = errors.New("exist")
 
 // add statement to create new table
 var statements = &map[string]string{
