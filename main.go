@@ -17,7 +17,6 @@ func main() {
 		log.Fatalf("Can't create DB, shutting server down")
 	}
 	defer db.Sql.Close()
-	//  db.PrintItemRecords()
 
 	routes.RegisterRoutes(db)
 	templates.InitTemplates()

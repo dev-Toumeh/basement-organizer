@@ -17,7 +17,7 @@ const (
 	DATABASE_FILE_PATH = "./internal/database/sqlite-database.db"
 )
 
-var ErrExist = errors.New("exist")
+var ErrExist = errors.New("the Record is already exist")
 
 // add statement to create new table
 var statements = &map[string]string{
@@ -26,9 +26,7 @@ var statements = &map[string]string{
 }
 
 type DB struct {
-	Sql   *sql.DB
-	Users []User
-	Items []Item
+	Sql *sql.DB
 }
 
 // create the Database file if it was not exist and establish the connection with it
@@ -78,5 +76,6 @@ func (db *DB) createTable() {
 			log.Printf("Table '%s' created successfully", tableName)
 		}
 	}
-	// If the table already exists, the function will exit silently
+
+	log.Printf("Database Connection established")
 }

@@ -58,6 +58,35 @@ func (db *DB) ItemByField(ctx context.Context, field string, value string) (Item
 	return item, ErrExist
 }
 
+func (db *DB) ItemIDs() ([]string, error) {
+	query := "SELECT id FROM item;"
+	rows, err := db.Sql.Query(query)
+	if err != nil {
+		log.Printf("Error querying item records: %v", err)
+		return []string{}, err
+	}
+	defer rows.Close()
+
+	var ids []string
+	for rows.Next() {
+		var idStr string
+		err := rows.Scan(&idStr)
+		if err != nil {
+			log.Printf("Error scanning item record: %v", err)
+			continue
+		}
+		ids = append(ids, idStr)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("Error during rows iteration: %v", err)
+	}
+
+	// Print all IDs
+	fmt.Println(ids)
+	return ids, nil
+}
+
 // here we run the insert new Item query separate from the public function
 // it make the code more readable
 func (db *DB) insertNewItem(ctx context.Context, item Item) error {
@@ -78,4 +107,67 @@ func (db *DB) insertNewItem(ctx context.Context, item Item) error {
 		return errors.New("item not added")
 	}
 	return nil
+}
+
+func (db *DB) Items() ([][]string, error) {
+	query := "SELECT id, label, description, picture, quantity, weight, qrcode FROM item;"
+	rows, err := db.Sql.Query(query)
+	if err != nil {
+		log.Printf("Error querying user records: %v", err)
+		return [][]string{}, err
+	}
+	defer rows.Close()
+
+	var items [][]string
+	for rows.Next() {
+		var item Item
+		var idStr string
+		err := rows.Scan(&idStr, &item.Label, &item.Description, &item.Picture, &item.Quantity, &item.Weight, &item.QRcode)
+		if err != nil {
+			log.Printf("Error scanning item record: %v", err)
+			return [][]string{}, err
+		}
+
+		formatted := fmt.Sprintf("id: %s, label: %s, description: %s, picture: %s, quantity: %d, weight: %s, qrcode: %s \n",
+			idStr, item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode)
+		items = append(items, []string{formatted})
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("Error during rows iteration: %v", err)
+	}
+	return items, nil
+}
+
+// this is dynamic function but not ready
+// am not really convinced from repeating the process every time i want to retrieve the data,
+func (db *DB) ItemExperement(query string, refs []interface{}) {
+	rows, err := db.Sql.Query(query)
+	if err != nil {
+		log.Printf("Error querying user records: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	var results [][]interface{}
+
+	for rows.Next() {
+		err := rows.Scan(refs...)
+		if err != nil {
+			log.Printf("Error scanning item: %v", err)
+			continue
+		}
+
+		// Copy the data from refs to a new slice to store the results
+		row := make([]interface{}, len(refs))
+		for i, ref := range refs {
+			row[i] = *ref.(*interface{})
+		}
+		results = append(results, row)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("Error during rows iteration: %v", err)
+	}
+	fmt.Print(results)
 }
