@@ -1,16 +1,18 @@
-<!doctype html>
-<html>
-  <head>
-    <title></title>
-  </head>
-  <body>
-    {{ define "register-page" }} {{ template "open-html-tag" . }} {{ template
-    "head" . }} {{ template "statusbar" . }} {{ template "register-form" . }}{{
-    template "script" . }} {{ template "close-html-tag" . }} {{end}} {{define
-    "register-form"}}
+    {{ define "register-page" }}
+      {{ template "open-html-tag" . }}
+      {{ template "head" . }}
+      <body>
+          {{ template "statusbar" . }}
+          {{ template "register-form" . }}
+      </body>
+      {{ template "script" . }}
+      {{ template "close-html-tag" . }}
+    {{end}}
+
+    {{define "register-form"}}
     <form hx-post="register" id="form" name="form">
       <label for="username">Username:</label>
-      <input type="text" id="username" name="username" required="" /><br />
+      <input type="text" id="username" name="username" required="" /><br/>
       <label for="password">Password:</label>
       <input 
         type="password"
@@ -18,7 +20,7 @@
         name="password"
         required=""
       />
-      <br />
+      <br/>
       <label for="password-confirm">Confirm Password:</label>
       <input
         type="password"
@@ -30,5 +32,3 @@
       <button type="submit">Register</button>
     </form>
     {{end}}
-  </body>
-</html>
