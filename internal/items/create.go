@@ -1,11 +1,12 @@
 package items
 
 import (
-	"encoding/json"
+	"context"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -31,7 +32,7 @@ var validate *validator.Validate
 
 // this function will check the type of the request
 // if it is from type post it will create the item otherwise it will generate the  create title  template
-func CreateItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.Request) {
+func CreateItemHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			createNewItem(w, r, db)
@@ -41,31 +42,28 @@ func CreateItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.
 	}
 }
 
-func createNewItem(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
+func createNewItem(w http.ResponseWriter, r *http.Request, db *database.DB) {
 
-	var errorMessages []string
+	var responseMessage []string
 	newItem := item(r)
 
-	if _, exist := db.ItemByLabel(newItem.Label); exist {
-		responseGenerator(
-			w,
-			[]string{"<div> the Label you have chosen is already selected</div>"},
-			false,
-		)
-	}
-
-	if valiedItem, err := validateItem(newItem, &errorMessages); err != nil {
-		responseGenerator(w, errorMessages, false)
+	if valiedItem, err := validateItem(newItem, &responseMessage); err != nil {
+		responseGenerator(w, responseMessage, false)
 	} else {
-
-		fmt.Println(valiedItem)
-		if err := db.AddItem(valiedItem); err != nil {
-			responseGenerator(w, []string{"<div>we was not able to add the new Item please comeback later</div>"}, false)
+		ctx := context.TODO()
+		if err := db.CreateNewItem(ctx, valiedItem); err != nil {
+			if err == database.ErrExist {
+				responseMessage = append(responseMessage, "the Label is already token please choice another one")
+				responseGenerator(w, responseMessage, false)
+			} else {
+				responseMessage = append(responseMessage, "Unable to add new item due to technical issues. Please try again later.")
+				responseGenerator(w, responseMessage, false)
+			}
 		} else {
-			responseGenerator(w, []string{"<div>The Item has been added successfully</div>"}, true)
+			responseMessage = append(responseMessage, "your Item was added successfully")
+			responseGenerator(w, responseMessage, true)
 		}
 	}
-	return
 }
 
 // this function will generate a new from if the request was from type GET
@@ -193,16 +191,29 @@ func responseGenerator(w http.ResponseWriter, responseMessage []string, success 
 
 // this function will pack the request into struct from type Item, so it will be easier to handle it
 func item(r *http.Request) database.Item {
-
-	newId, _ := uuid.NewV4()
+	var id uuid.UUID
+	if updatedId, err := uuid.FromString(r.PostFormValue(ID)); err != nil {
+		id, _ = uuid.NewV4()
+	} else {
+		id = updatedId
+	}
 	newItem := database.Item{
-		Id:          newId,
+		Id:          id,
 		Label:       r.PostFormValue(LABEL),
 		Description: r.PostFormValue(DESCRIPTIO),
 		Picture:     r.PostFormValue(PICTURE),
-		Quantity:    json.Number(r.PostFormValue(QUANTITY)),
+		Quantity:    stringToInt64(r.PostFormValue(QUANTITY)),
 		Weight:      r.PostFormValue(WEIGHT),
 		QRcode:      r.PostFormValue(QRCODE),
 	}
 	return newItem
+}
+
+func stringToInt64(value string) int64 {
+	intValue, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		log.Printf("Error converting string to int64: %v", err)
+		return 0
+	}
+	return intValue
 }

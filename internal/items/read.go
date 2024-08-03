@@ -3,12 +3,10 @@ package items
 import (
 	"basement/main/internal/database"
 	"basement/main/internal/templates"
+	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
-
-	"github.com/gofrs/uuid/v5"
 )
 
 // ResponseWriter should implement a function to write a template response or normal response.
@@ -26,7 +24,7 @@ type ResponseWriter func(w io.Writer, data any)
 // ReadItemHandler returns a single item.
 //
 // Accepts "/item?id=" and "/item/id"
-func ReadItemHandler(db *database.JsonDB, responseWriter ResponseWriter) http.HandlerFunc {
+func ReadItemHandler(db *database.DB, responseWriter ResponseWriter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			id := r.FormValue("id")
@@ -34,15 +32,12 @@ func ReadItemHandler(db *database.JsonDB, responseWriter ResponseWriter) http.Ha
 				id = r.PathValue("id")
 			}
 
-			Id, err := uuid.FromString(id)
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
+			ctx := context.TODO()
+			data, err := db.ItemByField(ctx, "id", id)
+			if err != nil && err != database.ErrExist {
+				w.WriteHeader(http.StatusInternalServerError)
 				templates.RenderErrorSnackbar(w, err.Error())
-				log.Println("ReadItemHandler error:", err)
-				return
 			}
-			data := db.Items[Id]
-			log.Println(data)
 			responseWriter(w, data)
 			return
 		}
@@ -60,17 +55,25 @@ func ReadItemHandler(db *database.JsonDB, responseWriter ResponseWriter) http.Ha
 //	id := uuid.must(uuid.fromstring(r.FormValue("query")),)
 //
 // Accepts "/items?query=id" to only return item IDs.
-func ReadItemsHandler(db *database.JsonDB, responseWriter ResponseWriter) http.HandlerFunc {
+func ReadItemsHandler(db *database.DB, responseWriter ResponseWriter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			id := r.FormValue("query")
 			switch id {
 			// return all item IDs
 			case "id":
-				responseWriter(w, Keys(db.Items))
+				ids, err := db.ItemIDs()
+				if err != nil {
+					fmt.Fprintln(w, "something wrong happened please comeback later")
+				}
+				responseWriter(w, ids)
 			// return all items
 			default:
-				responseWriter(w, db.Items)
+				ids, err := db.ItemIDs()
+				if err != nil {
+					fmt.Fprintln(w, "something wrong happened please comeback later")
+				}
+				responseWriter(w, ids)
 			}
 			return
 		}
