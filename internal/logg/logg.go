@@ -7,7 +7,7 @@ import (
 )
 
 var logger = log.New(os.Stdout, "", log.Ltime|log.Lshortfile)
-var errorLogger = log.New(os.Stderr, "ERR:\t", log.Ltime|log.Lshortfile)
+var errorLogger = log.New(os.Stderr, "ERROR:\t", log.Ltime|log.Lshortfile)
 var debugLogger = log.New(os.Stdout, "DEBUG:\t", log.Ltime|log.Lshortfile)
 var infoLogger = log.New(os.Stderr, "INFO:\t", log.Ltime|log.Lshortfile)
 
@@ -25,6 +25,10 @@ func Debug(v ...any) {
 
 func Debugf(format string, v ...any) {
 	debugLogger.Output(2, fmt.Sprintf(format, v...))
+}
+
+func Fatal(v ...any) {
+	logger.Fatal(v...)
 }
 
 func Fatalf(format string, v ...any) {
