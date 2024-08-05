@@ -49,52 +49,36 @@
        form.querySelector('button[onclick^="cancelEdit"]').style.display = 'none';
    }
 
-//document.body.addEventListener('htmx:oobBeforeSwap', function(evt) {
-//   console.log(evt) 
-//});
-
-document.body.addEventListener('htmx:beforeSwap', function(evt) {
-    if(evt.detail.xhr.status === 404){
-        // alert the user when a 404 occurs (maybe use a nicer mechanism than alert())
-        //alert("Error: Could Not Find Resource");
-    } else if(evt.detail.xhr.status === 400){
-        //console.log(evt.detail);
-        //alert("Bad request");
-        //document.querySelector("#responses").innerHTML = evt.detail.xhr.status;
-    } else if(evt.detail.xhr.status === 422){
-        // allow 422 responses to swap as we are using this as a signal that
-        // a form was submitted with bad data and want to rerender with the
-        // errors
-        //
-        // set isError to false to avoid error logging in console
-        evt.detail.shouldSwap = true;
-        evt.detail.isError = false;
-    } else if(evt.detail.xhr.status === 418){
-        // if the response code 418 (I'm a teapot) is returned, retarget the
-        // content of the response to the element with the id `teapot`
-        evt.detail.shouldSwap = true;
-        evt.detail.target = htmx.find("#teapot");
-    }
-    if(evt.detail.xhr.status >= 400){
-        //showSnackbar(evt.detail.xhr.statusText + " " + evt.detail.serverResponse, 500000);
+// Callback function that handles Error responses
+// Is registered as an eventListener
+function errorResponseCallback(evt) {
+    // Show all error responses above 400 with a snackbar notification
+    if (evt.detail.xhr.status >= 400) {
         console.log(evt);
+        evt.detail.isError = false;
 
-        // Will still swap contents to show error notification
-        evt.detail.shouldSwap = true;
-
+        if (evt.detail.serverResponse !== "") {
+            createAndShowSnackbar(evt.detail.serverResponse, "error");
+        } else {
+            createAndShowSnackbar(evt.detail.xhr.statusText, "error");
+        }
         //evt.detail.target = htmx.find("#snackbars");
         //evt.detail.target.setAttribute("hx-swap", "afterend");
     }
-});
-
-
-function removeSnackbar(snackbarId) {
-    bar = document.getElementById(snackbarId);
-    bar.remove();
 }
 
-function removeSnackbarAfter(snackbarId, duration) {
-    setTimeout(() => removeSnackbar(snackbarId), duration);
+function createAndShowSnackbar(text, type, duration) {
+    const newElement = document.createElement('div');
+
+    newElement.className = 'snackbar noshow ' + type;
+    newElement.id = "snackbar-" + Math.round( (Math.random() * 100)).toString();
+
+    const snackbarsElement = document.getElementById('snackbars');
+
+    snackbarsElement.appendChild(newElement);
+
+    showSnackbarWithId(newElement.id, text, duration)
+    console.log('snack')
 }
 
 function showSnackbarWithId(id, text, duration) {
@@ -105,38 +89,30 @@ function showSnackbarWithId(id, text, duration) {
     var snackbar = document.getElementById(id);
 
     setTimeout(() => {
-        snackbar.className = snackbar.className.replace("noshow", "show"); 
-        snackbar.innerHTML = text;
+        snackbar.className = snackbar.className.replace("noshow", "show");
+        snackbar.textContent = text;
     }, 50);
 
 
-    setTimeout(function(){
-        snackbar.className = snackbar.className.replace("show", "noshow"); 
-       removeSnackbarAfter(id, 210);
-    }, duration);
-
-}
-
-function showSnackbar(text, duration) {
-    if (duration === undefined) {
-        duration = 2000;
-    }
-
-    var x = document.getElementById("snackbar");
-
-    if (currentSnackbarTimerId !== undefined) {
-        clearTimeout(currentSnackbarTimerId);
-        x.className = x.className.replace("show", ""); 
-    }
-
-    setTimeout(() => {
-        x.className = "show";
-        x.innerHTML = text;
-    }, 50);
-
-
-    currentSnackbarTimerId = setTimeout(function(){
-        x.className = x.className.replace("show", ""); 
-        currentSnackbarTimerId = undefined;
+    setTimeout(function() {
+        snackbar.className = snackbar.className.replace("show", "noshow");
+        removeSnackbarAfter(id, 210);
     }, duration);
 }
+
+function removeSnackbar(snackbarId) {
+    bar = document.getElementById(snackbarId);
+    bar.remove();
+}
+
+function removeSnackbarAfter(snackbarId, duration) {
+    setTimeout(() => removeSnackbar(snackbarId), duration);
+}
+
+
+function registerCallbackEventListener() {
+    document.body.addEventListener('htmx:beforeSwap', errorResponseCallback );
+}
+
+console.log("registerCallbackEventListener executed")
+htmx.onLoad(registerCallbackEventListener)
