@@ -41,24 +41,28 @@ func loginUser(w http.ResponseWriter, r *http.Request, db *database.DB) {
 	logg.Debugf("%v %v ", r.URL, r.Form.Encode())
 
 	if username == "" {
-		logg.Err("Missing username")
-		w.WriteHeader(http.StatusBadRequest)
-		templates.RenderErrorSnackbar(w, LOGIN_FAILED_MESSAGE)
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
+		logg.Info(LOGIN_FAILED_MESSAGE)
+		logg.Debug("Missing username")
 		return
 	}
 	if password == "" {
-		logg.Err("Missing password")
-		w.WriteHeader(http.StatusBadRequest)
-		templates.RenderErrorSnackbar(w, LOGIN_FAILED_MESSAGE)
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
+		logg.Info(LOGIN_FAILED_MESSAGE)
+		logg.Debug("Missing password")
 		return
 	}
+
 	ctx := context.TODO()
 	user, _ := db.User(ctx, username)
 
 	if !checkPasswordHash(password, user.PasswordHash) {
-		logg.Err("pw hash doesnt match")
-		w.WriteHeader(http.StatusBadRequest)
-		templates.RenderErrorSnackbar(w, LOGIN_FAILED_MESSAGE)
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
+		logg.Info(LOGIN_FAILED_MESSAGE)
+		logg.Debug("pw hash doesnt match")
 		return
 	}
 
@@ -93,7 +97,8 @@ func LoginForm(w http.ResponseWriter, r *http.Request) {
 
 	err := templates.Render(w, templates.TEMPLATE_LOGIN_FORM, data)
 	if err != nil {
-		fmt.Fprintln(w, "failed")
+		logg.Err(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
