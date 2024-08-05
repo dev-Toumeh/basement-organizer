@@ -95,9 +95,9 @@ func LoginForm(w http.ResponseWriter, r *http.Request) {
 	data.Title = "login"
 	data.Authenticated = authenticated
 
-	err := templates.Render(w, templates.TEMPLATE_LOGIN_FORM, data)
+	err := templates.SafeRender(w, templates.TEMPLATE_LOGIN_FORM, data)
 	if err != nil {
-		logg.Err(err)
+		logg.Debug(http.StatusText(http.StatusInternalServerError))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
