@@ -10,7 +10,7 @@ const (
 	TEMPLATE_ATEST_STYLE_PATH        string = "internal/templates/sample-page.html"
 	TEMPLATE_CLOSE_HTML_TAG          string = "close-html-tag"
 	TEMPLATE_CLOSE_HTML_TAG_PATH     string = "internal/templates/page.html"
-	TEMPLATE_CREATE_ITEM_FORM        string = "create_item_form"
+	TEMPLATE_CREATE_ITEM_FORM        string = "create-item-form"
 	TEMPLATE_CREATE_ITEM_FORM_PATH   string = "internal/templates/items/create-item.html"
 	TEMPLATE_CREATE_ITEM_HTML        string = "create-item.html"
 	TEMPLATE_CREATE_ITEM_HTML_PATH   string = "internal/templates/items/create-item.html"

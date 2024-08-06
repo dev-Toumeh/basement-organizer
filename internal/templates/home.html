@@ -4,7 +4,6 @@
 <body>
     {{ template "home-page-body" . }}
 </body>
-{{ template "script" . }}
 {{ template "close-html-tag" .}}
 {{ end }}
 
@@ -27,10 +26,8 @@
     <button
         id="register-btn"
         type="button"
-        hx-get="/register" 
-        hx-swap="outerHTML" 
-        hx-target="body" 
-        hx-push-url="true"
+        hx-get="/register-form" 
+        hx-target="#content" 
     >Register</button>
     <label for="#register-btn"></label>
 </div>

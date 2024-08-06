@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"basement/main/internal/logg"
 	"bytes"
 	"fmt"
 	"html/template"
@@ -109,6 +110,18 @@ func Render(w io.Writer, name string, data any) error {
 		fmt.Fprintln(w, err)
 		return err
 	}
+	return nil
+}
+
+// SafeRender will write to the writer "w" only if there are no errors executing the template.
+func SafeRender(w io.Writer, name string, data any) error {
+	wbs := bytes.NewBufferString("")
+	err := internalTemplate.ExecuteTemplate(wbs, name, data)
+	if err != nil {
+		logg.Err(err)
+		return err
+	}
+	w.Write(wbs.Bytes())
 	return nil
 }
 
