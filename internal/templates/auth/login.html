@@ -27,19 +27,11 @@
         <button 
             style="display: flex"
             hx-post="login"
-            hx-indicator="#responseIndicator"
+            hx-indicator="#loadingIndicator"
             hx-disabled-elt="this"
             hx-target="#auth-label"
-            onclick="document.querySelector('#auth-label').textContent = 'logging in...'"
             {{ if .Authenticated }}disabled{{ end }}
-        >Login
-            <div 
-                id="responseIndicator" 
-                class="htmx-indicator lds-dual-ring" 
-                style="margin-left: 5px"
-            ></div>
-    </div>
-    </button>
+        >Login</button>
 </form>
 <label id="responseLabel"></label>
 {{ end }}

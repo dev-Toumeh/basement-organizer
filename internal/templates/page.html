@@ -70,6 +70,11 @@
         </nav>
     </div>
     <div id="authentication-status">
+        <div 
+            id="loadingIndicator" 
+            class="htmx-indicator lds-dual-ring" 
+            style="margin-left: 5px"
+        ></div>
         {{with .Authenticated }}
             <label id="auth-label">logged in</label>
             <button
