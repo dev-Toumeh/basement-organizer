@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<head>
+    <title>home</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <script
+        src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.js"
+        integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS"
+        crossorigin="anonymous"
+    ></script>
+    <script src="static/custom-functions.js"></script>
+    <link rel="stylesheet" href="static/layout.css" />
+    <link rel="stylesheet" href="static/snackbar.css" />
+    <link rel="manifest" href="static/manifest.json" />
+    <link
+        rel="icon"
+        href="static/basement-organizer-icon512.png"
+        type="image/png"
+    />
+    
+    
+</head>
+
+<body>
+    
+
+<div class="status-bar">
+    
+    <div hx-boost="true" hx-push-url="true">
+        <nav>
+            <a id="home" href="/">Home</a>
+            
+            <a id="personal-page" href="/personal-page">Personal Page</a>
+            
+            <a id="sample-page" 
+                href="/sample-page" 
+                hx-swap="innerHTML show:html:top"
+            >Sample Page</a>
+            
+        </nav>
+    </div>
+    <div id="authentication-status">
+        
+            <label id="auth-label">logged in</label>
+            <button
+                id="logout-btn"
+                type="button"
+                hx-get="/logout"
+                hx-target="#auth-label"
+            >
+                Logout
+            </button>
+        
+    </div>
+</div>
+
+<div 
+    id="snackbars"
+    class="snackbar-container"
+></div>
+
+<div id="content">
+    <div id="welcome-div">Welcome to home page </div>
+    
+    You are logged in
+    
+
+
+</body>
+</html>
+

@@ -1,0 +1,1 @@
+docker run -it --rm -d -p 8010:80 --name web -v "$(pwd)/../../internal/static/:/usr/share/nginx/html" -v $(pwd)/nginx.conf:/etc/nginx/nginx.conf -v $(pwd)/default.conf:/etc/nginx/conf.d/default.conf nginx

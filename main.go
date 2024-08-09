@@ -21,5 +21,5 @@ func main() {
 	routes.RegisterRoutes(db)
 	templates.InitTemplates()
 
-	http.ListenAndServe("localhost:8000", nil)
+	http.ListenAndServe("172.25.139.157:8000", nil)
 }
