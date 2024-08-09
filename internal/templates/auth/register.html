@@ -9,7 +9,12 @@
 {{end}}
 
 {{define "register-form"}}
-<form hx-post="register" id="form" name="form">
+<form 
+    hx-post="register"
+    hx-disabled-elt="#registerButton"
+    hx-indicator="#loadingIndicator"
+    id="form"
+    name="form">
     <label for="username">Username:</label>
     <input 
         type="text" 
@@ -36,6 +41,6 @@
         placeholder="Confirm Password"
         required
     />
-    <button type="submit">Register</button>
+    <button id="registerButton" type="submit">Register</button>
 </form>
 {{end}}
