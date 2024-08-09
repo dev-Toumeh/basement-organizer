@@ -49,43 +49,51 @@
        form.querySelector('button[onclick^="cancelEdit"]').style.display = 'none';
    }
 
-// Callback function that handles Error responses
-// Is registered as an eventListener
-function errorResponseCallback(evt) {
+/** Callback function that handles Error responses to display for the user.
+ * Is registered as an eventListener
+ * @param {HtmxResponseInfo}resInfo */
+function errorResponseCallback(resInfo) {
     // Show all error responses above 400 with a snackbar notification
-    if (evt.detail.xhr.status >= 400) {
-        console.log(evt);
-        evt.detail.isError = false;
+    if (resInfo.detail.xhr.status >= 400) {
+        console.log(resInfo);
+        resInfo.detail.isError = false;
 
-        if (evt.detail.serverResponse !== "") {
-            createAndShowSnackbar(evt.detail.serverResponse, "error");
+        if (resInfo.detail.serverResponse !== "") {
+            createAndShowSnackbar(resInfo.detail.serverResponse, "error");
         } else {
-            createAndShowSnackbar(evt.detail.xhr.statusText, "error");
+            createAndShowSnackbar(resInfo.detail.xhr.statusText, "error");
         }
-        //evt.detail.target = htmx.find("#snackbars");
-        //evt.detail.target.setAttribute("hx-swap", "afterend");
+        //resInfo.detail.target = htmx.find("#snackbars");
+        //resInfo.detail.target.setAttribute("hx-swap", "afterend");
     }
 }
 
-function createAndShowSnackbar(text, type, duration) {
+const SnackbarTypeError = "error";
+const SnackbarTypeInfo = "";
+
+/** createAndShowSnackbar is for showing errors and information on updates.
+ * @param text {string} Message to display.
+ * @param type {SnackbarTypeError | SnackbarTypeInfo | undefined } Can be "error" or undefined for info.
+ * @param duration {number | undefined} How long is should display before removal. Default is 2000 (2 seconds). */
+function createAndShowSnackbar(text, type, duration = 2000) {
     const newElement = document.createElement('div');
 
     newElement.className = 'snackbar noshow ' + type;
-    newElement.id = "snackbar-" + Math.round( (Math.random() * 100)).toString();
+    newElement.id = "snackbar-" + Math.round((Math.random() * 100)).toString();
 
     const snackbarsElement = document.getElementById('snackbars');
 
     snackbarsElement.appendChild(newElement);
 
     showSnackbarWithId(newElement.id, text, duration)
-    console.log('snack')
 }
 
-function showSnackbarWithId(id, text, duration) {
-    if (duration === undefined) {
-        duration = 2000;
-    }
 
+/** showSnackbarWithId creates notification snackbar with id and automatically removes after duration.
+ * @param id {string} HTML Element id.
+ * @param text {string | undefined} Message to display.
+ * @param duration {number | undefined} How long is should display before removal. Default is 2000 (2 seconds). */
+function showSnackbarWithId(id, text, duration = 2000) {
     var snackbar = document.getElementById(id);
 
     setTimeout(() => {
@@ -100,18 +108,30 @@ function showSnackbarWithId(id, text, duration) {
     }, duration);
 }
 
+/** removeSnackbar removes snackbar HTML element.
+ * @param snackbarId {string} HTML Element id. */
 function removeSnackbar(snackbarId) {
     bar = document.getElementById(snackbarId);
     bar.remove();
 }
 
+/** removeSnackbar removes snackbar HTML element after a certain duration.
+ * @param snackbarId {string} HTML Element id. 
+ * @param duration {number | undefined} How long to wait for removal. */
 function removeSnackbarAfter(snackbarId, duration) {
     setTimeout(() => removeSnackbar(snackbarId), duration);
 }
 
+/** noResponseCallback handles notification if requests don't respond.
+ * @param resInfo {HmtxResponseInfo} */
+function noResponseCallback(resInfo) {
+    console.log(resInfo.requestConfig);
+    createAndShowSnackbar("No response. Server down?", "error");
+}
 
 function registerCallbackEventListener() {
-    document.body.addEventListener('htmx:beforeSwap', errorResponseCallback );
+    document.body.addEventListener('htmx:beforeSwap', errorResponseCallback);
+    document.body.addEventListener('htmx:sendError', noResponseCallback);
 }
 
 console.log("registerCallbackEventListener executed")
