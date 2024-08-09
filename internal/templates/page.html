@@ -10,19 +10,25 @@
 {{ define "open-html-tag" }}<html lang="en">{{ end }}
 {{ define "close-html-tag" }}</html>{{ end }}
 
-{{ define "script" }}<script src="static/custom-functions.js"></script>{{end}}
+{{ define "script" }}
+<script src="static/custom-functions.js"></script>
+
+<!--HTMX from local sources-->
+<script src="static/htmx.js"></script>
+
+<!--HTMX from CDN-->
+<!--<script-->
+<!--    src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.js"-->
+<!--    integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS"-->
+<!--    crossorigin="anonymous"-->
+<!--></script>-->
+{{end}}
 
 {{ define "head" }}
 <head>
     <title>{{ with .Title}}{{.}}{{else}}no title{{end}}</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- @TODO: Replace external source with internal static -->
-    <script
-        src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.js"
-        integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS"
-        crossorigin="anonymous"
-    ></script>
     {{ template "script" . }}
     <link rel="stylesheet" href="static/layout.css" />
     <link rel="stylesheet" href="static/snackbar.css" />
