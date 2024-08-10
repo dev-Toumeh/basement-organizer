@@ -19,7 +19,6 @@ const (
 	STATIC              string = "/static/"
 	ITEMS_FILE_PATH     string = "internal/auth/items.json"
 	USERS_FILE_PATH     string = "internal/auth/users2.json"
-	API_V1_READ_ITEM    string = "/api/v1/read/item/{id}"
 	PERSONAL_PAGE_ROUTE string = "/personal-page"
 )
 
@@ -62,11 +61,11 @@ func authRoutes(db *database.DB) {
 
 func apiRoutes(db *database.DB) {
 	http.HandleFunc("/api/v1/create/item", items.CreateItemHandler(db))
-	http.HandleFunc(API_V1_READ_ITEM, items.ReadItemHandler(db, func(w io.Writer, data any) {
+	http.HandleFunc("/api/v1/read/item/{id}", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		fmt.Fprint(w, data)
 	}))
 	http.HandleFunc("/api/v1/update/item", items.UpdateItemHandler(db))
-//	http.HandleFunc("/api/v1/delete/item", items.DeleteItem(db))
+	//	http.HandleFunc("/api/v1/delete/item", items.DeleteItem(db))
 	http.HandleFunc("/api/v1/read/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
 		fmt.Fprint(w, data)
 	}))
