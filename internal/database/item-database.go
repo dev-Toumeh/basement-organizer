@@ -111,7 +111,8 @@ func (db *DB) insertNewItem(ctx context.Context, item Item) error {
 
 // update the item based on the id
 func (db *DB) UpdateItem(ctx context.Context, item Item) error {
-	sqlStatement := fmt.Sprintf(`UPDATE item Set label = "%s", description = "%s", picture = "%s", quantity = "%d", weight = "%s", qrcode = "%s" WHERE id = ?`,
+	sqlStatement := fmt.Sprintf(`UPDATE item Set label = "%s", description = "%s", picture = "%s",
+    quantity = "%d", weight = "%s", qrcode = "%s" WHERE id = ?`,
 		item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode)
 	result, err := db.Sql.ExecContext(ctx, sqlStatement, item.Id.String())
 	if err != nil {

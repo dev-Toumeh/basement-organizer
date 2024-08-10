@@ -2,6 +2,7 @@ package items
 
 import (
 	"basement/main/internal/database"
+	"basement/main/internal/logg"
 	"context"
 	"fmt"
 	"net/http"
@@ -19,7 +20,7 @@ func UpdateItemHandler(db *database.DB) func(w http.ResponseWriter, r *http.Requ
 }
 
 func updateItem(w http.ResponseWriter, r *http.Request, db *database.DB) {
-
+	logg.Debug(r.URL)
 	var errorMessages []string
 	updatedItem := item(r)
 
