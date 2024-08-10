@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/logg"
 	"context"
 	"database/sql"
 	"errors"
@@ -108,10 +109,11 @@ func (db *DB) insertNewItem(ctx context.Context, item Item) error {
 	}
 	return nil
 }
+
 // update the item based on the id
 func (db *DB) UpdateItem(ctx context.Context, item Item) error {
 	sqlStatement := fmt.Sprintf(`UPDATE item Set label = "%s", description = "%s", picture = "%s", quantity = "%d", weight = "%s", qrcode = "%s" WHERE id = ?`,
-    item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode)
+		item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode)
 	result, err := db.Sql.ExecContext(ctx, sqlStatement, item.Id.String())
 	if err != nil {
 		logg.Err(err)
@@ -123,18 +125,17 @@ func (db *DB) UpdateItem(ctx context.Context, item Item) error {
 		logg.Err(err)
 		return err
 	}
-  if rowsAffected == 0 {
-    err := errors.New(fmt.Sprintf("the Record with the id: %s was not found that should not happened while updating", item.Id.String()))
+	if rowsAffected == 0 {
+		err := errors.New(fmt.Sprintf("the Record with the id: %s was not found that should not happened while updating", item.Id.String()))
 		logg.Debug(err)
 		return err
-  } else if rowsAffected != 1 {
-    err := errors.New(fmt.Sprintf("the id: %s has unexpected effected number of rows (more than one or less than 0)", item.Id.String()))
+	} else if rowsAffected != 1 {
+		err := errors.New(fmt.Sprintf("the id: %s has unexpected effected number of rows (more than one or less than 0)", item.Id.String()))
 		logg.Err(err)
 		return err
-	} 
+	}
 	return nil
 }
-
 
 func (db *DB) Items() ([][]string, error) {
 	query := "SELECT id, label, description, picture, quantity, weight, qrcode FROM item;"
