@@ -27,7 +27,10 @@ div.snackbar.error {
     background-color: red;
     color: #fff;
 }
-
+div.snackbar.success {
+    background-color: green;
+    color: #fff;
+}
 div.snackbar.noshow {
     opacity: 0;
     transition: opacity 0.2s ease;

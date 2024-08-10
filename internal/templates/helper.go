@@ -22,6 +22,18 @@ const (
 	TEMPLATE_DIR string = "internal/templates/"
 )
 
+const errorSnackbar snackbarType = "error"
+const SuccessSnackbar snackbarType = "success"
+
+type snackbarType string
+
+type oobSnackbarData struct {
+	Message    string
+	SnackbarId int
+	Duration   int
+	Type       snackbarType
+}
+
 type PageTemplate struct {
 	Title         string
 	Authenticated bool
@@ -127,7 +139,7 @@ func SafeRender(w io.Writer, name string, data any) error {
 
 // RenderErrorSnackbar shows a brief error notification.
 func RenderErrorSnackbar(w io.Writer, message string) error {
-	data := NewErrorOobSnackbarData(message)
+	data := newOobSnackbarData(message, errorSnackbar)
 	err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_SNACKBAR, data)
 	if err != nil {
 		log.Println(err)
@@ -137,28 +149,29 @@ func RenderErrorSnackbar(w io.Writer, message string) error {
 	return nil
 }
 
-type oobSnackbarData struct {
-	Message    string
-	SnackbarId int
-	Duration   int
-	Type       snackbarType
+// RenderSuccessSnackbar shows a brief success notification.
+func RenderSuccessSnackbar(w io.Writer, message string) error {
+	data := newOobSnackbarData(message, SuccessSnackbar)
+	err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_SNACKBAR, data)
+	if err != nil {
+		log.Println(err)
+		fmt.Fprintln(w, err)
+		return err
+	}
+	return nil
 }
 
-// NewErrorOobSnackbarData creates oobSnackbarData for error snackbar with default values.
+// newOobSnackbarData creates oobSnackbarData for error snackbar with default values.
 //
 // Defaut Duration = 2000 // 2 seconds
-func NewErrorOobSnackbarData(message string) oobSnackbarData {
+func newOobSnackbarData(message string, messageType snackbarType) oobSnackbarData {
 	return oobSnackbarData{
 		Message:    message,
 		SnackbarId: rand.Int(),
-		Duration:   2000,
-		Type:       errorSnackbar,
+		Duration:   3000,
+		Type:       messageType,
 	}
 }
-
-type snackbarType string
-
-const errorSnackbar snackbarType = "error"
 
 /*
 RedefineTemplateDefinition redefines "targetDefinitionName" template in "tmpl" by using the new definition from "definitionTemplate".
