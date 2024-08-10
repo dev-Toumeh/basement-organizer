@@ -1,10 +1,10 @@
 package database
 
 import (
+	"basement/main/internal/logg"
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -18,22 +18,25 @@ type User struct {
 var ctx context.Context
 
 // CreateNewUser inserts a new user into the database with the given username and passwordHash
+// Returns an error if user already exists.
 func (db *DB) CreateNewUser(ctx context.Context, username string, passwordhash string) error {
-	if _, err := db.User(ctx, username); err != nil {
-		// finding no rows means we can use the username to create new user
-		if err == sql.ErrNoRows {
-			err := db.inserNewUser(ctx, username, passwordhash)
-			if err != nil {
-				return err
-			}
-			return nil
-		}
-	} else {
-		// otherwise return the real error
-		return err
+	_, err := db.User(ctx, username)
+
+	// user exists, can't create new user
+	if err == nil {
+		return ErrExist
 	}
-	// if no error exist than you should choice another username
-	return errors.New("username already exist")
+	// user does not exist
+	if err == sql.ErrNoRows {
+		insertErr := db.insertNewUser(ctx, username, passwordhash)
+		if insertErr != nil {
+			return insertErr
+		}
+		return nil
+	}
+
+	// otherwise return the real error
+	return err
 }
 
 // check if the username is available
@@ -52,7 +55,7 @@ func (db *DB) User(ctx context.Context, username string) (User, error) {
 		if err == sql.ErrNoRows {
 			return User{}, err
 		}
-		log.Println("Error while checking if the username is available:", err)
+		logg.Err("row.Scan error while checking if the username is available:", err)
 		return User{}, err
 	}
 
@@ -61,27 +64,27 @@ func (db *DB) User(ctx context.Context, username string) (User, error) {
 
 // here we run the insert new User query separate from the public function
 // it make the code more readable
-func (db *DB) inserNewUser(ctx context.Context, username string, passwordhash string) error {
+func (db *DB) insertNewUser(ctx context.Context, username string, passwordhash string) error {
 	id, err := uuid.NewV4() // Error handling for UUID generation
 	if err != nil {
-		log.Printf("Error generating UUID: %v", err)
+		logg.Err("Error generating UUID:", err)
 		return err
 	}
 
 	sqlStatement := `INSERT INTO user (id, username, passwordhash) VALUES (?, ?, ?)`
 	result, err := db.Sql.ExecContext(ctx, sqlStatement, id.String(), username, passwordhash) // Using ExecContext
 	if err != nil {
-		log.Printf("Error while executing create new user statement: %v", err)
+		logg.Err("Error while executing create new user statement:", err)
 		return err
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		log.Printf("Error checking rows affected while executing create new user statement: %v", err)
+		logg.Err("Error checking rows affected while executing create new user statement:", err)
 		return err
 	}
 	if rowsAffected != 1 {
-		log.Println("No rows affected, user not added")
+		logg.Err("No rows affected, user not added")
 		return errors.New("user not added")
 	}
 	return nil

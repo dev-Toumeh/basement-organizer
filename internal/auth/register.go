@@ -5,7 +5,6 @@ import (
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"context"
-	"database/sql"
 	"fmt"
 	"net/http"
 
@@ -100,19 +99,16 @@ func registerUser(w http.ResponseWriter, r *http.Request, db *database.DB) {
 		logg.Fatal(err)
 	}
 
-	if err := db.CreateNewUser(ctx, username, newHashedPassword); err != nil {
-		if err == sql.ErrNoRows {
-			templates.Render(w, templates.TEMPLATE_REGISTER_PAGE, "")
-		} else {
-			logg.Debug(http.StatusText(http.StatusInternalServerError))
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-	} else {
-		// https://htmx.org/headers/hx-location/
-		http.RedirectHandler("/login-form", http.StatusOK)
-		w.Header().Add("HX-Location", "/login")
-		logg.Debugf("User %s registered successfully:", username)
-
+	err = db.CreateNewUser(ctx, username, newHashedPassword)
+	if err != nil {
+		logg.Debug(http.StatusText(http.StatusInternalServerError))
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	// https://htmx.org/headers/hx-location/
+	http.RedirectHandler("/login-form", http.StatusOK)
+	w.Header().Add("HX-Location", "/login")
+	logg.Debugf("User %s registered successfully:", username)
+	return
 }
