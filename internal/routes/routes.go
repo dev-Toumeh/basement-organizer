@@ -2,9 +2,7 @@ package routes
 
 import (
 	"fmt"
-	_ "fmt"
 	"io"
-	_ "io"
 	"net/http"
 
 	"basement/main/internal/auth"
@@ -12,7 +10,6 @@ import (
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
-	_ "basement/main/internal/templates"
 )
 
 const (
@@ -66,7 +63,7 @@ func apiRoutes(db *database.DB) {
 		fmt.Fprint(w, data)
 	}))
 	http.HandleFunc("/api/v1/update/item", items.UpdateItemHandler(db))
-//	http.HandleFunc("/api/v1/delete/item", items.DeleteItem(db))
+	http.HandleFunc("/api/v1/delete/item", items.DeleteItemHandler(db))
 	http.HandleFunc("/api/v1/read/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
 		fmt.Fprint(w, data)
 	}))

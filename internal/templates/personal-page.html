@@ -21,6 +21,18 @@ Hello {{ with .User }}{{ . }}{{ end }}, how is things going? </br>
     hx-push-url="false"
 >Add new Item</button>
 <label for="login-btn"></label>
+</br></br> 
+
+<form 
+    hx-delete="/api/v1/delete/item"
+    id="form-item"
+    hx-on::after-request="this.reset()"
+    hx-target="#item-container"
+    hx-include="[name='id']">
+    <label for="id">Delete By ID</label>
+    <input type="text" name="id">
+    <button type="submit">Delete</button>
+</form>
 
 <form 
     hx-get="/item"

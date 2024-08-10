@@ -2,10 +2,12 @@ package items
 
 import (
 	"basement/main/internal/database"
+	"context"
 	"fmt"
 	"net/http"
 )
 
+// update the item based on ID
 func UpdateItemHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPut {
