@@ -2,8 +2,10 @@ package items
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -15,6 +17,7 @@ import (
 
 	"basement/main/internal/auth"
 	"basement/main/internal/database"
+	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 )
 
@@ -43,7 +46,7 @@ func CreateItemHandler(db *database.DB) func(w http.ResponseWriter, r *http.Requ
 }
 
 func createNewItem(w http.ResponseWriter, r *http.Request, db *database.DB) {
-
+	logg.Debug(r.URL)
 	var responseMessage []string
 	newItem := item(r)
 
@@ -190,6 +193,7 @@ func responseGenerator(w http.ResponseWriter, responseMessage []string, success 
 }
 
 // this function will pack the request into struct from type Item, so it will be easier to handle it
+// @TODO: Need error return in case something wrong happens
 func item(r *http.Request) database.Item {
 	var id uuid.UUID
 	if updatedId, err := uuid.FromString(r.PostFormValue(ID)); err != nil {
@@ -197,16 +201,63 @@ func item(r *http.Request) database.Item {
 	} else {
 		id = updatedId
 	}
+	logg.Debug("Creating item id:", id)
+	logg.Debug("Content-Type:", r.Header.Get("Content-Type"))
+
+	b64encodedPictureString := ""
+	// Request has multipart/form-data content type for uploading picture
+	if strings.Contains(r.Header.Get("Content-Type"), "multipart/form-data") {
+		b64encodedPictureString = parsePicture(r)
+	}
+
 	newItem := database.Item{
 		Id:          id,
 		Label:       r.PostFormValue(LABEL),
 		Description: r.PostFormValue(DESCRIPTIO),
-		Picture:     r.PostFormValue(PICTURE),
-		Quantity:    stringToInt64(r.PostFormValue(QUANTITY)),
+		Picture:     b64encodedPictureString,
+		Quantity:    parseQuantity(r.PostFormValue(QUANTITY)),
 		Weight:      r.PostFormValue(WEIGHT),
 		QRcode:      r.PostFormValue(QRCODE),
 	}
 	return newItem
+}
+
+// parsePicture returns base64 encoded string of picture uploaded if there is any
+func parsePicture(r *http.Request) string {
+	logg.Info("Parsing multipart/form-data for picture")
+	// 8 MB
+	var maxSize int64 = 1000 * 1000 * 8
+	err := r.ParseMultipartForm(maxSize)
+	if err != nil {
+		logg.Err(err)
+		return ""
+	}
+
+	file, header, err := r.FormFile(PICTURE)
+	logg.Debug("picture filename:", header.Filename)
+	if err != nil {
+		logg.Err(err)
+		return ""
+	}
+
+	readbytes, err := io.ReadAll(file)
+	logg.Debug("picture size:", len(readbytes)/1000, "KB")
+	if err != nil {
+		logg.Err(err)
+		return ""
+	}
+
+	return base64.StdEncoding.EncodeToString(readbytes)
+}
+
+// parseQuantity returns by default at least 1
+func parseQuantity(value string) int64 {
+	intValue, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		logg.Info("Could not parse quantity. Set quantity to 1")
+		return 1
+	}
+	return intValue
 }
 
 func stringToInt64(value string) int64 {
