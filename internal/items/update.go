@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func UpdateItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.Request) {
+func UpdateItemHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPut {
 			updateItem(w, r, db)
@@ -16,7 +16,7 @@ func UpdateItemHandler(db *database.JsonDB) func(w http.ResponseWriter, r *http.
 	}
 }
 
-func updateItem(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
+func updateItem(w http.ResponseWriter, r *http.Request, db *database.DB) {
 
 	var errorMessages []string
 	updatedItem := item(r)
@@ -24,11 +24,12 @@ func updateItem(w http.ResponseWriter, r *http.Request, db *database.JsonDB) {
 	if valiedItem, err := validateItem(updatedItem, &errorMessages); err != nil {
 		responseGenerator(w, errorMessages, false)
 	} else {
-		if responseMessage, err := db.UpdateItem(valiedItem); err != nil {
+		ctx := context.TODO()
+		if err := db.UpdateItem(ctx, valiedItem); err != nil {
 			fmt.Println(err)
-			responseGenerator(w, responseMessage, false)
+			responseGenerator(w, []string{"we was not able to update the Item please comeback later"}, false)
 		} else {
-			responseGenerator(w, responseMessage, true)
+			responseGenerator(w, []string{"the Item has been updated Successfully"}, true)
 		}
 	}
 	return
