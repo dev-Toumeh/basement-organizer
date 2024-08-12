@@ -5,7 +5,8 @@
     "./template_constants_generator.go"
   ],
   "ignore": [
-    "../internal/templates/constants.go"
+    "../internal/templates/constants.go",
+    "../internal/static/htmx.js"
   ],
   "verbose": false,
   "exec": "go run template_constants_generator.go",

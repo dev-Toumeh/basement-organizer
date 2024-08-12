@@ -1,0 +1,15 @@
+{
+  "name": "basement-oraniser",
+  "version": "1.0.0",
+  "scripts": {
+    "postinstall": "if [ ! -f internal/static/js/htmx.min.js ]; then cp ./node_modules/htmx.org/dist/htmx.min.js internal/static/js/htmx.min.js; fi",
+    "start": "nodemon"
+  },
+  "dependencies": {
+    "htmx.org": "^2.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.0"
+  }
+}
+

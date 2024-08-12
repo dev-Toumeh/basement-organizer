@@ -3,7 +3,8 @@
   "ignore": [
     ".git",
     "node_modules/**/node_modules",
-    "internal/templates/constants.go"
+    "internal/templates/constants.go",
+    "internal/static/js/htmx.min.js"
   ],
   "verbose": false,
   "exec": "go run main.go",

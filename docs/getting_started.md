@@ -12,21 +12,20 @@
 
 ### Start Server
 #### Automatic
-Using nodemon: https://www.npmjs.com/package/nodemon
+Using npm:
 
 **Install**:
 ```bash
-npm install -g nodemon # or using yarn: yarn global add nodemon
+npm install
 ```
 
 **Run**:
 ```bash
-nodemon
+npm start
 ```
 
-
-This will auto start and restart the go main server.
-By default it uses `nodemon.json` config.
+This will auto start and restart the Go main server using nodemon. By default,
+it uses the nodemon.json config.
 
 Running without config:
 ```bash
@@ -34,8 +33,10 @@ nodemon -e 'go,html' --signal SIGTERM --exec 'go' run main.go
 ```
 
 #### Manual
+```bash
+curl -o internal/static/js https://unpkg.com/htmx.org@2.0.1/dist/htmx.min.js
 Run `go run .`
-
+```
 ### Generate Template constants
 Manually generate with:
 ```bash

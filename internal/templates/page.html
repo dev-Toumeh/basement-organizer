@@ -12,7 +12,7 @@
 
 {{ define "script" }}
 <!--HTMX from local sources-->
-<script src="static/htmx.js"></script>
+<script src="static/js/htmx.min.js"></script>
 
 <!--HTMX from CDN-->
 <!--<script-->
@@ -20,7 +20,7 @@
 <!--    integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS"-->
 <!--    crossorigin="anonymous"-->
 <!--></script>-->
-<script src="static/custom-functions.js"></script>
+<script src="static/js/custom-functions.js"></script>
 {{end}}
 
 {{ define "head" }}
@@ -29,8 +29,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     {{ template "script" . }}
-    <link rel="stylesheet" href="static/layout.css" />
-    <link rel="stylesheet" href="static/snackbar.css" />
+    <link rel="stylesheet" href="static/css/layout.css" />
+    <link rel="stylesheet" href="static/css/snackbar.css" />
     <link rel="manifest" href="static/manifest.json" />
     <link
         rel="icon"
