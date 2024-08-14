@@ -23,6 +23,10 @@ div.snackbar {
     /*visibility: hidden; /* Hidden by default. Visible on click */*/
 }
 
+div.snackbar.warning {
+    background-color: yellow;
+    color: #000;
+}
 div.snackbar.error {
     background-color: red;
     color: #fff;

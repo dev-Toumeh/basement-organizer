@@ -24,6 +24,7 @@ const (
 
 const errorSnackbar snackbarType = "error"
 const SuccessSnackbar snackbarType = "success"
+const warningSnackbar snackbarType = "warning"
 
 type snackbarType string
 
@@ -144,6 +145,18 @@ func RenderErrorSnackbar(w io.Writer, message string) error {
 	if err != nil {
 		log.Println(err)
 		fmt.Fprintln(w, err)
+		return err
+	}
+	return nil
+}
+
+// RenderWarningSnackbar shows a brief warning notification.
+func RenderWarningSnackbar(w io.Writer, message string) error {
+	data := newOobSnackbarData(message, warningSnackbar)
+	logg.Debug(data.Message, data.Type, data.Duration, data.SnackbarId)
+	err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_SNACKBAR, data)
+	if err != nil {
+		logg.Fatal(err)
 		return err
 	}
 	return nil

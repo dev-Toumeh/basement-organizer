@@ -12,29 +12,21 @@ import (
 	"basement/main/internal/templates"
 )
 
-const (
-	STATIC              string = "/static/"
-	ITEMS_FILE_PATH     string = "internal/auth/items.json"
-	USERS_FILE_PATH     string = "internal/auth/users2.json"
-	PERSONAL_PAGE_ROUTE string = "/personal-page"
-)
-
 func RegisterRoutes(db *database.DB) {
-	http.Handle(STATIC, http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
 	http.HandleFunc("/", HomePage)
-	http.HandleFunc(PERSONAL_PAGE_ROUTE, PersonalPage)
-	http.HandleFunc("/sample-page", SamplePage)
+	http.HandleFunc("/personal-page", PersonalPage)
 	http.HandleFunc("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
 	}))
 	http.HandleFunc("/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEMS_CONTAINER, data)
 	}))
-	http.HandleFunc("/switch-debug-style", SwitchDebugStyle)
 	http.HandleFunc("/login-form", auth.LoginForm)
 
 	authRoutes(db)
 	apiRoutes(db)
+	experimentalRoutes(db)
 }
 
 // MustRender will only render valid templates or throw http.StatusInternalServerError.
@@ -81,4 +73,15 @@ func SwitchDebugStyle(w http.ResponseWriter, r *http.Request) {
 		templates.Render(w, templates.TEMPLATE_STYLE, nil)
 	}
 	testStyle = !testStyle
+}
+
+func experimentalRoutes(db *database.DB) {
+	http.HandleFunc("/sample-page", SamplePage)
+	http.HandleFunc("/switch-debug-style", SwitchDebugStyle)
+	http.HandleFunc("/snackbar-success", func(w http.ResponseWriter, r *http.Request) {
+		templates.RenderSuccessSnackbar(w, "success")
+	})
+	http.HandleFunc("/snackbar-warning", func(w http.ResponseWriter, r *http.Request) {
+		templates.RenderWarningSnackbar(w, "warning")
+	})
 }

@@ -46,7 +46,7 @@
 
 {{ define "statusbar" }}
 <div class="status-bar">
-    <!-- hx-boost upgrades all a tags to use hx-get and reposnses target the body-->
+    <!-- hx-boost upgrades all a tags to use hx-get and responses target the body-->
     <div hx-boost="true" hx-push-url="true">
         <nav>
             <a id="home" href="/">Home</a>
@@ -106,9 +106,8 @@
 >
     <div id="snackbar-{{.SnackbarId}}"
         class="snackbar noshow {{.Type}}"
-        hx-on::load="showSnackbarWithId('snackbar-{{.SnackbarId}}', '{{.Message}}', {{.Duration}})"
-    >
-    </div>
+        hx-on::load="showSnackbar('snackbar-{{.SnackbarId}}', {{.Duration}})"
+    >{{.Message}}</div>
 </div>
 {{end}}
 
