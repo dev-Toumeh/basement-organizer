@@ -4,3 +4,4 @@
 temp.txt
 node_modules/
 internal/static/js/htmx.min.js
+internal/database/*.db
