@@ -69,11 +69,13 @@ function errorResponseCallback(resInfo) {
 }
 
 const SnackbarTypeError = "error";
+const SnackbarTypeSuccess = "success";
+const SnackbarTypeWarning = "warning";
 const SnackbarTypeInfo = "";
 
 /** createAndShowSnackbar is for showing errors and information on updates.
  * @param text {string} Message to display.
- * @param type {SnackbarTypeError | SnackbarTypeInfo | undefined } Can be "error" or undefined for info.
+ * @param snackbarType {SnackbarTypeError | SnackbarTypeInfo | SnackbarTypeSuccess | SnackbarTypeWarning | undefined } Can be "error" or undefined for info.
  * @param duration {number | undefined} How long is should display before removal. Default is 2000 (2 seconds).
  * @param id {number | undefined} Add Id to HTML element: <div id="snackbar-{id}</div>. Will be random by default */
 function createAndShowSnackbar(text, snackbarType, duration = 2000, id) {
@@ -88,6 +90,7 @@ function createAndShowSnackbar(text, snackbarType, duration = 2000, id) {
  * Creates a snackbar element but doesn't append it to the snackbars container. 
  *
  * @param {string} text - The message to be displayed in the snackbar.
+ * @param snackbarType {SnackbarTypeError | SnackbarTypeInfo | SnackbarTypeSuccess | SnackbarTypeWarning | undefined } Can be "error" or undefined for info.
  * @param {string} [id] - Optional unique identifier for the snackbar. If not provided, a random ID is generated.
  * @returns {HTMLDivElement} The created snackbar element.
  */
