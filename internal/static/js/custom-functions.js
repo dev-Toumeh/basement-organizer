@@ -119,6 +119,26 @@ function showSnackbar(id, duration = 2000) {
     let currentSnackbarCount = document.querySelectorAll("div.snackbar").length;
     console.log(currentSnackbarCount);
 
+    // Add warning notification for too many snackbars
+    if (currentSnackbarCount > 10) {
+        let warnSnackbarId = 999999;
+        let warnSnackbar = document.getElementById("snackbar-" + warnSnackbarId.toString());
+
+        if (!warnSnackbar) {
+            warnSnackbar = createSnackbar("Over 10 notifications", SnackbarTypeWarning, warnSnackbarId);
+            let snackbarElements = document.getElementById('snackbars');
+            snackbarElements.prepend(warnSnackbar);
+
+            setTimeout(() => {
+                warnSnackbar.className = warnSnackbar.className.replace("noshow", "show");
+            }, 50);
+
+            setTimeout(function() {
+                warnSnackbar.className = warnSnackbar.className.replace("show", "noshow");
+                removeSnackbarAfter(warnSnackbar.id, 210);
+            }, duration);
+        }
+    }
 
     var snackbar = document.getElementById(id);
     if (snackbar === null) {
