@@ -22,6 +22,11 @@ func Err(v ...any) {
 	errorLogger.Output(2, fmt.Sprint(v...))
 }
 
+// Errf is for logging errors which indicate internal problems (not user errors) with formatting.
+func Errf(format string, v ...any) {
+	errorLogger.Output(2, fmt.Sprintf(format, v...))
+}
+
 // Debug is for logs with internal detailed information.
 func Debug(v ...any) {
 	debugLogger.Output(2, fmt.Sprint(v...))
