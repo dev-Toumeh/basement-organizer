@@ -50,6 +50,7 @@ func (db *DB) Connect() error {
 		log.Fatalf("Failed to open database: %v", err)
 		return err
 	}
+	log.Printf("Database Connection established")
 
 	// create the Tables if were not exist
 	db.createTable()
@@ -76,6 +77,4 @@ func (db *DB) createTable() {
 			log.Printf("Table '%s' created successfully", tableName)
 		}
 	}
-
-	log.Printf("Database Connection established")
 }

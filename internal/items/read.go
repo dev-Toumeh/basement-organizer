@@ -81,18 +81,3 @@ func ReadItemsHandler(db *database.DB, responseWriter ResponseWriter) http.Handl
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
-
-// Keys returns the keys of the map m.
-// The keys will be in an indeterminate order.
-//
-// # In Go 1.21 a part of the maps package has been moved into the standard library, but not maps.Keys
-//
-// https://stackoverflow.com/a/69889828
-// https://cs.opensource.google/go/x/exp/+/39d4317d:maps/maps.go;l=10
-func Keys[M ~map[K]V, K comparable, V any](m M) []K {
-	r := make([]K, 0, len(m))
-	for k := range m {
-		r = append(r, k)
-	}
-	return r
-}
