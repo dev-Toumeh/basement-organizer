@@ -74,31 +74,56 @@ const SnackbarTypeInfo = "";
 /** createAndShowSnackbar is for showing errors and information on updates.
  * @param text {string} Message to display.
  * @param type {SnackbarTypeError | SnackbarTypeInfo | undefined } Can be "error" or undefined for info.
- * @param duration {number | undefined} How long is should display before removal. Default is 2000 (2 seconds). */
-function createAndShowSnackbar(text, type, duration = 2000) {
-    const newElement = document.createElement('div');
+ * @param duration {number | undefined} How long is should display before removal. Default is 2000 (2 seconds).
+ * @param id {number | undefined} Add Id to HTML element: <div id="snackbar-{id}</div>. Will be random by default */
+function createAndShowSnackbar(text, snackbarType, duration = 2000, id) {
+    const snackbar = createSnackbar(text, snackbarType, id);
+    const snackbarElements = document.getElementById('snackbars');
+    snackbarElements.appendChild(snackbar);
 
-    newElement.className = 'snackbar noshow ' + type;
-    newElement.id = "snackbar-" + Math.round((Math.random() * 100)).toString();
-
-    const snackbarsElement = document.getElementById('snackbars');
-
-    snackbarsElement.appendChild(newElement);
-
-    showSnackbarWithId(newElement.id, text, duration)
+    showSnackbar(snackbar.id, duration)
 }
 
+/**
+ * Creates a snackbar element but doesn't append it to the snackbars container. 
+ *
+ * @param {string} text - The message to be displayed in the snackbar.
+ * @param {string} [id] - Optional unique identifier for the snackbar. If not provided, a random ID is generated.
+ * @returns {HTMLDivElement} The created snackbar element.
+ */
+function createSnackbar(text, snackbarType, id) {
+    const snackbar = document.createElement('div');
 
-/** showSnackbarWithId creates notification snackbar with id and automatically removes after duration.
+    snackbar.className = 'snackbar noshow ' + snackbarType;
+
+    var snackbarId;
+    if (id === undefined || id === "") {
+        snackbarId = Math.round((Math.random() * 100)).toString(); 
+    } else {
+        snackbarId = id;
+    }
+
+    snackbar.id = "snackbar-" + snackbarId;
+    snackbar.textContent = text;
+    return snackbar;
+}
+
+/** showSnackbar creates notification snackbar with id and automatically removes after duration.
  * @param id {string} HTML Element id.
  * @param text {string | undefined} Message to display.
  * @param duration {number | undefined} How long is should display before removal. Default is 2000 (2 seconds). */
-function showSnackbarWithId(id, text, duration = 2000) {
+function showSnackbar(id, duration = 2000) {
+    let currentSnackbarCount = document.querySelectorAll("div.snackbar").length;
+    console.log(currentSnackbarCount);
+
+
     var snackbar = document.getElementById(id);
+    if (snackbar === null) {
+        console.error("no snackbar to show");
+    }
 
     setTimeout(() => {
         snackbar.className = snackbar.className.replace("noshow", "show");
-        snackbar.textContent = text;
     }, 50);
 
 
@@ -109,17 +134,19 @@ function showSnackbarWithId(id, text, duration = 2000) {
 }
 
 /** removeSnackbar removes snackbar HTML element.
- * @param snackbarId {string} HTML Element id. */
-function removeSnackbar(snackbarId) {
-    bar = document.getElementById(snackbarId);
-    bar.remove();
+ * @param id {string} HTML Element id. */
+function removeSnackbar(id) {
+    let bar = document.getElementById(id);
+    if (bar !== null) {    
+        bar.remove();
+    }
 }
 
 /** removeSnackbar removes snackbar HTML element after a certain duration.
- * @param snackbarId {string} HTML Element id. 
+ * @param id {string} HTML Element id. 
  * @param duration {number | undefined} How long to wait for removal. */
-function removeSnackbarAfter(snackbarId, duration) {
-    setTimeout(() => removeSnackbar(snackbarId), duration);
+function removeSnackbarAfter(id, duration) {
+    setTimeout(() => removeSnackbar(id), duration);
 }
 
 /** noResponseCallback handles notification if requests don't respond.
@@ -129,10 +156,31 @@ function noResponseCallback(resInfo) {
     createAndShowSnackbar("No response. Server down?", "error");
 }
 
+/** 
+ * Callback function to show snackbar notifications triggered by the server.
+ * Handles ServerNotificationEvents triggered with the "HX-Trigger" response header from the server.
+ * <https://htmx.org/headers/hx-trigger/>
+ *
+ * @param {CustomEvent} evt - The event object containing details about the server notifications.
+ * @param {Object} evt.detail - The event detail payload.
+ * @param {Array} evt.detail.value - An array of notification objects.
+ * @param {string} evt.detail.value[].message - The message to be displayed in the snackbar.
+ * @param {string} evt.detail.value[].type - The type of notification (e.g., "success", "error").
+ * @param {number} [evt.detail.value[].duration] - Optional duration for which the snackbar is displayed.
+ * @param {string} [evt.detail.value[].id] - Optional unique identifier for the snackbar.
+ */
+function serverNotificationsCallback(evt){
+    for (let i = 0; i < evt.detail.value.length; i++) {
+        createAndShowSnackbar(evt.detail.value[i].message, evt.detail.value[i].type, evt.detail.value[i].duration, evt.detail.value[i].id);
+    }
+}
+
 function registerCallbackEventListener() {
     document.body.addEventListener('htmx:beforeSwap', errorResponseCallback);
     document.body.addEventListener('htmx:sendError', noResponseCallback);
+    document.body.addEventListener('ServerNotificationEvents', serverNotificationsCallback);
 }
 
 console.log("registerCallbackEventListener executed")
+//htmx.logAll();
 htmx.onLoad(registerCallbackEventListener)

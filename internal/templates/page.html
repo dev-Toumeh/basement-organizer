@@ -106,9 +106,8 @@
 >
     <div id="snackbar-{{.SnackbarId}}"
         class="snackbar noshow {{.Type}}"
-        hx-on::load="showSnackbarWithId('snackbar-{{.SnackbarId}}', '{{.Message}}', {{.Duration}})"
-    >
-    </div>
+        hx-on::load="showSnackbar('snackbar-{{.SnackbarId}}', {{.Duration}})"
+    >{{.Message}}</div>
 </div>
 {{end}}
 
