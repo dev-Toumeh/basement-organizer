@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"basement/main/internal/database"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 )
@@ -14,7 +13,7 @@ const (
 	LOGIN_FAILED_MESSAGE string = "Login failed"
 )
 
-func LoginHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) {
+func LoginHandler(db AuthDatabase) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			loginUser(w, r, db)
@@ -24,7 +23,8 @@ func LoginHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 }
-func loginUser(w http.ResponseWriter, r *http.Request, db *database.DB) {
+
+func loginUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 	authenticated, ok := Authenticated(r)
 
 	if ok {
