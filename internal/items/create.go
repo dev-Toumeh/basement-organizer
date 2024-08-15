@@ -234,7 +234,9 @@ func parsePicture(r *http.Request) string {
 	}
 
 	file, header, err := r.FormFile(PICTURE)
-	logg.Debug("picture filename:", header.Filename)
+	if header != nil {
+		logg.Debug("picture filename:", header.Filename)
+	}
 	if err != nil {
 		logg.Err(err)
 		return ""
