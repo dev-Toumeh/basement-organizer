@@ -49,6 +49,7 @@ func (db *DB) ItemByField(ctx context.Context, field string, value string) (Item
 	err := row.Scan(&idStr, &item.Label, &item.Description, &item.Picture, &item.Quantity, &item.Weight, &item.QRcode)
 
 	if err != nil {
+		// @TODO: should error not be returned?
 		if err == sql.ErrNoRows {
 			return Item{}, nil
 		}
@@ -56,6 +57,7 @@ func (db *DB) ItemByField(ctx context.Context, field string, value string) (Item
 		return Item{}, err
 	}
 	item.Id = uuid.Must(uuid.FromString(idStr))
+	// @TODO: Why is error returned after item is found?
 	return item, ErrExist
 }
 
