@@ -2,6 +2,7 @@ package items
 
 import (
 	"basement/main/internal/database"
+	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"context"
 	"fmt"
@@ -27,6 +28,8 @@ type ResponseWriter func(w io.Writer, data any)
 func ReadItemHandler(db *database.DB, responseWriter ResponseWriter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
+			logg.Info("access: ", r.URL)
+
 			id := r.FormValue("id")
 			if id == "" {
 				id = r.PathValue("id")
@@ -35,9 +38,17 @@ func ReadItemHandler(db *database.DB, responseWriter ResponseWriter) http.Handle
 			ctx := context.TODO()
 			data, err := db.ItemByField(ctx, "id", id)
 			if err != nil && err != database.ErrExist {
+				logg.Err(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				templates.RenderErrorSnackbar(w, err.Error())
 			}
+			if data.Id.IsNil() {
+				logg.Debug("item not found: ", id)
+				w.WriteHeader(http.StatusNotFound)
+				fmt.Fprintf(w, `Item with id "%s" not found`, id)
+				return
+			}
+			logg.Debugf("item: %T=%v, %T=%v", data.Id, data.Id, data.Label, data.Label)
 			responseWriter(w, data)
 			return
 		}
