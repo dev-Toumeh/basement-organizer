@@ -50,6 +50,17 @@ cd ./tools
 nodemon
 ```
 
+## Testing
+### run all the tests 
+open the Project root directory and run the following 
+
+```
+go test  ./...
+```
+#### options
+-add -v flag to print any fmt logs
+-add -count=1 to prevent using the cache 
+
 ## Development Environment Configuration
 ### Tree
 - the environment tree look like the following:

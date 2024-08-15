@@ -31,7 +31,7 @@ func setup() error {
 
 	// 1. Create the sqlite database File it it wasn't exist
 	if _, err := os.Stat("./sqlite-database-test.db"); err != nil {
-		logg.Debug("Creating sqlite-database-test.db...")
+		fmt.Print("Creating sqlite-database-test.db...")
 		file, err := os.Create("./sqlite-database-test.db")
 		if err != nil {
 			logg.Fatalf("Failed to create database: %v", err)
@@ -39,7 +39,6 @@ func setup() error {
 		}
 		defer file.Close()
 		logg.Debug("sqlite-database-test.db was created")
-		return err
 	}
 
 	//  2. Open the connection
