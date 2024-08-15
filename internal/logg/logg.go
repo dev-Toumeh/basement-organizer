@@ -164,3 +164,27 @@ func DisableErrorLoggerS() {
 func ErrorLoggerEnabled() bool {
 	return errorLoggerEnabled
 }
+
+// WantHave creates a well formatted string for test fail logging
+//
+// Calling
+//
+//	WantHave(http.StatusForbidden, w.Result().Status, "/login"+urlParams)
+//
+// Output will look like:
+//
+//	Want: "403"      Have: "403 Forbidden"   Info: "/login?username="
+func WantHave(want any, have any, v ...any) string {
+	msg := fmt.Sprintf("Want: \"%v\"\tHave: \"%v\"", want, have)
+
+	if v == nil {
+		return msg
+	}
+
+	info := "\tInfo: "
+	for _, item := range v {
+		info += fmt.Sprintf("\"%v\"\t", item)
+	}
+	msg += info
+	return msg
+}

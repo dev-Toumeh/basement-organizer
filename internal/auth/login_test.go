@@ -78,7 +78,7 @@ func TestLoginUserDoesNotExist(t *testing.T) {
 
 	loginUser(w, r, testErrorDB)
 	if w.Code != http.StatusForbidden {
-		t.Log("/login"+urlParams, "Status:", w.Result().Status)
+		t.Log(logg.WantHave(http.StatusForbidden, w.Result().Status, "/login"+urlParams))
 		t.Fail()
 	}
 }
@@ -93,7 +93,7 @@ func TestLoginUserDoesNotMatch(t *testing.T) {
 	w := &httptest.ResponseRecorder{}
 	loginUser(w, r, testDB)
 	if w.Code != http.StatusInternalServerError {
-		t.Log("/login"+urlParams, "Status:", w.Result().Status)
+		t.Log(logg.WantHave(http.StatusInternalServerError, w.Result().Status, "/login"+urlParams))
 		t.Fail()
 	}
 }
@@ -103,7 +103,7 @@ func TestLoginCorrectPassword(t *testing.T) {
 	w := &httptest.ResponseRecorder{}
 	loginUser(w, r, testDB)
 	if w.Code != http.StatusOK {
-		t.Log("/login?username=testuser1&password=abc", "Status:", w.Result().Status)
+		t.Log(logg.WantHave(http.StatusOK, w.Result().Status, "/login?username=testuser1&password=abc"))
 		t.Fail()
 	}
 }
@@ -121,7 +121,7 @@ func loginWithMalformedInputs(urlParams string, t *testing.T) {
 	w := &httptest.ResponseRecorder{}
 	loginUser(w, r, testDB)
 	if w.Code != http.StatusForbidden {
-		t.Log("/login"+urlParams, "Status:", w.Result().Status)
+		t.Log(logg.WantHave(http.StatusForbidden, w.Result().Status, "/login"+urlParams))
 		t.Fail()
 	}
 }
@@ -132,7 +132,7 @@ func runLoginHandlerMethodNotAllowed(method string, t *testing.T) {
 	loginFunc := LoginHandler(testDB)
 	loginFunc(w, r)
 	if w.Code != http.StatusMethodNotAllowed {
-		t.Log("Method:", method, "=> Status:", w.Result().Status)
+		t.Log(logg.WantHave(http.StatusMethodNotAllowed, w.Result().Status, "Method="+method))
 		t.Fail()
 	}
 	allowHeader := w.Result().Header.Values("allow")
@@ -142,11 +142,11 @@ func runLoginHandlerMethodNotAllowed(method string, t *testing.T) {
 	logg.Debug(getAllowed)
 	logg.Debug(postAllowed)
 	if !getAllowed {
-		t.Log("Missing 'Allow' Header method:", http.MethodGet)
+		t.Log(logg.WantHave("GET", allowHeader))
 		t.Fail()
 	}
 	if !postAllowed {
-		t.Log("Missing 'Allow' Header: method", http.MethodGet)
+		t.Log(logg.WantHave("POST", allowHeader))
 		t.Fail()
 	}
 }
