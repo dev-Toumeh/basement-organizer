@@ -2,6 +2,7 @@ package auth
 
 import (
 	"basement/main/internal/database"
+	"basement/main/internal/logg"
 	"context"
 	"errors"
 	"net/http"
@@ -9,6 +10,10 @@ import (
 	"slices"
 	"testing"
 )
+
+func init() {
+	// logg.EnableInfoLogger()
+}
 
 // TestAuthDatabase mock implementation
 type TestAuthDatabase struct{}
@@ -79,6 +84,10 @@ func TestLoginUserDoesNotExist(t *testing.T) {
 }
 
 func TestLoginUserDoesNotMatch(t *testing.T) {
+	// Disable error logging because this test will throw an expected errror that should not be logged.
+	logg.DisableErrorLoggerS()
+	defer logg.EnableErrorLoggerS()
+
 	urlParams := "?username=nomatchinguser&password=abc"
 	r := httptest.NewRequest(http.MethodPost, "/login"+urlParams, nil)
 	w := &httptest.ResponseRecorder{}
@@ -129,9 +138,9 @@ func runLoginHandlerMethodNotAllowed(method string, t *testing.T) {
 	allowHeader := w.Result().Header.Values("allow")
 	getAllowed := slices.Contains(allowHeader, http.MethodGet)
 	postAllowed := slices.Contains(allowHeader, http.MethodPost)
-	// logg.Debug(allowHeader)
-	// logg.Debug(getAllowed)
-	// logg.Debug(postAllowed)
+	logg.Debug(allowHeader)
+	logg.Debug(getAllowed)
+	logg.Debug(postAllowed)
 	if !getAllowed {
 		t.Log("Missing 'Allow' Header method:", http.MethodGet)
 		t.Fail()
