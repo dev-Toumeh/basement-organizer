@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"basement/main/internal/database"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 )
@@ -14,7 +13,7 @@ const (
 	LOGIN_FAILED_MESSAGE string = "Login failed"
 )
 
-func LoginHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) {
+func LoginHandler(db AuthDatabase) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			loginUser(w, r, db)
@@ -22,9 +21,13 @@ func LoginHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) 
 		if r.Method == http.MethodGet {
 			loginPage(w, r)
 		}
+		w.Header().Add("Allow", http.MethodGet)
+		w.Header().Add("Allow", http.MethodPost)
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
-func loginUser(w http.ResponseWriter, r *http.Request, db *database.DB) {
+
+func loginUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 	authenticated, ok := Authenticated(r)
 
 	if ok {
@@ -56,7 +59,22 @@ func loginUser(w http.ResponseWriter, r *http.Request, db *database.DB) {
 	}
 
 	ctx := context.TODO()
-	user, _ := db.User(ctx, username)
+	user, err := db.User(ctx, username)
+
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintln(w, LOGIN_FAILED_MESSAGE)
+		logg.Info(LOGIN_FAILED_MESSAGE)
+		logg.Debug("User", username, "doesn't exist")
+		return
+	}
+
+	if user.Username != username {
+		w.WriteHeader(http.StatusInternalServerError)
+		logg.Info(LOGIN_FAILED_MESSAGE)
+		logg.Errf(`username "%s" does not match user.Username from database "%s". This should not happen!`, username, user.Username)
+		return
+	}
 
 	if !checkPasswordHash(password, user.PasswordHash) {
 		w.WriteHeader(http.StatusForbidden)
@@ -80,7 +98,7 @@ func loginPage(w http.ResponseWriter, r *http.Request) {
 	data := templates.NewPageTemplate()
 	data.Title = "login"
 	data.Authenticated = authenticated
-
+	logg.Debug(data)
 	err := templates.Render(w, templates.TEMPLATE_LOGIN_PAGE, data)
 	if err != nil {
 		templates.RenderErrorSnackbar(w, err.Error())

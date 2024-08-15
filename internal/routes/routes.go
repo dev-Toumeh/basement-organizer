@@ -39,7 +39,7 @@ func MustRender(w http.ResponseWriter, r *http.Request, name string, data any) {
 	}
 }
 
-func authRoutes(db *database.DB) {
+func authRoutes(db auth.AuthDatabase) {
 	http.HandleFunc("/login", auth.LoginHandler(db))
 	http.HandleFunc("/register", auth.RegisterHandler(db))
 	http.HandleFunc("/register-form", func(w http.ResponseWriter, r *http.Request) {

@@ -22,9 +22,15 @@ var (
 	store = sessions.NewCookieStore(key)
 )
 
+type AuthDatabase interface {
+	CreateNewUser(ctx context.Context, username string, passwordhash string) error
+	// @TODO: Move User struct to a different place that is independent of database
+	User(ctx context.Context, username string) (database.User, error)
+}
+
 // this function will check the type of the request
 // if it is from type post it will register the user otherwise it will generate the register template
-func RegisterHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) {
+func RegisterHandler(db AuthDatabase) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			registerUser(w, r, db)
@@ -54,7 +60,7 @@ func generateRegisterPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func registerUser(w http.ResponseWriter, r *http.Request, db *database.DB) {
+func registerUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 	username := r.PostFormValue("username")
 	password := r.PostFormValue("password")
 	passwordConfirm := r.PostFormValue("password-confirm")
