@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"basement/main/internal/database"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"context"
@@ -22,10 +21,18 @@ var (
 	store = sessions.NewCookieStore(key)
 )
 
+type User struct {
+	Id           uuid.UUID
+	Username     string
+	PasswordHash string
+	email        string
+}
+
+
 type AuthDatabase interface {
 	CreateNewUser(ctx context.Context, username string, passwordhash string) error
-	// @TODO: Move User struct to a different place that is independent of database
-	User(ctx context.Context, username string) (database.User, error)
+	User(ctx context.Context, username string) (User, error)
+	UserExists(ctx context.Context, username string) (bool, error)
 }
 
 // this function will check the type of the request

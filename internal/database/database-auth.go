@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/auth"
 	"basement/main/internal/logg"
 	"context"
 	"database/sql"
@@ -40,13 +41,11 @@ func (db *DB) CreateNewUser(ctx context.Context, username string, passwordhash s
 }
 
 // check if the username is available
-// if the user exist it will return iuser struct with nil
+// if the user exist it will return user struct with nil
 // if not it will return empty user struct with err
-func (db *DB) User(ctx context.Context, username string) (User, error) {
-	var user User
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (db *DB) User(ctx context.Context, username string) (auth.User, error) {
+    var user auth.User
+    var userId string 
 
 	query := "SELECT id, username, passwordhash FROM user WHERE username=?"
 	row := db.Sql.QueryRowContext(ctx, query, username)
