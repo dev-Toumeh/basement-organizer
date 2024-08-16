@@ -26,7 +26,7 @@ func (db *TestAuthDatabase) CreateNewUser(ctx context.Context, username string, 
 // User mock implementation
 func (db *TestAuthDatabase) User(ctx context.Context, username string) (User, error) {
 	user := User{
-		Id:           "18c60ba9-ccac-48f5-8c7c-473bd35acbea",
+		Id:           uuid.Must(uuid.NewV4()),
 		Username:     "testuser1",
 		PasswordHash: "$2a$14$Lw/lCPdEm2JrmCgSuEIUN.rxZZYlHQbMSNbM/7zOLu8k5jZZ4pwPK", // "abc"
 	}

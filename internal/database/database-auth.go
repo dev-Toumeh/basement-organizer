@@ -44,18 +44,30 @@ func (db *DB) CreateNewUser(ctx context.Context, username string, passwordhash s
 // if the user exist it will return user struct with nil
 // if not it will return empty user struct with err
 func (db *DB) User(ctx context.Context, username string) (auth.User, error) {
-    var user auth.User
-    var userId string 
+	var user auth.User
+	var userId string
+
+	if ctx == nil {
+		ctx = context.Background()
+	}
 
 	query := "SELECT id, username, passwordhash FROM user WHERE username=?"
 	row := db.Sql.QueryRowContext(ctx, query, username)
-	err := row.Scan(&user.Id, &user.Username, &user.PasswordHash)
+
+	err := row.Scan(&userId, &user.Username, &user.PasswordHash)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return User{}, err
+			return auth.User{}, err
 		}
 		logg.Err("row.Scan error while checking if the username is available:", err)
-		return User{}, err
+		return auth.User{}, err
+	}
+
+	// Convert the string representation to a UUID
+	user.Id, err = uuid.FromString(userId)
+	if err != nil {
+		logg.Err("Error parsing UUID:", err)
+		return auth.User{}, err
 	}
 
 	return user, nil
@@ -64,7 +76,7 @@ func (db *DB) User(ctx context.Context, username string) (auth.User, error) {
 // here we run the insert new User query separate from the public function
 // it make the code more readable
 func (db *DB) insertNewUser(ctx context.Context, username string, passwordhash string) error {
-	id, err := uuid.NewV4() // Error handling for UUID generation
+	id, err := uuid.NewV4()
 	if err != nil {
 		logg.Err("Error generating UUID:", err)
 		return err
