@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"basement/main/internal/database"
 	"basement/main/internal/logg"
 	"context"
 	"errors"
@@ -9,6 +8,8 @@ import (
 	"net/http/httptest"
 	"slices"
 	"testing"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 func init() {
@@ -33,6 +34,11 @@ func (db *TestAuthDatabase) User(ctx context.Context, username string) (User, er
 	return user, nil
 }
 
+// UserExists mock implementation
+func (db *TestAuthDatabase) UserExist(ctx context.Context, username string) (bool, error) {
+	return true, nil
+}
+
 type TestAuthDatabaseError struct{}
 
 // CreateNewUser mock implementation returns error
@@ -41,8 +47,12 @@ func (db *TestAuthDatabaseError) CreateNewUser(ctx context.Context, username str
 }
 
 // User mock implementation returns error
-func (db *TestAuthDatabaseError) User(ctx context.Context, username string) (database.User, error) {
-	return database.User{}, errors.New("")
+func (db *TestAuthDatabaseError) User(ctx context.Context, username string) (User, error) {
+	return User{}, errors.New("")
+}
+
+func (db *TestAuthDatabaseError) UserExist(ctx context.Context, username string) (bool, error) {
+	return false, errors.New("user not found")
 }
 
 var testDB *TestAuthDatabase = &TestAuthDatabase{}

@@ -10,14 +10,6 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-type User struct {
-	Id           string
-	Username     string
-	PasswordHash string
-}
-
-var ctx context.Context
-
 // CreateNewUser inserts a new user into the database with the given username and passwordHash
 // Returns an error if user already exists.
 func (db *DB) CreateNewUser(ctx context.Context, username string, passwordhash string) error {
@@ -71,6 +63,24 @@ func (db *DB) User(ctx context.Context, username string) (auth.User, error) {
 	}
 
 	return user, nil
+}
+
+func (db *DB) UserExist(ctx context.Context, username string) (bool, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	query := "SELECT EXISTS(SELECT 1 FROM user WHERE username=?)" // Modified query
+	var exists bool
+	row := db.Sql.QueryRowContext(ctx, query, username)
+
+	err := row.Scan(&exists)
+	if err != nil {
+		logg.Err("row.Scan error while checking if the username exists:", err)
+		return false, err
+	}
+
+	return exists, nil
 }
 
 // here we run the insert new User query separate from the public function

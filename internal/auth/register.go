@@ -32,7 +32,7 @@ type User struct {
 type AuthDatabase interface {
 	CreateNewUser(ctx context.Context, username string, passwordhash string) error
 	User(ctx context.Context, username string) (User, error)
-	UserExists(ctx context.Context, username string) (bool, error)
+	UserExist(ctx context.Context, username string) (bool, error)
 }
 
 // this function will check the type of the request
