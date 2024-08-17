@@ -65,7 +65,7 @@ func (db *DB) User(ctx context.Context, username string) (auth.User, error) {
 	return user, nil
 }
 
-func (db *DB) UserExist(ctx context.Context, username string) (bool, error) {
+func (db *DB) UserExist(ctx context.Context, username string) bool {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -76,11 +76,11 @@ func (db *DB) UserExist(ctx context.Context, username string) (bool, error) {
 
 	err := row.Scan(&exists)
 	if err != nil {
-		logg.Err("row.Scan error while checking if the username exists:", err)
-		return false, err
+		logg.Fatal("row.Scan error while checking if the username exists:", err)
+		return false
 	}
 
-	return exists, nil
+	return exists
 }
 
 // here we run the insert new User query separate from the public function

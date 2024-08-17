@@ -30,7 +30,7 @@ var (
 type AuthDatabase interface {
 	CreateNewUser(ctx context.Context, username string, passwordhash string) error
 	User(ctx context.Context, username string) (User, error)
-	UserExist(ctx context.Context, username string) (bool, error)
+	UserExist(ctx context.Context, username string) bool
 }
 
 type User struct {
@@ -49,8 +49,7 @@ type InputUser struct {
 	Email           string `validate:"omitempty,email"`
 }
 
-// this need zo be moved to templates & add Item
-type TemplateError struct {
+type registerErroData struct {
 	InputType     InputUser `json:"input_type"`
 	ErrorMessages []string  `json:"error_messages"`
 }
@@ -122,7 +121,7 @@ func registerUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 
 	// 3. Check if the username exist
 	ctx := context.TODO() // i don't now which kind of context we need to use so i keep it todo for now
-	exist, err := db.UserExist(ctx, newUser.Username)
+	exist := db.UserExist(ctx, newUser.Username)
 	if err != nil {
 		logg.Err(err)
 		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
@@ -251,7 +250,7 @@ func passwordStrengthValidator(fl validator.FieldLevel) bool {
 
 // render register validate error Messages
 func RenderValidateErrorMessages(w io.Writer, inputUser InputUser) {
-	templateError := TemplateError{
+	templateError := registerErroData{
 		InputType:     inputUser,
 		ErrorMessages: *errorMessages,
 	}
