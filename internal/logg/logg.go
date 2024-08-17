@@ -135,6 +135,11 @@ func InfoLoggerEnabled() bool {
 	return infoLoggerEnabled
 }
 
+// InfoForceOutput is for logs that must be logged no matter what config is set.
+func InfoForceOutput(outputLevel int, v ...any) {
+	infoLogger.Output(outputLevel, fmt.Sprint(v...))
+}
+
 //
 // Error logging
 
