@@ -6,10 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"regexp"
-	"strings"
-	"text/template"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid/v5"
@@ -48,6 +47,12 @@ type InputUser struct {
 	Password        string `validate:"required,min=8,password_strength"`
 	PasswordConfirm string `validate:"required,eqfield=Password"`
 	Email           string `validate:"omitempty,email"`
+}
+
+// this need zo be moved to templates & add Item
+type TemplateError struct {
+	InputType     InputUser `json:"input_type"`
+	ErrorMessages []string  `json:"error_messages"`
 }
 
 const (
@@ -95,30 +100,21 @@ func generateRegisterPage(w http.ResponseWriter, r *http.Request) {
 func registerUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 
 	//  1. Validate the input
-	inputUser := InputUser{
+	inputFromPost := InputUser{
 		Username:        r.PostFormValue(USERNAME),
 		Password:        r.PostFormValue(PASSWORD),
 		PasswordConfirm: r.PostFormValue(PASSWORD_CONFIRM),
 		Email:           r.PostFormValue(EMAIL),
 	}
 
-	inputUser, err := validateRegisterInput(inputUser)
+	validInputUser, err := validateRegisterInput(inputFromPost)
 	if err != nil {
-		htmlstring := fmt.Sprintf(
-			"please check the following errors and try again: </br> %s",
-			strings.Join(*errorMessages, " "),
-		)
-		tmp, err := template.New("div").Parse(htmlstring)
-		if err != nil {
-			logg.Err(err)
-			templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
-		}
-		tmp.Execute(w, nil)
+		RenderValidateErrorMessages(w, inputFromPost)
 		return
 	}
 
 	// 2. Put the data into struct from type user
-	newUser, err := user(inputUser)
+	newUser, err := user(validInputUser)
 	if err != nil {
 		logg.Err(err)
 		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
@@ -132,13 +128,10 @@ func registerUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
 	}
 	if exist {
-		logg.Debugf(`User already exists: "%v"`, newUser.Username)
-		tmp, err := template.New("div").Parse("user already exist")
-		if err != nil {
-			logg.Err(err)
-			templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
-		}
-		tmp.Execute(w, nil)
+		message := fmt.Sprintf(`User already exists: "%s"`, newUser.Username)
+		logg.Debug(message)
+		*errorMessages = append(*errorMessages, message)
+		RenderValidateErrorMessages(w, inputFromPost)
 		return
 	}
 
@@ -148,6 +141,7 @@ func registerUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
 		return
 	}
+	http.RedirectHandler("/login", http.StatusOK)
 
 	// https://htmx.org/headers/hx-location/
 	http.RedirectHandler("/login-form", http.StatusOK)
@@ -202,29 +196,29 @@ func validateRegisterInput(inputUser InputUser) (InputUser, error) {
 				switch validationErr.Field() {
 				case "Username":
 					if validationErr.Tag() == "required" {
-						*errorMessages = append(*errorMessages, "<div>The Username field is required but missing.</div>")
+						*errorMessages = append(*errorMessages, "The Username field is required but missing.")
 					} else if validationErr.Tag() == "min" {
-						*errorMessages = append(*errorMessages, "<div>The Username must be at least 6 characters long.</div>")
+						*errorMessages = append(*errorMessages, "The Username must be at least 6 characters long.")
 					} else if validationErr.Tag() == "max" {
-						*errorMessages = append(*errorMessages, "<div>The Username must be at most 20 characters long.</div>")
+						*errorMessages = append(*errorMessages, "The Username must be at most 20 characters long.")
 					}
 				case "Password":
 					if validationErr.Tag() == "required" {
-						*errorMessages = append(*errorMessages, "<div>The Password field is required but missing.</div>")
+						*errorMessages = append(*errorMessages, "The Password field is required but missing.")
 					} else if validationErr.Tag() == "min" {
-						*errorMessages = append(*errorMessages, "<div>The Password must be at least 8 characters long.</div>")
+						*errorMessages = append(*errorMessages, "The Password must be at least 8 characters long.")
 					} else if validationErr.Tag() == "password_strength" {
-						*errorMessages = append(*errorMessages, "<div>The Password must contain at least one letter, one number, and one symbol.</div>")
+						*errorMessages = append(*errorMessages, "The Password must contain at least one letter, one number, and one symbol.")
 					}
 				case "PasswordConfirm":
 					if validationErr.Tag() == "required" {
-						*errorMessages = append(*errorMessages, "<div>The Password Confirm field is required but missing.</div>")
+						*errorMessages = append(*errorMessages, "The Password Confirm field is required but missing.")
 					} else if validationErr.Tag() == "eqfield" {
-						*errorMessages = append(*errorMessages, "<div>The Password and Password Confirm fields must match.</div>")
+						*errorMessages = append(*errorMessages, "The Password and Password Confirm fields must match.")
 					}
 				case "Email":
 					if validationErr.Tag() == "email" {
-						*errorMessages = append(*errorMessages, "<div>The Email field must be a valid email address.</div>")
+						*errorMessages = append(*errorMessages, "The Email field must be a valid email address.")
 					}
 				default:
 					*errorMessages = append(*errorMessages, fmt.Sprintf("Field '%s' is invalid: %s", validationErr.Field(), validationErr.Tag()))
@@ -253,4 +247,18 @@ func passwordStrengthValidator(fl validator.FieldLevel) bool {
 	hasSymbol := regexp.MustCompile(`[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]`).MatchString(password)
 
 	return hasLetter && hasNumber && hasSymbol
+}
+
+// render register validate error Messages
+func RenderValidateErrorMessages(w io.Writer, inputUser InputUser) {
+	templateError := TemplateError{
+		InputType:     inputUser,
+		ErrorMessages: *errorMessages,
+	}
+	err := templates.Render(w, templates.TEMPLATE_REGISTER_FORM, templateError)
+	if err != nil {
+		logg.Debug(err)
+		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
+	}
+	*errorMessages = []string{}
 }

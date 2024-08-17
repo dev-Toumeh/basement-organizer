@@ -13,17 +13,7 @@ import (
 )
 
 func RegisterRoutes(db *database.DB) {
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
-	http.HandleFunc("/", HomePage)
-	http.HandleFunc("/personal-page", PersonalPage)
-	http.HandleFunc("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
-		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
-	}))
-	http.HandleFunc("/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
-		templates.Render(w, templates.TEMPLATE_ITEMS_CONTAINER, data)
-	}))
-	http.HandleFunc("/login-form", auth.LoginForm)
-
+	staticRoutes()
 	authRoutes(db)
 	apiRoutes(db)
 	experimentalRoutes(db)
@@ -41,6 +31,7 @@ func MustRender(w http.ResponseWriter, r *http.Request, name string, data any) {
 
 func authRoutes(db auth.AuthDatabase) {
 	http.HandleFunc("/login", auth.LoginHandler(db))
+	http.HandleFunc("/login-form", auth.LoginForm)
 	http.HandleFunc("/register", auth.RegisterHandler(db))
 	http.HandleFunc("/register-form", func(w http.ResponseWriter, r *http.Request) {
 		MustRender(w, r, templates.TEMPLATE_REGISTER_FORM, nil)
@@ -49,6 +40,13 @@ func authRoutes(db auth.AuthDatabase) {
 }
 
 func apiRoutes(db *database.DB) {
+	http.HandleFunc("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
+		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
+	}))
+	http.HandleFunc("/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
+		templates.Render(w, templates.TEMPLATE_ITEMS_CONTAINER, data)
+	}))
+
 	http.HandleFunc("/api/v1/create/item", items.CreateItemHandler(db))
 	http.HandleFunc("/api/v1/read/item/{id}", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		fmt.Fprint(w, data)
@@ -73,6 +71,12 @@ func SwitchDebugStyle(w http.ResponseWriter, r *http.Request) {
 		templates.Render(w, templates.TEMPLATE_STYLE, nil)
 	}
 	testStyle = !testStyle
+}
+
+func staticRoutes() {
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
+	http.HandleFunc("/", HomePage)
+	http.HandleFunc("/personal-page", PersonalPage)
 }
 
 func experimentalRoutes(db *database.DB) {
