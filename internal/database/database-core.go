@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/logg"
 	"database/sql"
 	"errors"
 	"log"
@@ -38,7 +39,7 @@ func (db *DB) Connect() error {
 		file, err := os.Create(DATABASE_FILE_PATH)
 		defer file.Close()
 		if err != nil {
-			log.Fatal(err.Error())
+			logg.Fatal(err)
 			return err
 		}
 		log.Println("sqlite-database.db created")
