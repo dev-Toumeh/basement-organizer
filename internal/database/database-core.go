@@ -36,11 +36,11 @@ func (db *DB) Connect() error {
 	if _, err := os.Stat(DATABASE_FILE_PATH); err != nil {
 		log.Println("Creating sqlite-database.db...")
 		file, err := os.Create(DATABASE_FILE_PATH)
+		defer file.Close()
 		if err != nil {
 			log.Fatal(err.Error())
 			return err
 		}
-		defer file.Close()
 		log.Println("sqlite-database.db created")
 		return err
 	}
