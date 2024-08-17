@@ -204,11 +204,7 @@ func item(r *http.Request) database.Item {
 	logg.Debug("Creating item id:", id)
 	logg.Debug("Content-Type:", r.Header.Get("Content-Type"))
 
-	b64encodedPictureString := ""
-	// Request has multipart/form-data content type for uploading picture
-	if strings.Contains(r.Header.Get("Content-Type"), "multipart/form-data") {
-		b64encodedPictureString = parsePicture(r)
-	}
+	b64encodedPictureString := parsePicture(r)
 
 	newItem := database.Item{
 		Id:          id,
