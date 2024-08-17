@@ -11,6 +11,7 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
+// @TODO: Move item to items package?
 type Item struct {
 	Id          uuid.UUID `json:"id"`
 	Label       string    `json:"label"       validate:"required,lte=128"`
