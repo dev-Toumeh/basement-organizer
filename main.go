@@ -5,7 +5,6 @@ import (
 	"basement/main/internal/logg"
 	"basement/main/internal/routes"
 	"basement/main/internal/templates"
-	"log"
 	"net/http"
 )
 
@@ -15,10 +14,7 @@ func main() {
 
 	db := &database.DB{}
 
-	err := db.Connect()
-	if err != nil {
-		log.Fatalf("Can't create DB, shutting server down")
-	}
+	db.Connect()
 	defer db.Sql.Close()
 
 	routes.RegisterRoutes(db)

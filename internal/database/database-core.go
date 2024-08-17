@@ -31,31 +31,28 @@ type DB struct {
 }
 
 // create the Database file if it was not exist and establish the connection with it
-func (db *DB) Connect() error {
+func (db *DB) Connect() {
 
 	// create the sqlite database File it it wasn't exist
 	if _, err := os.Stat(DATABASE_FILE_PATH); err != nil {
 		log.Println("Creating sqlite-database.db...")
-		file, err := os.Create(DATABASE_FILE_PATH)
+		file, internErr := os.Create(DATABASE_FILE_PATH)
 		defer file.Close()
-		if err != nil {
-			logg.Fatal(err)
-			return err
+		if internErr != nil {
+			logg.Fatal(internErr)
 		}
 		log.Println("sqlite-database.db created")
-		return err
 	}
 	// open the connection
 	var err error
-	if db.Sql, err = sql.Open("sqlite", DATABASE_FILE_PATH); err != nil {
-		log.Fatalf("Failed to open database: %v", err)
-		return err
+	db.Sql, err = sql.Open("sqlite", DATABASE_FILE_PATH)
+	if err != nil {
+		logg.Fatalf("Failed to open database: %v", err)
 	}
 	log.Printf("Database Connection established")
 
 	// create the Tables if were not exist
 	db.createTable()
-	return nil
 }
 
 func (db *DB) createTable() {
@@ -64,18 +61,16 @@ func (db *DB) createTable() {
 		var exists bool
 		err := db.Sql.QueryRow("SELECT EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name=?)", tableName).Scan(&exists)
 		if err != nil {
-			log.Fatalf("Failed to check if table exists: %s", err)
-			return
+			logg.Fatalf("Failed to check if table exists: %s", err)
 		}
 
 		// If the table doesn't exist, create it
 		if !exists {
 			_, err := db.Sql.Exec(createStatement)
 			if err != nil {
-				log.Fatalf("Failed to create table: %s", err)
-				return
+				logg.Fatalf("Failed to create table: %s", err)
 			}
-			log.Printf("Table '%s' created successfully", tableName)
+			log.Printf("Table '%s' created successfully\n", tableName)
 		}
 	}
 }
