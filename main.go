@@ -2,6 +2,7 @@ package main
 
 import (
 	"basement/main/internal/database"
+	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"basement/main/internal/routes"
 	"basement/main/internal/templates"
@@ -9,8 +10,12 @@ import (
 )
 
 func main() {
-	logg.EnableDebugLogger()
-	logg.EnableInfoLogger()
+	// Move this only if necessary
+	env.SetDevelopment()
+	if env.Development() {
+		logg.EnableDebugLogger()
+		logg.EnableInfoLogger()
+	}
 
 	db := &database.DB{}
 
