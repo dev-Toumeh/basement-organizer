@@ -1,46 +1,52 @@
-{{ define "register-page" }}
+{{ define "create-item-page" }}
 {{ template "open-html-tag" . }}
 {{ template "head" . }}
-<body>
-    {{ template "statusbar" . }}
-    {{ template "register-form" . }}
-</body>
+{{ template "statusbar" . }}
+{{ template "register-form" . }}
 {{ template "close-html-tag" . }}
-{{end}}
+{{ end }}
 
 {{define "register-form"}}
-<form 
-    hx-post="register"
-    hx-disabled-elt="#registerButton"
-    hx-indicator="#loadingIndicator"
-    id="form"
-    name="form">
+<form id="form" name="form" 
+     hx-post="register"
+     hx-disabled-elt="#registerButton"
+     hx-indicator="#loadingIndicator">
+
+    <div id="error-messages" class="error-messages"> 
+        {{ if .ErrorMessages }}
+            {{ range .ErrorMessages }}
+              <div> {{ . }} </div>
+            {{ end }}
+        {{ end }}
+    </div>
     <label for="username">Username:</label>
     <input 
         type="text" 
         id="username" 
-        name="username"
-        required
-    />
-    <br/>
+        name="username" 
+        value="{{ if .InputType }}{{ .InputType.Username }}{{ end }}" 
+        required>
+    <br>
 
     <label for="password">Password:</label>
     <input 
-        type="password"
-        id="password"
-        name="password"
-        required
-    />
-    <br/>
+        type="password" 
+        id="password" 
+        name="password" 
+        value="{{ if .InputType }}{{ .InputType.Password }}{{ end }}" 
+        required>
+    <br>
 
     <label for="password-confirm">Confirm Password:</label>
-    <input
-        type="password"
-        id="password-confirm"
-        name="password-confirm"
-        placeholder="Confirm Password"
-        required
-    />
+    <input 
+        type="password" 
+        id="password-confirm" 
+        name="password-confirm"   
+        value="{{ if .InputType }}{{ .InputType.PasswordConfirm }}{{ end }}" 
+        placeholder="Confirm Password" 
+        required>
+    <br>
+
     <button id="registerButton" type="submit">Register</button>
 </form>
 {{end}}

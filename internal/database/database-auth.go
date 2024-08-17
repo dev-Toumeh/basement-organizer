@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/auth"
 	"basement/main/internal/logg"
 	"context"
 	"database/sql"
@@ -8,14 +9,6 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 )
-
-type User struct {
-	Id           string
-	Username     string
-	PasswordHash string
-}
-
-var ctx context.Context
 
 // CreateNewUser inserts a new user into the database with the given username and passwordHash
 // Returns an error if user already exists.
@@ -40,32 +33,60 @@ func (db *DB) CreateNewUser(ctx context.Context, username string, passwordhash s
 }
 
 // check if the username is available
-// if the user exist it will return iuser struct with nil
+// if the user exist it will return user struct with nil
 // if not it will return empty user struct with err
-func (db *DB) User(ctx context.Context, username string) (User, error) {
-	var user User
+func (db *DB) User(ctx context.Context, username string) (auth.User, error) {
+	var user auth.User
+	var userId string
+
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
 	query := "SELECT id, username, passwordhash FROM user WHERE username=?"
 	row := db.Sql.QueryRowContext(ctx, query, username)
-	err := row.Scan(&user.Id, &user.Username, &user.PasswordHash)
+
+	err := row.Scan(&userId, &user.Username, &user.PasswordHash)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return User{}, err
+			return auth.User{}, err
 		}
 		logg.Err("row.Scan error while checking if the username is available:", err)
-		return User{}, err
+		return auth.User{}, err
+	}
+
+	// Convert the string representation to a UUID
+	user.Id, err = uuid.FromString(userId)
+	if err != nil {
+		logg.Err("Error parsing UUID:", err)
+		return auth.User{}, err
 	}
 
 	return user, nil
 }
 
+func (db *DB) UserExist(ctx context.Context, username string) bool {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	query := "SELECT EXISTS(SELECT 1 FROM user WHERE username=?)" // Modified query
+	var exists bool
+	row := db.Sql.QueryRowContext(ctx, query, username)
+
+	err := row.Scan(&exists)
+	if err != nil {
+		logg.Fatal("row.Scan error while checking if the username exists:", err)
+		return false
+	}
+
+	return exists
+}
+
 // here we run the insert new User query separate from the public function
 // it make the code more readable
 func (db *DB) insertNewUser(ctx context.Context, username string, passwordhash string) error {
-	id, err := uuid.NewV4() // Error handling for UUID generation
+	id, err := uuid.NewV4()
 	if err != nil {
 		logg.Err("Error generating UUID:", err)
 		return err
