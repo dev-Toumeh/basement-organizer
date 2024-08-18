@@ -93,12 +93,12 @@ type BoxNode interface {
 	// InnerBoxes represent boxes that are inside this current box.
 	//
 	// Returns a slice of pointers to (inner) boxes if it has other boxes inside, else it returns nil.
-	InnerBoxes() []*Box
+	// InnerBoxes() []*Box
 
 	// OuterBox is the box where this current box is inside of.
 	//
 	// Returns a Box pointer to the (outer) box if it is inside that other box, else it returns nil.
-	OuterBox() *Box
+	// OuterBox() *Box
 
 	// Self returns this Box bnstance that implements the BoxNode interface.
 	Self() *Box
