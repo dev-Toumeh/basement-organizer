@@ -12,7 +12,12 @@ import (
 	"basement/main/internal/templates"
 )
 
+// Temporary workaround for simplicity.
+// No need to pass reference around in functions for database access.
+var pdb *database.DB
+
 func RegisterRoutes(db *database.DB) {
+	pdb = db
 	staticRoutes()
 	authRoutes(db)
 	apiRoutes(db)
