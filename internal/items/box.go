@@ -90,19 +90,23 @@ type BoxNode interface {
 	// InnerBoxes represent boxes that are inside this current box.
 	//
 	// Returns a slice of pointers to (inner) boxes if it has other boxes inside, else it returns nil.
-	// InnerBoxes() []*Box
+	InnerBoxes() []*Box
 
-	// OuterBox has this current box inside.
+	// OuterBox is the box where this current box is inside of.
 	//
 	// Returns a Box pointer to the (outer) box if it is inside that other box, else it returns nil.
-	// OuterBox() *Box
+	OuterBox() *Box
 
-	// Self returns this Box instance that implements the BoxNode interface.
+	// Self returns this Box bnstance that implements the BoxNode interface.
 	Self() *Box
 
 	// MoveTo moves this box inside another box.
-	// Returns an error if it didn't work.
+	// Returns an error if moving is not successful.
 	MoveTo(other *Box) error
+
+	// MoveOutOfOtherBox moves this box out.
+	// Returns an error if moving out is not succesful.
+	MoveOutOfOtherBox() error
 }
 
 // func (box *Box) OuterBox() *Box {
