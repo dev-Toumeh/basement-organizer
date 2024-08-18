@@ -83,6 +83,9 @@ func (box *Box) MoveOutOfOtherBox() error {
 }
 
 type Movable interface {
+	// MoveTo moves this instance inside another instance.
+	// Currently 'other' works only with Box structs.
+	// Returns an error if moving is not successful.
 	MoveTo(other any) error
 }
 
@@ -100,9 +103,8 @@ type BoxNode interface {
 	// Self returns this Box bnstance that implements the BoxNode interface.
 	Self() *Box
 
-	// MoveTo moves this box inside another box.
-	// Returns an error if moving is not successful.
-	MoveTo(other *Box) error
+	// Movable interface implements MoveTo functions.
+	Movable
 
 	// MoveOutOfOtherBox moves this box out.
 	// Returns an error if moving out is not succesful.
