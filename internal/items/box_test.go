@@ -92,7 +92,6 @@ func TestMoveToOther(t *testing.T) {
 	assertOuterBoxEq(t, b2, b3)
 
 	assertInnerBoxesLengthEq(t, b3, 1)
-	// assertFirstInnerBoxEq(t, b3, b2)
 	assertOuterBoxEqNil(t, b3)
 }
 
@@ -161,10 +160,10 @@ func assertInnerBoxesNil(t *testing.T, b *Box) {
 
 }
 
+// useBoxNodeInterface shows current contents of the box like InnerBoxes and OuterBox.
 func useBoxNodeInterface(box BoxNode) {
 	mbox := box.Self()
 	boxes := fmt.Sprintf("\n-------------------------\nBox \"%v\": \n", mbox.Label)
-
 	boxes += fmt.Sprintf("%v.OuterBox:\n", mbox.Label)
 	if mbox.OuterBox != nil {
 		boxes += fmt.Sprintf("\t- %v\n", mbox.OuterBox.Label)
@@ -180,7 +179,5 @@ func useBoxNodeInterface(box BoxNode) {
 	} else {
 		boxes += fmt.Sprint("\t- no inner boxes\n")
 	}
-	// boxes += fmt.Sprint("This box is inside: ", mbox.OuterBox.Label)
-	// boxes += fmt.Sprintf("Outer box has: %v", mbox.OuterBox.InnerBoxes[0].Label)
 	logg.Debug(boxes, "-------------------------\n")
 }
