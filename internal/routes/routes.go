@@ -88,5 +88,5 @@ func experimentalRoutes() {
 	http.HandleFunc("/snackbar-warning", func(w http.ResponseWriter, r *http.Request) {
 		templates.RenderWarningSnackbar(w, "warning")
 	})
-	registerBoxRoute()
+	registerBoxRoutes()
 }

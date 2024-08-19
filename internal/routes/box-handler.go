@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func registerBoxRoute() {
+func registerBoxRoutes() {
 	http.HandleFunc("/box", BoxHandler)
 }
 
