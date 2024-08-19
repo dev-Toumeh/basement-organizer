@@ -6,6 +6,8 @@ import (
 	"basement/main/internal/logg"
 	"basement/main/internal/routes"
 	"basement/main/internal/templates"
+	"context"
+	"net"
 	"net/http"
 )
 
@@ -25,5 +27,13 @@ func main() {
 	routes.RegisterRoutes(db)
 	templates.InitTemplates()
 
-	http.ListenAndServe("localhost:8000", nil)
+	// Accessable context in every http.Request.
+	// Access db with r.Context().Value("db").(*database.DB) inside an http.Handler.
+	DBctx := context.WithValue(context.Background(), "db", db)
+	server := http.Server{
+		Addr:        "localhost:8000",
+		BaseContext: func(_ net.Listener) context.Context { return DBctx },
+	}
+
+	server.ListenAndServe()
 }

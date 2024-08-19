@@ -12,12 +12,7 @@ import (
 	"basement/main/internal/templates"
 )
 
-// Temporary workaround for simplicity.
-// No need to pass reference around in functions for database access.
-var pdb *database.DB
-
 func RegisterRoutes(db *database.DB) {
-	pdb = db
 	staticRoutes()
 	authRoutes(db)
 	apiRoutes(db)
@@ -84,7 +79,7 @@ func staticRoutes() {
 	http.HandleFunc("/personal-page", PersonalPage)
 }
 
-func experimentalRoutes(db *database.DB) {
+func experimentalRoutes() {
 	http.HandleFunc("/sample-page", SamplePage)
 	http.HandleFunc("/switch-debug-style", SwitchDebugStyle)
 	http.HandleFunc("/snackbar-success", func(w http.ResponseWriter, r *http.Request) {
@@ -105,8 +100,9 @@ func BoxRequestHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, err)
 		logg.Err(err)
 	}
-	ids, _ := pdb.ItemIDs()
-	item, _ := pdb.Item(ids[0])
+	db := r.Context().Value("db").(*database.DB)
+	ids, _ := db.ItemIDs()
+	item, _ := db.Item(ids[0])
 	item.Picture = ""
 
 	b.Items = []*database.Item{&item}
