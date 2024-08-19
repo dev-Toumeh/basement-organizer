@@ -49,6 +49,15 @@ type BoxC struct {
 	OuterBox    Box             `json:"outerbox" `
 }
 
+// NewBox returns an empty box with a new uuid.
+func NewBox() Box {
+	return Box{
+		Id:          uuid.Must(uuid.NewV4()),
+		Label:       "Box",
+		Description: "This box is empty.",
+	}
+}
+
 func (b *Box) MarshalJSON() ([]byte, error) {
 	c := BoxC{}
 	for _, item := range b.Items {
