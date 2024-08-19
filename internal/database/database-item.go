@@ -62,6 +62,12 @@ func (db *DB) ItemByField(ctx context.Context, field string, value string) (Item
 	return item, ErrExist
 }
 
+// Item returns new Item struct if id matches.
+func (db *DB) Item(id string) (Item, error) {
+	ctx := context.Background()
+	return db.ItemByField(ctx, "id", id)
+}
+
 func (db *DB) ItemIDs() ([]string, error) {
 	query := "SELECT id FROM item;"
 	rows, err := db.Sql.Query(query)

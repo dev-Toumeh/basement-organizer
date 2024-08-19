@@ -12,7 +12,12 @@ import (
 	"basement/main/internal/templates"
 )
 
+// Temporary workaround for simplicity.
+// No need to pass reference around in functions for database access.
+var pdb *database.DB
+
 func RegisterRoutes(db *database.DB) {
+	pdb = db
 	staticRoutes()
 	authRoutes(db)
 	apiRoutes(db)
@@ -88,4 +93,24 @@ func experimentalRoutes(db *database.DB) {
 	http.HandleFunc("/snackbar-warning", func(w http.ResponseWriter, r *http.Request) {
 		templates.RenderWarningSnackbar(w, "warning")
 	})
+	http.HandleFunc("/box", BoxRequestHandler)
+}
+
+func BoxRequestHandler(w http.ResponseWriter, r *http.Request) {
+	b := items.Box{Label: "asdfasdf"}
+	b2 := items.Box{Label: "box 2"}
+	err := b2.MoveTo(&b)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, err)
+		logg.Err(err)
+	}
+	ids, _ := pdb.ItemIDs()
+	item, _ := pdb.Item(ids[0])
+	item.Picture = ""
+
+	b.Items = []*database.Item{&item}
+	// data, _ := json.Marshal(b)
+	data, _ := b.MarshalJSON()
+	fmt.Fprintf(w, "%s", data)
 }
