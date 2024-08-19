@@ -1,0 +1,14 @@
+{{ define "box" }}
+<div class="box-container">
+    <ul>
+        <li>{{.Id}}</li>
+        <li>{{.Label}}</li>
+        <li>{{.Description}}</li>
+        <ol>
+            {{ range .Items }}    
+            <li style="border:solid">{{ template "item-container" .}}</li>
+            {{ end}}
+        </ol>
+    </ul>
+</div>
+{{end}}

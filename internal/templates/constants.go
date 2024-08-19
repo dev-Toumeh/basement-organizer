@@ -8,6 +8,10 @@ package templates
 const (
 	TEMPLATE_ATEST_STYLE             string = "atest-style"
 	TEMPLATE_ATEST_STYLE_PATH        string = "internal/templates/sample-page.html"
+	TEMPLATE_BOX                     string = "box"
+	TEMPLATE_BOX_HTML                string = "box.html"
+	TEMPLATE_BOX_HTML_PATH           string = "internal/templates/items/box.html"
+	TEMPLATE_BOX_PATH                string = "internal/templates/items/box.html"
 	TEMPLATE_CLOSE_HTML_TAG          string = "close-html-tag"
 	TEMPLATE_CLOSE_HTML_TAG_PATH     string = "internal/templates/shared/page.html"
 	TEMPLATE_CREATE_ITEM_FORM        string = "create-item-form"
