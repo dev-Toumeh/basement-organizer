@@ -35,6 +35,8 @@ const (
 	TEMPLATE_ITEMS_CONTAINER         string = "items-container"
 	TEMPLATE_ITEMS_CONTAINER_PATH    string = "internal/templates/items/item.html"
 	TEMPLATE_ITEM_CONTAINER          string = "item-container"
+	TEMPLATE_ITEM_CONTAINER_2        string = "item-container-2"
+	TEMPLATE_ITEM_CONTAINER_2_PATH   string = "internal/templates/items/item.html"
 	TEMPLATE_ITEM_CONTAINER_PATH     string = "internal/templates/items/item.html"
 	TEMPLATE_ITEM_HTML               string = "item.html"
 	TEMPLATE_ITEM_HTML_PATH          string = "internal/templates/items/item.html"

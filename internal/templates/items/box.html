@@ -1,14 +1,12 @@
 {{ define "box" }}
 <div class="box-container">
-    <ul>
-        <li>{{.Id}}</li>
-        <li>{{.Label}}</li>
-        <li>{{.Description}}</li>
-        <ol>
-            {{ range .Items }}    
-            <li style="border:solid">{{ template "item-container" .}}</li>
-            {{ end}}
-        </ol>
-    </ul>
+    <label for="id"></label><input type="text" value="{{.Id}}" readonly>
+    <label for="id"></label><input type="text" value="{{.Label}}" readonly>
+    <label for="id"></label><input type="text" value="{{.Description}}" readonly>
+<ol>
+    {{ range .Items }}    
+    <li style="border:solid">{{ template "item-container-2" .}}</li>
+    {{ end}}
+</ol>
 </div>
 {{end}}

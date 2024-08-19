@@ -3,6 +3,30 @@ html {
     scroll-behavior: smoot
 }
 
+img {
+  width: 10rem;
+  height: 10rem;
+  object-fit: contain;
+}
+
+ul li {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+input[readonly] {
+    background: transparent;
+    border-color: #00000038;
+    border-width: thin;
+}
+
+.flex-horizontal {
+    display: flex;
+    flex-wrap: wrap;
+}
+
 .status-bar nav a{
     font-size: 1em;
 }
