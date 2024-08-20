@@ -17,7 +17,7 @@ func (db *DB) CreateNewUser(ctx context.Context, username string, passwordhash s
 
 	// user exists, can't create new user
 	if err == nil {
-		return ErrExist
+		return db.ErrorExist()
 	}
 	// user does not exist
 	if err == sql.ErrNoRows {

@@ -19,6 +19,11 @@ func init() {
 // TestAuthDatabase mock implementation
 type TestAuthDatabase struct{}
 
+// ErrorExist implements AuthDatabase.
+func (db *TestAuthDatabase) ErrorExist() error {
+	return errors.New("the Record is already exist")
+}
+
 // CreateNewUser mock implementation
 func (db *TestAuthDatabase) CreateNewUser(ctx context.Context, username string, passwordhash string) error {
 	return nil
@@ -40,6 +45,11 @@ func (db *TestAuthDatabase) UserExist(ctx context.Context, username string) bool
 }
 
 type TestAuthDatabaseError struct{}
+
+// ErrorExist implements AuthDatabase.
+func (db *TestAuthDatabaseError) ErrorExist() error {
+	return errors.New("the Record is already exist")
+}
 
 // CreateNewUser mock implementation returns error
 func (db *TestAuthDatabaseError) CreateNewUser(ctx context.Context, username string, passwordhash string) error {

@@ -36,7 +36,6 @@ func ReadItemHandler(db ItemDatabase, responseWriter ResponseWriter) http.Handle
 
 			ctx := context.TODO()
 			data, err := db.ItemByField(ctx, "id", id)
-			logg.Debugf("the data: %v \n", data)
 			if err != nil && err != db.ErrorExist() {
 				w.WriteHeader(http.StatusInternalServerError)
 				templates.RenderErrorSnackbar(w, err.Error())

@@ -49,7 +49,7 @@ func (db *DB) ItemByField(ctx context.Context, field string, value string) (item
 	}
 	item.Id = uuid.Must(uuid.FromString(idStr))
 	// @TODO: Why is error returned after item is found?
-	return item, ErrExist
+	return item, db.ErrorExist()
 }
 
 // Item returns new Item struct if id matches.

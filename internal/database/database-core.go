@@ -74,3 +74,7 @@ func (db *DB) createTable() {
 		}
 	}
 }
+
+func (db *DB) ErrorExist() error {
+	return ErrExist
+}
