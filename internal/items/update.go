@@ -1,7 +1,6 @@
 package items
 
 import (
-	"basement/main/internal/database"
 	"basement/main/internal/logg"
 	"context"
 	"fmt"
@@ -9,7 +8,7 @@ import (
 )
 
 // update the item based on ID
-func UpdateItemHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) {
+func UpdateItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPut {
 			updateItem(w, r, db)
@@ -19,7 +18,7 @@ func UpdateItemHandler(db *database.DB) func(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func updateItem(w http.ResponseWriter, r *http.Request, db *database.DB) {
+func updateItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
 	logg.Debug(r.URL)
 	var errorMessages []string
 	updatedItem := item(r)

@@ -39,7 +39,7 @@ func authRoutes(db auth.AuthDatabase) {
 	http.HandleFunc("/logout", auth.LogoutHandler)
 }
 
-func apiRoutes(db *database.DB) {
+func apiRoutes(db items.ItemDatabase) {
 	http.HandleFunc("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
 	}))

@@ -1,7 +1,6 @@
 package items
 
 import (
-	"basement/main/internal/database"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"context"
@@ -11,7 +10,7 @@ import (
 )
 
 // delete Item based on Id
-func DeleteItemHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) {
+func DeleteItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodDelete {

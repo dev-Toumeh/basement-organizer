@@ -1,7 +1,6 @@
 package items
 
 import (
-	"basement/main/internal/database"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"context"
@@ -25,7 +24,7 @@ type ResponseWriter func(w io.Writer, data any)
 // ReadItemHandler returns a single item.
 //
 // Accepts "/item?id=" and "/item/id"
-func ReadItemHandler(db *database.DB, responseWriter ResponseWriter) http.HandlerFunc {
+func ReadItemHandler(db ItemDatabase, responseWriter ResponseWriter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			logg.Info("access: ", r.URL)
@@ -37,8 +36,8 @@ func ReadItemHandler(db *database.DB, responseWriter ResponseWriter) http.Handle
 
 			ctx := context.TODO()
 			data, err := db.ItemByField(ctx, "id", id)
-			if err != nil && err != database.ErrExist {
-				logg.Err(err)
+			logg.Debugf("the data: %v \n", data)
+			if err != nil && err != db.ErrorExist() {
 				w.WriteHeader(http.StatusInternalServerError)
 				templates.RenderErrorSnackbar(w, err.Error())
 			}
@@ -66,7 +65,7 @@ func ReadItemHandler(db *database.DB, responseWriter ResponseWriter) http.Handle
 //	id := uuid.must(uuid.fromstring(r.FormValue("query")),)
 //
 // Accepts "/items?query=id" to only return item IDs.
-func ReadItemsHandler(db *database.DB, responseWriter ResponseWriter) http.HandlerFunc {
+func ReadItemsHandler(db ItemDatabase, responseWriter ResponseWriter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			id := r.FormValue("query")

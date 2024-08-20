@@ -1,7 +1,6 @@
 package items
 
 import (
-	"basement/main/internal/database"
 	"basement/main/internal/logg"
 	"encoding/json"
 	"fmt"
@@ -26,27 +25,27 @@ type AnotherItem struct {
 type Box struct {
 	// Quantity    int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
 	// Weight      string    `json:"weight"      validate:"omitempty,numeric"`
-	Id          uuid.UUID        `json:"id"`
-	Label       string           `json:"label"       validate:"required,lte=128"`
-	Description string           `json:"description" validate:"omitempty,lte=256"`
-	Picture     string           `json:"picture"     validate:"omitempty,base64"`
-	QRcode      string           `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	Items       []*database.Item `json:"items"`
-	InnerBoxes  []*Box           `json:"innerboxes"`
-	OuterBox    *Box             `json:"outerbox" `
+	Id          uuid.UUID `json:"id"`
+	Label       string    `json:"label"       validate:"required,lte=128"`
+	Description string    `json:"description" validate:"omitempty,lte=256"`
+	Picture     string    `json:"picture"     validate:"omitempty,base64"`
+	QRcode      string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	Items       []*Item   `json:"items"`
+	InnerBoxes  []*Box    `json:"innerboxes"`
+	OuterBox    *Box      `json:"outerbox" `
 }
 
 type BoxC struct {
 	// Quantity    int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
 	// Weight      string    `json:"weight"      validate:"omitempty,numeric"`
-	Id          uuid.UUID       `json:"id"`
-	Label       string          `json:"label"       validate:"required,lte=128"`
-	Description string          `json:"description" validate:"omitempty,lte=256"`
-	Picture     string          `json:"picture"     validate:"omitempty,base64"`
-	QRcode      string          `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	Items       []database.Item `json:"items"`
-	InnerBoxes  []Box           `json:"innerboxes"`
-	OuterBox    Box             `json:"outerbox" `
+	Id          uuid.UUID `json:"id"`
+	Label       string    `json:"label"       validate:"required,lte=128"`
+	Description string    `json:"description" validate:"omitempty,lte=256"`
+	Picture     string    `json:"picture"     validate:"omitempty,base64"`
+	QRcode      string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	Items       []Item    `json:"items"`
+	InnerBoxes  []Box     `json:"innerboxes"`
+	OuterBox    Box       `json:"outerbox" `
 }
 
 // NewBox returns an empty box with a new uuid.
