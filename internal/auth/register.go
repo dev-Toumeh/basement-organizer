@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"context"
@@ -137,6 +138,7 @@ func registerUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 	// 4. Create the new Record
 	err = db.CreateNewUser(ctx, newUser.Username, newUser.PasswordHash)
 	if err != nil {
+		logg.Debug(err)
 		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
 		return
 	}
@@ -185,55 +187,58 @@ func user(inputUser InputUser) (User, error) {
 // If validation fails, returns an empty input struct along with error.
 // The function utilizes a global string array (errorMessages) to store validation error messages.
 func validateRegisterInput(inputUser InputUser) (InputUser, error) {
+	if !env.Development() {
 
-	validate := validator.New(validator.WithRequiredStructEnabled())
-	validate.RegisterValidation("password_strength", passwordStrengthValidator)
+		validate := validator.New(validator.WithRequiredStructEnabled())
+		validate.RegisterValidation("password_strength", passwordStrengthValidator)
 
-	if err := validate.Struct(inputUser); err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			for _, validationErr := range validationErrors {
-				switch validationErr.Field() {
-				case "Username":
-					if validationErr.Tag() == "required" {
-						*errorMessages = append(*errorMessages, "The Username field is required but missing.")
-					} else if validationErr.Tag() == "min" {
-						*errorMessages = append(*errorMessages, "The Username must be at least 6 characters long.")
-					} else if validationErr.Tag() == "max" {
-						*errorMessages = append(*errorMessages, "The Username must be at most 20 characters long.")
+		if err := validate.Struct(inputUser); err != nil {
+			if validationErrors, ok := err.(validator.ValidationErrors); ok {
+				for _, validationErr := range validationErrors {
+					switch validationErr.Field() {
+					case "Username":
+						if validationErr.Tag() == "required" {
+							*errorMessages = append(*errorMessages, "The Username field is required but missing.")
+						} else if validationErr.Tag() == "min" {
+							*errorMessages = append(*errorMessages, "The Username must be at least 6 characters long.")
+						} else if validationErr.Tag() == "max" {
+							*errorMessages = append(*errorMessages, "The Username must be at most 20 characters long.")
+						}
+					case "Password":
+						if validationErr.Tag() == "required" {
+							*errorMessages = append(*errorMessages, "The Password field is required but missing.")
+						} else if validationErr.Tag() == "min" {
+							*errorMessages = append(*errorMessages, "The Password must be at least 8 characters long.")
+						} else if validationErr.Tag() == "password_strength" {
+							*errorMessages = append(*errorMessages, "The Password must contain at least one letter, one number, and one symbol.")
+						}
+					case "PasswordConfirm":
+						if validationErr.Tag() == "required" {
+							*errorMessages = append(*errorMessages, "The Password Confirm field is required but missing.")
+						} else if validationErr.Tag() == "eqfield" {
+							*errorMessages = append(*errorMessages, "The Password and Password Confirm fields must match.")
+						}
+					case "Email":
+						if validationErr.Tag() == "email" {
+							*errorMessages = append(*errorMessages, "The Email field must be a valid email address.")
+						}
+					default:
+						*errorMessages = append(*errorMessages, fmt.Sprintf("Field '%s' is invalid: %s", validationErr.Field(), validationErr.Tag()))
 					}
-				case "Password":
-					if validationErr.Tag() == "required" {
-						*errorMessages = append(*errorMessages, "The Password field is required but missing.")
-					} else if validationErr.Tag() == "min" {
-						*errorMessages = append(*errorMessages, "The Password must be at least 8 characters long.")
-					} else if validationErr.Tag() == "password_strength" {
-						*errorMessages = append(*errorMessages, "The Password must contain at least one letter, one number, and one symbol.")
-					}
-				case "PasswordConfirm":
-					if validationErr.Tag() == "required" {
-						*errorMessages = append(*errorMessages, "The Password Confirm field is required but missing.")
-					} else if validationErr.Tag() == "eqfield" {
-						*errorMessages = append(*errorMessages, "The Password and Password Confirm fields must match.")
-					}
-				case "Email":
-					if validationErr.Tag() == "email" {
-						*errorMessages = append(*errorMessages, "The Email field must be a valid email address.")
-					}
-				default:
-					*errorMessages = append(*errorMessages, fmt.Sprintf("Field '%s' is invalid: %s", validationErr.Field(), validationErr.Tag()))
 				}
+			} else {
+				*errorMessages = append(*errorMessages, err.Error())
 			}
-		} else {
-			*errorMessages = append(*errorMessages, err.Error())
-		}
 
-		//		logg.Err("User Input Validation failed")
-		err := errors.New("validation failed")
-		return InputUser{}, err
-	} else {
-		logg.Debug("User Input Validation succeeded")
-		return inputUser, nil
+			//		logg.Err("User Input Validation failed")
+			err := errors.New("validation failed")
+			return InputUser{}, err
+		} else {
+			logg.Debug("User Input Validation succeeded")
+			return inputUser, nil
+		}
 	}
+	return inputUser, nil
 }
 
 // custom validate to make sure that the password has number, letters and symbols

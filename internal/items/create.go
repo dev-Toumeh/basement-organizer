@@ -17,6 +17,7 @@ import (
 
 	"basement/main/internal/auth"
 	"basement/main/internal/database"
+	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 )
@@ -88,89 +89,92 @@ func generateAddItemForm(w http.ResponseWriter, r *http.Request) {
 // or false with an empty Struct
 func validateItem(newItem database.Item, errorMessages *[]string) (database.Item, error) {
 
-	validate = validator.New(validator.WithRequiredStructEnabled())
+	if !env.Development() {
+		validate = validator.New(validator.WithRequiredStructEnabled())
 
-	if err := validate.Struct(newItem); err != nil {
+		if err := validate.Struct(newItem); err != nil {
 
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			for _, validationErr := range validationErrors {
+			if validationErrors, ok := err.(validator.ValidationErrors); ok {
+				for _, validationErr := range validationErrors {
 
-				switch validationErr.Field() {
-				case "Label":
-					if validationErr.Tag() == "required" {
+					switch validationErr.Field() {
+					case "Label":
+						if validationErr.Tag() == "required" {
+							*errorMessages = append(
+								*errorMessages,
+								"<div>The Label field is required but missing.</div>",
+							)
+						} else if validationErr.Tag() == "lte" {
+							*errorMessages = append(*errorMessages, "<div>The Label field must be less than or equal to 15 characters.</div>")
+						}
+					case "Description":
+						if validationErr.Tag() == "alphanum" {
+							*errorMessages = append(
+								*errorMessages,
+								"<div>The Description must contain only alphanumeric characters.</div>",
+							)
+						} else if validationErr.Tag() == "lte" {
+							*errorMessages = append(*errorMessages, "<div>The Description must be less than or equal to 255 characters.</div>")
+						}
+					case "Picture":
+						if validationErr.Tag() == "base64" {
+							*errorMessages = append(
+								*errorMessages,
+								"<div>The Picture must be a valid Base64 string.</div>",
+							)
+						}
+					case "Quantity":
+						if validationErr.Tag() == "numeric" {
+							*errorMessages = append(
+								*errorMessages,
+								"<div>The Quantity must be a number.</div>",
+							)
+						} else if validationErr.Tag() == "gte" {
+							*errorMessages = append(*errorMessages, "<div>The Quantity must be greater than or equal to 1.</div>")
+						} else if validationErr.Tag() == "lte" {
+							*errorMessages = append(*errorMessages, "<div>The Quantity must be less than or equal to 15.</div>")
+						}
+					case "Weight":
+						if validationErr.Tag() == "numeric" {
+							*errorMessages = append(
+								*errorMessages,
+								"<div>The Weight must be a number.</div>",
+							)
+						}
+					case "QRcode":
+						if validationErr.Tag() == "alphanumunicode" {
+							*errorMessages = append(
+								*errorMessages,
+								"<div>The QRcode must contain only alphanumeric characters and unicode.</div>",
+							)
+						}
+					default:
 						*errorMessages = append(
 							*errorMessages,
-							"<div>The Label field is required but missing.</div>",
-						)
-					} else if validationErr.Tag() == "lte" {
-						*errorMessages = append(*errorMessages, "<div>The Label field must be less than or equal to 15 characters.</div>")
-					}
-				case "Description":
-					if validationErr.Tag() == "alphanum" {
-						*errorMessages = append(
-							*errorMessages,
-							"<div>The Description must contain only alphanumeric characters.</div>",
-						)
-					} else if validationErr.Tag() == "lte" {
-						*errorMessages = append(*errorMessages, "<div>The Description must be less than or equal to 255 characters.</div>")
-					}
-				case "Picture":
-					if validationErr.Tag() == "base64" {
-						*errorMessages = append(
-							*errorMessages,
-							"<div>The Picture must be a valid Base64 string.</div>",
+							fmt.Sprintf(
+								"Field '%s' is invalid: %s",
+								validationErr.Field(),
+								validationErr.Tag(),
+							),
 						)
 					}
-				case "Quantity":
-					if validationErr.Tag() == "numeric" {
-						*errorMessages = append(
-							*errorMessages,
-							"<div>The Quantity must be a number.</div>",
-						)
-					} else if validationErr.Tag() == "gte" {
-						*errorMessages = append(*errorMessages, "<div>The Quantity must be greater than or equal to 1.</div>")
-					} else if validationErr.Tag() == "lte" {
-						*errorMessages = append(*errorMessages, "<div>The Quantity must be less than or equal to 15.</div>")
-					}
-				case "Weight":
-					if validationErr.Tag() == "numeric" {
-						*errorMessages = append(
-							*errorMessages,
-							"<div>The Weight must be a number.</div>",
-						)
-					}
-				case "QRcode":
-					if validationErr.Tag() == "alphanumunicode" {
-						*errorMessages = append(
-							*errorMessages,
-							"<div>The QRcode must contain only alphanumeric characters and unicode.</div>",
-						)
-					}
-				default:
-					*errorMessages = append(
-						*errorMessages,
-						fmt.Sprintf(
-							"Field '%s' is invalid: %s",
-							validationErr.Field(),
-							validationErr.Tag(),
-						),
-					)
 				}
+			} else {
+				// Other errors
+				*errorMessages = append(*errorMessages, err.Error())
 			}
+
+			log.Println("create Item Validation failed")
+			err := errors.New("validation failed")
+			return database.Item{}, err
+
 		} else {
-			// Other errors
-			*errorMessages = append(*errorMessages, err.Error())
+
+			log.Println("create Item Validation succeeded")
+			return newItem, nil
 		}
-
-		log.Println("create Item Validation failed")
-		err := errors.New("validation failed")
-		return database.Item{}, err
-
-	} else {
-
-		log.Println("create Item Validation succeeded")
-		return newItem, nil
 	}
+	return newItem, nil
 }
 
 func responseGenerator(w http.ResponseWriter, responseMessage []string, success bool) {
