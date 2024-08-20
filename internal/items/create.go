@@ -22,6 +22,16 @@ import (
 	"basement/main/internal/templates"
 )
 
+type Item struct {
+	Id          uuid.UUID `json:"id"`
+	Label       string    `json:"label"       validate:"required,lte=128"`
+	Description string    `json:"description" validate:"omitempty,lte=256"`
+	Picture     string    `json:"picture"     validate:"omitempty,base64"`
+	Quantity    int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
+	Weight      string    `json:"weight"      validate:"omitempty,numeric"`
+	QRcode      string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+}
+
 const (
 	ID         string = "id"
 	LABEL      string = "label"
@@ -36,7 +46,7 @@ var validate *validator.Validate
 
 // this function will check the type of the request
 // if it is from type post it will create the item otherwise it will generate the  create title  template
-func CreateItemHandler(db *database.DB) func(w http.ResponseWriter, r *http.Request) {
+func CreateItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			createNewItem(w, r, db)
@@ -87,7 +97,7 @@ func generateAddItemForm(w http.ResponseWriter, r *http.Request) {
 
 // this function will validate the new Item  and will return ether true will a Struct full of data
 // or false with an empty Struct
-func validateItem(newItem database.Item, errorMessages *[]string) (database.Item, error) {
+func validateItem(newItem Item, errorMessages *[]string) (Item, error) {
 
 	if !env.Development() {
 		validate = validator.New(validator.WithRequiredStructEnabled())
@@ -166,7 +176,7 @@ func validateItem(newItem database.Item, errorMessages *[]string) (database.Item
 
 			log.Println("create Item Validation failed")
 			err := errors.New("validation failed")
-			return database.Item{}, err
+			return Item{}, err
 
 		} else {
 
@@ -198,7 +208,7 @@ func responseGenerator(w http.ResponseWriter, responseMessage []string, success 
 
 // this function will pack the request into struct from type Item, so it will be easier to handle it
 // @TODO: Need error return in case something wrong happens
-func item(r *http.Request) database.Item {
+func item(r *http.Request) Item {
 	var id uuid.UUID
 	if updatedId, err := uuid.FromString(r.PostFormValue(ID)); err != nil {
 		id, _ = uuid.NewV4()
@@ -210,7 +220,7 @@ func item(r *http.Request) database.Item {
 
 	b64encodedPictureString := parsePicture(r)
 
-	newItem := database.Item{
+	newItem := Item{
 		Id:          id,
 		Label:       r.PostFormValue(LABEL),
 		Description: r.PostFormValue(DESCRIPTIO),

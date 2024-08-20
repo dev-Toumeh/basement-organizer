@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/items"
 	"fmt"
 	"log"
 )
@@ -44,7 +45,7 @@ func (db *DB) PrintItemRecords() {
 
 	for rows.Next() {
 
-		var item Item
+		var item items.Item
 		var idStr string
 		err := rows.Scan(&idStr, &item.Label, &item.Description, &item.Picture, &item.Quantity, &item.Weight, &item.QRcode)
 		if err != nil {

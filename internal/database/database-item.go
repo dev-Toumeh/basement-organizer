@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"context"
 	"database/sql"
@@ -11,19 +12,8 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-// @TODO: Move item to items package?
-type Item struct {
-	Id          uuid.UUID `json:"id"`
-	Label       string    `json:"label"       validate:"required,lte=128"`
-	Description string    `json:"description" validate:"omitempty,lte=256"`
-	Picture     string    `json:"picture"     validate:"omitempty,base64"`
-	Quantity    int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
-	Weight      string    `json:"weight"      validate:"omitempty,numeric"`
-	QRcode      string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-}
-
 // Create New Item Record
-func (db *DB) CreateNewItem(ctx context.Context, newItem Item) error {
+func (db *DB) CreateNewItem(ctx context.Context, newItem items.Item) error {
 
 	if _, err := db.ItemByField(ctx, "label", newItem.Label); err != nil {
 		return err
@@ -37,7 +27,7 @@ func (db *DB) CreateNewItem(ctx context.Context, newItem Item) error {
 }
 
 // Get/Check if the Item exist
-func (db *DB) ItemByField(ctx context.Context, field string, value string) (Item, error) {
+func (db *DB) ItemByField(ctx context.Context, field string, value string) (items.Item, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -45,17 +35,17 @@ func (db *DB) ItemByField(ctx context.Context, field string, value string) (Item
 	query := fmt.Sprintf("SELECT id, label, description, picture, quantity, weight, qrcode FROM item WHERE %s = ? \n", field)
 	row := db.Sql.QueryRowContext(ctx, query, value)
 
-	var item Item
+	var item items.Item
 	var idStr string
 	err := row.Scan(&idStr, &item.Label, &item.Description, &item.Picture, &item.Quantity, &item.Weight, &item.QRcode)
 
 	if err != nil {
 		// @TODO: should error not be returned?
 		if err == sql.ErrNoRows {
-			return Item{}, nil
+			return items.Item{}, nil
 		}
 		log.Println("Error while checking if the Item is available:", err)
-		return Item{}, err
+		return items.Item{}, err
 	}
 	item.Id = uuid.Must(uuid.FromString(idStr))
 	// @TODO: Why is error returned after item is found?
@@ -63,7 +53,7 @@ func (db *DB) ItemByField(ctx context.Context, field string, value string) (Item
 }
 
 // Item returns new Item struct if id matches.
-func (db *DB) Item(id string) (Item, error) {
+func (db *DB) Item(id string) (items.Item, error) {
 	ctx := context.Background()
 	return db.ItemByField(ctx, "id", id)
 }
@@ -98,7 +88,7 @@ func (db *DB) ItemIDs() ([]string, error) {
 
 // here we run the insert new Item query separate from the public function
 // it make the code more readable
-func (db *DB) insertNewItem(ctx context.Context, item Item) error {
+func (db *DB) insertNewItem(ctx context.Context, item items.Item) error {
 	sqlStatement := `INSERT INTO item (id, label, description, picture, quantity, weight, qrcode) VALUES (?, ?, ?, ?, ?, ?, ?)`
 	result, err := db.Sql.ExecContext(ctx, sqlStatement, item.Id.String(), item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode)
 	if err != nil {
@@ -119,7 +109,7 @@ func (db *DB) insertNewItem(ctx context.Context, item Item) error {
 }
 
 // update the item based on the id
-func (db *DB) UpdateItem(ctx context.Context, item Item) error {
+func (db *DB) UpdateItem(ctx context.Context, item items.Item) error {
 	sqlStatement := fmt.Sprintf(`UPDATE item Set label = "%s", description = "%s", picture = "%s",
     quantity = "%d", weight = "%s", qrcode = "%s" WHERE id = ?`,
 		item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode)
@@ -183,9 +173,9 @@ func (db *DB) Items() ([][]string, error) {
 	}
 	defer rows.Close()
 
-	var items [][]string
+	var itemsArray [][]string
+	var item items.Item
 	for rows.Next() {
-		var item Item
 		var idStr string
 		err := rows.Scan(&idStr, &item.Label, &item.Description, &item.Picture, &item.Quantity, &item.Weight, &item.QRcode)
 		if err != nil {
@@ -195,13 +185,13 @@ func (db *DB) Items() ([][]string, error) {
 
 		formatted := fmt.Sprintf("id: %s, label: %s, description: %s, picture: %s, quantity: %d, weight: %s, qrcode: %s \n",
 			idStr, item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode)
-		items = append(items, []string{formatted})
+		itemsArray = append(itemsArray, []string{formatted})
 	}
 
 	if err := rows.Err(); err != nil {
 		log.Printf("Error during rows iteration: %v", err)
 	}
-	return items, nil
+	return itemsArray, nil
 }
 
 // this is dynamic function but not ready
