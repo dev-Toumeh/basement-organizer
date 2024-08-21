@@ -86,10 +86,11 @@ func RegisterHandler(db AuthDatabase) func(w http.ResponseWriter, r *http.Reques
 
 func generateRegisterPage(w http.ResponseWriter, r *http.Request) {
 	authenticated, _ := Authenticated(r)
+	user, _ := UserSessionData(r)
 	data := templates.PageTemplate{
 		Title:         "Register",
 		Authenticated: authenticated,
-		User:          Username(r),
+		User:          user,
 	}
 
 	if err := templates.Render(w, templates.TEMPLATE_REGISTER_PAGE, data); err != nil {

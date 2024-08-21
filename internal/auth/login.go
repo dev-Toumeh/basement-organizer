@@ -84,7 +84,7 @@ func loginUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 		return
 	}
 
-	saveSession(w, r)
+	saveSession(w, r, user)
 
 	logg.Info("login successful")
 
@@ -129,20 +129,22 @@ func Authenticated(r *http.Request) (authenticated bool, hasAuthenticatedCookieV
 	return
 }
 
-func saveSession(w http.ResponseWriter, r *http.Request) {
+func saveSession(w http.ResponseWriter, r *http.Request, user User) {
 	session, _ := store.Get(r, COOKIE_NAME)
 	session.Values["authenticated"] = true
-	session.Values["username"] = r.FormValue("username")
+	session.Values["username"] = user.Username
+	session.Values["id"] = user.Id.String()
 	session.Save(r, w)
 }
 
-func Username(r *http.Request) string {
+func UserSessionData(r *http.Request) (string, string) {
 
 	session, _ := store.Get(r, COOKIE_NAME)
-	usernmae, ok := session.Values["username"].(string)
-	if !ok {
-		logg.Err("Username not found in session or not a string")
-		return ""
+	usernmae, ok1 := session.Values["username"].(string)
+	id, ok2 := session.Values["id"].(string)
+	if !ok1 || !ok2 {
+		logg.Err("corrupted session, check UserSessionData function")
+		http.RedirectHandler("/logout", http.StatusUnauthorized)
 	}
-	return usernmae
+	return usernmae, id
 }

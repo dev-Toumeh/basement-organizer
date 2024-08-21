@@ -94,10 +94,11 @@ func createNewItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
 // this function will generate a new from if the request was from type GET
 func generateAddItemForm(w http.ResponseWriter, r *http.Request) {
 	authenticated, _ := auth.Authenticated(r)
+	user, _ := auth.UserSessionData(r)
 	data := templates.PageTemplate{
 		Title:         "Personal",
 		Authenticated: authenticated,
-		User:          auth.Username(r),
+		User:          user,
 	}
 
 	if err := templates.Render(w, templates.TEMPLATE_CREATE_ITEM_PAGE, data); err != nil {

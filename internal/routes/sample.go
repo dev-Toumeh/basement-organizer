@@ -9,10 +9,11 @@ import (
 
 func SamplePage(w http.ResponseWriter, r *http.Request) {
 	authenticated, _ := auth.Authenticated(r)
+	user, _ := auth.UserSessionData(r)
 	data := templates.NewPageTemplate()
 	data.Title = "Sample Page"
 	data.Authenticated = authenticated
-	data.User = auth.Username(r)
+	data.User = user
 
 	triggerAllServerNotifications(w)
 	MustRender(w, r, templates.TEMPLATE_SAMPLE_PAGE, data)

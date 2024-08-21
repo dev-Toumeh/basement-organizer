@@ -11,10 +11,11 @@ import (
 // PersonalPage renders full HTML page.
 func PersonalPage(w http.ResponseWriter, r *http.Request) {
 	authenticated, _ := auth.Authenticated(r)
+	user, _ := auth.UserSessionData(r)
 	data := templates.PageTemplate{
 		Title:         "Personal",
 		Authenticated: authenticated,
-		User:          auth.Username(r),
+		User:          user,
 	}
 
 	err := templates.Render(w, templates.TEMPLATE_PERSONAL_PAGE, data)
