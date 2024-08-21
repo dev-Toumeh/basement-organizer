@@ -122,35 +122,31 @@ func registerUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 	}
 
 	// 3. Check if the username exist
-	ctx := context.TODO() // i don't now which kind of context we need to use so i keep it todo for now
+	ctx := context.TODO()
 	exist := db.UserExist(ctx, newUser.Username)
-	if err != nil {
-		logg.Err(err)
-		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
-	}
 	if exist {
 		message := fmt.Sprintf(`User already exists: "%s"`, newUser.Username)
 		logg.Debug(message)
 		*errorMessages = append(*errorMessages, message)
 		RenderValidateErrorMessages(w, inputFromPost)
 		return
-	}
 
-	// 4. Create the new Record
-	err = db.CreateNewUser(ctx, newUser.Username, newUser.PasswordHash)
-	if err != nil {
-		logg.Debug(err)
-		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
+	} else {
+		// 4. Create the new Record
+		err = db.CreateNewUser(ctx, newUser.Username, newUser.PasswordHash)
+		if err != nil {
+			logg.Debug(err)
+			templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
+			return
+		}
+
+		// https://htmx.org/headers/hx-location/
+		http.RedirectHandler("/login-form", http.StatusOK)
+		templates.RenderSuccessSnackbar(w, fmt.Sprintf("the user %s was created successfully", newUser.Username))
+		w.Header().Add("HX-Location", "/login")
+		logg.Debugf("User %s registered successfully:", newUser.Username)
 		return
 	}
-	http.RedirectHandler("/login", http.StatusOK)
-
-	// https://htmx.org/headers/hx-location/
-	http.RedirectHandler("/login-form", http.StatusOK)
-	templates.RenderSuccessSnackbar(w, fmt.Sprintf("the user %s was created successfully", newUser.Username))
-	w.Header().Add("HX-Location", "/login")
-	logg.Debugf("User %s registered successfully:", newUser.Username)
-	return
 }
 
 // return filled struct from type user

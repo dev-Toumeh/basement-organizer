@@ -6,30 +6,20 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"log"
 
 	"github.com/gofrs/uuid/v5"
 )
 
 // CreateNewUser inserts a new user into the database with the given username and passwordHash
-// Returns an error if user already exists.
+// The function accepts also a variable of type userExist, which can be obtained by executing the UserExist function.
 func (db *DB) CreateNewUser(ctx context.Context, username string, passwordhash string) error {
-	_, err := db.User(ctx, username)
-
-	// user exists, can't create new user
-	if err == nil {
-		return db.ErrorExist()
+	err := db.insertNewUser(ctx, username, passwordhash)
+	if err != nil {
+		return fmt.Errorf("was not able to insert the user %w", err)
 	}
-	// user does not exist
-	if err == sql.ErrNoRows {
-		insertErr := db.insertNewUser(ctx, username, passwordhash)
-		if insertErr != nil {
-			return insertErr
-		}
-		return nil
-	}
-
-	// otherwise return the real error
-	return err
+	return nil
 }
 
 // check if the username is available
@@ -70,17 +60,19 @@ func (db *DB) UserExist(ctx context.Context, username string) bool {
 		ctx = context.Background()
 	}
 
-	query := "SELECT EXISTS(SELECT 1 FROM user WHERE username=?)" // Modified query
+	query := "SELECT EXISTS(SELECT 1 FROM user WHERE username=?)"
 	var exists bool
 	row := db.Sql.QueryRowContext(ctx, query, username)
 
 	err := row.Scan(&exists)
 	if err != nil {
-		logg.Fatal("row.Scan error while checking if the username exists:", err)
-		return false
+		log.Fatal(err)
 	}
 
-	return exists
+	if exists {
+		return true
+	}
+	return false
 }
 
 // here we run the insert new User query separate from the public function
