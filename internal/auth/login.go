@@ -59,7 +59,7 @@ func loginUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 	}
 
 	ctx := context.TODO()
-	user, err := db.User(ctx, username)
+	user, err := db.UserByField(ctx, "username", username)
 
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)

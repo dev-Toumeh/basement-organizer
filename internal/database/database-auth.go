@@ -22,19 +22,18 @@ func (db *DB) CreateNewUser(ctx context.Context, username string, passwordhash s
 	return nil
 }
 
-// check if the username is available
+// Get user Data based on Field
 // if the user exist it will return user struct with nil
 // if not it will return empty user struct with err
-func (db *DB) User(ctx context.Context, username string) (auth.User, error) {
+func (db *DB) UserByField(ctx context.Context, field string, value string) (auth.User, error) {
 	var user auth.User
 	var userId string
 
 	if ctx == nil {
 		ctx = context.Background()
 	}
-
-	query := "SELECT id, username, passwordhash FROM user WHERE username=?"
-	row := db.Sql.QueryRowContext(ctx, query, username)
+	query := fmt.Sprintf("SELECT id, username, passwordhash FROM user WHERE ? = %s", field)
+	row := db.Sql.QueryRowContext(ctx, query, value)
 
 	err := row.Scan(&userId, &user.Username, &user.PasswordHash)
 	if err != nil {

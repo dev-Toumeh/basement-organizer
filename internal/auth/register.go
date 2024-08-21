@@ -30,7 +30,7 @@ var (
 
 type AuthDatabase interface {
 	CreateNewUser(ctx context.Context, username string, passwordhash string) error
-	User(ctx context.Context, username string) (User, error)
+	UserByField(ctx context.Context, field string, value string) (User, error)
 	UserExist(ctx context.Context, username string) bool
 	ErrorExist() error
 }

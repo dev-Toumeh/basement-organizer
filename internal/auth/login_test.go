@@ -29,8 +29,8 @@ func (db *TestAuthDatabase) CreateNewUser(ctx context.Context, username string, 
 	return nil
 }
 
-// User mock implementation
-func (db *TestAuthDatabase) User(ctx context.Context, username string) (User, error) {
+// UserByField mock implementation
+func (db *TestAuthDatabase) UserByField(ctx context.Context, field string, value string) (User, error) {
 	user := User{
 		Id:           uuid.Must(uuid.FromString("18c60ba9-ccac-48f5-8c7c-473bd35acbea")),
 		Username:     "testuser1",
@@ -56,8 +56,8 @@ func (db *TestAuthDatabaseError) CreateNewUser(ctx context.Context, username str
 	return errors.New("")
 }
 
-// User mock implementation returns error
-func (db *TestAuthDatabaseError) User(ctx context.Context, username string) (User, error) {
+// UserByField mock implementation returns error
+func (db *TestAuthDatabaseError) UserByField(ctx context.Context, field string, value string) (User, error) {
 	return User{}, errors.New("")
 }
 
