@@ -31,6 +31,7 @@ var (
 type AuthDatabase interface {
 	CreateNewUser(ctx context.Context, username string, passwordhash string) error
 	UserByField(ctx context.Context, field string, value string) (User, error)
+	UpdateUser(ctx context.Context, user User) error
 	UserExist(ctx context.Context, username string) bool
 	ErrorExist() error
 }
@@ -51,8 +52,9 @@ type InputUser struct {
 	Email           string `validate:"omitempty,email"`
 }
 
-type registerErroData struct {
-	InputType     InputUser `json:"input_type"`
+// use this struct for generating responses with data error/update user
+type UserResponseData struct {
+	InputUserData InputUser `json:"input_user_data"`
 	ErrorMessages []string  `json:"error_messages"`
 }
 
@@ -133,8 +135,8 @@ func registerUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 		return
 
 	} else {
-		// 4. Create the new Record
 		err = db.CreateNewUser(ctx, newUser.Username, newUser.PasswordHash)
+		// 4. Create the new Record
 		if err != nil {
 			logg.Debug(err)
 			templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
@@ -253,10 +255,7 @@ func passwordStrengthValidator(fl validator.FieldLevel) bool {
 
 // render register validate error Messages
 func RenderValidateErrorMessages(w io.Writer, inputUser InputUser) {
-	templateError := registerErroData{
-		InputType:     inputUser,
-		ErrorMessages: *errorMessages,
-	}
+	templateError := UserResponseData{InputUserData: inputUser, ErrorMessages: *errorMessages}
 	err := templates.Render(w, templates.TEMPLATE_REGISTER_FORM, templateError)
 	if err != nil {
 		logg.Debug(err)

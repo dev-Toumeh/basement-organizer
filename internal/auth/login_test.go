@@ -39,6 +39,11 @@ func (db *TestAuthDatabase) UserByField(ctx context.Context, field string, value
 	return user, nil
 }
 
+// UpdateUser mock implementation
+func (db *TestAuthDatabase) UpdateUser(ctx context.Context, user User) error {
+	return nil
+}
+
 // UserExist mock implementation
 func (db *TestAuthDatabase) UserExist(ctx context.Context, username string) bool {
 	return true
@@ -59,6 +64,11 @@ func (db *TestAuthDatabaseError) CreateNewUser(ctx context.Context, username str
 // UserByField mock implementation returns error
 func (db *TestAuthDatabaseError) UserByField(ctx context.Context, field string, value string) (User, error) {
 	return User{}, errors.New("")
+}
+
+// UpdateUser mock implementation
+func (db *TestAuthDatabaseError) UpdateUser(ctx context.Context, user User) error {
+	return errors.New("")
 }
 
 func (db *TestAuthDatabaseError) UserExist(ctx context.Context, username string) bool {

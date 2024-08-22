@@ -36,6 +36,7 @@ func authRoutes(db auth.AuthDatabase) {
 	http.HandleFunc("/register-form", func(w http.ResponseWriter, r *http.Request) {
 		MustRender(w, r, templates.TEMPLATE_REGISTER_FORM, nil)
 	})
+	http.HandleFunc("/update", auth.UpdateHandler(db))
 	http.HandleFunc("/logout", auth.LogoutHandler)
 }
 
