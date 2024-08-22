@@ -24,7 +24,7 @@
         type="text" 
         id="username" 
         name="username" 
-        value="{{ if .InputType }}{{ .InputType.Username }}{{ end }}" 
+        value="{{ if .InputUserData }}{{ .InputUserData.Username }}{{ end }}" 
         required>
     <br>
 
@@ -33,7 +33,7 @@
         type="password" 
         id="password" 
         name="password" 
-        value="{{ if .InputType }}{{ .InputType.Password }}{{ end }}" 
+        value="{{ if .InputUserData }}{{ .InputUserData.Password }}{{ end }}" 
         required>
     <br>
 
@@ -42,7 +42,7 @@
         type="password" 
         id="password-confirm" 
         name="password-confirm"   
-        value="{{ if .InputType }}{{ .InputType.PasswordConfirm }}{{ end }}" 
+        value="{{ if .InputUserData }}{{ .InputUserData.PasswordConfirm }}{{ end }}" 
         placeholder="Confirm Password" 
         required>
     <br>

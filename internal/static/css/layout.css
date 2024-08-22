@@ -73,3 +73,10 @@ input[readonly] {
     background: aliceblue;
     border: solid;
 }
+
+#user-data-container {
+padding: 1em;
+border: 2px dashed red;
+width: 50%
+}
+

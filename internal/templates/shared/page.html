@@ -13,13 +13,6 @@
 {{ define "script" }}
 <!--HTMX from local sources-->
 <script src="static/js/htmx.min.js"></script>
-
-<!--HTMX from CDN-->
-<!--<script-->
-<!--    src="https://unpkg.com/htmx.org@1.9.12/dist/htmx.js"-->
-<!--    integrity="sha384-qbtR4rS9RrUMECUWDWM2+YGgN3U4V4ZncZ0BvUcg9FGct0jqXz3PUdVpU1p0yrXS"-->
-<!--    crossorigin="anonymous"-->
-<!--></script>-->
 <script src="static/js/custom-functions.js"></script>
 {{end}}
 
@@ -81,9 +74,17 @@
                 id="logout-btn"
                 type="button"
                 hx-get="/logout"
-                hx-target="#auth-label"
-            >
+                hx-target="#auth-label">
                 Logout
+            </button>
+            <button
+                class="update-btn"
+                hx-get="/update"
+                type="button"
+                hx-swap="innerHTML"
+                hx-target=".update-placeholder"
+                style="text-align: right;">
+                My Account
             </button>
         {{else}}
             <label id="auth-label">logged out</label>

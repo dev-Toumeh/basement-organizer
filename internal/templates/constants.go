@@ -65,7 +65,7 @@ const (
 	TEMPLATE_REGISTER_HTML           string = "register.html"
 	TEMPLATE_REGISTER_HTML_PATH      string = "internal/templates/auth/register.html"
 	TEMPLATE_REGISTER_PAGE           string = "register-page"
-	TEMPLATE_REGISTER_PAGE_PATH      string = "internal/templates/auth/register.html"
+	TEMPLATE_REGISTER_PAGE_PATH      string = "internal/templates/auth/update.html"
 	TEMPLATE_SAMPLE_PAGE             string = "sample-page"
 	TEMPLATE_SAMPLE_PAGE_BODY        string = "sample-page-body"
 	TEMPLATE_SAMPLE_PAGE_BODY_PATH   string = "internal/templates/sample-page.html"
@@ -80,4 +80,8 @@ const (
 	TEMPLATE_STYLE_DEBUG             string = "style-debug"
 	TEMPLATE_STYLE_DEBUG_PATH        string = "internal/templates/sample-page.html"
 	TEMPLATE_STYLE_PATH              string = "internal/templates/shared/page.html"
+	TEMPLATE_UPDATE_FORM             string = "update-form"
+	TEMPLATE_UPDATE_FORM_PATH        string = "internal/templates/auth/update.html"
+	TEMPLATE_UPDATE_HTML             string = "update.html"
+	TEMPLATE_UPDATE_HTML_PATH        string = "internal/templates/auth/update.html"
 )
