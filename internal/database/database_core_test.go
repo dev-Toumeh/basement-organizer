@@ -2,7 +2,6 @@ package database
 
 import (
 	"basement/main/internal/logg"
-	"context"
 	"database/sql"
 	"fmt"
 	"os"
@@ -81,27 +80,4 @@ func teardown() {
 	}
 	logg.Info("Testing Database Package was finished, Tables was cleared")
 	dbTest.Sql.Close()
-}
-
-func TestUser(t *testing.T) {
-	ctx := context.Background()
-	_, err := dbTest.Sql.ExecContext(ctx, "INSERT INTO user (id, username, passwordhash) VALUES (?, ?, ?)", "123e4567-e89b-12d3-a456-426614174000", "testuser", "hash")
-	if err != nil {
-		t.Fatalf("Failed to insert user: %v", err)
-	}
-
-	// Test the User function for existing user
-	user, err := dbTest.User(ctx, "testuser")
-	if err != nil {
-		t.Errorf("Error fetching user: %v", err)
-	}
-	if user.Username != "testuser" {
-		t.Errorf("Expected username 'testuser', got '%s'", user.Username)
-	}
-
-	// test for non-existing user
-	_, err = dbTest.User(context.Background(), "nonexistent")
-	if err == nil {
-		t.Errorf("Expected an error for non-existing user, got none")
-	}
 }

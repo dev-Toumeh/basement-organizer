@@ -54,6 +54,29 @@ func (db *DB) UserByField(ctx context.Context, field string, value string) (auth
 	return user, nil
 }
 
+// update user Record
+func (db *DB) UpdateUser(ctx context.Context, user auth.User) error {
+	sqlStatement := fmt.Sprintf(`UPDATE user SET username = '%s', passwordhash = '%s' WHERE id = ?`,
+		user.Username, user.PasswordHash)
+
+	result, err := db.Sql.ExecContext(ctx, sqlStatement, user.Id.String())
+	if err != nil {
+		logg.Err(err)
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error while finding the user %w", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("the Record with the id: %s was not found; this should not have happened while updating", user.Id.String())
+	} else if rowsAffected != 1 {
+		return fmt.Errorf("the id: %s has an unexpected number of rows affected (more than one or less than 0)", user.Id.String())
+	}
+	return nil
+}
+
 func (db *DB) UserExist(ctx context.Context, username string) bool {
 	if ctx == nil {
 		ctx = context.Background()
@@ -79,8 +102,7 @@ func (db *DB) UserExist(ctx context.Context, username string) bool {
 func (db *DB) insertNewUser(ctx context.Context, username string, passwordhash string) error {
 	id, err := uuid.NewV4()
 	if err != nil {
-		logg.Err("Error generating UUID:", err)
-		return err
+		return fmt.Errorf("Error generating UUID: %v", err)
 	}
 
 	sqlStatement := `INSERT INTO user (id, username, passwordhash) VALUES (?, ?, ?)`
