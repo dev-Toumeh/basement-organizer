@@ -2,10 +2,13 @@ package routes
 
 import (
 	"basement/main/internal/items"
+	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 func registerBoxRoutes() {
@@ -32,12 +35,33 @@ func BoxHandler(rw items.ResponseWriter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			db := r.Context().Value("db").(BoxDatabase)
+			const errorMsg = "Can't find box. '%v'"
+
 			id := r.FormValue("id")
-			_, err := db.Box(id)
+			if id == "" {
+				logg.Debugf("query param id is empty: '%v'.", id)
+				id = r.PathValue("id")
+				if id == "" {
+					w.WriteHeader(http.StatusBadRequest)
+					logg.Debugf("Can't get box with empty id: '%v'.", id)
+					fmt.Fprintf(w, errorMsg, id)
+					return
+				}
+				logg.Debugf("path value id: '%v'.", id)
+			}
+			db := r.Context().Value("db").(BoxDatabase)
+			_, err := uuid.FromString(id)
 			if err != nil {
+				logg.Debugf("Wrong id: '%v'. %v", id, err)
 				w.WriteHeader(http.StatusNotFound)
-				fmt.Fprint(w, fmt.Errorf("Can't find box with id: %v. %w", id, err))
+				fmt.Fprintf(w, errorMsg, id)
+				return
+			}
+			_, err = db.Box(id)
+			if err != nil {
+				logg.Debugf("Can't find box with id: '%v'. %v", id, err)
+				w.WriteHeader(http.StatusNotFound)
+				fmt.Fprintf(w, errorMsg, id)
 				return
 			}
 			// ids, _ := db.ItemIDs()
