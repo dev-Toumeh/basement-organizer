@@ -39,56 +39,57 @@
 
 {{ define "statusbar" }}
 <div class="status-bar">
-    <!-- hx-boost upgrades all a tags to use hx-get and responses target the body-->
     <div hx-boost="true" hx-push-url="true">
         <nav>
-            <a id="home" href="/">Home</a>
-            {{with .Authenticated }}
-            <a id="personal-page" href="/personal-page">Personal Page</a>
-            {{end}}
-            <a id="sample-page" 
-                href="/sample-page" 
-                hx-swap="innerHTML show:html:top"
-            >Sample Page</a>
-            {{ with .Debug }}
-            <button
-                hx-boost="false"
-                hx-get="/switch-debug-style"
-                hx-target="style"
-                hx-push-url="false"
-            >
-                Switch Debug Style
-            </button>
-            {{ end }}
+            <div>
+                <a id="home" href="/">Home</a>
+                {{with .Authenticated }}
+                <a id="personal-page" href="/personal-page">Personal Page</a>
+                {{end}}
+                <a id="sample-page" 
+                    href="/sample-page" 
+                    hx-swap="innerHTML show:html:top"
+                >Sample Page</a>
+                {{ with .Debug }}
+                <button
+                    hx-boost="false"
+                    hx-get="/switch-debug-style"
+                    hx-target="style"
+                    hx-push-url="false"
+                >
+                    Switch Debug Style
+                </button>
+                {{ end }}
+            </div>
+            <div id="authentication-status">
+                <div 
+                    id="loadingIndicator" 
+                    class="htmx-indicator lds-dual-ring" 
+                    style="margin-left: 5px"
+                ></div>
+                {{with .Authenticated }}
+                    <label id="auth-label">logged in</label>
+                    <button
+                        id="logout-btn"
+                        type="button"
+                        hx-get="/logout"
+                        hx-target="#auth-label">
+                        Logout
+                    </button>
+                    <button
+                        class="update-btn"
+                        hx-get="/update"
+                        type="button"
+                        hx-swap="innerHTML"
+                        hx-target="#main-container"
+                        style="text-align: right;">
+                        My Account
+                    </button>
+                {{else}}
+                    <label id="auth-label">logged out</label>
+                {{end}}
+            </div>
         </nav>
-    </div>
-    <div id="authentication-status">
-        <div 
-            id="loadingIndicator" 
-            class="htmx-indicator lds-dual-ring" 
-            style="margin-left: 5px"
-        ></div>
-        {{with .Authenticated }}
-            <label id="auth-label">logged in</label>
-            <button
-                id="logout-btn"
-                type="button"
-                hx-get="/logout"
-                hx-target="#auth-label">
-                Logout
-            </button>
-            <button
-                class="update-btn"
-                hx-get="/update"
-                type="button"
-                hx-swap="innerHTML"
-                hx-target=".update-placeholder"
-                style="text-align: right;">
-                My Account
-            </button>
-        {{else}}
-            <label id="auth-label">logged out</label>
-        {{end}}
     </div>
 </div>
 
