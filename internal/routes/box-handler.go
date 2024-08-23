@@ -47,7 +47,7 @@ func BoxHandler(rw items.ResponseWriter) http.HandlerFunc {
 			// }
 			// b.Description = fmt.Sprintf("This box has %v items", len(ids))
 			// rw(w, b)
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusNotImplemented)
 			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
 		case http.MethodPost:
@@ -58,14 +58,14 @@ func BoxHandler(rw items.ResponseWriter) http.HandlerFunc {
 				fmt.Fprint(w, fmt.Errorf("Can't create new box. %w", err))
 				return
 			}
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusNotImplemented)
 			break
 		case http.MethodDelete:
-			w.WriteHeader(http.StatusServiceUnavailable)
+			w.WriteHeader(http.StatusNotImplemented)
 			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
 		case http.MethodPut:
-			w.WriteHeader(http.StatusServiceUnavailable)
+			w.WriteHeader(http.StatusNotImplemented)
 			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
 		default:
