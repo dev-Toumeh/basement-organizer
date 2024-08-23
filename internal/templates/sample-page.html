@@ -2,43 +2,47 @@
 {{ template "open-html-tag" . }}
 {{ template "head" . }}
 <body>
-    {{ template "statusbar" . }}
-    {{ template "sample-page-body" . }}
+    <div class="page">
+      {{ template "statusbar" . }}
+      {{ template "sample-page-body" . }}
+    </div>
 </body>
 {{ template "close-html-tag" . }}
 {{end}}
 
 {{ define "sample-page-body" }}
-<div>Body Text inside div</div>
-<h1>H1 Header</h1>
-<div style="display:flex">
-    <p>Paragraph text</p>
+<div id="main-container">
     <div>Body Text inside div</div>
+
+    <h1>H1 Header</h1>
+    <div style="display:flex">
+        <p>Paragraph text</p>
+        <div>Body Text inside div</div>
+    </div>
+    <h2>H2 Header</h2>
+    <h3>H3 Header</h3>
+    <h4>H4 Header</h4>
+    <h5>H5 Header</h5>
+    <button hx-post="/box" hx-target="#box-list" hx-swap="beforeend">Create box</button>
+    <button hx-get="/box" hx-target="#box">Get box</button>
+
+    <div id="box-list" ></div>
+    <div id="box" ></div>
+    <h6>H6 Header</h6>
+
+    <button 
+        hx-get="/snackbar-success"
+        type="button"
+        hx-swap="none"
+    >success</button>
+
+    <button 
+        hx-get="/snackbar-warning"
+        type="button"
+        hx-swap="none"
+    >warning</button>
+    <div class="update-placeholder"></div>
 </div>
-<h2>H2 Header</h2>
-<h3>H3 Header</h3>
-<h4>H4 Header</h4>
-<h5>H5 Header</h5>
-
-<button hx-post="/box" hx-target="#box-list" hx-swap="beforeend">Create box</button>
-<button hx-get="/box" hx-target="#box">Get box</button>
-
-<div id="box-list" ></div>
-<div id="box" ></div>
-<h6>H6 Header</h6>
-
-<button 
-    hx-get="/snackbar-success"
-    type="button"
-    hx-swap="none"
->success</button>
-
-<button 
-    hx-get="/snackbar-warning"
-    type="button"
-    hx-swap="none"
->warning</button>
-<div class="update-placeholder"></div>
 {{end}}
 
 {{ define "box-list-item" }}

@@ -1,0 +1,44 @@
+#form-container {
+  padding: 1em;
+  border-radius: 20px;
+}
+
+#form-label {
+  padding-bottom: 0.5rem;
+  margin-bottom: 0;
+  margin-top: -5px;
+}
+
+#form {
+  display: flex;
+  flex-direction: column;
+  max-width: 300px;
+  padding: 20px;
+  border: 1px solid #333;
+  border-radius: 5px;
+  text-align: center;
+  margin: 1em auto;
+  /* Center horizontally */
+}
+
+#form label {
+  margin-bottom: 5px;
+}
+
+input[type="file"],
+input[type="number"],
+input[type="text"],
+input[type="password"] {
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #333;
+  border-radius: 3px;
+}
+
+.page input[type="file"],
+.page input[type="number"],
+.page input[type="text"],
+.page input[type="password"] {
+  margin-top: 10px;
+}
+

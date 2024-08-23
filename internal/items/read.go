@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"text/template"
 )
 
 // ResponseWriter should implement a function to write a template response or normal response.
@@ -80,9 +81,19 @@ func ReadItemsHandler(db ItemDatabase, responseWriter ResponseWriter) http.Handl
 			default:
 				ids, err := db.ItemIDs()
 				if err != nil {
-					fmt.Fprintln(w, "something wrong happened please comeback later")
+					http.Error(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
+					return
 				}
-				responseWriter(w, ids)
+				tmpl, err := template.New("ids").Parse("{{range .}}<div>{{.}}</div>{{ end}}")
+				if err != nil {
+					http.Error(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
+					return
+				}
+				err = tmpl.Execute(w, ids)
+				if err != nil {
+					http.Error(w, "Something went wrong. Please try again later.", http.StatusInternalServerError)
+					return
+				}
 			}
 			return
 		}

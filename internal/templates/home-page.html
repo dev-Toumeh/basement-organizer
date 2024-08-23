@@ -2,14 +2,16 @@
 {{ template "open-html-tag" .}}
 {{ template "head" . }}
 <body>
+  <div class="page">
     {{ template "home-page-body" . }}
+  </div>
 </body>
 {{ template "close-html-tag" .}}
 {{ end }}
 
 {{ define "home-page-body" }}
 {{ template "statusbar" . }}
-<div id="content">
+<div id="main-container">
     <div id="welcome-div">Welcome to {{ with .Title }}{{ . }}{{end}} page </div>
     {{ with .Authenticated }}
     You are logged in
@@ -18,7 +20,7 @@
         id="login-btn"
         type="button"
         hx-get="/login-form" 
-        hx-target="#content" 
+        hx-target="#main-container" 
     >Login</button>
         <!--hx-swap="outerHTML" -->
     <label for="#login-btn"></label>
@@ -27,12 +29,9 @@
         id="register-btn"
         type="button"
         hx-get="/register-form" 
-        hx-target="#content" 
+        hx-target="#main-container" 
     >Register</button>
     <label for="#register-btn"></label>
 </div>
 {{end}}
-</br>
-</br>
-<div class="update-placeholder"></div>
 {{end}}

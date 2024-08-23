@@ -33,6 +33,7 @@ func (db *DB) ItemByField(ctx context.Context, field string, value string) (item
 	}
 
 	query := fmt.Sprintf("SELECT id, label, description, picture, quantity, weight, qrcode FROM item WHERE %s = ? \n", field)
+	logg.Debug(query)
 	row := db.Sql.QueryRowContext(ctx, query, value)
 
 	var item items.Item
@@ -58,6 +59,7 @@ func (db *DB) Item(id string) (items.Item, error) {
 	return db.ItemByField(ctx, "id", id)
 }
 
+// return items id's in array from type string
 func (db *DB) ItemIDs() ([]string, error) {
 	query := "SELECT id FROM item;"
 	rows, err := db.Sql.Query(query)
