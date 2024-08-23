@@ -11,12 +11,22 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-func registerBoxRoutes() {
-	http.HandleFunc("/api/v2/box", BoxHandler(FprintWriteFunc))
-	http.HandleFunc("/api/v2/box/{id}", BoxHandler(FprintWriteFunc))
+// boxDatabaseSuccess never returns errors.
+type mockBoxDB struct{}
+
+func (db *mockBoxDB) CreateBox() (string, error) {
+	return "fa2e3db6-fcf8-49c6-ac9c-54ce5855bf0b", nil
+}
+
+func (db *mockBoxDB) Box(id string) (items.Box, error) {
+	return items.Box{}, nil
+}
+func registerBoxRoutes(db BoxDatabase) {
+	http.HandleFunc("/api/v2/box", BoxHandler(FprintWriteFunc, db))
+	http.HandleFunc("/api/v2/box/{id}", BoxHandler(FprintWriteFunc, db))
 	http.HandleFunc("/box", BoxHandler(func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_BOX, data)
-	}))
+	}, db))
 }
 
 func FprintWriteFunc(w io.Writer, data any) { fmt.Fprint(w, data) }
@@ -31,7 +41,7 @@ type BoxDatabase interface {
 	// MoveBox(id1 string, id2 string) error
 }
 
-func BoxHandler(rw items.ResponseWriter) http.HandlerFunc {
+func BoxHandler(rw items.ResponseWriter, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -49,7 +59,6 @@ func BoxHandler(rw items.ResponseWriter) http.HandlerFunc {
 				}
 				logg.Debugf("path value id: '%v'.", id)
 			}
-			db := r.Context().Value("db").(BoxDatabase)
 			_, err := uuid.FromString(id)
 			if err != nil {
 				logg.Debugf("Wrong id: '%v'. %v", id, err)
@@ -75,7 +84,6 @@ func BoxHandler(rw items.ResponseWriter) http.HandlerFunc {
 			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
 		case http.MethodPost:
-			db := r.Context().Value("db").(BoxDatabase)
 			_, err := db.CreateBox()
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)

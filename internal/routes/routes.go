@@ -17,7 +17,7 @@ func RegisterRoutes(db *database.DB) {
 	authRoutes(db)
 	apiRoutes(db)
 	experimentalRoutes()
-	registerBoxRoutes()
+	registerBoxRoutes(&mockBoxDB{})
 }
 
 // MustRender will only render valid templates or throw http.StatusInternalServerError.
