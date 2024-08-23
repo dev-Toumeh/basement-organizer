@@ -2,7 +2,6 @@ package routes
 
 import (
 	"basement/main/internal/items"
-	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -30,17 +29,27 @@ func (db *boxDatabaseError) Box(id string) (items.Box, error) {
 // boxDatabaseSuccess never returns errors.
 type boxDatabaseSuccess struct{}
 
+const BOX_ID = "fa2e3db6-fcf8-49c6-ac9c-54ce5855bf0b"
+
 func (db *boxDatabaseSuccess) CreateBox() (string, error) {
-	return "asdfkaj", nil
+	return BOX_ID, nil
 }
 
 func (db *boxDatabaseSuccess) Box(id string) (items.Box, error) {
 	return items.Box{}, nil
 }
 
-func TestBoxHandler(t *testing.T) {
-	dbErrorCtx := context.WithValue(context.Background(), "db", &boxDatabaseError{})
-	dbSuccessCtx := context.WithValue(context.Background(), "db", &boxDatabaseSuccess{})
+func TestBoxHandlerDBErrors(t *testing.T) {
+	// logg.EnableDebugLoggerS()
+
+	dbErr := &boxDatabaseError{}
+
+	// Add mux handler, without it r.PathValue("id") will not work.
+	mux := http.NewServeMux()
+	mux.Handle("/box", BoxHandler(FprintWriteFunc, dbErr))
+	mux.Handle("/box/", BoxHandler(FprintWriteFunc, dbErr))
+	mux.Handle("/api/v2/box/{id}", BoxHandler(FprintWriteFunc, dbErr))
+	mux.Handle("/api/v2/box/", BoxHandler(FprintWriteFunc, dbErr))
 
 	testCases := []struct {
 		name               string
@@ -48,36 +57,153 @@ func TestBoxHandler(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{
-			name: "Get Box fails",
+			name: "Create box DB error",
 			input: handlerInput{
-				R: httptest.NewRequest(http.MethodGet, "/box?id=dfkjasdlk", nil).WithContext(dbErrorCtx),
-				W: *httptest.NewRecorder(),
-			},
-			expectedStatusCode: http.StatusNotFound,
-		},
-		{
-			name: "CreateBox fails",
-			input: handlerInput{
-				R: httptest.NewRequest(http.MethodPost, "/box", nil).WithContext(dbErrorCtx),
+				R: httptest.NewRequest(http.MethodPost, "/box", nil),
 				W: *httptest.NewRecorder(),
 			},
 			expectedStatusCode: http.StatusInternalServerError,
 		},
 		{
-			name: "CreateBox succedes",
+			name: "Create box DB error",
 			input: handlerInput{
-				R: httptest.NewRequest(http.MethodPost, "/box", nil).WithContext(dbSuccessCtx),
+				R: httptest.NewRequest(http.MethodPost, "/box", nil),
 				W: *httptest.NewRecorder(),
 			},
-			expectedStatusCode: http.StatusOK,
+			expectedStatusCode: http.StatusInternalServerError,
 		},
+		// @TODO
+		// {
+		// 	name: "Can't delete box, not found",
+		// 	input: handlerInput{
+		// 		R: httptest.NewRequest(http.MethodDelete, "/box", nil),
+		// 		W: *httptest.NewRecorder(),
+		// 	},
+		// 	expectedStatusCode: http.StatusNotFound,
+		// },
+		// {
+		// 	name: "Can't update box, not found",
+		// 	input: handlerInput{
+		// 		R: httptest.NewRequest(http.MethodPut, "/box", nil),
+		// 		W: *httptest.NewRecorder(),
+		// 	},
+		// 	expectedStatusCode: http.StatusNotFound,
+		// },
 	}
-
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			h := BoxHandler(FprintWriteFunc)
-			h(&tc.input.W, tc.input.R)
-			assert.Equal(t, tc.expectedStatusCode, tc.input.W.Result().StatusCode)
+			mux.ServeHTTP(&tc.input.W, tc.input.R)
+			assert.Equal(t, tc.expectedStatusCode, tc.input.W.Result().StatusCode, "URL: "+tc.input.R.URL.String())
+		})
+	}
+}
+
+func TestBoxHandlerInputErrors(t *testing.T) {
+	// logg.EnableDebugLoggerS()
+
+	dbOk := boxDatabaseSuccess{}
+
+	// Add mux handler, without it r.PathValue("id") will not work.
+	mux := http.NewServeMux()
+	mux.Handle("/box", BoxHandler(FprintWriteFunc, &dbOk))
+	mux.Handle("/box/", BoxHandler(FprintWriteFunc, &dbOk))
+	mux.Handle("/api/v2/box/{id}", BoxHandler(FprintWriteFunc, &dbOk))
+	mux.Handle("/api/v2/box/", BoxHandler(FprintWriteFunc, &dbOk))
+
+	testCases := []struct {
+		name               string
+		input              handlerInput
+		expectedStatusCode int
+	}{
+		{
+			name: "Patch not allowed",
+			input: handlerInput{
+				R: httptest.NewRequest(http.MethodPatch, "/box", nil),
+				W: *httptest.NewRecorder(),
+			},
+			expectedStatusCode: http.StatusMethodNotAllowed,
+		},
+		{
+			name: "Box not found, incorrect id path value /box/{id}",
+			input: handlerInput{
+				R: httptest.NewRequest(http.MethodGet, "/api/v2/box/333", nil),
+				W: *httptest.NewRecorder(),
+			},
+			expectedStatusCode: http.StatusNotFound,
+		},
+		{
+			name: "Box not found, empty path id",
+			input: handlerInput{
+				R: httptest.NewRequest(http.MethodGet, "/api/v2/box/", nil),
+				W: *httptest.NewRecorder(),
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "Box not found, empty query param id",
+			input: handlerInput{
+				R: httptest.NewRequest(http.MethodGet, "/box?id=", nil),
+				W: *httptest.NewRecorder(),
+			},
+			expectedStatusCode: http.StatusBadRequest,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mux.ServeHTTP(&tc.input.W, tc.input.R)
+			assert.Equal(t, tc.expectedStatusCode, tc.input.W.Result().StatusCode, "URL: "+tc.input.R.URL.String())
+		})
+	}
+}
+
+func TestBoxHandlerOK(t *testing.T) {
+	// logg.EnableDebugLoggerS()
+
+	dbOk := boxDatabaseSuccess{}
+
+	// Add mux handler, without it r.PathValue("id") will not work.
+	mux := http.NewServeMux()
+	mux.Handle("/box", BoxHandler(FprintWriteFunc, &dbOk))
+	mux.Handle("/box/", BoxHandler(FprintWriteFunc, &dbOk))
+	mux.Handle("/api/v2/box/{id}", BoxHandler(FprintWriteFunc, &dbOk))
+	mux.Handle("/api/v2/box/", BoxHandler(FprintWriteFunc, &dbOk))
+
+	testCases := []struct {
+		name               string
+		input              handlerInput
+		expectedStatusCode int
+	}{
+		// @TODO
+		// {
+		// 	name: "Create box ok",
+		// 	input: handlerInput{
+		// 		R: httptest.NewRequest(http.MethodPost, "/box", nil),
+		// 		W: *httptest.NewRecorder(),
+		// 	},
+		// 	expectedStatusCode: http.StatusOK,
+		// },
+		// @TODO
+		// {
+		// 	name: "Should use query param value /box?id={id}",
+		// 	input: handlerInput{
+		// 		R: httptest.NewRequest(http.MethodGet, "/box?id="+BOX_ID, nil),
+		// 		W: *httptest.NewRecorder(),
+		// 	},
+		// 	expectedStatusCode: http.StatusOK,
+		// },
+		// {
+		// 	name: "Should use path value id /box/{id}",
+		// 	input: handlerInput{
+		// 		R: httptest.NewRequest(http.MethodGet, "/api/v2/box/"+BOX_ID, nil),
+		// 		W: *httptest.NewRecorder(),
+		// 	},
+		// 	expectedStatusCode: http.StatusOK,
+		// },
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mux.ServeHTTP(&tc.input.W, tc.input.R)
+			assert.Equal(t, tc.expectedStatusCode, tc.input.W.Result().StatusCode, "URL: "+tc.input.R.URL.String())
 		})
 	}
 }

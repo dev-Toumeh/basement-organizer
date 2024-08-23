@@ -2,18 +2,39 @@ package routes
 
 import (
 	"basement/main/internal/items"
+	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/gofrs/uuid/v5"
 )
 
-func registerBoxRoutes() {
-	http.HandleFunc("/api/v2/box", BoxHandler(FprintWriteFunc))
-	http.HandleFunc("/api/v2/box/{id}", BoxHandler(FprintWriteFunc))
+// SampleBoxDB to test request handler.
+type SampleBoxDB struct{}
+
+func (db *SampleBoxDB) CreateBox() (string, error) {
+	id, err := uuid.NewV4()
+	return id.String(), err
+}
+
+func (db *SampleBoxDB) Box(id string) (items.Box, error) {
+	b := items.NewBox()
+	nid, _ := uuid.FromString(id)
+	b.Id = nid
+
+	return b, nil
+}
+
+func registerBoxRoutes(db BoxDatabase) {
+	http.HandleFunc("/api/v2/box", BoxHandler(FprintWriteFunc, db))
+	http.HandleFunc("/api/v2/box/{id}", BoxHandler(FprintWriteFunc, db))
 	http.HandleFunc("/box", BoxHandler(func(w io.Writer, data any) {
-		templates.Render(w, templates.TEMPLATE_BOX, data)
-	}))
+		// templates.Render(w, templates.TEMPLATE_BOX, data)
+		// templates.Render(w, "box-list-item", data)
+		// fmt.Fprint(w, data)
+	}, &SampleBoxDB{}))
 }
 
 func FprintWriteFunc(w io.Writer, data any) { fmt.Fprint(w, data) }
@@ -28,16 +49,22 @@ type BoxDatabase interface {
 	// MoveBox(id1 string, id2 string) error
 }
 
-func BoxHandler(rw items.ResponseWriter) http.HandlerFunc {
+func BoxHandler(rw items.ResponseWriter, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			db := r.Context().Value("db").(BoxDatabase)
-			id := r.FormValue("id")
-			_, err := db.Box(id)
+			const errorMsg = "Can't get box"
+
+			id := validID(w, r, errorMsg)
+			if id == "" {
+				return
+			}
+
+			box, err := db.Box(id)
 			if err != nil {
+				logg.Debugf("Can't find box with id: '%v'. %v", id, err)
 				w.WriteHeader(http.StatusNotFound)
-				fmt.Fprint(w, fmt.Errorf("Can't find box with id: %v. %w", id, err))
+				fmt.Fprint(w, errorMsg, id)
 				return
 			}
 			// ids, _ := db.ItemIDs()
@@ -47,25 +74,37 @@ func BoxHandler(rw items.ResponseWriter) http.HandlerFunc {
 			// }
 			// b.Description = fmt.Sprintf("This box has %v items", len(ids))
 			// rw(w, b)
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
+			// rw(w, box)
+			templates.Render(w, templates.TEMPLATE_BOX, box)
+			// @TODO: Implement
+			// w.WriteHeader(http.StatusNotImplemented)
+			// fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
 		case http.MethodPost:
-			db := r.Context().Value("db").(BoxDatabase)
-			_, err := db.CreateBox()
+			id, err := db.CreateBox()
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprint(w, fmt.Errorf("Can't create new box. %w", err))
 				return
 			}
-			w.WriteHeader(http.StatusOK)
+			templates.Render(w, "box-list-item", struct{ Id string }{Id: id})
 			break
 		case http.MethodDelete:
-			w.WriteHeader(http.StatusServiceUnavailable)
-			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
+			id := validID(w, r, "Can't delete box")
+			if id == "" {
+				return
+			}
+			// @TODO: Implement
+			// w.WriteHeader(http.StatusNotImplemented)
+			// fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
 		case http.MethodPut:
-			w.WriteHeader(http.StatusServiceUnavailable)
+			id := validID(w, r, "Can't update box")
+			if id == "" {
+				return
+			}
+			// @TODO: Implement
+			w.WriteHeader(http.StatusNotImplemented)
 			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
 		default:
@@ -74,4 +113,30 @@ func BoxHandler(rw items.ResponseWriter) http.HandlerFunc {
 			fmt.Fprint(w, "Method:'", r.Method, "' not allowed")
 		}
 	}
+}
+
+// validID returns valid id string or if errors occurs
+// writes correct response header status code with errorMessage and returns empty string.
+func validID(w http.ResponseWriter, r *http.Request, errorMessage string) string {
+	id := r.FormValue("id")
+	logg.Debugf("Query param id: '%v'.", id)
+	if id == "" {
+		id = r.PathValue("id")
+		if id == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			logg.Debug("Empty id")
+			fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
+			return ""
+		}
+		logg.Debugf("path value id: '%v'.", id)
+	}
+
+	_, err := uuid.FromString(id)
+	if err != nil {
+		logg.Debugf("Wrong id: '%v'. %v", id, err)
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
+		return ""
+	}
+	return id
 }

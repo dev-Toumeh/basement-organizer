@@ -13,6 +13,7 @@
 {{ define "sample-page-body" }}
 <div id="main-container">
     <div>Body Text inside div</div>
+
     <h1>H1 Header</h1>
     <div style="display:flex">
         <p>Paragraph text</p>
@@ -22,8 +23,11 @@
     <h3>H3 Header</h3>
     <h4>H4 Header</h4>
     <h5>H5 Header</h5>
-    <button hx-get="/box" hx-target="#box">NEW BOX</button>
-    <div id="box" >no box</div>
+    <button hx-post="/box" hx-target="#box-list" hx-swap="beforeend">Create box</button>
+    <button hx-get="/box" hx-target="#box">Get box</button>
+
+    <div id="box-list" ></div>
+    <div id="box" ></div>
     <h6>H6 Header</h6>
 
     <button 
@@ -40,6 +44,26 @@
     <div class="update-placeholder"></div>
 </div>
 {{end}}
+
+{{ define "box-list-item" }}
+<div id="box-list-item-{{.Id}}">
+    <button 
+        hx-get="/box?id={{.Id}}"
+        hx-target="#box"
+    >
+        Box: {{.Id}}  
+    </button>
+    <button hx-delete="/box?id={{.Id}}"
+        hx-swap="outerHTML" 
+        hx-select-oob="#box-list-item-{{.Id}}"
+    >delete</button>
+        <!--hx-select="this"-->
+        <!--hx-select="#box-list-item-{{.Id}}"-->
+        <!--hx-swap-oob="#box-{{.Id}}"-->
+    <button hx-put="/box?id={{.Id}}" hx-target="#box">edit</button>
+</div>
+{{end}}
+
 
 {{ define "style-debug" }}
 <style>

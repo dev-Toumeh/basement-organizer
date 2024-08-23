@@ -17,6 +17,7 @@ func RegisterRoutes(db *database.DB) {
 	authRoutes(db)
 	apiRoutes(db)
 	experimentalRoutes()
+	registerBoxRoutes(&SampleBoxDB{})
 }
 
 // MustRender will only render valid templates or throw http.StatusInternalServerError.
@@ -89,5 +90,4 @@ func experimentalRoutes() {
 	http.HandleFunc("/snackbar-warning", func(w http.ResponseWriter, r *http.Request) {
 		templates.RenderWarningSnackbar(w, "warning")
 	})
-	registerBoxRoutes()
 }
