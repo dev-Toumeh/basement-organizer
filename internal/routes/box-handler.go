@@ -56,6 +56,11 @@ func BoxHandler(rw items.ResponseWriter, db BoxDatabase) http.HandlerFunc {
 			const errorMsg = "Can't get box"
 
 			id := validID(w, r, errorMsg)
+			editParam := r.FormValue("edit")
+			edit := false
+			if editParam == "true" {
+				edit = true
+			}
 			if id == "" {
 				return
 			}
@@ -75,7 +80,11 @@ func BoxHandler(rw items.ResponseWriter, db BoxDatabase) http.HandlerFunc {
 			// b.Description = fmt.Sprintf("This box has %v items", len(ids))
 			// rw(w, b)
 			// rw(w, box)
-			templates.Render(w, templates.TEMPLATE_BOX, box)
+			templates.Render(w, templates.TEMPLATE_BOX,
+				struct {
+					items.Box
+					Edit bool
+				}{box, edit})
 			// @TODO: Implement
 			// w.WriteHeader(http.StatusNotImplemented)
 			// fmt.Fprint(w, "Method:'", r.Method, "' not implemented")

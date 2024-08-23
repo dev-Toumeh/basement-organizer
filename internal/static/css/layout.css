@@ -20,6 +20,11 @@ ul li {
   justify-content: space-between;
 }
 
+td[hx-get]:hover {
+  cursor: pointer;
+  background: yellow;
+}
+
 input[readonly] {
   background: transparent;
   border-color: #00000038;
