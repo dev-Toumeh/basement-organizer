@@ -6,11 +6,11 @@
 {{ end }}
 
 {{define "update-form"}}
-<div id="user-data-container">
-    <h2>Edit User Data</h2>
-    <form id="update-form" name="form" 
+<div id="form-container">
+    <h2 id="form-label">User Data</h2>
+    <form id="form" name="form" 
          hx-put="/update"
-         hx-target="#user-data-container"
+         hx-target="#main-container"
          hx-swap="outerHTML"
          hx-disabled-elt="#registerButton"
          hx-indicator="#loadingIndicator">
@@ -29,7 +29,6 @@
             name="username" 
             value="{{ if .InputUserData }}{{ .InputUserData.Username }}{{ end }}" 
             required>
-        <br>
         <label for="password">Password:</label>
         <input 
             type="password" 
@@ -37,7 +36,6 @@
             name="password" 
             placeholder="Password" 
             required>
-        <br>
 
         <label for="password-confirm">Confirm Password:</label>
         <input 
@@ -46,7 +44,6 @@
             name="password-confirm"   
             placeholder="Confirm Password" 
             required>
-        <br>
 
         <button id="registerButton" type="submit">Update</button>
     </form>

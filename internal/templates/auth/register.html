@@ -7,7 +7,7 @@
 {{ end }}
 
 {{define "register-form"}}
-<form id="form" name="form" 
+<form id="register-form" name="form" 
      hx-post="register"
      hx-disabled-elt="#registerButton"
      hx-indicator="#loadingIndicator">
@@ -26,7 +26,6 @@
         name="username" 
         value="{{ if .InputUserData }}{{ .InputUserData.Username }}{{ end }}" 
         required>
-    <br>
 
     <label for="password">Password:</label>
     <input 
@@ -35,7 +34,6 @@
         name="password" 
         value="{{ if .InputUserData }}{{ .InputUserData.Password }}{{ end }}" 
         required>
-    <br>
 
     <label for="password-confirm">Confirm Password:</label>
     <input 
@@ -45,8 +43,23 @@
         value="{{ if .InputUserData }}{{ .InputUserData.PasswordConfirm }}{{ end }}" 
         placeholder="Confirm Password" 
         required>
-    <br>
 
     <button id="registerButton" type="submit">Register</button>
 </form>
+<style>
+    #register-form {
+      display: flex;
+      flex-direction: column;
+      max-width: 300px;
+      padding: 20px;
+      border: 1px solid #333;
+      border-radius: 5px;
+      text-align: center;
+      margin: 1em auto; /* Center horizontally */
+    }
+
+    label {
+      margin-bottom: 5px;
+    }
+</style>
 {{end}}

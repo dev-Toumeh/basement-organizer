@@ -9,7 +9,7 @@
 {{end}}
 
 {{ define "login-form" }}
-<form id="login-form">
+<form id="form">
     <label for="username">Username:</label>
     <input 
         {{ if .Authenticated }}disabled{{ end }}
@@ -17,15 +17,12 @@
         id="username"
         name="username"
         required>
-    </br>
     <label for="password">Password:</label>
     <input 
         {{ if .Authenticated }}disabled{{ end }}
         type="password" id="password" name="password" required>
-    </br>
     <div>
         <button 
-            style="display: flex"
             hx-post="login"
             hx-indicator="#loadingIndicator"
             hx-disabled-elt="this"
