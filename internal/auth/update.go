@@ -67,13 +67,12 @@ func updateUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
 		return
 	}
-	http.RedirectHandler("/login", http.StatusOK)
 
 	// https://htmx.org/headers/hx-location/
-	http.RedirectHandler("/login-form", http.StatusOK)
+	w.Header().Add("HX-Location", "/")
 	templates.RenderSuccessSnackbar(w, fmt.Sprintf("the user %s was updated successfully", newUser.Username))
-	w.Header().Add("HX-Location", "/login")
-	logg.Debugf("User %s registered successfully:", newUser.Username)
+	http.Redirect(w, r, "/", http.StatusOK)
+	logg.Debugf("User %s updated successfully:", newUser.Username)
 	return
 }
 
