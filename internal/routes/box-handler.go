@@ -11,22 +11,30 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-// boxDatabaseSuccess never returns errors.
-type mockBoxDB struct{}
+// SampleBoxDB to test request handler.
+type SampleBoxDB struct{}
 
-func (db *mockBoxDB) CreateBox() (string, error) {
-	return "fa2e3db6-fcf8-49c6-ac9c-54ce5855bf0b", nil
+func (db *SampleBoxDB) CreateBox() (string, error) {
+	id, err := uuid.NewV4()
+	return id.String(), err
 }
 
-func (db *mockBoxDB) Box(id string) (items.Box, error) {
-	return items.Box{}, nil
+func (db *SampleBoxDB) Box(id string) (items.Box, error) {
+	b := items.NewBox()
+	nid, _ := uuid.FromString(id)
+	b.Id = nid
+
+	return b, nil
 }
+
 func registerBoxRoutes(db BoxDatabase) {
 	http.HandleFunc("/api/v2/box", BoxHandler(FprintWriteFunc, db))
 	http.HandleFunc("/api/v2/box/{id}", BoxHandler(FprintWriteFunc, db))
 	http.HandleFunc("/box", BoxHandler(func(w io.Writer, data any) {
-		templates.Render(w, templates.TEMPLATE_BOX, data)
-	}, db))
+		// templates.Render(w, templates.TEMPLATE_BOX, data)
+		// templates.Render(w, "box-list-item", data)
+		// fmt.Fprint(w, data)
+	}, &SampleBoxDB{}))
 }
 
 func FprintWriteFunc(w io.Writer, data any) { fmt.Fprint(w, data) }
@@ -52,7 +60,7 @@ func BoxHandler(rw items.ResponseWriter, db BoxDatabase) http.HandlerFunc {
 				return
 			}
 
-			_, err := db.Box(id)
+			box, err := db.Box(id)
 			if err != nil {
 				logg.Debugf("Can't find box with id: '%v'. %v", id, err)
 				w.WriteHeader(http.StatusNotFound)
@@ -66,20 +74,20 @@ func BoxHandler(rw items.ResponseWriter, db BoxDatabase) http.HandlerFunc {
 			// }
 			// b.Description = fmt.Sprintf("This box has %v items", len(ids))
 			// rw(w, b)
-
+			// rw(w, box)
+			templates.Render(w, templates.TEMPLATE_BOX, box)
 			// @TODO: Implement
-			w.WriteHeader(http.StatusNotImplemented)
-			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
+			// w.WriteHeader(http.StatusNotImplemented)
+			// fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
 		case http.MethodPost:
-			_, err := db.CreateBox()
+			id, err := db.CreateBox()
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprint(w, fmt.Errorf("Can't create new box. %w", err))
 				return
 			}
-			// @TODO: Implement
-			w.WriteHeader(http.StatusNotImplemented)
+			templates.Render(w, "box-list-item", struct{ Id string }{Id: id})
 			break
 		case http.MethodDelete:
 			id := validID(w, r, "Can't delete box")
@@ -87,8 +95,8 @@ func BoxHandler(rw items.ResponseWriter, db BoxDatabase) http.HandlerFunc {
 				return
 			}
 			// @TODO: Implement
-			w.WriteHeader(http.StatusNotImplemented)
-			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
+			// w.WriteHeader(http.StatusNotImplemented)
+			// fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
 		case http.MethodPut:
 			id := validID(w, r, "Can't update box")
@@ -132,4 +140,3 @@ func validID(w http.ResponseWriter, r *http.Request, errorMessage string) string
 	}
 	return id
 }
-

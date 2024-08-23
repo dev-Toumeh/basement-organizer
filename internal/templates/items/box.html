@@ -1,5 +1,6 @@
 {{ define "box" }}
-<div class="box-container">
+<div id="box-{{.Id}}"
+    class="box-container">
     <label for="id"></label><input type="text" value="{{.Id}}" readonly>
     <label for="id"></label><input type="text" value="{{.Label}}" readonly>
     <label for="id"></label><input type="text" value="{{.Description}}" readonly>
@@ -8,5 +9,7 @@
     <li style="border:solid">{{ template "item-container-2" .}}</li>
     {{ end}}
 </ol>
+<button hx-delete="/box?id={{.Id}}" hx-swap="outerHTML" hx-target="#box-{{.Id}}">delete</button>
+<button hx-put="/box?id={{.Id}}" hx-target="#box">Update box</button>
 </div>
 {{end}}
