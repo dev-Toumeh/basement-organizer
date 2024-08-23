@@ -45,32 +45,18 @@ func BoxHandler(rw items.ResponseWriter, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			const errorMsg = "Can't find box. '%v'"
+			const errorMsg = "Can't get box"
 
-			id := r.FormValue("id")
+			id := validID(w, r, errorMsg)
 			if id == "" {
-				logg.Debugf("query param id is empty: '%v'.", id)
-				id = r.PathValue("id")
-				if id == "" {
-					w.WriteHeader(http.StatusBadRequest)
-					logg.Debugf("Can't get box with empty id: '%v'.", id)
-					fmt.Fprintf(w, errorMsg, id)
-					return
-				}
-				logg.Debugf("path value id: '%v'.", id)
-			}
-			_, err := uuid.FromString(id)
-			if err != nil {
-				logg.Debugf("Wrong id: '%v'. %v", id, err)
-				w.WriteHeader(http.StatusNotFound)
-				fmt.Fprintf(w, errorMsg, id)
 				return
 			}
-			_, err = db.Box(id)
+
+			_, err := db.Box(id)
 			if err != nil {
 				logg.Debugf("Can't find box with id: '%v'. %v", id, err)
 				w.WriteHeader(http.StatusNotFound)
-				fmt.Fprintf(w, errorMsg, id)
+				fmt.Fprint(w, errorMsg, id)
 				return
 			}
 			// ids, _ := db.ItemIDs()
@@ -80,6 +66,8 @@ func BoxHandler(rw items.ResponseWriter, db BoxDatabase) http.HandlerFunc {
 			// }
 			// b.Description = fmt.Sprintf("This box has %v items", len(ids))
 			// rw(w, b)
+
+			// @TODO: Implement
 			w.WriteHeader(http.StatusNotImplemented)
 			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
@@ -90,13 +78,24 @@ func BoxHandler(rw items.ResponseWriter, db BoxDatabase) http.HandlerFunc {
 				fmt.Fprint(w, fmt.Errorf("Can't create new box. %w", err))
 				return
 			}
+			// @TODO: Implement
 			w.WriteHeader(http.StatusNotImplemented)
 			break
 		case http.MethodDelete:
+			id := validID(w, r, "Can't delete box")
+			if id == "" {
+				return
+			}
+			// @TODO: Implement
 			w.WriteHeader(http.StatusNotImplemented)
 			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
 		case http.MethodPut:
+			id := validID(w, r, "Can't update box")
+			if id == "" {
+				return
+			}
+			// @TODO: Implement
 			w.WriteHeader(http.StatusNotImplemented)
 			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
@@ -107,3 +106,30 @@ func BoxHandler(rw items.ResponseWriter, db BoxDatabase) http.HandlerFunc {
 		}
 	}
 }
+
+// validID returns valid id string or if errors occurs
+// writes correct response header status code with errorMessage and returns empty string.
+func validID(w http.ResponseWriter, r *http.Request, errorMessage string) string {
+	id := r.FormValue("id")
+	logg.Debugf("Query param id: '%v'.", id)
+	if id == "" {
+		id = r.PathValue("id")
+		if id == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			logg.Debug("Empty id")
+			fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
+			return ""
+		}
+		logg.Debugf("path value id: '%v'.", id)
+	}
+
+	_, err := uuid.FromString(id)
+	if err != nil {
+		logg.Debugf("Wrong id: '%v'. %v", id, err)
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
+		return ""
+	}
+	return id
+}
+
