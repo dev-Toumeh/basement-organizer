@@ -23,7 +23,10 @@ func main() {
 	defer db.Sql.Close()
 
 	routes.RegisterRoutes(db)
-	templates.InitTemplates()
+	err := templates.InitTemplates("./internal/templates")
+	if err != nil {
+		logg.Fatal("Templates failed to initialize", err)
+	}
 
 	http.ListenAndServe("localhost:8000", nil)
 }

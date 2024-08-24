@@ -64,11 +64,11 @@ var testStyle = templates.DEBUG_STYLE
 
 func SwitchDebugStyle(w http.ResponseWriter, r *http.Request) {
 	if testStyle {
-		templates.InitTemplates()
+		templates.InitTemplates("")
 		templates.RedefineFromOtherTemplateDefinition("style", templates.InternalTemplate(), "style-debug", templates.InternalTemplate())
 		templates.Render(w, templates.TEMPLATE_STYLE, nil)
 	} else {
-		templates.InitTemplates()
+		templates.InitTemplates("")
 		templates.RedefineTemplateDefinition(templates.InternalTemplate(), "style", "<style></style>")
 		templates.Render(w, templates.TEMPLATE_STYLE, nil)
 	}

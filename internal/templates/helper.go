@@ -73,14 +73,21 @@ func InternalTemplate() *template.Template {
 }
 
 // InitTemplates loads all templates from "internal/templates" directory.
-func InitTemplates() {
+func InitTemplates(directory string) error {
 	var err error
-	internalTemplate, _, err = ParseDirectory("internal/templates")
+	dir := ""
+	if directory == "" {
+		dir = "internal/templates"
+	} else {
+		dir = directory
+	}
+	internalTemplate, _, err = ParseDirectory(dir)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("Init Templates failed: %w", err)
 	}
 
 	log.Println("Templates initialized")
+	return nil
 }
 
 // Recursively parse all files in directory, including sub-directories.
