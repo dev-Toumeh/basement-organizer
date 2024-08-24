@@ -4,9 +4,11 @@ import (
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -28,16 +30,23 @@ func (db *SampleBoxDB) Box(id string) (items.Box, error) {
 }
 
 func registerBoxRoutes(db BoxDatabase) {
-	http.HandleFunc("/api/v2/box", BoxHandler(FprintWriteFunc, db))
-	http.HandleFunc("/api/v2/box/{id}", BoxHandler(FprintWriteFunc, db))
+	http.HandleFunc("/api/v2/box", BoxHandler(WriteJSON, db))
+	http.HandleFunc("/api/v2/box/{id}", BoxHandler(WriteJSON, db))
 	http.HandleFunc("/box", BoxHandler(func(w io.Writer, data any) {
-		// templates.Render(w, templates.TEMPLATE_BOX, data)
+		templates.Render(w, templates.TEMPLATE_BOX, data)
 		// templates.Render(w, "box-list-item", data)
 		// fmt.Fprint(w, data)
 	}, &SampleBoxDB{}))
 }
 
-func FprintWriteFunc(w io.Writer, data any) { fmt.Fprint(w, data) }
+func WriteFprint(w io.Writer, data any) {
+	fmt.Fprint(w, data)
+}
+
+func WriteJSON(w io.Writer, data any) {
+	enc := json.NewEncoder(w)
+	enc.Encode(data)
+}
 
 type BoxDatabase interface {
 	// CreateBox returns id of box if successful, otherwise error.
@@ -49,18 +58,13 @@ type BoxDatabase interface {
 	// MoveBox(id1 string, id2 string) error
 }
 
-func BoxHandler(rw items.ResponseWriter, db BoxDatabase) http.HandlerFunc {
+func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			const errorMsg = "Can't get box"
 
 			id := validID(w, r, errorMsg)
-			editParam := r.FormValue("edit")
-			edit := false
-			if editParam == "true" {
-				edit = true
-			}
 			if id == "" {
 				return
 			}
@@ -72,22 +76,25 @@ func BoxHandler(rw items.ResponseWriter, db BoxDatabase) http.HandlerFunc {
 				fmt.Fprint(w, errorMsg, id)
 				return
 			}
-			// ids, _ := db.ItemIDs()
-			// for _, id := range ids {
-			// 	item, _ := db.Item(id)
-			// 	b.Items = append(b.Items, &item)
-			// }
-			// b.Description = fmt.Sprintf("This box has %v items", len(ids))
-			// rw(w, b)
-			// rw(w, box)
-			templates.Render(w, templates.TEMPLATE_BOX,
-				struct {
-					items.Box
-					Edit bool
-				}{box, edit})
-			// @TODO: Implement
-			// w.WriteHeader(http.StatusNotImplemented)
-			// fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
+
+			// Use API data writer
+			if strings.Contains(r.URL.Path, "/api/") {
+				writeData(w, box)
+				return
+			}
+
+			// Template writer
+			editParam := r.FormValue("edit")
+			edit := false
+			if editParam == "true" {
+				edit = true
+			}
+			b := struct {
+				items.Box
+				Edit bool
+			}{box, edit}
+
+			writeData(w, b)
 			break
 		case http.MethodPost:
 			id, err := db.CreateBox()

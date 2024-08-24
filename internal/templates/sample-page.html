@@ -72,7 +72,11 @@
     >{{.Id}}</td>
     <td><button hx-get="/box?id={{.Id}}&edit=true" 
         hx-target="#box"
-    >edit</button></td>
+    >edit</button>
+    <button hx-get="/api/v2/box/{{.Id}}" 
+        hx-target="#box"
+    >API get</button>
+    </td>
     <td><button hx-delete="/box?id={{.Id}}" 
         hx-target="#box-list-item-{{.Id}}" 
     >del</button></td>

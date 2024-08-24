@@ -46,10 +46,10 @@ func TestBoxHandlerDBErrors(t *testing.T) {
 
 	// Add mux handler, without it r.PathValue("id") will not work.
 	mux := http.NewServeMux()
-	mux.Handle("/box", BoxHandler(FprintWriteFunc, dbErr))
-	mux.Handle("/box/", BoxHandler(FprintWriteFunc, dbErr))
-	mux.Handle("/api/v2/box/{id}", BoxHandler(FprintWriteFunc, dbErr))
-	mux.Handle("/api/v2/box/", BoxHandler(FprintWriteFunc, dbErr))
+	mux.Handle("/box", BoxHandler(WriteFprint, dbErr))
+	mux.Handle("/box/", BoxHandler(WriteFprint, dbErr))
+	mux.Handle("/api/v2/box/{id}", BoxHandler(WriteFprint, dbErr))
+	mux.Handle("/api/v2/box/", BoxHandler(WriteFprint, dbErr))
 
 	testCases := []struct {
 		name               string
@@ -105,10 +105,10 @@ func TestBoxHandlerInputErrors(t *testing.T) {
 
 	// Add mux handler, without it r.PathValue("id") will not work.
 	mux := http.NewServeMux()
-	mux.Handle("/box", BoxHandler(FprintWriteFunc, &dbOk))
-	mux.Handle("/box/", BoxHandler(FprintWriteFunc, &dbOk))
-	mux.Handle("/api/v2/box/{id}", BoxHandler(FprintWriteFunc, &dbOk))
-	mux.Handle("/api/v2/box/", BoxHandler(FprintWriteFunc, &dbOk))
+	mux.Handle("/box", BoxHandler(WriteFprint, &dbOk))
+	mux.Handle("/box/", BoxHandler(WriteFprint, &dbOk))
+	mux.Handle("/api/v2/box/{id}", BoxHandler(WriteFprint, &dbOk))
+	mux.Handle("/api/v2/box/", BoxHandler(WriteFprint, &dbOk))
 
 	testCases := []struct {
 		name               string
@@ -163,10 +163,10 @@ func TestBoxHandlerOK(t *testing.T) {
 
 	// Add mux handler, without it r.PathValue("id") will not work.
 	mux := http.NewServeMux()
-	mux.Handle("/box", BoxHandler(FprintWriteFunc, &dbOk))
-	mux.Handle("/box/", BoxHandler(FprintWriteFunc, &dbOk))
-	mux.Handle("/api/v2/box/{id}", BoxHandler(FprintWriteFunc, &dbOk))
-	mux.Handle("/api/v2/box/", BoxHandler(FprintWriteFunc, &dbOk))
+	mux.Handle("/box", BoxHandler(WriteFprint, &dbOk))
+	mux.Handle("/box/", BoxHandler(WriteFprint, &dbOk))
+	mux.Handle("/api/v2/box/{id}", BoxHandler(WriteFprint, &dbOk))
+	mux.Handle("/api/v2/box/", BoxHandler(WriteFprint, &dbOk))
 
 	testCases := []struct {
 		name               string
