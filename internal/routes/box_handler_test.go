@@ -170,7 +170,7 @@ func TestBoxHandlerOK(t *testing.T) {
 	mux.Handle("/box", BoxHandler(WriteBoxTemplate, &dbOk))
 	mux.Handle("/box/", BoxHandler(WriteBoxTemplate, &dbOk))
 	mux.Handle("/api/v2/box/{id}", BoxHandler(WriteFprint, &dbOk))
-	mux.Handle("/api/v2/box/", BoxHandler(WriteFprint, &dbOk))
+	mux.Handle("/api/v2/box", BoxHandler(WriteFprint, &dbOk))
 
 	testCases := []struct {
 		name               string
@@ -179,13 +179,22 @@ func TestBoxHandlerOK(t *testing.T) {
 		expectedTemplate   bool
 	}{
 		{
-			name: "Create box ok",
+			name: "Create box ok template response",
 			input: handlerInput{
 				R: httptest.NewRequest(http.MethodPost, "/box", nil),
 				W: *httptest.NewRecorder(),
 			},
 			expectedStatusCode: http.StatusOK,
 			expectedTemplate:   true,
+		},
+		{
+			name: "Create box ok data only response",
+			input: handlerInput{
+				R: httptest.NewRequest(http.MethodPost, "/api/v2/box", nil),
+				W: *httptest.NewRecorder(),
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedTemplate:   false,
 		},
 		{
 			name: "Should use query param value /box?id={id}",

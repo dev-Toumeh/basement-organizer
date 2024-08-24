@@ -78,7 +78,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			}
 
 			// Use API data writer
-			if strings.Contains(r.URL.Path, "/api/") {
+			if !wantsTemplateData(r) {
 				writeData(w, box)
 				return
 			}
@@ -96,6 +96,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 
 			writeData(w, b)
 			break
+
 		case http.MethodPost:
 			id, err := db.CreateBox()
 			if err != nil {
@@ -103,7 +104,11 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 				fmt.Fprint(w, fmt.Errorf("Can't create new box. %w", err))
 				return
 			}
-			templates.Render(w, "box-list-item", struct{ Id string }{Id: id})
+			if wantsTemplateData(r) {
+				templates.Render(w, "box-list-item", struct{ Id string }{Id: id})
+			} else {
+				writeData(w, id)
+			}
 			break
 		case http.MethodDelete:
 			id := validID(w, r, "Can't delete box")
@@ -114,6 +119,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			// w.WriteHeader(http.StatusNotImplemented)
 			// fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
+
 		case http.MethodPut:
 			id := validID(w, r, "Can't update box")
 			if id == "" {
@@ -123,6 +129,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			w.WriteHeader(http.StatusNotImplemented)
 			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
+
 		default:
 			w.Header().Add("Allow", http.MethodGet)
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -155,4 +162,9 @@ func validID(w http.ResponseWriter, r *http.Request, errorMessage string) string
 		return ""
 	}
 	return id
+}
+
+// wantsTemplateData checks if current request requires template data.
+func wantsTemplateData(r *http.Request) bool {
+	return !strings.Contains(r.URL.Path, "/api/")
 }
