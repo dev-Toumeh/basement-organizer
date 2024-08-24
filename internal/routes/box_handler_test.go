@@ -2,11 +2,15 @@ package routes
 
 import (
 	"basement/main/internal/items"
+	"basement/main/internal/logg"
+	"basement/main/internal/templates"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,14 +33,14 @@ func (db *boxDatabaseError) Box(id string) (items.Box, error) {
 // boxDatabaseSuccess never returns errors.
 type boxDatabaseSuccess struct{}
 
-const BOX_ID = "fa2e3db6-fcf8-49c6-ac9c-54ce5855bf0b"
+const BOX_ID string = "fa2e3db6-fcf8-49c6-ac9c-54ce5855bf0b"
 
 func (db *boxDatabaseSuccess) CreateBox() (string, error) {
 	return BOX_ID, nil
 }
 
 func (db *boxDatabaseSuccess) Box(id string) (items.Box, error) {
-	return items.Box{}, nil
+	return items.Box{Id: uuid.Must(uuid.FromString(BOX_ID))}, nil
 }
 
 func TestBoxHandlerDBErrors(t *testing.T) {
@@ -163,8 +167,8 @@ func TestBoxHandlerOK(t *testing.T) {
 
 	// Add mux handler, without it r.PathValue("id") will not work.
 	mux := http.NewServeMux()
-	mux.Handle("/box", BoxHandler(WriteFprint, &dbOk))
-	mux.Handle("/box/", BoxHandler(WriteFprint, &dbOk))
+	mux.Handle("/box", BoxHandler(WriteBoxTemplate, &dbOk))
+	mux.Handle("/box/", BoxHandler(WriteBoxTemplate, &dbOk))
 	mux.Handle("/api/v2/box/{id}", BoxHandler(WriteFprint, &dbOk))
 	mux.Handle("/api/v2/box/", BoxHandler(WriteFprint, &dbOk))
 
@@ -172,38 +176,52 @@ func TestBoxHandlerOK(t *testing.T) {
 		name               string
 		input              handlerInput
 		expectedStatusCode int
+		expectedTemplate   bool
 	}{
-		// @TODO
-		// {
-		// 	name: "Create box ok",
-		// 	input: handlerInput{
-		// 		R: httptest.NewRequest(http.MethodPost, "/box", nil),
-		// 		W: *httptest.NewRecorder(),
-		// 	},
-		// 	expectedStatusCode: http.StatusOK,
-		// },
-		// @TODO
-		// {
-		// 	name: "Should use query param value /box?id={id}",
-		// 	input: handlerInput{
-		// 		R: httptest.NewRequest(http.MethodGet, "/box?id="+BOX_ID, nil),
-		// 		W: *httptest.NewRecorder(),
-		// 	},
-		// 	expectedStatusCode: http.StatusOK,
-		// },
-		// {
-		// 	name: "Should use path value id /box/{id}",
-		// 	input: handlerInput{
-		// 		R: httptest.NewRequest(http.MethodGet, "/api/v2/box/"+BOX_ID, nil),
-		// 		W: *httptest.NewRecorder(),
-		// 	},
-		// 	expectedStatusCode: http.StatusOK,
-		// },
+		{
+			name: "Create box ok",
+			input: handlerInput{
+				R: httptest.NewRequest(http.MethodPost, "/box", nil),
+				W: *httptest.NewRecorder(),
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedTemplate:   true,
+		},
+		{
+			name: "Should use query param value /box?id={id}",
+			input: handlerInput{
+				R: httptest.NewRequest(http.MethodGet, "/box?id="+BOX_ID, nil),
+				W: *httptest.NewRecorder(),
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedTemplate:   true,
+		},
+		{
+			name: "Should use path value id /box/{id}",
+			input: handlerInput{
+				R: httptest.NewRequest(http.MethodGet, "/api/v2/box/"+BOX_ID, nil),
+				W: *httptest.NewRecorder(),
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedTemplate:   false,
+		},
+	}
+	err := templates.InitTemplates("../templates")
+	if err != nil {
+		logg.Fatal(err)
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mux.ServeHTTP(&tc.input.W, tc.input.R)
-			assert.Equal(t, tc.expectedStatusCode, tc.input.W.Result().StatusCode, "URL: "+tc.input.R.URL.String())
+			url := "URL: " + tc.input.R.URL.String()
+			assert.Equal(t, tc.expectedStatusCode, tc.input.W.Result().StatusCode, url)
+
+			read, _ := io.ReadAll(tc.input.W.Result().Body)
+			if tc.expectedTemplate {
+				assert.Contains(t, string(read), "hx-", url)
+			} else {
+				assert.NotContains(t, string(read), "hx-", url)
+			}
 		})
 	}
 }
