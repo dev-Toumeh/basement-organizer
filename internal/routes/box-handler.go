@@ -32,11 +32,11 @@ func (db *SampleBoxDB) Box(id string) (items.Box, error) {
 func registerBoxRoutes(db BoxDatabase) {
 	http.HandleFunc("/api/v2/box", BoxHandler(WriteJSON, db))
 	http.HandleFunc("/api/v2/box/{id}", BoxHandler(WriteJSON, db))
-	http.HandleFunc("/box", BoxHandler(func(w io.Writer, data any) {
-		templates.Render(w, templates.TEMPLATE_BOX, data)
-		// templates.Render(w, "box-list-item", data)
-		// fmt.Fprint(w, data)
-	}, &SampleBoxDB{}))
+	http.HandleFunc("/box", BoxHandler(WriteBoxTemplate, &SampleBoxDB{}))
+}
+
+func WriteBoxTemplate(w io.Writer, data any) {
+	templates.Render(w, templates.TEMPLATE_BOX, data)
 }
 
 func WriteFprint(w io.Writer, data any) {
