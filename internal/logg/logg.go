@@ -62,7 +62,8 @@ func Debugf(format string, v ...any) {
 
 // Fatal is equivalent to log.Fatal().
 func Fatal(v ...any) {
-	logger.Fatal(v...)
+	logger.Output(2, fmt.Sprint(v...))
+	os.Exit(1)
 }
 
 // Fatalf is equivalent to log.Fatalf().
