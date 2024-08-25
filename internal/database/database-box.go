@@ -33,16 +33,17 @@ type SqlItem struct {
 }
 
 // Create New Item Record
-func (db *DB) CreateNewBox(newBox *items.Box) error {
+
+func (db *DB) CreateNewBox(newBox *items.Box) (uuid.UUID, error) {
 	if db.BoxExist("id", newBox.Id.String()) {
-		return db.ErrorExist()
+		return uuid.Nil, db.ErrorExist()
 
 	}
-	_, err := db.insertNewBox(newBox)
+	id, err := db.insertNewBox(newBox)
 	if err != nil {
-		return fmt.Errorf("error whie creating new Box: %v", err)
+		return uuid.Nil, fmt.Errorf("error whie creating new Box: %v", err)
 	}
-	return nil
+	return id, nil
 }
 
 // check if the Box Exist based on given Field

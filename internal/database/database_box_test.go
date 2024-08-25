@@ -77,7 +77,7 @@ func TestBoxByField(t *testing.T) {
 	_, err = dbTest.BoxByField("non_existent_field", "some_value")
 	assert.NotEqual(t, err, nil)
 
-	EmptyDatabse()
+	EmptyTestDatabase()
 }
 
 func TestCreateNewBox(t *testing.T) {
@@ -86,7 +86,7 @@ func TestCreateNewBox(t *testing.T) {
 	testBox := boxList[0]
 
 	// Testing creation of a new box that does not already exist
-	err := dbTest.CreateNewBox(testBox)
+	_, err := dbTest.CreateNewBox(testBox)
 	assert.Equal(t, nil, err)
 	if err != nil {
 		t.Fatalf("Failed to create new box: %v", err)
@@ -97,10 +97,10 @@ func TestCreateNewBox(t *testing.T) {
 	assert.Equal(t, true, exists)
 
 	// Test creating the same box again to trigger an error
-	err = dbTest.CreateNewBox(testBox)
+	_, err = dbTest.CreateNewBox(testBox)
 	assert.NotEqual(t, nil, err)
 
-	EmptyDatabse()
+	EmptyTestDatabase()
 }
 
 func TestBoxIDs(t *testing.T) {

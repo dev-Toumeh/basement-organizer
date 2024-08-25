@@ -73,12 +73,12 @@ func setup() error {
 
 func teardown() {
 
-	EmptyDatabse()
+	EmptyTestDatabase()
 	logg.Info("Testing Database Package was finished, Tables was cleared")
 	dbTest.Sql.Close()
 }
 
-func EmptyDatabse() {
+func EmptyTestDatabase() {
 	for tableName := range *statements {
 		sqlStatement := fmt.Sprintf("DELETE FROM %s;", tableName)
 		_, err := dbTest.Sql.Exec(sqlStatement)
