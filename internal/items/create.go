@@ -29,6 +29,7 @@ type Item struct {
 	Quantity    int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
 	Weight      string    `json:"weight"      validate:"omitempty,numeric"`
 	QRcode      string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	BoxId       uuid.UUID `json:"box_id"`
 }
 
 type ItemDatabase interface {
