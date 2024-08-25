@@ -15,7 +15,7 @@ import (
 // Create New Item Record
 func (db *DB) CreateNewItem(ctx context.Context, newItem items.Item) error {
 
-	if _, err := db.ItemByField(ctx, "label", newItem.Label); err != nil {
+	if _, err := db.ItemByField("label", newItem.Label); err != nil {
 		return err
 	}
 	err := db.insertNewItem(ctx, newItem)
@@ -26,37 +26,42 @@ func (db *DB) CreateNewItem(ctx context.Context, newItem items.Item) error {
 
 }
 
-// Get/Check if the Item exist
-func (db *DB) ItemByField(ctx context.Context, field string, value string) (items.Item, error) {
-	if ctx == nil {
-		ctx = context.Background()
+// Get Item Record based on given Field  
+func (db *DB) ItemByField(field string, value string) (items.Item, error) {
+
+	if !db.ItemExist(field, value) {
+		return items.Item{}, sql.ErrNoRows
 	}
 
 	query := fmt.Sprintf("SELECT id, label, description, picture, quantity, weight, qrcode FROM item WHERE %s = ? \n", field)
-	logg.Debug(query)
-	row := db.Sql.QueryRowContext(ctx, query, value)
+	row := db.Sql.QueryRow(query, value)
 
 	var item items.Item
 	var idStr string
 	err := row.Scan(&idStr, &item.Label, &item.Description, &item.Picture, &item.Quantity, &item.Weight, &item.QRcode)
 
 	if err != nil {
-		// @TODO: should error not be returned?
-		if err == sql.ErrNoRows {
-			return items.Item{}, nil
-		}
-		log.Println("Error while checking if the Item is available:", err)
-		return items.Item{}, err
+		return items.Item{}, fmt.Errorf("Error while checking if the Item is available: %w ", err)
 	}
 	item.Id = uuid.Must(uuid.FromString(idStr))
-	// @TODO: Why is error returned after item is found?
-	return item, db.ErrorExist()
+	return item, nil
+}
+
+// check if the Item exist
+func (db *DB) ItemExist(field string, value string) bool {
+	query := fmt.Sprintf("SELECT COUNT(*) FROM item WHERE %s = ?", field)
+	var count int
+	err := db.Sql.QueryRow(query, value).Scan(&count)
+	if err != nil {
+		log.Println("Error checking item existence:", err)
+		return false
+	}
+	return count > 0
 }
 
 // Item returns new Item struct if id matches.
 func (db *DB) Item(id string) (items.Item, error) {
-	ctx := context.Background()
-	return db.ItemByField(ctx, "id", id)
+	return db.ItemByField("id", id)
 }
 
 // return items id's in array from type string
