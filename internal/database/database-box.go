@@ -78,6 +78,16 @@ func (db *DB) BoxIDs() ([]string, error) {
 	return ids, nil
 }
 
+// Moves box with id1 into box with id2.
+func (db *DB) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
+	updateStmt := `UPDATE box SET outerbox_id = ? WHERE Id = ?;`
+	_, err := db.Sql.Exec(updateStmt, id2, id1)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Get Box  based on given Field
 func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 	var box *items.Box

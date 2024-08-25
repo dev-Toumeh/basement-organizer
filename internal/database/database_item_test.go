@@ -103,43 +103,79 @@ func TestCreateNewBox(t *testing.T) {
 	EmptyDatabse()
 }
 
-
-
 func TestBoxIDs(t *testing.T) {
-    // Prepare static test data with pre-defined UUIDs using uuid.Must
-    testBox1Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000"))
-    testBox2Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174001"))
-    testBox3Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174002"))
+	// Prepare static test data with pre-defined UUIDs using uuid.Must
+	testBox1Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000"))
+	testBox2Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174001"))
+	testBox3Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174002"))
 
-    testBoxes := []*itemsPackage.Box{
-        {Id: testBox1Id, Label: "Test Box 1", Description: "Test description 1", OuterBoxId: uuid.Nil},
-        {Id: testBox2Id, Label: "Test Box 2", Description: "Test description 2", OuterBoxId: uuid.Nil},
-        {Id: testBox3Id, Label: "Test Box 3", Description: "Test description 3", OuterBoxId: uuid.Nil},
-    }
+	testBoxes := []*itemsPackage.Box{
+		{Id: testBox1Id, Label: "Test Box 1", Description: "Test description 1", OuterBoxId: uuid.Nil},
+		{Id: testBox2Id, Label: "Test Box 2", Description: "Test description 2", OuterBoxId: uuid.Nil},
+		{Id: testBox3Id, Label: "Test Box 3", Description: "Test description 3", OuterBoxId: uuid.Nil},
+	}
 
-    expectedIDs := []string{testBox1Id.String(), testBox2Id.String(), testBox3Id.String()}
+	expectedIDs := []string{testBox1Id.String(), testBox2Id.String(), testBox3Id.String()}
 
-    // Insert test boxes into the database
-    for _, testBox := range testBoxes {
-        _, err := dbTest.insertNewBox(testBox)
-        if err != nil {
-            t.Fatalf("Failed to insert test box: %v", err)
-        }
-    }
+	// Insert test boxes into the database
+	for _, testBox := range testBoxes {
+		_, err := dbTest.insertNewBox(testBox)
+		if err != nil {
+			t.Fatalf("Failed to insert test box: %v", err)
+		}
+	}
 
-    // Call the BoxIDs function
-    actualIDs, err := dbTest.BoxIDs()
-    if err != nil {
-        t.Fatalf("BoxIDs function returned an error: %v", err)
-    }
+	// Call the BoxIDs function
+	actualIDs, err := dbTest.BoxIDs()
+	if err != nil {
+		t.Fatalf("BoxIDs function returned an error: %v", err)
+	}
 
-    // Verify the results
-    assert.Equal(t, expectedIDs, actualIDs) 
+	// Verify the results
+	assert.Equal(t, expectedIDs, actualIDs)
 
-    EmptyTestDatabase()
+	EmptyTestDatabase()
 }
 
+func TestMoveBox(t *testing.T) {
+	// Prepare test data
+	outerBox1Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000"))
+	outerBox2Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174001"))
+	innerBoxId := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174002"))
 
+	testBoxes := []*itemsPackage.Box{
+		{Id: outerBox1Id, Label: "Outer Box 1", Description: "This is the first outer box", OuterBoxId: uuid.Nil},
+		{Id: outerBox2Id, Label: "Outer Box 2", Description: "This is the second outer box", OuterBoxId: uuid.Nil},
+		{Id: innerBoxId, Label: "Inner Box", Description: "This is the inner box", OuterBoxId: outerBox1Id}, // Assign outerBox1Id by default
+	}
+
+	// Insert test boxes into the database using range
+	for _, testBox := range testBoxes {
+		_, err := dbTest.insertNewBox(testBox)
+		if err != nil {
+			t.Fatalf("Failed to insert test box: %v", err)
+		}
+	}
+
+	// 1. Test successful move
+	err := dbTest.MoveBox(innerBoxId, outerBox2Id)
+	if err != nil {
+		t.Fatalf("MoveBox function returned an error: %v", err)
+	}
+
+	updatedInnerBox, err := dbTest.BoxByField("id", innerBoxId.String())
+	if err != nil {
+		t.Fatalf("Failed to retrieve updated inner box: %v", err)
+	}
+	assert.Equal(t, outerBox2Id, updatedInnerBox.OuterBoxId)
+
+	// 2. Test move to non-existent box (should return an error)
+	nonExistentBoxId := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174003"))
+	err = dbTest.MoveBox(innerBoxId, nonExistentBoxId)
+	assert.Equal(t, err, err)
+
+	EmptyTestDatabase()
+}
 
 // return data for testing Database
 func testData() ([]*itemsPackage.Box, *[]itemsPackage.Item) {
