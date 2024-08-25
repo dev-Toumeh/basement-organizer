@@ -1,0 +1,210 @@
+package database
+
+import (
+	itemsPackage "basement/main/internal/items"
+	"context"
+	_ "context"
+	"testing"
+
+	"github.com/go-playground/assert/v2"
+	"github.com/gofrs/uuid/v5"
+)
+
+func TestInsertNewBox(t *testing.T) {
+	// Step 1: Get Test Data
+	boxList, items := testData()
+	boxToTest := boxList[0]
+
+	// Step 2: Insert boxes
+	for _, box := range boxList {
+		_, err := dbTest.insertNewBox(box)
+		if err != nil {
+			t.Fatalf("insertNewBox failed: %v", err)
+		}
+	}
+
+	// Step 3: Insert items
+	ctx := context.TODO()
+	for _, item := range *items {
+		err := dbTest.insertNewItem(ctx, item)
+		if err != nil {
+			t.Fatalf("insertNewItem failed: %v", err)
+		}
+	}
+
+	//	Step 4: Verify that the insertion of items was successful
+	for _, item := range *items {
+		_, err := dbTest.ItemByField("id", item.Id.String())
+		if err != nil {
+			t.Fatalf("get item error: %v", err)
+		}
+	}
+
+	fetchedBox, err := dbTest.BoxByField("id", boxToTest.Id.String())
+	if err != nil {
+		t.Fatalf(" the function BoxByfield not working properly : %v", err)
+	}
+
+	//Compare the fetched box with the original test box
+	assert.Equal(t, boxToTest.Label, fetchedBox.Label)
+	assert.Equal(t, boxToTest.Description, fetchedBox.Description)
+
+	duplicateBox := &itemsPackage.Box{
+		Id:    boxToTest.Id,
+		Label: "Duplicate Box",
+	}
+
+	_, err = dbTest.insertNewBox(duplicateBox)
+	if err == nil {
+		t.Errorf("Expected an error when inserting a box with an existing ID, got none")
+	}
+}
+
+func TestBoxByField(t *testing.T) {
+	boxList, _ := testData()
+
+	testBox := boxList[0] // Assuming you want to test the first box
+
+	// Testing retrieval by a field that should exist
+	fetchedBox, err := dbTest.BoxByField("id", testBox.Id.String())
+	assert.Equal(t, err, nil)
+	if err != nil {
+		t.Fatalf("Failed to retrieve box by id: %v", err)
+	}
+	assert.Equal(t, fetchedBox.Id.String(), testBox.Id.String())
+
+	// Testing retrieval by a non-existent field
+	_, err = dbTest.BoxByField("non_existent_field", "some_value")
+	assert.NotEqual(t, err, nil)
+
+	EmptyDatabse()
+}
+
+func TestCreateNewBox(t *testing.T) {
+	boxList, _ := testData()
+
+	testBox := boxList[0]
+
+	// Testing creation of a new box that does not already exist
+	err := dbTest.CreateNewBox(testBox)
+	assert.Equal(t, nil, err)
+	if err != nil {
+		t.Fatalf("Failed to create new box: %v", err)
+	}
+
+	// Verify box was created
+	exists := dbTest.BoxExist("id", testBox.Id.String())
+	assert.Equal(t, true, exists)
+
+	// Test creating the same box again to trigger an error
+	err = dbTest.CreateNewBox(testBox)
+	assert.NotEqual(t, nil, err)
+
+	EmptyDatabse()
+}
+
+// return data for testing Database
+func testData() ([]*itemsPackage.Box, *[]itemsPackage.Item) {
+
+	testBoxId := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174111"))
+	outerBoxId := uuid.Must(uuid.FromString("18c60ba9-ffac-48f1-8c7c-473bd35acbea"))
+	innerBoxId := uuid.Must(uuid.FromString("a0c201c2-5d5b-4587-938b-5a2b59c31e25"))
+	innerBox2Id := uuid.Must(uuid.FromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))
+	innerBox := &itemsPackage.Box{
+		Id:          innerBoxId,
+		Label:       "Inner Box 1",
+		Description: "This is the first inner box",
+		Picture:     "base64encodedinnerbox",
+		QRcode:      "QRcodeInnerBox",
+		OuterBoxId:  testBoxId,
+	}
+
+	innerBox2 := &itemsPackage.Box{
+		Id:          innerBox2Id,
+		Label:       "Inner Box 2",
+		Description: "This is the second inner box",
+		Picture:     "innerBox2Picture",
+		QRcode:      "QR91011",
+		OuterBoxId:  testBoxId,
+	}
+
+	outerBox := &itemsPackage.Box{
+		Id:          outerBoxId,
+		Label:       "OuterBox",
+		Description: "This is the outer box",
+		Picture:     "base64encodedouterbox",
+		QRcode:      "QRcodeOuterBox",
+		OuterBoxId:  uuid.Nil,
+	}
+
+	testBox := &itemsPackage.Box{
+		Id:          testBoxId,
+		Label:       "My Special Box",
+		Description: "This box contains my precious items.",
+		Picture:     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
+		QRcode:      "AB123CD",
+		OuterBoxId:  outerBoxId,
+		InnerBoxes:  []*itemsPackage.Box{innerBox, innerBox2},
+		OuterBox:    outerBox,
+	}
+
+	item1 := itemsPackage.Item{
+		Id:          uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000")),
+		Label:       "Item 1",
+		Description: "Description for item 1",
+		Picture:     "base64encodedstring1",
+		Quantity:    10,
+		Weight:      "5.5",
+		QRcode:      "QRcode1",
+		BoxId:       testBoxId,
+	}
+
+	item2 := itemsPackage.Item{
+		Id:          uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174001")),
+		Label:       "Item 2",
+		Description: "Description for item 2",
+		Picture:     "base64encodedstring2",
+		Quantity:    20,
+		Weight:      "10.0",
+		QRcode:      "QRcode2",
+		BoxId:       testBoxId,
+	}
+
+	item3 := itemsPackage.Item{
+		Id:          uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174002")),
+		Label:       "Item 3",
+		Description: "Description for item 3",
+		Picture:     "base64encodedstring3",
+		Quantity:    15,
+		Weight:      "7.25",
+		QRcode:      "QRcode3",
+		BoxId:       testBoxId,
+	}
+
+	testBoxItemList := &[]itemsPackage.Item{item1, item2, item3}
+	boxList := []*itemsPackage.Box{testBox, innerBox, innerBox2, outerBox}
+	return boxList, testBoxItemList
+}
+
+// print the data that came from BoxByField()
+// func priintData(t *testing.T) {
+//
+// 	boxList, _ := testData()
+// 	fetchedBox, err := dbTest.BoxByField("id", boxList[0].Id.String())
+// 	if err != nil {
+// 		t.Fatalf("Failed to fetch inserted box: %v", err)
+// 	}
+//
+// 	fmt.Print(" 1. Checking the items \n")
+// 	for index, item := range fetchedBox.Items {
+// 		fmt.Printf("item %d item %v \n", index, item)
+// 	}
+//
+// 	fmt.Print(" 2. Checking the inner boxes \n")
+// 	for index, item := range fetchedBox.InnerBoxes {
+// 		fmt.Printf("item %d item %v \n", index, item)
+// 	}
+//
+// 	fmt.Print(" 3. Checking the outer Box \n")
+// 	fmt.Printf("the outerBox: %v \n", fetchedBox.OuterBox)
+// }
