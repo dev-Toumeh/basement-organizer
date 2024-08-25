@@ -58,6 +58,26 @@ func (db *DB) BoxExist(field string, value string) bool {
 	return count > 0
 }
 
+// BoxIDs returns IDs of all boxes.
+func (db *DB) BoxIDs() ([]string, error) {
+	ids := []string{}
+	sqlStatement := `SELECT id FROM BOX`
+	rows, err := db.Sql.Query(sqlStatement)
+	if err != nil {
+		return ids, fmt.Errorf("Error while executing Box ids: %w", err)
+	}
+	for rows.Next() {
+		var idStr string
+		err := rows.Scan(&idStr)
+		if err != nil {
+			return []string{}, fmt.Errorf("Error scanning Box ids: %v", err)
+		}
+		ids = append(ids, idStr)
+	}
+
+	return ids, nil
+}
+
 // Get Box  based on given Field
 func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 	var box *items.Box

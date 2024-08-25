@@ -103,6 +103,44 @@ func TestCreateNewBox(t *testing.T) {
 	EmptyDatabse()
 }
 
+
+
+func TestBoxIDs(t *testing.T) {
+    // Prepare static test data with pre-defined UUIDs using uuid.Must
+    testBox1Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000"))
+    testBox2Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174001"))
+    testBox3Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174002"))
+
+    testBoxes := []*itemsPackage.Box{
+        {Id: testBox1Id, Label: "Test Box 1", Description: "Test description 1", OuterBoxId: uuid.Nil},
+        {Id: testBox2Id, Label: "Test Box 2", Description: "Test description 2", OuterBoxId: uuid.Nil},
+        {Id: testBox3Id, Label: "Test Box 3", Description: "Test description 3", OuterBoxId: uuid.Nil},
+    }
+
+    expectedIDs := []string{testBox1Id.String(), testBox2Id.String(), testBox3Id.String()}
+
+    // Insert test boxes into the database
+    for _, testBox := range testBoxes {
+        _, err := dbTest.insertNewBox(testBox)
+        if err != nil {
+            t.Fatalf("Failed to insert test box: %v", err)
+        }
+    }
+
+    // Call the BoxIDs function
+    actualIDs, err := dbTest.BoxIDs()
+    if err != nil {
+        t.Fatalf("BoxIDs function returned an error: %v", err)
+    }
+
+    // Verify the results
+    assert.Equal(t, expectedIDs, actualIDs) 
+
+    EmptyTestDatabase()
+}
+
+
+
 // return data for testing Database
 func testData() ([]*itemsPackage.Box, *[]itemsPackage.Item) {
 
