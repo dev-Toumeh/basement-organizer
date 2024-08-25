@@ -9,7 +9,7 @@ import (
 	"text/template"
 )
 
-// ResponseWriter should implement a function to write a template response or normal response.
+// DataWriteFunc should implement a function to write a template response or normal response.
 //
 // Example:
 //
@@ -19,12 +19,12 @@ import (
 //		// Fprint
 //		fmt.Fprint(w, data)
 //	})
-type ResponseWriter func(w io.Writer, data any)
+type DataWriteFunc func(w io.Writer, data any)
 
 // ReadItemHandler returns a single item.
 //
 // Accepts "/item?id=" and "/item/id"
-func ReadItemHandler(db ItemDatabase, responseWriter ResponseWriter) http.HandlerFunc {
+func ReadItemHandler(db ItemDatabase, responseWriter DataWriteFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			logg.Info("access: ", r.URL)
@@ -63,7 +63,7 @@ func ReadItemHandler(db ItemDatabase, responseWriter ResponseWriter) http.Handle
 //	id := uuid.must(uuid.fromstring(r.FormValue("query")),)
 //
 // Accepts "/items?query=id" to only return item IDs.
-func ReadItemsHandler(db ItemDatabase, responseWriter ResponseWriter) http.HandlerFunc {
+func ReadItemsHandler(db ItemDatabase, responseWriter DataWriteFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			id := r.FormValue("query")

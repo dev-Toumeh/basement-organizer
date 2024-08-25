@@ -1,12 +1,15 @@
 {{ define "box" }}
-<div class="box-container">
-    <label for="id"></label><input type="text" value="{{.Id}}" readonly>
-    <label for="id"></label><input type="text" value="{{.Label}}" readonly>
-    <label for="id"></label><input type="text" value="{{.Description}}" readonly>
+<div id="box-{{.Id}}"
+    class="box-container">
+    <label for="id"></label><input type="text" value="{{.Id}}" {{ if not .Edit}}readonly{{end}}>
+    <label for="id"></label><input type="text" value="{{.Label}}" {{ if not .Edit}}readonly{{end}}>
+    <label for="id"></label><input type="text" value="{{.Description}}" {{ if not .Edit}}readonly{{end}}>
 <ol>
     {{ range .Items }}    
     <li style="border:solid">{{ template "item-container-2" .}}</li>
     {{ end}}
 </ol>
+<button hx-delete="/box?id={{.Id}}" hx-swap="outerHTML" hx-target="#box-{{.Id}}">delete</button>
+<button hx-put="/box?id={{.Id}}" hx-target="#box">Update box</button>
 </div>
 {{end}}

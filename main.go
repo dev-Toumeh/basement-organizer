@@ -6,8 +6,6 @@ import (
 	"basement/main/internal/logg"
 	"basement/main/internal/routes"
 	"basement/main/internal/templates"
-	"context"
-	"net"
 	"net/http"
 )
 
@@ -25,15 +23,10 @@ func main() {
 	defer db.Sql.Close()
 
 	routes.RegisterRoutes(db)
-	templates.InitTemplates()
-
-	// Accessable context in every http.Request.
-	// Access db with r.Context().Value("db").(*database.DB) inside an http.Handler.
-	DBctx := context.WithValue(context.Background(), "db", db)
-	server := http.Server{
-		Addr:        "localhost:8000",
-		BaseContext: func(_ net.Listener) context.Context { return DBctx },
+	err := templates.InitTemplates("./internal/templates")
+	if err != nil {
+		logg.Fatal("Templates failed to initialize", err)
 	}
 
-	server.ListenAndServe()
+	http.ListenAndServe("localhost:8000", nil)
 }
