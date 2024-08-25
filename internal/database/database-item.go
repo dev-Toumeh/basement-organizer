@@ -26,7 +26,7 @@ func (db *DB) CreateNewItem(ctx context.Context, newItem items.Item) error {
 
 }
 
-// Get Item Record based on given Field  
+// Get Item Record based on given Field
 func (db *DB) ItemByField(field string, value string) (items.Item, error) {
 
 	if !db.ItemExist(field, value) {
@@ -96,8 +96,8 @@ func (db *DB) ItemIDs() ([]string, error) {
 // here we run the insert new Item query separate from the public function
 // it make the code more readable
 func (db *DB) insertNewItem(ctx context.Context, item items.Item) error {
-	sqlStatement := `INSERT INTO item (id, label, description, picture, quantity, weight, qrcode) VALUES (?, ?, ?, ?, ?, ?, ?)`
-	result, err := db.Sql.ExecContext(ctx, sqlStatement, item.Id.String(), item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode)
+	sqlStatement := `INSERT INTO item (id, label, description, picture, quantity, weight, qrcode, box_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+	result, err := db.Sql.ExecContext(ctx, sqlStatement, item.Id.String(), item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode, item.BoxId.String())
 	if err != nil {
 		log.Printf("Error while executing create new item statement: %v", err)
 		return err

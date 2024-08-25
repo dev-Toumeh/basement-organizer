@@ -3,6 +3,7 @@ module basement/main
 go 1.22.1
 
 require (
+	github.com/go-playground/assert/v2 v2.2.0
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/gorilla/sessions v1.2.2
 	github.com/stretchr/testify v1.8.4
