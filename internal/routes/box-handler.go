@@ -13,26 +13,10 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-// SampleBoxDB to test request handler.
-type SampleBoxDB struct{}
-
-func (db *SampleBoxDB) CreateBox() (string, error) {
-	id, err := uuid.NewV4()
-	return id.String(), err
-}
-
-func (db *SampleBoxDB) Box(id string) (items.Box, error) {
-	b := items.NewBox()
-	nid, _ := uuid.FromString(id)
-	b.Id = nid
-
-	return b, nil
-}
-
 func registerBoxRoutes(db BoxDatabase) {
 	http.HandleFunc("/api/v2/box", BoxHandler(WriteJSON, db))
 	http.HandleFunc("/api/v2/box/{id}", BoxHandler(WriteJSON, db))
-	http.HandleFunc("/box", BoxHandler(WriteBoxTemplate, &SampleBoxDB{}))
+	http.HandleFunc("/box", BoxHandler(WriteBoxTemplate, db))
 }
 
 func WriteBoxTemplate(w io.Writer, data any) {
@@ -49,13 +33,15 @@ func WriteJSON(w io.Writer, data any) {
 }
 
 type BoxDatabase interface {
-	// CreateBox returns id of box if successful, otherwise error. // ✅
 	CreateBox() (string, error)
-	Box(id string) (items.Box, error) // ✅
-	// // BoxIDs returns IDs of all boxes. // ✅
-	// BoxIDs() ([]string, error)
-	// // MoveBox moves box with id1 into box with id2. // ✅
-	// MoveBox(id1 string, id2 string) error
+	Box(id string) (items.Box, error)
+	// new functions
+	BoxByField(field string, value string) (*items.Box, error)
+	MoveBox(id1 uuid.UUID, id2 uuid.UUID) error
+	BoxIDs() ([]string, error)
+	BoxExist(field string, value string) bool
+	CreateNewBox(newBox *items.Box) (uuid.UUID, error)
+	ErrorExist() error
 }
 
 func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc {
