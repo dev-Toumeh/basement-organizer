@@ -29,6 +29,11 @@ func (db *SampleBoxDB) Box(id string) (items.Box, error) {
 	return b, nil
 }
 
+func (db *SampleBoxDB) UpdateBox(box items.Box) error {
+	// id, err := uuid.NewV4()
+	return nil
+}
+
 func registerBoxRoutes(db BoxDatabase) {
 	http.HandleFunc("/api/v2/box", BoxHandler(WriteJSON, db))
 	http.HandleFunc("/api/v2/box/{id}", BoxHandler(WriteJSON, db))
@@ -56,6 +61,7 @@ type BoxDatabase interface {
 	// BoxIDs() ([]string, error)
 	// // MoveBox moves box with id1 into box with id2.
 	// MoveBox(id1 string, id2 string) error
+	UpdateBox(box items.Box) error
 }
 
 func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc {
@@ -110,6 +116,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 				writeData(w, id)
 			}
 			break
+
 		case http.MethodDelete:
 			id := validID(w, r, "Can't delete box")
 			if id == "" {
@@ -125,9 +132,37 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			if id == "" {
 				return
 			}
+
+			label := r.FormValue("label")
+			// picture := r.FormValue("picture")
+			// qrcode := r.FormValue("qrcode")
+			description := r.FormValue("description")
+
+			if wantsTemplateData(r) {
+				b := items.BoxTemplateData{}
+				b.Id = uuid.Must(uuid.FromString(id))
+				b.Label = label
+				// b.Picture = picture
+				// b.QRcode = qrcode
+				b.Description = description
+				logg.Debug(b)
+				writeData(w, b)
+			} else {
+				// b := items.Box{}
+				// b.Label = label
+				// b.Picture = picture
+				// b.QRcode = qrcode
+				// b.Description = description
+				// writeData(w, b)
+				w.WriteHeader(http.StatusOK)
+			}
+
+			// items := r.FormValue("items")
+			// innerboxes := r.FormValue("innerboxes")
+			// outerbox := r.FormValue("outerbox")
 			// @TODO: Implement
-			w.WriteHeader(http.StatusNotImplemented)
-			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
+			// w.WriteHeader(http.StatusNotImplemented)
+			// fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
 			break
 
 		default:

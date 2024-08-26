@@ -30,6 +30,10 @@ func (db *boxDatabaseError) Box(id string) (items.Box, error) {
 	return items.Box{}, errors.New("AAAAAAAA")
 }
 
+func (db *boxDatabaseError) UpdateBox(box items.Box) error {
+	return errors.New("AAAAA")
+}
+
 // boxDatabaseSuccess never returns errors.
 type boxDatabaseSuccess struct{}
 
@@ -41,6 +45,10 @@ func (db *boxDatabaseSuccess) CreateBox() (string, error) {
 
 func (db *boxDatabaseSuccess) Box(id string) (items.Box, error) {
 	return items.Box{Id: uuid.Must(uuid.FromString(BOX_ID))}, nil
+}
+
+func (db *boxDatabaseSuccess) UpdateBox(box items.Box) error {
+	return nil
 }
 
 func TestBoxHandlerDBErrors(t *testing.T) {
@@ -85,14 +93,14 @@ func TestBoxHandlerDBErrors(t *testing.T) {
 		// 	},
 		// 	expectedStatusCode: http.StatusNotFound,
 		// },
-		// {
-		// 	name: "Can't update box, not found",
-		// 	input: handlerInput{
-		// 		R: httptest.NewRequest(http.MethodPut, "/box", nil),
-		// 		W: *httptest.NewRecorder(),
-		// 	},
-		// 	expectedStatusCode: http.StatusNotFound,
-		// },
+		{
+			name: "Can't update box, not found",
+			input: handlerInput{
+				R: httptest.NewRequest(http.MethodPut, "/box?id=asdflkjenlwj", nil),
+				W: *httptest.NewRecorder(),
+			},
+			expectedStatusCode: http.StatusNotFound,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
