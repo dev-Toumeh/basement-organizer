@@ -33,7 +33,7 @@ type Item struct {
 }
 
 type ItemDatabase interface {
-	CreateNewItem(ctx context.Context, newItem Item) error
+	CreateNewItem(newItem Item) error
 	ItemByField(field string, value string) (Item, error)
 	Item(id string) (Item, error)
 	ItemIDs() ([]string, error)
@@ -53,6 +53,7 @@ const (
 	QUANTITY   string = "quantity"
 	WEIGHT     string = "weight"
 	QRCODE     string = "qrcode"
+	BOX_ID     string = "Box_id"
 )
 
 var validate *validator.Validate
@@ -70,15 +71,16 @@ func CreateItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Requ
 }
 
 func createNewItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
-	logg.Debug(r.URL)
 	var responseMessage []string
-	newItem := item(r)
-
+	newItem, err := item(r)
+	if err != nil {
+		logg.Err(err)
+		templates.RenderErrorSnackbar(w, "Error while generating the User please comeback later")
+	}
 	if valiedItem, err := validateItem(newItem, &responseMessage); err != nil {
 		responseGenerator(w, responseMessage, false)
 	} else {
-		ctx := context.TODO()
-		if err := db.CreateNewItem(ctx, valiedItem); err != nil {
+		if err := db.CreateNewItem(valiedItem); err != nil {
 			if err == db.ErrorExist() {
 				responseMessage = append(responseMessage, "the Label is already token please choice another one")
 				responseGenerator(w, responseMessage, false)
@@ -222,16 +224,12 @@ func responseGenerator(w http.ResponseWriter, responseMessage []string, success 
 
 // this function will pack the request into struct from type Item, so it will be easier to handle it
 // @TODO: Need error return in case something wrong happens
-func item(r *http.Request) Item {
-	var id uuid.UUID
-	if updatedId, err := uuid.FromString(r.PostFormValue(ID)); err != nil {
-		id, _ = uuid.NewV4()
-	} else {
-		id = updatedId
-	}
-	logg.Debug("Creating item id:", id)
-	logg.Debug("Content-Type:", r.Header.Get("Content-Type"))
+func item(r *http.Request) (Item, error) {
 
+	id, boxId, err := checkIDs(r)
+	if err != nil {
+		return Item{}, err
+	}
 	b64encodedPictureString := parsePicture(r)
 
 	newItem := Item{
@@ -242,8 +240,9 @@ func item(r *http.Request) Item {
 		Quantity:    parseQuantity(r.PostFormValue(QUANTITY)),
 		Weight:      r.PostFormValue(WEIGHT),
 		QRcode:      r.PostFormValue(QRCODE),
+		BoxId:       boxId,
 	}
-	return newItem
+	return newItem, nil
 }
 
 // parsePicture returns base64 encoded string of picture uploaded if there is any
@@ -293,4 +292,29 @@ func stringToInt64(value string) int64 {
 		return 0
 	}
 	return intValue
+}
+
+func checkIDs(r *http.Request) (uuid.UUID, uuid.UUID, error) {
+
+	id := uuid.Nil
+	boxId := uuid.Nil
+	lengID := len(r.PostFormValue(ID))
+	lengBoxID := len(r.PostFormValue(BOX_ID))
+	if lengID != 0 && lengBoxID != 0 {
+		currentId, err1 := uuid.FromString(r.PostFormValue(ID))
+		currentBoxId, err2 := uuid.FromString(r.PostFormValue(BOX_ID))
+		if err1 != nil || err2 != nil {
+			return uuid.Nil, uuid.Nil, fmt.Errorf("error while converting the id string into id from type uuid: %w %w", err1, err2)
+		} else {
+			return currentId, currentBoxId, nil
+		}
+	} else if lengID == 0 && lengBoxID == 0 {
+		id, err1 := uuid.NewV4()
+		boxId, err2 := uuid.NewV4()
+		if err1 != nil || err2 != nil {
+			return id, boxId, fmt.Errorf("error while generating the new item uuid: %w %w", err1, err2)
+		}
+		return id, boxId, nil
+	}
+	return id, boxId, fmt.Errorf("error while checking the item ids one id is empty")
 }

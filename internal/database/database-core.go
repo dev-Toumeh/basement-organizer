@@ -96,6 +96,8 @@ func (db *DB) createTable() {
 	}
 }
 
+// ErrorExist returns a predefined error indicating that the requested SQL data insertion failed
+// due to a duplicate record already existing in the database.
 func (db *DB) ErrorExist() error {
 	return ErrExist
 }

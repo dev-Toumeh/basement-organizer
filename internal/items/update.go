@@ -2,6 +2,7 @@ package items
 
 import (
 	"basement/main/internal/logg"
+	"basement/main/internal/templates"
 	"context"
 	"fmt"
 	"net/http"
@@ -21,7 +22,10 @@ func UpdateItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Requ
 func updateItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
 	logg.Debug(r.URL)
 	var errorMessages []string
-	updatedItem := item(r)
+	updatedItem, err := item(r)
+	if err != nil {
+		templates.RenderErrorSnackbar(w, "Error while generating the User please comeback later")
+	}
 
 	if valiedItem, err := validateItem(updatedItem, &errorMessages); err != nil {
 		responseGenerator(w, errorMessages, false)

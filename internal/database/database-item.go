@@ -13,17 +13,15 @@ import (
 )
 
 // Create New Item Record
-func (db *DB) CreateNewItem(ctx context.Context, newItem items.Item) error {
-
-	if _, err := db.ItemByField("label", newItem.Label); err != nil {
-		return err
+func (db *DB) CreateNewItem(newItem items.Item) error {
+	if exist := db.ItemExist("label", string(newItem.Label)); exist {
+		return db.ErrorExist()
 	}
-	err := db.insertNewItem(ctx, newItem)
+	err := db.insertNewItem(newItem)
 	if err != nil {
 		return err
 	}
 	return nil
-
 }
 
 // Get Item Record based on given Field
@@ -95,9 +93,9 @@ func (db *DB) ItemIDs() ([]string, error) {
 
 // here we run the insert new Item query separate from the public function
 // it make the code more readable
-func (db *DB) insertNewItem(ctx context.Context, item items.Item) error {
+func (db *DB) insertNewItem(item items.Item) error {
 	sqlStatement := `INSERT INTO item (id, label, description, picture, quantity, weight, qrcode, box_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-	result, err := db.Sql.ExecContext(ctx, sqlStatement, item.Id.String(), item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode, item.BoxId.String())
+	result, err := db.Sql.Exec(sqlStatement, item.Id.String(), item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode, item.BoxId.String())
 	if err != nil {
 		log.Printf("Error while executing create new item statement: %v", err)
 		return err

@@ -2,8 +2,6 @@ package database
 
 import (
 	itemsPackage "basement/main/internal/items"
-	"context"
-	_ "context"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -24,9 +22,8 @@ func TestInsertNewBox(t *testing.T) {
 	}
 
 	// Step 3: Insert items
-	ctx := context.TODO()
 	for _, item := range *items {
-		err := dbTest.insertNewItem(ctx, item)
+		err := dbTest.insertNewItem(item)
 		if err != nil {
 			t.Fatalf("insertNewItem failed: %v", err)
 		}
