@@ -29,13 +29,15 @@ type Item struct {
 	Quantity    int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
 	Weight      string    `json:"weight"      validate:"omitempty,numeric"`
 	QRcode      string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	BoxId       uuid.UUID `json:"box_id"`
 }
 
 type ItemDatabase interface {
 	CreateNewItem(ctx context.Context, newItem Item) error
-	ItemByField(ctx context.Context, field string, value string) (Item, error)
+	ItemByField(field string, value string) (Item, error)
 	Item(id string) (Item, error)
 	ItemIDs() ([]string, error)
+	ItemExist(field string, value string) bool
 	Items() ([][]string, error)
 	UpdateItem(ctx context.Context, item Item) error
 	DeleteItem(ctx context.Context, itemId uuid.UUID) error

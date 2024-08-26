@@ -49,12 +49,12 @@ func WriteJSON(w io.Writer, data any) {
 }
 
 type BoxDatabase interface {
-	// CreateBox returns id of box if successful, otherwise error.
+	// CreateBox returns id of box if successful, otherwise error. // ✅
 	CreateBox() (string, error)
-	Box(id string) (items.Box, error)
-	// // BoxIDs returns IDs of all boxes.
+	Box(id string) (items.Box, error) // ✅
+	// // BoxIDs returns IDs of all boxes. // ✅
 	// BoxIDs() ([]string, error)
-	// // MoveBox moves box with id1 into box with id2.
+	// // MoveBox moves box with id1 into box with id2. // ✅
 	// MoveBox(id1 string, id2 string) error
 }
 

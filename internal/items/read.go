@@ -3,7 +3,6 @@ package items
 import (
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -35,8 +34,7 @@ func ReadItemHandler(db ItemDatabase, responseWriter DataWriteFunc) http.Handler
 				id = r.PathValue("id")
 			}
 
-			ctx := context.TODO()
-			data, err := db.ItemByField(ctx, "id", id)
+			data, err := db.ItemByField("id", id)
 			if err != nil && err != db.ErrorExist() {
 				w.WriteHeader(http.StatusInternalServerError)
 				templates.RenderErrorSnackbar(w, err.Error())

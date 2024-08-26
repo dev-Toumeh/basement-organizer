@@ -21,8 +21,8 @@ func TestMain(m *testing.M) {
 	}
 
 	code := m.Run()
-
 	teardown()
+
 	os.Exit(code)
 }
 
@@ -66,10 +66,19 @@ func setup() error {
 		}
 	}
 
+	//dbTest.PrintTables()
+
 	return nil
 }
 
 func teardown() {
+
+	EmptyTestDatabase()
+	logg.Info("Testing Database Package was finished, Tables was cleared")
+	dbTest.Sql.Close()
+}
+
+func EmptyTestDatabase() {
 	for tableName := range *statements {
 		sqlStatement := fmt.Sprintf("DELETE FROM %s;", tableName)
 		_, err := dbTest.Sql.Exec(sqlStatement)
@@ -78,6 +87,4 @@ func teardown() {
 			return
 		}
 	}
-	logg.Info("Testing Database Package was finished, Tables was cleared")
-	dbTest.Sql.Close()
 }
