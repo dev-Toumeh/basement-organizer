@@ -18,7 +18,7 @@ func UpdateHandler(db AuthDatabase) func(w http.ResponseWriter, r *http.Request)
 		}
 		w.Header().Add("Allow", http.MethodGet)
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		logg.Debug(w, "Method:'", r.Method, "' not allowed")
+		//logg.Debug(w, "Method:'", r.Method, "' not allowed")
 	}
 }
 

@@ -12,9 +12,29 @@ import (
 )
 
 const (
-	CREATE_USER_TABLE_STMT = `CREATE TABLE IF NOT EXISTS user ( id TEXT NOT NULL PRIMARY KEY, username TEXT UNIQUE, passwordhash TEXT);`
-	CREATE_ITEM_TABLE_STMT = `CREATE TABLE IF NOT EXISTS item ( id TEXT PRIMARY KEY, label TEXT NOT NULL,
-                            description TEXT, picture TEXT, quantity INTEGER, weight TEXT, qrcode TEXT);`
+	CREATE_USER_TABLE_STMT = `CREATE TABLE IF NOT EXISTS user (
+    id TEXT NOT NULL PRIMARY KEY,
+    username TEXT UNIQUE,
+    passwordhash TEXT);`
+
+	CREATE_ITEM_TABLE_STMT = `CREATE TABLE IF NOT EXISTS item (
+    id TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    description TEXT,
+    picture TEXT,
+    quantity INTEGER,
+    weight TEXT,
+    qrcode TEXT,
+    box_id TEXT REFERENCES box(id));`
+
+	CREATE_BOX_TABLE_STMT = `CREATE TABLE IF NOT EXISTS box (
+    id TEXT PRIMARY KEY,
+    label TEXT NOT NULL, 
+    description TEXT,
+    picture TEXT,
+    qrcode TEXT,
+    outerbox_id TEXT REFERENCES box(id));`
+
 	DATABASE_FILE_PATH = "./internal/database/sqlite-database.db"
 )
 
@@ -24,6 +44,7 @@ var ErrExist = errors.New("the Record is already exist")
 var statements = &map[string]string{
 	"user": CREATE_USER_TABLE_STMT,
 	"item": CREATE_ITEM_TABLE_STMT,
+	"box":  CREATE_BOX_TABLE_STMT,
 }
 
 type DB struct {
@@ -75,6 +96,8 @@ func (db *DB) createTable() {
 	}
 }
 
+// ErrorExist returns a predefined error indicating that the requested SQL data insertion failed
+// due to a duplicate record already existing in the database.
 func (db *DB) ErrorExist() error {
 	return ErrExist
 }

@@ -30,6 +30,30 @@ func (db *boxDatabaseError) Box(id string) (items.Box, error) {
 	return items.Box{}, errors.New("AAAAAAAA")
 }
 
+func (db *boxDatabaseError) BoxIDs() ([]string, error) {
+	return nil, errors.New("AAAAAAAA")
+}
+
+func (db *boxDatabaseError) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
+	return errors.New("AAAAAAAA")
+}
+
+func (db *boxDatabaseError) BoxByField(field string, value string) (*items.Box, error) {
+	return &items.Box{}, errors.New("AAAAAAAA")
+}
+
+func (db *boxDatabaseError) BoxExist(field string, value string) bool {
+	return false // Simulate that the box does not exist (or an error occurred)
+}
+
+func (db *boxDatabaseError) CreateNewBox(newBox *items.Box) (uuid.UUID, error) {
+	return uuid.Nil, errors.New("AAAAAAAA")
+}
+
+func (db *boxDatabaseError) ErrorExist() error {
+	return errors.New("AAAAAAAA")
+}
+
 func (db *boxDatabaseError) UpdateBox(box items.Box) error {
 	return errors.New("AAAAA")
 }
@@ -45,6 +69,31 @@ func (db *boxDatabaseSuccess) CreateBox() (string, error) {
 
 func (db *boxDatabaseSuccess) Box(id string) (items.Box, error) {
 	return items.Box{Id: uuid.Must(uuid.FromString(BOX_ID))}, nil
+}
+
+func (db *boxDatabaseSuccess) BoxIDs() ([]string, error) {
+	return []string{"id1", "id2", "id3"}, nil
+}
+
+func (db *boxDatabaseSuccess) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
+	return nil
+}
+
+func (db *boxDatabaseSuccess) BoxByField(field string, value string) (*items.Box, error) {
+	return &items.Box{Id: uuid.Must(uuid.FromString(BOX_ID))}, nil
+}
+
+func (db *boxDatabaseSuccess) BoxExist(field string, value string) bool {
+	return true
+}
+
+func (db *boxDatabaseSuccess) CreateNewBox(newBox *items.Box) (uuid.UUID, error) {
+	sampleUUID := uuid.Must(uuid.FromString(BOX_ID))
+	return sampleUUID, nil
+}
+
+func (db *boxDatabaseSuccess) ErrorExist() error {
+	return nil
 }
 
 func (db *boxDatabaseSuccess) UpdateBox(box items.Box) error {
