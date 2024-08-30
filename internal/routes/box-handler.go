@@ -43,6 +43,7 @@ type BoxDatabase interface {
 	CreateNewBox(newBox *items.Box) (uuid.UUID, error)
 	ErrorExist() error
 	// UpdateBox(box items.Box) error
+	// DeleteBox(id string) error
 }
 
 func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc {
