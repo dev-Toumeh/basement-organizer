@@ -158,6 +158,9 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 
 // validID returns valid id string or if errors occurs
 // writes correct response header status code with errorMessage and returns empty string.
+// validID returns valid id string.
+// Check for empty string! If error occurs return will be "".
+// But the error is already handled.
 func validID(w http.ResponseWriter, r *http.Request, errorMessage string) string {
 	id := r.FormValue("id")
 	logg.Debugf("Query param id: '%v'.", id)
