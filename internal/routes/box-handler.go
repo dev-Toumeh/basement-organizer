@@ -21,7 +21,28 @@ func registerBoxRoutes(db BoxDatabase) {
 }
 
 func WriteBoxTemplate(w io.Writer, data any) {
-	templates.Render(w, templates.TEMPLATE_BOX, data)
+	boxTemplate, ok := data.(items.BoxTemplateData)
+	errMessageForUser := "Something went wrong"
+	if !ok {
+		ww, ok := w.(http.ResponseWriter)
+		if !ok {
+			logg.Fatal("Can't write box template, writer is not http.ResponseWriter")
+		}
+		ww.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(ww, errMessageForUser)
+		logg.Info(errMessageForUser)
+	}
+	err := templates.Render(w, templates.TEMPLATE_BOX, boxTemplate)
+	if err != nil {
+		ww, ok := w.(http.ResponseWriter)
+		if !ok {
+			logg.Fatal("Can't write box template, writer is not http.ResponseWriter")
+		}
+		ww.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(ww, errMessageForUser)
+		logg.Info(fmt.Errorf("Can't render TEMPLATE_BOX. %w", err))
+		return
+	}
 }
 
 func WriteFprint(w io.Writer, data any) {
@@ -77,10 +98,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			if editParam == "true" {
 				edit = true
 			}
-			b := struct {
-				items.Box
-				Edit bool
-			}{box, edit}
+			b := items.BoxTemplateData{&box, edit}
 
 			writeData(w, b)
 			break
