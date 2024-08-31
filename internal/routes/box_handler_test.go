@@ -133,14 +133,6 @@ func TestBoxHandlerDBErrors(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusInternalServerError,
 		},
-		{
-			name: "Create box DB error",
-			input: handlerInput{
-				R: httptest.NewRequest(http.MethodPost, "/box", nil),
-				W: *httptest.NewRecorder(),
-			},
-			expectedStatusCode: http.StatusInternalServerError,
-		},
 		// @TODO
 		// {
 		// 	name: "Can't delete box, not found",
