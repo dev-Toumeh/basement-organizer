@@ -34,6 +34,13 @@ type Box struct {
 	OuterBox    *Box      `json:"outerbox" `
 }
 
+type BoxTemplateData struct {
+	// Quantity    int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
+	// Weight      string    `json:"weight"      validate:"omitempty,numeric"`
+	*Box
+	Edit bool
+}
+
 type BoxC struct {
 	// Quantity    int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
 	// Weight      string    `json:"weight"      validate:"omitempty,numeric"`
@@ -71,6 +78,16 @@ func (b *Box) MarshalJSON() ([]byte, error) {
 	// 	c.OuterBox = *b.OuterBox
 	// }
 	return json.Marshal(c)
+}
+
+func (b Box) String() string {
+	data, err := json.Marshal(b)
+	if err != nil {
+		logg.Err("Can't JSON box to string:", err)
+		return ""
+	}
+	s := fmt.Sprintf("%s", data)
+	return s
 }
 
 func (box *Box) MoveTo(other any) error {

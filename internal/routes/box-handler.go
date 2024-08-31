@@ -5,6 +5,7 @@ import (
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,7 +21,28 @@ func registerBoxRoutes(db BoxDatabase) {
 }
 
 func WriteBoxTemplate(w io.Writer, data any) {
-	templates.Render(w, templates.TEMPLATE_BOX, data)
+	boxTemplate, ok := data.(items.BoxTemplateData)
+	errMessageForUser := "Something went wrong"
+	if !ok {
+		ww, ok := w.(http.ResponseWriter)
+		if !ok {
+			logg.Fatal("Can't write box template, writer is not http.ResponseWriter")
+		}
+		ww.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(ww, errMessageForUser)
+		logg.Info(errMessageForUser)
+	}
+	err := templates.Render(w, templates.TEMPLATE_BOX, boxTemplate)
+	if err != nil {
+		ww, ok := w.(http.ResponseWriter)
+		if !ok {
+			logg.Fatal("Can't write box template, writer is not http.ResponseWriter")
+		}
+		ww.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(ww, errMessageForUser)
+		logg.Info(fmt.Errorf("Can't render TEMPLATE_BOX. %w", err))
+		return
+	}
 }
 
 func WriteFprint(w io.Writer, data any) {
@@ -33,33 +55,34 @@ func WriteJSON(w io.Writer, data any) {
 }
 
 type BoxDatabase interface {
+	// CreateBox returns id of box if successful, otherwise error.
 	CreateBox() (string, error)
 	Box(id string) (items.Box, error)
-	// new functions
 	BoxByField(field string, value string) (*items.Box, error)
 	MoveBox(id1 uuid.UUID, id2 uuid.UUID) error
 	BoxIDs() ([]string, error)
 	BoxExist(field string, value string) bool
 	CreateNewBox(newBox *items.Box) (uuid.UUID, error)
 	ErrorExist() error
+	UpdateBox(box *items.Box) error
+	DeleteBox(id string) error
+}
 }
 
 func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			const errorMsg = "Can't get box"
+			const errMsgForUser = "Can't find box"
 
-			id := validID(w, r, errorMsg)
+			id := validID(w, r, errMsgForUser)
 			if id == "" {
 				return
 			}
 
 			box, err := db.Box(id)
 			if err != nil {
-				logg.Debugf("Can't find box with id: '%v'. %v", id, err)
-				w.WriteHeader(http.StatusNotFound)
-				fmt.Fprint(w, errorMsg, id)
+				writeNotFoundError(errMsgForUser, err, w, r)
 				return
 			}
 
@@ -75,19 +98,16 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			if editParam == "true" {
 				edit = true
 			}
-			b := struct {
-				items.Box
-				Edit bool
-			}{box, edit}
+			b := items.BoxTemplateData{&box, edit}
 
 			writeData(w, b)
 			break
 
 		case http.MethodPost:
+			errMsgForUser := "Can't create new box"
 			id, err := db.CreateBox()
 			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprint(w, fmt.Errorf("Can't create new box. %w", err))
+				writeNotFoundError(errMsgForUser, err, w, r)
 				return
 			}
 			if wantsTemplateData(r) {
@@ -96,24 +116,40 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 				writeData(w, id)
 			}
 			break
+
 		case http.MethodDelete:
-			id := validID(w, r, "Can't delete box")
+			errMsgForUser := "Can't delete box"
+			id := validID(w, r, errMsgForUser)
 			if id == "" {
 				return
 			}
-			// @TODO: Implement
-			// w.WriteHeader(http.StatusNotImplemented)
-			// fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
+			err := db.DeleteBox(id)
+			if err != nil {
+				writeNotFoundError(errMsgForUser, err, w, r)
+				return
+			}
 			break
 
 		case http.MethodPut:
-			id := validID(w, r, "Can't update box")
+			errMsgForUser := "Can't update box."
+			id := validID(w, r, errMsgForUser)
 			if id == "" {
 				return
 			}
-			// @TODO: Implement
-			w.WriteHeader(http.StatusNotImplemented)
-			fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
+
+			box := boxFromPostFormValue(id, r)
+			err := db.UpdateBox(&box)
+			if err != nil {
+				writeNotFoundError(errMsgForUser, err, w, r)
+				return
+			}
+			if wantsTemplateData(r) {
+				boxTemplate := items.BoxTemplateData{&box, false}
+				writeData(w, boxTemplate)
+			} else {
+				writeData(w, box)
+			}
+			logg.Debug("Updated Box: ", box)
 			break
 
 		default:
@@ -124,15 +160,34 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 	}
 }
 
-// validID returns valid id string or if errors occurs
-// writes correct response header status code with errorMessage and returns empty string.
+// writeNotFoundError sets not found status code 404, logs error and writes error message to client.
+func writeNotFoundError(message string, err error, w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
+	fmt.Fprint(w, message)
+	logg.Info(fmt.Errorf("%s: %w", message, err))
+}
+
+// boxFromPostFormValue returns items.Box without references to inner boxes, outer box and items.
+func boxFromPostFormValue(id string, r *http.Request) items.Box {
+	box := items.Box{}
+	box.Id = uuid.Must(uuid.FromString(id))
+	box.Label = r.PostFormValue("label")
+	box.Description = r.PostFormValue("description")
+	// box.Picture = r.PostFormValue("picture")
+	// box.QRcode = r.PostFormValue("qrcode")
+	return box
+}
+
+// validID returns valid id string.
+// Check for empty string! If error occurs return will be "".
+// But the error is already handled.
 func validID(w http.ResponseWriter, r *http.Request, errorMessage string) string {
 	id := r.FormValue("id")
 	logg.Debugf("Query param id: '%v'.", id)
 	if id == "" {
 		id = r.PathValue("id")
 		if id == "" {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusNotFound)
 			logg.Debug("Empty id")
 			fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
 			return ""
