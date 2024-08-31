@@ -19,6 +19,12 @@ type handlerInput struct {
 	W httptest.ResponseRecorder
 }
 
+const BOX_ID_VALID string = "fa2e3db6-fcf8-49c6-ac9c-54ce5855bf0b"
+const BOX_ID_NOT_FOUND string = "da2e3db6-fcf8-49c6-ac9c-54ce5855bf0b"
+const BOX_ID_INVALID_EMPTY string = ""
+const BOX_ID_INVALID_2 string = "aaaa"
+const BOX_ID_INVALID_UUID_FORMAT string = "ac9c-54ce5855bf0b"
+
 // boxDatabaseError returns errors on every function.
 type boxDatabaseError struct{}
 
@@ -65,14 +71,12 @@ func (db *boxDatabaseError) DeleteBox(id string) error {
 // boxDatabaseSuccess never returns errors.
 type boxDatabaseSuccess struct{}
 
-const BOX_ID string = "fa2e3db6-fcf8-49c6-ac9c-54ce5855bf0b"
-
 func (db *boxDatabaseSuccess) CreateBox() (string, error) {
-	return BOX_ID, nil
+	return BOX_ID_VALID, nil
 }
 
 func (db *boxDatabaseSuccess) Box(id string) (items.Box, error) {
-	return items.Box{Id: uuid.Must(uuid.FromString(BOX_ID))}, nil
+	return items.Box{Id: uuid.Must(uuid.FromString(BOX_ID_VALID))}, nil
 }
 
 func (db *boxDatabaseSuccess) BoxIDs() ([]string, error) {
@@ -84,7 +88,7 @@ func (db *boxDatabaseSuccess) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
 }
 
 func (db *boxDatabaseSuccess) BoxByField(field string, value string) (*items.Box, error) {
-	return &items.Box{Id: uuid.Must(uuid.FromString(BOX_ID))}, nil
+	return &items.Box{Id: uuid.Must(uuid.FromString(BOX_ID_VALID))}, nil
 }
 
 func (db *boxDatabaseSuccess) BoxExist(field string, value string) bool {
@@ -92,7 +96,7 @@ func (db *boxDatabaseSuccess) BoxExist(field string, value string) bool {
 }
 
 func (db *boxDatabaseSuccess) CreateNewBox(newBox *items.Box) (uuid.UUID, error) {
-	sampleUUID := uuid.Must(uuid.FromString(BOX_ID))
+	sampleUUID := uuid.Must(uuid.FromString(BOX_ID_VALID))
 	return sampleUUID, nil
 }
 
@@ -144,9 +148,17 @@ func TestBoxHandlerDBErrors(t *testing.T) {
 		// 	expectedStatusCode: http.StatusNotFound,
 		// },
 		{
+			name: "Can't update box, invalid ID",
+			input: handlerInput{
+				R: httptest.NewRequest(http.MethodPut, "/box?id="+BOX_ID_INVALID_EMPTY, nil),
+				W: *httptest.NewRecorder(),
+			},
+			expectedStatusCode: http.StatusNotFound,
+		},
+		{
 			name: "Can't update box, not found",
 			input: handlerInput{
-				R: httptest.NewRequest(http.MethodPut, "/box?id=asdflkjenlwj", nil),
+				R: httptest.NewRequest(http.MethodPut, "/box?id="+BOX_ID_NOT_FOUND, nil),
 				W: *httptest.NewRecorder(),
 			},
 			expectedStatusCode: http.StatusNotFound,
@@ -158,6 +170,12 @@ func TestBoxHandlerDBErrors(t *testing.T) {
 			assert.Equal(t, tc.expectedStatusCode, tc.input.W.Result().StatusCode, "URL: "+tc.input.R.URL.String())
 		})
 	}
+}
+
+type methodTestCase struct {
+	name               string
+	input              handlerInput
+	expectedStatusCode int
 }
 
 func TestBoxHandlerInputErrors(t *testing.T) {
@@ -188,7 +206,7 @@ func TestBoxHandlerInputErrors(t *testing.T) {
 		{
 			name: "Box not found, incorrect id path value /box/{id}",
 			input: handlerInput{
-				R: httptest.NewRequest(http.MethodGet, "/api/v2/box/333", nil),
+				R: httptest.NewRequest(http.MethodGet, "/api/v2/box/"+BOX_ID_INVALID_UUID_FORMAT, nil),
 				W: *httptest.NewRecorder(),
 			},
 			expectedStatusCode: http.StatusNotFound,
@@ -196,20 +214,21 @@ func TestBoxHandlerInputErrors(t *testing.T) {
 		{
 			name: "Box not found, empty path id",
 			input: handlerInput{
-				R: httptest.NewRequest(http.MethodGet, "/api/v2/box/", nil),
+				R: httptest.NewRequest(http.MethodGet, "/api/v2/box/"+BOX_ID_INVALID_EMPTY, nil),
 				W: *httptest.NewRecorder(),
 			},
-			expectedStatusCode: http.StatusBadRequest,
+			expectedStatusCode: http.StatusNotFound,
 		},
 		{
 			name: "Box not found, empty query param id",
 			input: handlerInput{
-				R: httptest.NewRequest(http.MethodGet, "/box?id=", nil),
+				R: httptest.NewRequest(http.MethodGet, "/box?id="+BOX_ID_INVALID_EMPTY, nil),
 				W: *httptest.NewRecorder(),
 			},
-			expectedStatusCode: http.StatusBadRequest,
+			expectedStatusCode: http.StatusNotFound,
 		},
 	}
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mux.ServeHTTP(&tc.input.W, tc.input.R)
@@ -257,7 +276,7 @@ func TestBoxHandlerOK(t *testing.T) {
 		{
 			name: "Should use query param value /box?id={id}",
 			input: handlerInput{
-				R: httptest.NewRequest(http.MethodGet, "/box?id="+BOX_ID, nil),
+				R: httptest.NewRequest(http.MethodGet, "/box?id="+BOX_ID_VALID, nil),
 				W: *httptest.NewRecorder(),
 			},
 			expectedStatusCode: http.StatusOK,
@@ -266,7 +285,7 @@ func TestBoxHandlerOK(t *testing.T) {
 		{
 			name: "Should use path value id /box/{id}",
 			input: handlerInput{
-				R: httptest.NewRequest(http.MethodGet, "/api/v2/box/"+BOX_ID, nil),
+				R: httptest.NewRequest(http.MethodGet, "/api/v2/box/"+BOX_ID_VALID, nil),
 				W: *httptest.NewRecorder(),
 			},
 			expectedStatusCode: http.StatusOK,

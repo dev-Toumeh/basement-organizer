@@ -163,7 +163,7 @@ func validID(w http.ResponseWriter, r *http.Request, errorMessage string) string
 	if id == "" {
 		id = r.PathValue("id")
 		if id == "" {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusNotFound)
 			logg.Debug("Empty id")
 			fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
 			return ""
