@@ -136,7 +136,7 @@ func TestBoxHandlerDBErrors(t *testing.T) {
 				R: httptest.NewRequest(http.MethodPost, "/box", nil),
 				W: *httptest.NewRecorder(),
 			},
-			expectedStatusCode: http.StatusInternalServerError,
+			expectedStatusCode: http.StatusNotFound,
 		},
 		// @TODO
 		// {

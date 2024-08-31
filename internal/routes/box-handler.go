@@ -52,18 +52,16 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			const errorMsg = "Can't get box"
+			const errMsgForUser = "Can't find box"
 
-			id := validID(w, r, errorMsg)
+			id := validID(w, r, errMsgForUser)
 			if id == "" {
 				return
 			}
 
 			box, err := db.Box(id)
 			if err != nil {
-				logg.Debugf("Can't find box with id: '%v'. %v", id, err)
-				w.WriteHeader(http.StatusNotFound)
-				fmt.Fprint(w, errorMsg, id)
+				writeNotFoundError(errMsgForUser, err, w, r)
 				return
 			}
 
@@ -88,10 +86,10 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			break
 
 		case http.MethodPost:
+			errMsgForUser := "Can't create new box"
 			id, err := db.CreateBox()
 			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprint(w, fmt.Errorf("Can't create new box. %w", err))
+				writeNotFoundError(errMsgForUser, err, w, r)
 				return
 			}
 			if wantsTemplateData(r) {
@@ -121,9 +119,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			box := boxFromPostFormValue(id, r)
 			err := db.UpdateBox(&box)
 			if err != nil {
-				w.WriteHeader(http.StatusNotFound)
-				fmt.Fprint(w, errMsgForUser)
-				logg.Info(fmt.Errorf("%s: %w", errMsgForUser, err))
+				writeNotFoundError(errMsgForUser, err, w, r)
 				return
 			}
 			if wantsTemplateData(r) {
@@ -141,6 +137,13 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			fmt.Fprint(w, "Method:'", r.Method, "' not allowed")
 		}
 	}
+}
+
+// writeNotFoundError sets not found status code 404, logs error and writes error message to client.
+func writeNotFoundError(message string, err error, w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
+	fmt.Fprint(w, message)
+	logg.Info(fmt.Errorf("%s: %w", message, err))
 }
 
 // boxFromPostFormValue returns items.Box without references to inner boxes, outer box and items.
