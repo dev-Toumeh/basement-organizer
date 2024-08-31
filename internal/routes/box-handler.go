@@ -5,6 +5,7 @@ import (
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -111,41 +112,27 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			break
 
 		case http.MethodPut:
-			id := validID(w, r, "Can't update box")
+			errMsgForUser := "Can't update box."
+			id := validID(w, r, errMsgForUser)
 			if id == "" {
 				return
 			}
 
-			label := r.FormValue("label")
-			// picture := r.FormValue("picture")
-			// qrcode := r.FormValue("qrcode")
-			description := r.FormValue("description")
-
-			if wantsTemplateData(r) {
-				b := items.BoxTemplateData{}
-				b.Id = uuid.Must(uuid.FromString(id))
-				b.Label = label
-				// b.Picture = picture
-				// b.QRcode = qrcode
-				b.Description = description
-				logg.Debug(b)
-				writeData(w, b)
-			} else {
-				// b := items.Box{}
-				// b.Label = label
-				// b.Picture = picture
-				// b.QRcode = qrcode
-				// b.Description = description
-				// writeData(w, b)
-				w.WriteHeader(http.StatusOK)
+			box := boxFromPostFormValue(id, r)
+			err := db.UpdateBox(&box)
+			if err != nil {
+				w.WriteHeader(http.StatusNotFound)
+				fmt.Fprint(w, errMsgForUser)
+				logg.Info(fmt.Errorf("%s: %w", errMsgForUser, err))
+				return
 			}
-
-			// items := r.FormValue("items")
-			// innerboxes := r.FormValue("innerboxes")
-			// outerbox := r.FormValue("outerbox")
-			// @TODO: Implement
-			// w.WriteHeader(http.StatusNotImplemented)
-			// fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
+			if wantsTemplateData(r) {
+				boxTemplate := items.BoxTemplateData{&box, false}
+				writeData(w, boxTemplate)
+			} else {
+				writeData(w, box)
+			}
+			logg.Debug("Updated Box: ", box)
 			break
 
 		default:
@@ -156,8 +143,17 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 	}
 }
 
-// validID returns valid id string or if errors occurs
-// writes correct response header status code with errorMessage and returns empty string.
+// boxFromPostFormValue returns items.Box without references to inner boxes, outer box and items.
+func boxFromPostFormValue(id string, r *http.Request) items.Box {
+	box := items.Box{}
+	box.Id = uuid.Must(uuid.FromString(id))
+	box.Label = r.PostFormValue("label")
+	box.Description = r.PostFormValue("description")
+	// box.Picture = r.PostFormValue("picture")
+	// box.QRcode = r.PostFormValue("qrcode")
+	return box
+}
+
 // validID returns valid id string.
 // Check for empty string! If error occurs return will be "".
 // But the error is already handled.

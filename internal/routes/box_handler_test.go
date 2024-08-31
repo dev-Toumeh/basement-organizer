@@ -110,6 +110,7 @@ func (db *boxDatabaseSuccess) DeleteBox(id string) error {
 
 func TestBoxHandlerDBErrors(t *testing.T) {
 	// logg.EnableDebugLoggerS()
+	// defer logg.DisableDebugLoggerS()
 
 	dbErr := &boxDatabaseError{}
 
