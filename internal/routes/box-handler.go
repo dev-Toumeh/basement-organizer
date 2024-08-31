@@ -109,7 +109,12 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 				return
 			}
 			if wantsTemplateData(r) {
-				templates.Render(w, "box-list-item", struct{ Id string }{Id: id})
+				box, err := db.Box(id)
+				if err != nil {
+					writeNotFoundError(errMsgForUser, err, w, r)
+					return
+				}
+				templates.Render(w, "box-list-item", box)
 			} else {
 				writeData(w, id)
 			}
