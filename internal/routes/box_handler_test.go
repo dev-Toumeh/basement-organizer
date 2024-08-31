@@ -138,19 +138,10 @@ func TestBoxHandlerDBErrors(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusNotFound,
 		},
-		// @TODO
-		// {
-		// 	name: "Can't delete box, not found",
-		// 	input: handlerInput{
-		// 		R: httptest.NewRequest(http.MethodDelete, "/box", nil),
-		// 		W: *httptest.NewRecorder(),
-		// 	},
-		// 	expectedStatusCode: http.StatusNotFound,
-		// },
 		{
-			name: "Can't update box, invalid ID",
+			name: "Can't delete box, not found",
 			input: handlerInput{
-				R: httptest.NewRequest(http.MethodPut, "/box?id="+BOX_ID_INVALID_EMPTY, nil),
+				R: httptest.NewRequest(http.MethodDelete, "/box?id="+BOX_ID_NOT_FOUND, nil),
 				W: *httptest.NewRecorder(),
 			},
 			expectedStatusCode: http.StatusNotFound,
@@ -223,6 +214,15 @@ func TestBoxHandlerInputErrors(t *testing.T) {
 			name: "Box not found, empty query param id",
 			input: handlerInput{
 				R: httptest.NewRequest(http.MethodGet, "/box?id="+BOX_ID_INVALID_EMPTY, nil),
+				W: *httptest.NewRecorder(),
+			},
+			expectedStatusCode: http.StatusNotFound,
+		},
+		// DELETE
+		{
+			name: "Can't delete box, invalid UUID format",
+			input: handlerInput{
+				R: httptest.NewRequest(http.MethodDelete, "/box?id="+BOX_ID_INVALID_UUID_FORMAT, nil),
 				W: *httptest.NewRecorder(),
 			},
 			expectedStatusCode: http.StatusNotFound,

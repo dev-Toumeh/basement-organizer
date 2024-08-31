@@ -100,13 +100,16 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			break
 
 		case http.MethodDelete:
-			id := validID(w, r, "Can't delete box")
+			errMsgForUser := "Can't delete box"
+			id := validID(w, r, errMsgForUser)
 			if id == "" {
 				return
 			}
-			// @TODO: Implement
-			// w.WriteHeader(http.StatusNotImplemented)
-			// fmt.Fprint(w, "Method:'", r.Method, "' not implemented")
+			err := db.DeleteBox(id)
+			if err != nil {
+				writeNotFoundError(errMsgForUser, err, w, r)
+				return
+			}
 			break
 
 		case http.MethodPut:
