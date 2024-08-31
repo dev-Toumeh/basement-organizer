@@ -80,6 +80,16 @@ func (b *Box) MarshalJSON() ([]byte, error) {
 	return json.Marshal(c)
 }
 
+func (b Box) String() string {
+	data, err := json.Marshal(b)
+	if err != nil {
+		logg.Err("Can't JSON box to string:", err)
+		return ""
+	}
+	s := fmt.Sprintf("%s", data)
+	return s
+}
+
 func (box *Box) MoveTo(other any) error {
 	switch v := other.(type) {
 	case *Box:
