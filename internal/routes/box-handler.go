@@ -5,7 +5,6 @@ import (
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -64,9 +63,8 @@ type BoxDatabase interface {
 	BoxExist(field string, value string) bool
 	CreateNewBox(newBox *items.Box) (uuid.UUID, error)
 	ErrorExist() error
-	UpdateBox(box *items.Box) error
-	DeleteBox(id string) error
-}
+	UpdateBox(box items.Box) error
+	DeleteBox(boxId uuid.UUID) error
 }
 
 func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc {
@@ -123,7 +121,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			if id == "" {
 				return
 			}
-			err := db.DeleteBox(id)
+			err := db.DeleteBox(uuid.Must(uuid.FromString(id)))
 			if err != nil {
 				writeNotFoundError(errMsgForUser, err, w, r)
 				return
@@ -138,7 +136,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			}
 
 			box := boxFromPostFormValue(id, r)
-			err := db.UpdateBox(&box)
+			err := db.UpdateBox(box)
 			if err != nil {
 				writeNotFoundError(errMsgForUser, err, w, r)
 				return

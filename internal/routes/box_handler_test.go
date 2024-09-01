@@ -60,11 +60,11 @@ func (db *boxDatabaseError) ErrorExist() error {
 	return errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) UpdateBox(box *items.Box) error {
+func (db *boxDatabaseError) UpdateBox(box items.Box) error {
 	return errors.New("AAAAA")
 }
 
-func (db *boxDatabaseError) DeleteBox(id string) error {
+func (db *boxDatabaseError) DeleteBox(boxId uuid.UUID) error {
 	return errors.New("AAAAA")
 }
 
@@ -104,11 +104,11 @@ func (db *boxDatabaseSuccess) ErrorExist() error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) UpdateBox(box *items.Box) error {
+func (db *boxDatabaseSuccess) UpdateBox(box items.Box) error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) DeleteBox(id string) error {
+func (db *boxDatabaseSuccess) DeleteBox(boxId uuid.UUID) error {
 	return nil
 }
 

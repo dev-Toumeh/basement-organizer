@@ -40,7 +40,7 @@ func (db *DB) CreateNewBox(newBox *items.Box) (uuid.UUID, error) {
 	}
 	id, err := db.insertNewBox(newBox)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("error whie creating new Box: %v", err)
+		return uuid.Nil, fmt.Errorf("error while creating new Box: %v", err)
 	}
 	return id, nil
 }
@@ -84,6 +84,49 @@ func (db *DB) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
 	_, err := db.Sql.Exec(updateStmt, id2, id1)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+// update box data
+func (db *DB) UpdateBox(box items.Box) error {
+	exist := db.BoxExist("id", box.Id.String())
+	if !exist {
+		return fmt.Errorf("the box is not exist")
+	}
+	sqlStatement := fmt.Sprintf(`UPDATE box SET label = '%s', description = '%s', picture = '%s', qrcode = '%s' WHERE id = ?`, box.Label, box.Description, box.Picture, box.QRcode)
+	result, err := db.Sql.Exec(sqlStatement, box.Id)
+	if err != nil {
+		return fmt.Errorf("something wrong happened while runing the box update query: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error while finding the item %w", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("the Record with the id: %s was not found; this should not have happened while updating", box.Id.String())
+	} else if rowsAffected != 1 {
+		return fmt.Errorf("the id: %s has an unexpected number of rows affected (more than one or less than 0)", box.Id.String())
+	}
+	return nil
+}
+
+// delete Box
+func (db *DB) DeleteBox(boxId uuid.UUID) error {
+	id := boxId.String()
+
+	// check if box is not Empty
+	itemExist := db.ItemExist("box_id", id)
+	boxExist := db.BoxExist("outerbox_id", id)
+	if itemExist || boxExist {
+		return fmt.Errorf("the box is not empty")
+	}
+
+	sqlStatement := `DELETE FROM box WHERE id = ?;`
+	_, err := db.Sql.Exec(sqlStatement, id)
+	if err != nil {
+		return fmt.Errorf("error whiel deleting the box: %W", err)
 	}
 	return nil
 }
@@ -319,7 +362,7 @@ func convertSQLItemToItem(sqlItem *SqlItem) (*items.Item, error) {
 		if sqlItem.ItemQuantity.Valid {
 			item.Quantity = sqlItem.ItemQuantity.Int64
 		} else {
-			item.Quantity = 0 // Default or invalid value
+			item.Quantity = 1
 		}
 
 		if sqlItem.ItemWeight.Valid {

@@ -2,6 +2,7 @@ package database
 
 import (
 	itemsPackage "basement/main/internal/items"
+	"strings"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -134,6 +135,126 @@ func TestBoxIDs(t *testing.T) {
 	EmptyTestDatabase()
 }
 
+func TestBoxUpdate(t *testing.T) {
+	BoxId := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000"))
+
+	BoxBeforeUpdate := &itemsPackage.Box{
+		Id:          BoxId,
+		Label:       "Test Box",
+		Description: "Test description",
+		Picture:     "my picture 1",
+		QRcode:      "qrcode 1",
+		OuterBoxId:  uuid.Nil,
+	}
+
+	BoxToUpdate := itemsPackage.Box{
+		Id:          BoxId,
+		Label:       "update Box",
+		Description: "Update description",
+		Picture:     "my picture 2",
+		QRcode:      "qrcode 2",
+		OuterBoxId:  uuid.Nil,
+	}
+
+	_, err := dbTest.insertNewBox(BoxBeforeUpdate)
+	if err != nil {
+		t.Fatalf("error while inserting the box: %v", err)
+	}
+
+	err = dbTest.UpdateBox(BoxToUpdate)
+	if err != nil {
+		t.Fatalf("error while updating the box: %v", err)
+	}
+
+	// Retrieve the updated box from the database
+	updatedBox, err := dbTest.BoxByField("id", BoxId.String())
+	if err != nil {
+		t.Fatalf("error while retrieving the updated box: %v", err)
+	}
+
+	// Assert that the box was updated correctly (using individual asserts)
+	assert.Equal(t, BoxToUpdate.Label, updatedBox.Label)
+	assert.Equal(t, BoxToUpdate.Description, updatedBox.Description)
+	assert.Equal(t, BoxToUpdate.Picture, updatedBox.Picture)
+	assert.Equal(t, BoxToUpdate.QRcode, updatedBox.QRcode)
+	assert.Equal(t, BoxToUpdate.OuterBoxId, BoxToUpdate.OuterBoxId)
+
+	assert.NotEqual(t, BoxBeforeUpdate.Label, updatedBox.Label)
+	assert.NotEqual(t, BoxBeforeUpdate.Description, updatedBox.Description)
+
+	EmptyTestDatabase()
+}
+
+func TestDeleteBox(t *testing.T) {
+	testBoxId := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000"))
+	innerBoxId := uuid.Must(uuid.FromString("a0c201c2-5d5b-4587-938b-5a2b59c31e25"))
+	itemId := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174002"))
+
+	testBox := &itemsPackage.Box{
+		Id:          testBoxId,
+		Label:       "My Special Box",
+		Description: "This box contains my precious items.",
+		Picture:     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
+		QRcode:      "AB123CD",
+		OuterBoxId:  uuid.Nil,
+	}
+
+	innerBox := &itemsPackage.Box{
+		Id:          innerBoxId,
+		Label:       "Inner Box 1",
+		Description: "This is the first inner box",
+		Picture:     "base64encodedinnerbox",
+		QRcode:      "QRcodeInnerBox",
+		OuterBoxId:  testBoxId,
+	}
+
+	item := itemsPackage.Item{
+		Id:          itemId,
+		Label:       "Item 1",
+		Description: "Description for item 1",
+		Picture:     "base64encodedstring1",
+		Quantity:    10,
+		Weight:      "5.5",
+		QRcode:      "QRcode1",
+		BoxId:       testBoxId,
+	}
+
+	boxList := []*itemsPackage.Box{innerBox, testBox}
+
+	for _, box := range boxList {
+		_, err := dbTest.insertNewBox(box)
+		if err != nil {
+			t.Fatalf("insertNewBox failed: %v", err)
+		}
+	}
+
+	err := dbTest.insertNewItem(item)
+	if err != nil {
+		t.Fatalf("insertNewItem failed: %v", err)
+	}
+
+	err = dbTest.DeleteBox(testBox.Id)
+	if err != nil && !strings.Contains(err.Error(), "the box is not empty") {
+		t.Fatalf("the should not be deleted as the box is not empty")
+	}
+
+	err = dbTest.DeleteItem(item.Id)
+	if err != nil {
+		t.Fatalf("the item was not deleted")
+	}
+	err = dbTest.DeleteBox(innerBox.Id)
+	if err != nil {
+		t.Fatalf("deleting the innerbox was not succeed")
+	}
+
+	err = dbTest.DeleteBox(testBox.Id)
+	if err != nil {
+		t.Fatalf("delete the box after deleting the data inside of it was not succeed")
+	}
+
+	EmptyTestDatabase()
+}
+
 func TestMoveBox(t *testing.T) {
 	// Prepare test data
 	outerBox1Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000"))
@@ -181,6 +302,7 @@ func testData() ([]*itemsPackage.Box, *[]itemsPackage.Item) {
 	outerBoxId := uuid.Must(uuid.FromString("18c60ba9-ffac-48f1-8c7c-473bd35acbea"))
 	innerBoxId := uuid.Must(uuid.FromString("a0c201c2-5d5b-4587-938b-5a2b59c31e25"))
 	innerBox2Id := uuid.Must(uuid.FromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))
+
 	innerBox := &itemsPackage.Box{
 		Id:          innerBoxId,
 		Label:       "Inner Box 1",
