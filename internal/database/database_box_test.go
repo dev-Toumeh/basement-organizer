@@ -2,6 +2,7 @@ package database
 
 import (
 	itemsPackage "basement/main/internal/items"
+	"context"
 	"strings"
 	"testing"
 
@@ -237,8 +238,7 @@ func TestDeleteBox(t *testing.T) {
 	if err != nil && !strings.Contains(err.Error(), "the box is not empty") {
 		t.Fatalf("the should not be deleted as the box is not empty")
 	}
-
-	err = dbTest.DeleteItem(item.Id)
+	err = dbTest.DeleteItem(context.Background(), item.Id)
 	if err != nil {
 		t.Fatalf("the item was not deleted")
 	}
