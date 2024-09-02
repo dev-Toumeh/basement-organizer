@@ -114,7 +114,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 					writeNotFoundError(errMsgForUser, err, w, r)
 					return
 				}
-				templates.Render(w, "box-list-item", box)
+				templates.Render(w, templates.TEMPLATE_BOX_LIST_ITEM, box)
 			} else {
 				writeData(w, id)
 			}

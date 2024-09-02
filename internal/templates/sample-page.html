@@ -23,32 +23,6 @@
     <h3>H3 Header</h3>
     <h4>H4 Header</h4>
     <h5>H5 Header</h5>
-    <button hx-post="/box" hx-target="#box-list" hx-swap="beforeend">Create box</button>
-    <button hx-post="/api/v2/box" hx-target="#box-list" hx-swap="beforeend">Create box API</button>
-    <button hx-get="/box" hx-target="#box">Get box</button>
-
-    <form>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th></th>
-                    <th></th>
-                    <th>Delete</th>
-                </tr>
-            </thead> 
-            <tbody id="box-list" >
-            </tbody>
-        </table>
-        <div >
-            <button hx-delete="/boxes"
-                hx-swap="outerHTML" 
-            >delete</button>
-                <!--hx-select-oob="#box-list-item-"-->
-            <button hx-put="/boxes" hx-target="#box">edit</button>
-        </div>
-    </form>
-    <div id="box" ></div>
     <h6>H6 Header</h6>
 
     <button 
@@ -63,25 +37,64 @@
         hx-swap="none"
     >warning</button>
     <div class="update-placeholder"></div>
+
+    <hr>
+
+    <h2>Box list</h2>
+    <button hx-post="/box" hx-target="#box-list" hx-swap="beforeend">Create box</button>
+    <button hx-post="/api/v2/box" hx-target="#box-list" hx-swap="beforeend">Create box API</button>
+    <button hx-get="/box" hx-target="#detailed-box">Get box</button>
+    {{ template "box-list" . }}
+    <div id="detailed-box" ></div>
 </div>
 {{end}}
+
+
+{{ define "box-list" }}
+<form>
+    <label for="search">search</label>
+    <input name="search" value="">
+    <button type="button">Alternative View</button>
+    <table>
+        <thead>
+            <tr>
+                <th>Label</th>
+                <th>Box</th>
+                <th>Shelve</th>
+                <th>Area</th>
+                <th>Image</th>
+                <th>Move</th>
+                <th>Delete</th>
+            </tr>
+        </thead> 
+        <tbody id="box-list" >
+        </tbody>
+    </table>
+    <div >
+        <button hx-delete="/boxes"
+            hx-swap="outerHTML" 
+        >delete</button>
+        <button type="button">move</button>
+    </div>
+</form>
+{{ end }}
+
 
 {{ define "box-list-item" }}
 <tr id="box-list-item-{{.Id}}">
     <td hx-get="/box?id={{.Id}}"
-        hx-target="#box"
-    >{{.Id}}</td>
-    <td><button hx-get="/box?id={{.Id}}&edit=true" 
-        hx-target="#box"
-    >edit</button>
-    <button hx-get="/api/v2/box/{{.Id}}" 
-        hx-target="#box"
-    >API get</button>
+        hx-target="#detailed-box"
+    >{{.Label}}</td>
+    <td>{{ if .OuterBox }}{{ .OuterBox }}{{ end }}</td>
+    <td></td>
+    <td></td>
+    <td>
+        <img class="preview" 
+            src="data:image/png;base64,{{.Picture}}" 
+            alt="{{.Label}} image preview"
+        >
     </td>
-    <td><button hx-delete="/box?id={{.Id}}" 
-        hx-target="#box-list-item-{{.Id}}" 
-    >del</button></td>
-        <!--hx-confirm="Delete {{.Id}} ?"-->
+    <td><input type="checkbox" name="Move:{{.Id}}"></td>
     <td><input type="checkbox" name="Delete:{{.Id}}"></td>
 </tr>
 {{end}}
