@@ -377,14 +377,20 @@ func convertSQLItemToItem(sqlItem *SqlItem) (*items.Item, error) {
 
 // functions need to be deleted when we adopt database-box
 func (db *DB) CreateBox() (string, error) {
-	id, err := uuid.NewV4()
+	b := items.NewBox()
+	id, err := db.CreateNewBox(&b)
+	if err != nil {
+		return "", fmt.Errorf("CreateBox() error:\n\t%w", err)
+	}
 	return id.String(), err
 }
 
 func (db *DB) Box(id string) (items.Box, error) {
-	b := items.NewBox()
-	nid, _ := uuid.FromString(id)
-	b.Id = nid
-
-	return b, nil
+	box := items.Box{}
+	b, err := db.BoxByField("id", id)
+	if err != nil {
+		return box, fmt.Errorf("Box() error:\n\t%w", err)
+	}
+	box = *b
+	return box, err
 }
