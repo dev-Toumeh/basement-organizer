@@ -17,6 +17,7 @@ func registerBoxRoutes(db BoxDatabase) {
 	http.HandleFunc("/api/v2/box", BoxHandler(WriteJSON, db))
 	http.HandleFunc("/api/v2/box/{id}", BoxHandler(WriteJSON, db))
 	http.HandleFunc("/box", BoxHandler(WriteBoxTemplate, db))
+	http.HandleFunc("/boxes", BoxesHandler(WriteJSON, db))
 }
 
 func WriteBoxTemplate(w io.Writer, data any) {
@@ -67,6 +68,20 @@ type BoxDatabase interface {
 	DeleteBox(boxId uuid.UUID) error
 }
 
+func BoxesHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			ids, err := db.BoxIDs()
+			if err != nil {
+				writeNotFoundError("Can't find boxes", err, w, r)
+			}
+			writeData(w, ids)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	}
+}
 
 func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

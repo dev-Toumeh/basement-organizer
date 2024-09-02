@@ -39,6 +39,11 @@
     <div class="update-placeholder"></div>
 
     <hr>
+    <button hx-get="/boxes" hx-target="#boxid-list" hx-swap="innerHTML">BoxIDs()</button>
+    <div>IDs:
+        <div id="boxid-list" ></div>
+    </div>
+    <hr>
 
     <h2>Box list</h2>
     <button hx-post="/box" hx-target="#box-list" hx-swap="beforeend">Create box</button>
