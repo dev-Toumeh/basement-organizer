@@ -55,17 +55,18 @@ func WriteJSON(w io.Writer, data any) {
 
 type BoxDatabase interface {
 	// CreateBox returns id of box if successful, otherwise error.
-	CreateBox() (string, error)
-	Box(id string) (items.Box, error)
+	CreateBox() (string, error)       // @TODO: Change string to uuid.UUID
+	Box(id string) (items.Box, error) // @TODO: Change string to uuid.UUID
 	BoxByField(field string, value string) (*items.Box, error)
 	MoveBox(id1 uuid.UUID, id2 uuid.UUID) error
-	BoxIDs() ([]string, error)
-	BoxExist(field string, value string) bool
+	BoxIDs() ([]string, error)                // @TODO: Change string to uuid.UUID
+	BoxExist(field string, value string) bool // @TODO: Change string to uuid.UUID
 	CreateNewBox(newBox *items.Box) (uuid.UUID, error)
 	ErrorExist() error
 	UpdateBox(box items.Box) error
 	DeleteBox(boxId uuid.UUID) error
 }
+
 
 func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -74,11 +75,11 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			const errMsgForUser = "Can't find box"
 
 			id := validID(w, r, errMsgForUser)
-			if id == "" {
+			if id.IsNil() {
 				return
 			}
 
-			box, err := db.Box(id)
+			box, err := db.Box(id.String())
 			if err != nil {
 				writeNotFoundError(errMsgForUser, err, w, r)
 				return
@@ -103,6 +104,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 
 		case http.MethodPost:
 			errMsgForUser := "Can't create new box"
+			// @TODO: Change string to uuid.UUID
 			id, err := db.CreateBox()
 			if err != nil {
 				writeNotFoundError(errMsgForUser, err, w, r)
@@ -123,10 +125,10 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 		case http.MethodDelete:
 			errMsgForUser := "Can't delete box"
 			id := validID(w, r, errMsgForUser)
-			if id == "" {
+			if id.IsNil() {
 				return
 			}
-			err := db.DeleteBox(uuid.Must(uuid.FromString(id)))
+			err := db.DeleteBox(id)
 			if err != nil {
 				writeNotFoundError(errMsgForUser, err, w, r)
 				return
@@ -136,7 +138,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 		case http.MethodPut:
 			errMsgForUser := "Can't update box."
 			id := validID(w, r, errMsgForUser)
-			if id == "" {
+			if id.IsNil() {
 				return
 			}
 
@@ -167,13 +169,13 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 func writeNotFoundError(message string, err error, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	fmt.Fprint(w, message)
-	logg.Info(fmt.Errorf("%s: %w", message, err))
+	logg.Info(fmt.Errorf("%s:\n\t%w", message, err))
 }
 
 // boxFromPostFormValue returns items.Box without references to inner boxes, outer box and items.
-func boxFromPostFormValue(id string, r *http.Request) items.Box {
+func boxFromPostFormValue(id uuid.UUID, r *http.Request) items.Box {
 	box := items.Box{}
-	box.Id = uuid.Must(uuid.FromString(id))
+	box.Id = id
 	box.Label = r.PostFormValue("label")
 	box.Description = r.PostFormValue("description")
 	// box.Picture = r.PostFormValue("picture")
@@ -181,10 +183,9 @@ func boxFromPostFormValue(id string, r *http.Request) items.Box {
 	return box
 }
 
-// validID returns valid id string.
-// Check for empty string! If error occurs return will be "".
-// But the error is already handled.
-func validID(w http.ResponseWriter, r *http.Request, errorMessage string) string {
+// validID returns valid uuid from request and handles errors.
+// Check for uuid.Nil! If error occurs return will be uuid.Nil.
+func validID(w http.ResponseWriter, r *http.Request, errorMessage string) uuid.UUID {
 	id := r.FormValue("id")
 	logg.Debugf("Query param id: '%v'.", id)
 	if id == "" {
@@ -193,19 +194,19 @@ func validID(w http.ResponseWriter, r *http.Request, errorMessage string) string
 			w.WriteHeader(http.StatusNotFound)
 			logg.Debug("Empty id")
 			fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
-			return ""
+			return uuid.Nil
 		}
 		logg.Debugf("path value id: '%v'.", id)
 	}
 
-	_, err := uuid.FromString(id)
+	newId, err := uuid.FromString(id)
 	if err != nil {
 		logg.Debugf("Wrong id: '%v'. %v", id, err)
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
-		return ""
+		return uuid.Nil
 	}
-	return id
+	return newId
 }
 
 // wantsTemplateData checks if current request requires template data.
