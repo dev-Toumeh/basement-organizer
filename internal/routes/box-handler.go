@@ -55,17 +55,14 @@ func WriteJSON(w io.Writer, data any) {
 }
 
 type BoxDatabase interface {
-	// CreateBox returns id of box if successful, otherwise error.
-	CreateBox() (string, error)       // @TODO: Change string to uuid.UUID
-	Box(id string) (items.Box, error) // @TODO: Change string to uuid.UUID
-	BoxByField(field string, value string) (*items.Box, error)
+	CreateBox(newBox *items.Box) (uuid.UUID, error)
 	MoveBox(id1 uuid.UUID, id2 uuid.UUID) error
-	BoxIDs() ([]string, error)                // @TODO: Change string to uuid.UUID
-	BoxExist(field string, value string) bool // @TODO: Change string to uuid.UUID
-	CreateNewBox(newBox *items.Box) (uuid.UUID, error)
-	ErrorExist() error
 	UpdateBox(box items.Box) error
 	DeleteBox(boxId uuid.UUID) error
+	BoxById(id uuid.UUID) (items.Box, error)
+	BoxIDs() ([]string, error)                // @TODO: Change string to uuid.UUID
+	BoxExist(field string, value string) bool // @TODO: Change string to uuid.UUID
+	ErrorExist() error
 }
 
 func BoxesHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc {
@@ -94,7 +91,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 				return
 			}
 
-			box, err := db.Box(id.String())
+			box, err := db.BoxById(id)
 			if err != nil {
 				writeNotFoundError(errMsgForUser, err, w, r)
 				return
@@ -118,17 +115,17 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			break
 
 		case http.MethodPost:
-			errMsgForUser := "Can't create new box"
-			// @TODO: Change string to uuid.UUID
-			id, err := db.CreateBox()
+			box := items.NewBox()
+			id, err := db.CreateBox(&box)
 			if err != nil {
-				writeNotFoundError(errMsgForUser, err, w, r)
+				writeNotFoundError("error while creating the box", err, w, r)
 				return
 			}
 			if wantsTemplateData(r) {
-				box, err := db.Box(id)
+				box, err := db.BoxById(id)
+				logg.Debug(box)
 				if err != nil {
-					writeNotFoundError(errMsgForUser, err, w, r)
+					writeNotFoundError("error while fetching the box based on Id", err, w, r)
 					return
 				}
 				templates.Render(w, templates.TEMPLATE_BOX_LIST_ITEM, box)

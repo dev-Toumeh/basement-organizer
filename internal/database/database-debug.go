@@ -117,10 +117,10 @@ func (db *DB) DatabasePatcher() error {
 	}
 
 	// Create the boxes using the CreateNewBox function
-	if _, err := db.CreateNewBox(outerBox); err != nil {
+	if _, err := db.CreateBox(outerBox); err != nil {
 		return err
 	}
-	if _, err := db.CreateNewBox(patchBox); err != nil {
+	if _, err := db.CreateBox(patchBox); err != nil {
 		return err
 	}
 

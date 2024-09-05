@@ -33,11 +33,11 @@ type SqlItem struct {
 }
 
 // Create New Item Record
-func (db *DB) CreateNewBox(newBox *items.Box) (uuid.UUID, error) {
-	if db.BoxExist("id", newBox.Id.String()) {
+func (db *DB) CreateBox(newBox *items.Box) (uuid.UUID, error) {
+	if db.BoxExist("label", newBox.Label) {
 		return uuid.Nil, db.ErrorExist()
-
 	}
+
 	id, err := db.insertNewBox(newBox)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("error while creating new Box: %v", err)
@@ -376,18 +376,9 @@ func convertSQLItemToItem(sqlItem *SqlItem) (*items.Item, error) {
 }
 
 // functions need to be deleted when we adopt database-box
-func (db *DB) CreateBox() (string, error) {
-	b := items.NewBox()
-	id, err := db.CreateNewBox(&b)
-	if err != nil {
-		return "", fmt.Errorf("CreateBox() error:\n\t%w", err)
-	}
-	return id.String(), err
-}
-
-func (db *DB) Box(id string) (items.Box, error) {
+func (db *DB) BoxById(id uuid.UUID) (items.Box, error) {
 	box := items.Box{}
-	b, err := db.BoxByField("id", id)
+	b, err := db.BoxByField("id", id.String())
 	if err != nil {
 		return box, fmt.Errorf("Box() error:\n\t%w", err)
 	}

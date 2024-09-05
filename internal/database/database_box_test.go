@@ -85,7 +85,7 @@ func TestCreateNewBox(t *testing.T) {
 	testBox := boxList[0]
 
 	// Testing creation of a new box that does not already exist
-	_, err := dbTest.CreateNewBox(testBox)
+	_, err := dbTest.CreateBox(testBox)
 	assert.Equal(t, nil, err)
 	if err != nil {
 		t.Fatalf("Failed to create new box: %v", err)
@@ -96,7 +96,7 @@ func TestCreateNewBox(t *testing.T) {
 	assert.Equal(t, true, exists)
 
 	// Test creating the same box again to trigger an error
-	_, err = dbTest.CreateNewBox(testBox)
+	_, err = dbTest.CreateBox(testBox)
 	assert.NotEqual(t, nil, err)
 
 	EmptyTestDatabase()
