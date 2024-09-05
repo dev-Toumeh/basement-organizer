@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"time"
 
 	"github.com/gofrs/uuid/v5"
+	"golang.org/x/exp/rand"
 )
 
 type AnotherItem struct {
@@ -56,10 +58,12 @@ type BoxC struct {
 
 // NewBox returns an empty box with a new uuid.
 func NewBox() Box {
+	rand.Seed(uint64(time.Now().UnixNano()))
+	num := rand.Intn(10000)
 	return Box{
 		Id:          uuid.Must(uuid.NewV4()),
-		Label:       "Box",
-		Description: "This box is empty.",
+		Label:       fmt.Sprintf("Box %d", num),
+		Description: fmt.Sprintf("Box description %d", num),
 	}
 }
 

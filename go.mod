@@ -35,6 +35,7 @@ require (
 	github.com/gofrs/uuid/v5 v5.2.0
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
+	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.15.0 // indirect

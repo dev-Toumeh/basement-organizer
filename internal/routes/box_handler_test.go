@@ -28,12 +28,12 @@ const BOX_ID_INVALID_UUID_FORMAT string = "ac9c-54ce5855bf0b"
 // boxDatabaseError returns errors on every function.
 type boxDatabaseError struct{}
 
-func (db *boxDatabaseError) CreateBox() (string, error) {
-	return "", errors.New("AAAAAAAA")
+func (db *boxDatabaseError) CreateBox(newBox *items.Box) (uuid.UUID, error) {
+	return uuid.Nil, errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) Box(id string) (items.Box, error) {
-	return items.Box{}, errors.New("AAAAAAAA")
+func (db *boxDatabaseError) BoxById(id uuid.UUID) (items.Box, error) {
+	return items.Box{Id: uuid.Nil}, errors.New("AAAAAAAA")
 }
 
 func (db *boxDatabaseError) BoxIDs() ([]string, error) {
@@ -52,10 +52,6 @@ func (db *boxDatabaseError) BoxExist(field string, value string) bool {
 	return false // Simulate that the box does not exist (or an error occurred)
 }
 
-func (db *boxDatabaseError) CreateNewBox(newBox *items.Box) (uuid.UUID, error) {
-	return uuid.Nil, errors.New("AAAAAAAA")
-}
-
 func (db *boxDatabaseError) ErrorExist() error {
 	return errors.New("AAAAAAAA")
 }
@@ -71,11 +67,11 @@ func (db *boxDatabaseError) DeleteBox(boxId uuid.UUID) error {
 // boxDatabaseSuccess never returns errors.
 type boxDatabaseSuccess struct{}
 
-func (db *boxDatabaseSuccess) CreateBox() (string, error) {
-	return BOX_ID_VALID, nil
+func (db *boxDatabaseSuccess) CreateBox(newBox *items.Box) (uuid.UUID, error) {
+	return uuid.Must(uuid.FromString(BOX_ID_VALID)), nil
 }
 
-func (db *boxDatabaseSuccess) Box(id string) (items.Box, error) {
+func (db *boxDatabaseSuccess) BoxById(id uuid.UUID) (items.Box, error) {
 	return items.Box{Id: uuid.Must(uuid.FromString(BOX_ID_VALID))}, nil
 }
 
@@ -87,17 +83,8 @@ func (db *boxDatabaseSuccess) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) BoxByField(field string, value string) (*items.Box, error) {
-	return &items.Box{Id: uuid.Must(uuid.FromString(BOX_ID_VALID))}, nil
-}
-
 func (db *boxDatabaseSuccess) BoxExist(field string, value string) bool {
 	return true
-}
-
-func (db *boxDatabaseSuccess) CreateNewBox(newBox *items.Box) (uuid.UUID, error) {
-	sampleUUID := uuid.Must(uuid.FromString(BOX_ID_VALID))
-	return sampleUUID, nil
 }
 
 func (db *boxDatabaseSuccess) ErrorExist() error {
@@ -238,7 +225,7 @@ func TestBoxHandlerInputErrors(t *testing.T) {
 }
 
 func TestBoxHandlerOK(t *testing.T) {
-	// logg.EnableDebugLoggerS()
+	logg.EnableDebugLoggerS()
 
 	dbOk := boxDatabaseSuccess{}
 
@@ -300,7 +287,15 @@ func TestBoxHandlerOK(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mux.ServeHTTP(&tc.input.W, tc.input.R)
 			url := "URL: " + tc.input.R.URL.String()
-			assert.Equal(t, tc.expectedStatusCode, tc.input.W.Result().StatusCode, url)
+
+			if tc.expectedStatusCode != tc.input.W.Result().StatusCode {
+				read, _ := io.ReadAll(tc.input.W.Result().Body)
+				t.Logf("Status code mismatch. Expected: %d, Got: %d. URL: %s. Response Body: %s",
+					tc.expectedStatusCode, tc.input.W.Result().StatusCode, url, string(read))
+				t.Fail() // Mark the test as failed
+			} else {
+				assert.Equal(t, tc.expectedStatusCode, tc.input.W.Result().StatusCode, url)
+			}
 
 			read, _ := io.ReadAll(tc.input.W.Result().Body)
 			if tc.expectedTemplate {
