@@ -1,0 +1,19 @@
+{{ define "search-item-page" }}
+{{ template "open-html-tag" . }}
+{{ template "head" . }}
+{{ template "search-item-form" . }}
+{{ template "close-html-tag" . }}
+{{ end }}
+
+{{define "search-item-form"}}
+<div id="form-container">
+  <h2 id="form-label">Search Items</h2>
+  <input type="text"
+    hx-post="/api/v1/search/item"
+    hx-target="#results"
+    hx-trigger="keyup changed delay:500ms"
+    id="search-bar"
+    name="query">
+  <div id="results"></div>
+</div>
+{{end}}

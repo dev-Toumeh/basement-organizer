@@ -80,9 +80,20 @@
                         hx-get="/update"
                         type="button"
                         hx-swap="innerHTML"
+                        hx-push-url="false"
                         hx-target="#main-container"
                         style="text-align: right;">
                         My Account
+                    </button>
+                    <button
+                        class="update-btn"
+                        hx-get="/api/v1/search/item"
+                        type="button"
+                        hx-swap="innerHTML"
+                        hx-push-url="false"
+                        hx-target="#main-container"
+                        style="text-align: right;">
+                        Search Items
                     </button>
                 {{else}}
                     <label id="auth-label">logged out</label>
