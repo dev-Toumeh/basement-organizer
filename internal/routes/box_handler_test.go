@@ -225,7 +225,7 @@ func TestBoxHandlerInputErrors(t *testing.T) {
 }
 
 func TestBoxHandlerOK(t *testing.T) {
-	logg.EnableDebugLoggerS()
+	// logg.EnableDebugLoggerS()
 
 	dbOk := boxDatabaseSuccess{}
 
@@ -287,15 +287,7 @@ func TestBoxHandlerOK(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mux.ServeHTTP(&tc.input.W, tc.input.R)
 			url := "URL: " + tc.input.R.URL.String()
-
-			if tc.expectedStatusCode != tc.input.W.Result().StatusCode {
-				read, _ := io.ReadAll(tc.input.W.Result().Body)
-				t.Logf("Status code mismatch. Expected: %d, Got: %d. URL: %s. Response Body: %s",
-					tc.expectedStatusCode, tc.input.W.Result().StatusCode, url, string(read))
-				t.Fail() // Mark the test as failed
-			} else {
-				assert.Equal(t, tc.expectedStatusCode, tc.input.W.Result().StatusCode, url)
-			}
+			assert.Equal(t, tc.expectedStatusCode, tc.input.W.Result().StatusCode, url)
 
 			read, _ := io.ReadAll(tc.input.W.Result().Body)
 			if tc.expectedTemplate {
