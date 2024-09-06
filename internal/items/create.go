@@ -43,6 +43,10 @@ type ItemDatabase interface {
 	DeleteItem(ctx context.Context, itemId uuid.UUID) error
 	ItemExperement(query string, refs []interface{})
 	ErrorExist() error
+	SearchItemsByLabel(query string) ([]struct {
+		Id    string
+		Label string
+	}, error)
 }
 
 const (

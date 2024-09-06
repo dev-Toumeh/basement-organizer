@@ -53,6 +53,7 @@ func apiRoutes(db items.ItemDatabase) {
 	http.HandleFunc("/api/v1/read/item/{id}", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		fmt.Fprint(w, data)
 	}))
+	http.HandleFunc("/api/v1/search/item", items.SearchItemHandler(db))
 	http.HandleFunc("/api/v1/update/item", items.UpdateItemHandler(db))
 	http.HandleFunc("/api/v1/delete/item", items.DeleteItemHandler(db))
 	http.HandleFunc("/api/v1/read/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
