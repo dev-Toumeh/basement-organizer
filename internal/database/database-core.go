@@ -7,44 +7,26 @@ import (
 	"log"
 	"os"
 
-	_ "github.com/gofrs/uuid/v5"
 	_ "modernc.org/sqlite"
 )
 
-const (
-	CREATE_USER_TABLE_STMT = `CREATE TABLE IF NOT EXISTS user (
-    id TEXT NOT NULL PRIMARY KEY,
-    username TEXT UNIQUE,
-    passwordhash TEXT);`
-
-	CREATE_ITEM_TABLE_STMT = `CREATE TABLE IF NOT EXISTS item (
-    id TEXT PRIMARY KEY,
-    label TEXT NOT NULL,
-    description TEXT,
-    picture TEXT,
-    quantity INTEGER,
-    weight TEXT,
-    qrcode TEXT,
-    box_id TEXT REFERENCES box(id));`
-
-	CREATE_BOX_TABLE_STMT = `CREATE TABLE IF NOT EXISTS box (
-    id TEXT PRIMARY KEY,
-    label TEXT NOT NULL, 
-    description TEXT,
-    picture TEXT,
-    qrcode TEXT,
-    outerbox_id TEXT REFERENCES box(id));`
-
-	DATABASE_FILE_PATH = "./internal/database/sqlite-database.db"
-)
+const DATABASE_FILE_PATH = "./internal/database/sqlite-database.db"
 
 var ErrExist = errors.New("the Record is already exist")
 
 // add statement to create new table
 var statements = &map[string]string{
-	"user": CREATE_USER_TABLE_STMT,
-	"item": CREATE_ITEM_TABLE_STMT,
-	"box":  CREATE_BOX_TABLE_STMT,
+	"user":                   CREATE_USER_TABLE_STMT,
+	"item":                   CREATE_ITEM_TABLE_STMT,
+	"box":                    CREATE_BOX_TABLE_STMT,
+	"item_fts":               CREATE_ITEM_TABLE_STMT_FTS,
+	"box_fts":                CREATE_BOX_TABLE_STMT_FTS,
+	"Item_fts_triger_insert": CREATE_ITEM_AI_TRIGGER,
+	"item_fts_triger_update": CREATE_ITEM_AU_TRIGGER,
+	"item_fts_triger_delete": CREATE_ITEM_AD_TRIGGER,
+	"box_fts_triger_insert":  CREATE_BOX_AI_TRIGGER,
+	"box_fts_triger_update":  CREATE_BOX_AU_TRIGGER,
+	"box_fts_triger_delete":  CREATE_BOX_AD_TRIGGER,
 }
 
 type DB struct {
@@ -74,30 +56,26 @@ func (db *DB) Connect() {
 
 	// create the Tables if were not exist
 	db.createTable()
+	db.RepopulateItemFTS() // only patch take this function out after Alex adopt the changes
 }
 
 func (db *DB) createTable() {
 	for tableName, createStatement := range *statements {
-		// First, check if the table exists
-		var exists bool
-		err := db.Sql.QueryRow("SELECT EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name=?)", tableName).Scan(&exists)
+		row, err := db.Sql.Exec(createStatement)
 		if err != nil {
-			logg.Fatalf("Failed to check if table exists: %s", err)
+			logg.Fatalf("Failed to create table %s: %v", tableName, err)
 		}
-
-		// If the table doesn't exist, create it
-		if !exists {
-			_, err := db.Sql.Exec(createStatement)
-			if err != nil {
-				logg.Fatalf("Failed to create table: %s", err)
-			}
+		numEffectedRows, err := row.RowsAffected()
+		if err != nil {
+			logg.Fatalf("Failed to check the number of effected rows while creating the %s table: %v ", tableName, err)
+		}
+		if numEffectedRows != 0 {
 			log.Printf("Table '%s' created successfully\n", tableName)
 		}
 	}
 }
 
 // ErrorExist returns a predefined error indicating that the requested SQL data insertion failed
-// due to a duplicate record already existing in the database.
 func (db *DB) ErrorExist() error {
 	return ErrExist
 }

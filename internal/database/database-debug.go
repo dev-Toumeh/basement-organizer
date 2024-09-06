@@ -25,7 +25,7 @@ func (db *DB) PrintUserRecords() {
 		var username, passwordhash string
 		if err := rows.Scan(&id, &username, &passwordhash); err != nil {
 			log.Printf("Error scanning user record: %v", err)
-			continue // Log the error and continue with the next row
+			continue
 		}
 		fmt.Printf("id: %s, username: %s, passwordhash: %s\n", id, username, passwordhash)
 	}
@@ -54,7 +54,7 @@ func (db *DB) PrintItemRecords() {
 		err := rows.Scan(&idStr, &item.Label, &item.Description, &item.Quantity, &item.Weight, &item.QRcode, &boxId)
 		if err != nil {
 			log.Printf("Error scanning item record: %v", err)
-			continue // Log the error and continue with the next row
+			continue
 		}
 		fmt.Printf("id: %s, label: %s, description: %s, quantity: %d, weight: %s, qrcode: %s \n", idStr, item.Label, item.Description, item.Quantity, item.Weight, item.QRcode)
 		if boxId.Valid {
@@ -71,7 +71,7 @@ func (db *DB) PrintItemRecords() {
 
 func (db *DB) PrintTables() {
 	query := "SELECT name FROM sqlite_master WHERE type='table';"
-	//	query := " SELECT name FROM pragma_table_info('user');"
+
 	rows, err := db.Sql.Query(query)
 	if err != nil {
 		log.Fatalf("Error querying tables: %v", err)
@@ -141,11 +141,76 @@ func (db *DB) DatabasePatcher() error {
 	return nil
 }
 
-func (db *DB) addBoxIDColumn() error {
-	alterStmt := `ALTER TABLE item ADD COLUMN box_id TEXT REFERENCES box(id);`
-	_, err := db.Sql.Exec(alterStmt)
+// this function will print all the records inside of  item_fts table
+func (db *DB) CheckItemFTSData() error {
+	rows, err := db.Sql.Query("SELECT item_id, label, description FROM item_fts;")
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
+
+	for rows.Next() {
+
+		var rowid, label, description string
+		err := rows.Scan(&rowid, &label, &description)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Rowid: %s, Label: %s, Description: %s\n", rowid, label, description)
+	}
 	return nil
 }
+
+// Repopulate the item_fts table with data from the item table, but only if item_fts is currently empty.
+// work only as path could be deleted when Alex adopt the changes
+func (db *DB) RepopulateItemFTS() error {
+	var count int
+	err := db.Sql.QueryRow(`SELECT COUNT(*) FROM item_fts`).Scan(&count)
+	if err != nil {
+		return fmt.Errorf("failed to check item_fts: %w", err)
+	}
+
+	if count > 0 {
+		return nil
+	}
+
+	_, err = db.Sql.Exec(`
+        INSERT INTO item_fts(item_id, label, description)
+        SELECT id, label, description FROM item;
+    `)
+	if err != nil {
+		return fmt.Errorf("failed to repopulate item_fts: %w", err)
+	}
+
+	fmt.Print("Item search data has been successfully repopulated from the item table to the item_fts table. \n")
+	return nil
+}
+
+// 💀💀 this function will delete all the search relevant tables
+// don't use it if you don't know how it works 💀💀
+// func (db *DB) dropFTS5TablesAndTriggers() error {
+// 	_, err := db.Sql.Exec(`
+//         DROP TABLE IF EXISTS item_fts;
+//         DROP TABLE IF EXISTS box_fts;
+//         DROP TRIGGER IF EXISTS item_ai;
+//         DROP TRIGGER IF EXISTS item_au;
+//         DROP TRIGGER IF EXISTS item_ad;
+//         DROP TRIGGER IF EXISTS box_ai;
+//         DROP TRIGGER IF EXISTS box_au;
+//         DROP TRIGGER IF EXISTS box_ad;
+//     `)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to drop FTS5 tables and triggers: %w", err)
+// 	}
+// 	return nil
+// }
+
+// 💀💀 this function will delete all the Records form the item_fts table
+// don't use it if you don't know how it works 💀💀
+// func (db *DB) clearItemFTS() error {
+// 	_, err := db.Sql.Exec("DELETE FROM item_fts;")
+// 	if err != nil {
+// 		return fmt.Errorf("failed to clear item_fts: %w", err)
+// 	}
+// 	return nil
+// }
