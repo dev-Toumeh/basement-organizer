@@ -5,7 +5,7 @@
 
 html {
   scrollbar-gutter: stable;
-  scroll-behavior: smoot;
+  scroll-behavior: smooth;
 }
 
 img {
