@@ -84,6 +84,7 @@ func staticRoutes() {
 
 func experimentalRoutes() {
 	http.HandleFunc("/sample-page", SamplePage)
+	http.HandleFunc("/settings", SettingsPage)
 	http.HandleFunc("/switch-debug-style", SwitchDebugStyle)
 	http.HandleFunc("/snackbar-success", func(w http.ResponseWriter, r *http.Request) {
 		templates.RenderSuccessSnackbar(w, "success")

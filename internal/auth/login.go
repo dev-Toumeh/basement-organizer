@@ -140,11 +140,11 @@ func saveSession(w http.ResponseWriter, r *http.Request, user User) {
 func UserSessionData(r *http.Request) (string, string) {
 
 	session, _ := store.Get(r, COOKIE_NAME)
-	usernmae, ok1 := session.Values["username"].(string)
+	username, ok1 := session.Values["username"].(string)
 	id, ok2 := session.Values["id"].(string)
 	if !ok1 || !ok2 {
 		logg.Err("corrupted session, check UserSessionData function")
 		http.RedirectHandler("/logout", http.StatusUnauthorized)
 	}
-	return usernmae, id
+	return username, id
 }
