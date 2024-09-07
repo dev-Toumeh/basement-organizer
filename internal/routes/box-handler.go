@@ -82,6 +82,11 @@ func BoxesHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFun
 			}
 			writeData(w, ids)
 
+		case http.MethodPut:
+			// @TODO: Implement move boxes.
+			w.WriteHeader(http.StatusNotImplemented)
+			return
+
 		case http.MethodDelete:
 			errMsgForUser := "Can't delete boxes"
 			r.ParseForm()
