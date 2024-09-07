@@ -46,8 +46,8 @@
     <hr>
 
     <h2>Box list</h2>
-    <button hx-post="/box" hx-target="#box-list" hx-swap="beforeend">Create box</button>
-    <button hx-post="/api/v2/box" hx-target="#box-list" hx-swap="beforeend">Create box API</button>
+    <button hx-post="/box" hx-target="#box-list-body" hx-swap="beforeend">Create box</button>
+    <button hx-post="/api/v2/box" hx-target="#box-list-body" hx-swap="beforeend">Create box API</button>
     <button hx-get="/box" hx-target="#detailed-box">Get box</button>
     {{ template "box-list" . }}
     <div id="detailed-box" ></div>
@@ -56,30 +56,33 @@
 
 
 {{ define "box-list" }}
-<form>
+<form id="box-list">
     <label for="search">search</label>
     <input name="search" value="">
     <button type="button">Alternative View</button>
-    <table>
+    <table class="box-list">
         <thead>
             <tr>
                 <th>Label</th>
                 <th>Box</th>
                 <th>Shelve</th>
                 <th>Area</th>
-                <th>Image</th>
-                <th>Move</th>
-                <th>Delete</th>
+                <th style="width: 10%">Image</th>
+                <th style="width: 10%">Move</th>
+                <th style="width: 10%">Delete</th>
             </tr>
         </thead> 
-        <tbody id="box-list" >
+        <tbody id="box-list-body" hx-trigger="load" hx-get="/boxes" >
         </tbody>
     </table>
     <div >
         <button hx-delete="/boxes"
-            hx-swap="outerHTML" 
+            hx-target="#box-list-body"
         >delete</button>
-        <button type="button">move</button>
+            <!--hx-include="[name='']"-->
+        <button type="button" 
+            hx-put="/boxes"
+        >move</button>
     </div>
 </form>
 {{ end }}
@@ -90,17 +93,17 @@
     <td hx-get="/box?id={{.Id}}"
         hx-target="#detailed-box"
     >{{.Label}}</td>
-    <td>{{ if .OuterBox }}{{ .OuterBox }}{{ end }}</td>
+    <td>{{ if .OuterBox }}{{ .OuterBox.Label }}{{ end }}</td>
     <td></td>
     <td></td>
-    <td>
+    <td style="text-align: center;">
         <img class="preview" 
             src="data:image/png;base64,{{.Picture}}" 
             alt="{{.Label}} image preview"
         >
     </td>
-    <td><input type="checkbox" name="Move:{{.Id}}"></td>
-    <td><input type="checkbox" name="Delete:{{.Id}}"></td>
+    <td style="text-align: center;"><input type="checkbox" name="move:{{.Id}}"></td>
+    <td style="text-align: center;"><input type="checkbox" name="delete:{{.Id}}"></td>
 </tr>
 {{end}}
 
