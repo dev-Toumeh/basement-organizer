@@ -73,7 +73,79 @@ func BoxesHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFun
 			if err != nil {
 				writeNotFoundError("Can't find boxes", err, w, r)
 			}
+			if wantsTemplateData(r) {
+				for _, id := range ids {
+					box, _ := db.BoxById(uuid.Must(uuid.FromString(id)))
+					templates.Render(w, templates.TEMPLATE_BOX_LIST_ITEM, box)
+				}
+				return
+			}
 			writeData(w, ids)
+
+		case http.MethodPut:
+			// @TODO: Implement move boxes.
+			w.WriteHeader(http.StatusNotImplemented)
+			return
+
+		case http.MethodDelete:
+			errMsgForUser := "Can't delete boxes"
+			r.ParseForm()
+			toDelete := make([]uuid.UUID, 0)
+			for k, v := range r.Form {
+				logg.Debugf("k: %v, v:%v", k, v)
+				if strings.Contains(k, "delete:") {
+					ids := strings.Split(k, "delete:")
+					if len(ids) != 2 {
+						w.WriteHeader(http.StatusBadRequest)
+						fmt.Fprint(w, errMsgForUser)
+						logg.Debugf("Wrong delete key value pair: '%v'\n\t%s", k, errMsgForUser)
+						return
+					}
+					id, err := uuid.FromString(ids[1])
+					if err != nil {
+						w.WriteHeader(http.StatusBadRequest)
+						fmt.Fprint(w, errMsgForUser)
+						logg.Debug(fmt.Errorf("%v\n\tMalformed uuid: %v\n\t%w", errMsgForUser, k, err))
+						return
+					}
+					toDelete = append(toDelete, id)
+				}
+			}
+			deleteErrorIds := []string{}
+			var err error
+			errOccurred := false
+			for _, deleteId := range toDelete {
+				err = nil
+				err = db.DeleteBox(deleteId)
+				if err != nil {
+					errOccurred = true
+					deleteErrorIds = append(deleteErrorIds, deleteId.String())
+					logg.Err(fmt.Errorf("%v: %v\n\t%w", errMsgForUser, deleteId, err))
+				} else {
+					logg.Debug("Box deleted: ", deleteId)
+				}
+			}
+			if errOccurred {
+				errIds := strings.Join(deleteErrorIds, ",")
+				TriggerErrorNotification(w, errMsgForUser+errIds)
+				// @TODO: Update partial table, even if error happens.
+				return
+			}
+
+			if wantsTemplateData(r) {
+				newids, _ := db.BoxIDs()
+				for _, id := range newids {
+					box, _ := db.BoxById(uuid.Must(uuid.FromString(id)))
+					templates.Render(w, templates.TEMPLATE_BOX_LIST_ITEM, box)
+				}
+				for _, id := range toDelete {
+					templates.RenderSuccessSnackbar(w, "Box deleted: "+id.String())
+				}
+				return
+			}
+			writeData(w, nil)
+			w.WriteHeader(http.StatusOK)
+
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
@@ -109,9 +181,9 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			if editParam == "true" {
 				edit = true
 			}
-			b := items.BoxTemplateData{&box, edit}
+			b := items.BoxTemplateData{Box: &box, Edit: edit}
 
-			writeData(w, b)
+			WriteBoxTemplate(w, b)
 			break
 
 		case http.MethodPost:
@@ -161,8 +233,8 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 				return
 			}
 			if wantsTemplateData(r) {
-				boxTemplate := items.BoxTemplateData{&box, false}
-				writeData(w, boxTemplate)
+				boxTemplate := items.BoxTemplateData{Box: &box, Edit: false}
+				RenderWithSuccessNotification(w, templates.TEMPLATE_BOX, boxTemplate, fmt.Sprintf("Updated box: %v", boxTemplate.Label))
 			} else {
 				writeData(w, box)
 			}
@@ -175,6 +247,17 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			fmt.Fprint(w, "Method:'", r.Method, "' not allowed")
 		}
 	}
+}
+
+// Render applies data to a defined template and writes result back to the writer.
+func RenderWithSuccessNotification(w http.ResponseWriter, name string, data any, successMessage string) error {
+	TriggerSuccessNotification(w, successMessage)
+	err := templates.Render(w, name, data)
+	if err != nil {
+		fmt.Fprintln(w, err)
+		return fmt.Errorf("RenderWithSuccessNotification() error: %w", err)
+	}
+	return nil
 }
 
 // writeNotFoundError sets not found status code 404, logs error and writes error message to client.
@@ -225,3 +308,73 @@ func validID(w http.ResponseWriter, r *http.Request, errorMessage string) uuid.U
 func wantsTemplateData(r *http.Request) bool {
 	return !strings.Contains(r.URL.Path, "/api/")
 }
+
+// // sampleBoxDB to test request handler.
+// type sampleBoxDB struct {
+// 	Boxes map[string]*items.Box
+// }
+//
+// func newSampleBoxDB() *sampleBoxDB {
+// 	db := sampleBoxDB{Boxes: make(map[string]*items.Box, 100)}
+// 	for i := range 10 {
+// 		box := items.NewBox()
+// 		box.Label = fmt.Sprintf("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa %d", i)
+// 		db.CreateBox(&box)
+// 	}
+// 	return &db
+// }
+//
+// // func (db *sampleBoxDB) CreateBox() (uuid.UUID, error) {
+// // 	box := items.NewBox()
+// // 	db.Boxes[box.Id.String()] = &box
+// // 	logg.Debug(db.Boxes)
+// // 	return box.Id, nil
+// // }
+//
+// func (db *sampleBoxDB) CreateBox(box *items.Box) (uuid.UUID, error) {
+// 	// box := items.NewBox()
+// 	db.Boxes[box.Id.String()] = box
+// 	logg.Debug(db.Boxes)
+// 	return box.Id, nil
+// }
+//
+// func (db *sampleBoxDB) BoxById(id uuid.UUID) (items.Box, error) {
+// 	box, ok := db.Boxes[id.String()]
+// 	if !ok {
+// 		// logg.Debug("BoxByID: ",db.Boxes)
+// 		return items.Box{}, errors.New("ID " + id.String() + " doesn't exist")
+// 	}
+// 	return *box, nil
+// }
+//
+// // func (db *sampleBoxDB) BoxIDs() ([]uuid.UUID, error) {
+// func (db *sampleBoxDB) BoxIDs() ([]string, error) {
+// 	// ids := make([]uuid.UUID, len(db.Boxes))
+// 	ids := make([]string, len(db.Boxes))
+// 	i := 0
+// 	for _, v := range db.Boxes {
+// 		// ids[i] = v.Id
+// 		ids[i] = v.Id.String()
+// 		i++
+// 	}
+// 	slices.Sort(ids)
+// 	return ids, nil
+// }
+//
+// func (db *sampleBoxDB) UpdateBox(box items.Box) error {
+// 	oldBox, err := db.BoxById(box.Id)
+// 	if err != nil {
+// 		return fmt.Errorf("UpdateBox(): %w", err)
+// 	}
+// 	db.Boxes[oldBox.Id.String()] = &box
+// 	return nil
+// }
+//
+// func (db *sampleBoxDB) DeleteBox(id uuid.UUID) error {
+// 	_, err := db.BoxById(id)
+// 	if err != nil {
+// 		return fmt.Errorf("DeleteBox(): %w", err)
+// 	}
+// 	delete(db.Boxes, id.String())
+// 	return nil
+// }

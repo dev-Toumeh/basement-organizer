@@ -41,3 +41,27 @@ input[type="password"] {
 .page input[type="password"] {
   margin-top: 10px;
 }
+
+.box-list {
+  width: 100%;
+  border: solid;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+.box-list th {
+  background: cadetblue;
+  text-align: left;
+  border: 1px solid black;
+  overflow: hidden;
+}
+
+.box-list td {
+  overflow: hidden;
+  border: 1px solid black;
+}
+
+.box-list tr:hover {
+  background: #e4e4e4;
+}
+

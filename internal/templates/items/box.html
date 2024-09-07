@@ -12,11 +12,11 @@
 <button hx-delete="/box?id={{.Id}}" hx-swap="outerHTML" hx-target="#box-{{.Id}}">delete</button>
 {{ if .Edit }}
 <button hx-put="/box" 
-        hx-target="#box"
+        hx-target="#detailed-box"
     >Update box</button>
 {{ else }}
-<button hx-get="/box?id={{.Id}}&edit=true" 
-        hx-target="#box"
+<button hx-get="/box?id={{.Id}}&edit=true"
+        hx-target="#detailed-box"
     >edit</button>
 {{ end }}
 <button hx-delete="/box?id={{.Id}}"
