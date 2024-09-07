@@ -24,6 +24,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         {{ template "script" . }}
             <link rel="stylesheet" href="static/css/navbar.css" />
+            <link rel="stylesheet" href="static/css/settings-container.css" />
             <link rel="manifest" href="static/manifest.json" />
             <link rel="icon" href="static/basement-organizer-icon512.png" type="image/png"/>
             {{ block "head-extras" . }}{{end}}
@@ -60,50 +61,65 @@
 
 {{ define "content"}}
 <div id="main-container">
-        {{if .Authenticated }}
+    <div class="quartier">
+    {{if .Authenticated }}
     <ul>
         <li>
-        <div id="welcome"> welcome {{.User}}</div>
+        <div id="welcome">{{.User}}</div>
         </li>
         <li>
             <button
                 id="logout-btn"
+                class="setting-button"
                 type="button"
                 hx-get="/logout"
-                hx-target="#auth-label">
-                Logout
+                hx-target="this">
+                <span>Logout</span>
             </button>
         </li>
         <li>
             <button
-                class="update-btn"
+                class="setting-button"
                 hx-get="/update"
                 type="button"
                 hx-swap="innerHTML"
                 hx-push-url="false"
-                hx-target="#main-container"
-                style="text-align: right;">
-                My Account
+                hx-target=".half">
+                <span>Update Login Data</span>
             </button>
-       </li>
+        </li>
     </ul>
-        {{end}}
+    </div>
+    {{end}}
+    <div class="half"></div>
+
+
 </div>
 {{end}}
-
-
 {{ define "extra-js" }}
-    <script>
-if (typeof navEl == 'undefined') { 
- const navEl = document.querySelector(".nav");
- const hamburgerEl = document.querySelector(".hamburger");
+<script>
+    if (typeof navEl == 'undefined') { 
+     const navEl = document.querySelector(".nav");
+     const hamburgerEl = document.querySelector(".hamburger");
 
-  if (hamburgerEl) {
-    hamburgerEl.addEventListener("click", () => {
-      navEl.classList.toggle("nav--open");
-      hamburgerEl.classList.toggle("hamburger--open");
+      if (hamburgerEl) {
+        hamburgerEl.addEventListener("click", () => {
+          navEl.classList.toggle("nav--open");
+          hamburgerEl.classList.toggle("hamburger--open");
+        });
+      }
+    }
+
+    if (typeof buttons == 'undefined') { 
+    const buttons = document.querySelectorAll('.setting-button');
+
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        buttons.forEach(btn => btn.classList.remove('clicked'));
+
+        button.classList.add('clicked');
+      });
     });
-  }
-}
-    </script>
+    }
+</script>
 {{end}}
