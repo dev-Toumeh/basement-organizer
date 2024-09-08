@@ -3,6 +3,7 @@
 {{ template "head" . }}
 <body>
     {{ template "statusbar" . }}
+    {{ template "page-content" . }}
 </body>
 {{ template "close-html-tag" . }}
 {{end}} 
@@ -23,6 +24,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     {{ template "script" . }}
     <link rel="stylesheet" href="static/css/layout.css" />
+    <link rel="stylesheet" href="static/css/settings-container.css" />
+    <link rel="stylesheet" href="static/css/navbar.css" />
     <link rel="manifest" href="static/manifest.json" />
     <link
         rel="icon"
@@ -36,77 +39,37 @@
 
 {{ define "default-style" }}<style></style>{{end}} 
 
-{{ define "statusbar" }}
-<div class="status-bar">
-    <div hx-boost="true" hx-push-url="true">
-        <nav>
-            <div>
-                <a id="home" href="/">Home</a>
-                {{with .Authenticated }}
-                <a id="personal-page" href="/personal-page">Personal Page</a>
-                {{end}}
-                <a id="sample-page" 
-                    href="/sample-page" 
-                    hx-swap="innerHTML show:html:top"
-                >Sample Page</a>
-                {{ with .Debug }}
-                <button
-                    hx-boost="false"
-                    hx-get="/switch-debug-style"
-                    hx-target="style"
-                    hx-push-url="false"
-                >
-                    Switch Debug Style
-                </button>
-                {{ end }}
-            </div>
-            <div id="authentication-status">
-                <div 
-                    id="loadingIndicator" 
-                    class="htmx-indicator lds-dual-ring" 
-                    style="margin-left: 5px"
-                ></div>
-                {{with .Authenticated }}
-                    <label id="auth-label">logged in</label>
-                    <button
-                        id="logout-btn"
-                        type="button"
-                        hx-get="/logout"
-                        hx-target="#auth-label">
-                        Logout
-                    </button>
-                    <button
-                        class="update-btn"
-                        hx-get="/update"
-                        type="button"
-                        hx-swap="innerHTML"
-                        hx-push-url="false"
-                        hx-target="#main-container"
-                        style="text-align: right;">
-                        My Account
-                    </button>
-                    <button
-                        class="update-btn"
-                        hx-get="/api/v1/search/item"
-                        type="button"
-                        hx-swap="innerHTML"
-                        hx-push-url="false"
-                        hx-target="#main-container"
-                        style="text-align: right;">
-                        Search Items
-                    </button>
-                {{else}}
-                    <label id="auth-label">logged out</label>
-                {{end}}
-            </div>
-        </nav>
+{{ define "navbar" }}
+<header class="header">
+  <div class="header_content" hx-boost="true" hx-push-url="true">
+    <nav class="nav">
+        <ul class="nav_list">
+            {{with .Authenticated }}
+              <li class="nav_item"><a class="nav_link" href="/items">Items</a></li>
+              <li class="nav_item"><a class="nav_link" href="/boxes">Boxes</a></li>
+              <li class="nav_item"><a class="nav_link" href="/shleves">Shelves</a></li>
+              <li class="nav_item"><a class="nav_link" href="/areas">Areas</a></li>
+              <li class="nav_item"><a class="nav_link" href="/settings">Settings</a></li>
+              <li class="nav_item"><a class="nav_link" href="/sample-page" hx-swap="innerHTML show:html:top" >Sample Page</a></li>
+            {{end}}
+        </ul>
+    </nav>
+    <div class="hamburger">
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
     </div>
-</div>
+  </div>
+</header>
+{{end}}
 
-<div 
-    id="snackbars"
-    class="snackbar-container"
->
+
+{{ define "page-content"  }}
+<div id="main-container">
+  <div 
+      id="snackbars"
+      class="snackbar-container">
+  </div>
 </div>
 {{end}}
 

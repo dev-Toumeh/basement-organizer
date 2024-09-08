@@ -89,7 +89,7 @@ func loginUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 	logg.Info("login successful")
 
 	// https://htmx.org/headers/hx-location/
-	w.Header().Add("HX-Location", "/personal-page")
+	w.Header().Add("HX-Location", "/items")
 	fmt.Fprintf(w, "Welcome %v\n", username)
 }
 

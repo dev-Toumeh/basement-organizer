@@ -17,6 +17,7 @@ func RegisterRoutes(db *database.DB) {
 	authRoutes(db)
 	apiRoutes(db)
 	registerBoxRoutes(db)
+	navigationRoutes()
 	experimentalRoutes()
 }
 
@@ -45,7 +46,7 @@ func apiRoutes(db items.ItemDatabase) {
 	http.HandleFunc("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
 	}))
-	http.HandleFunc("/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
+	http.HandleFunc("/items-ids", items.ReadItemsHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEMS_CONTAINER, data)
 	}))
 
@@ -78,13 +79,10 @@ func SwitchDebugStyle(w http.ResponseWriter, r *http.Request) {
 
 func staticRoutes() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
-	http.HandleFunc("/", HomePage)
-	http.HandleFunc("/personal-page", PersonalPage)
+	http.HandleFunc("/", AuthPage)
 }
 
 func experimentalRoutes() {
-	http.HandleFunc("/sample-page", SamplePage)
-	http.HandleFunc("/settings", SettingsPage)
 	http.HandleFunc("/switch-debug-style", SwitchDebugStyle)
 	http.HandleFunc("/snackbar-success", func(w http.ResponseWriter, r *http.Request) {
 		templates.RenderSuccessSnackbar(w, "success")
@@ -92,4 +90,13 @@ func experimentalRoutes() {
 	http.HandleFunc("/snackbar-warning", func(w http.ResponseWriter, r *http.Request) {
 		templates.RenderWarningSnackbar(w, "warning")
 	})
+}
+
+func navigationRoutes() {
+	http.HandleFunc("/settings", SettingsPage)
+	http.HandleFunc("/items", itemsPage)
+	http.HandleFunc("/sample-page", SamplePage)
+
+	http.HandleFunc("/personal-page", PersonalPage)
+
 }
