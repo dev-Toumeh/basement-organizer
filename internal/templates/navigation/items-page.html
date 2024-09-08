@@ -1,0 +1,17 @@
+{{ define "items-page" }}
+{{ template "open-html-tag" .}}
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "items-page-body" . }}
+</body>
+{{ template "close-html-tag" .}}
+{{ end }}
+
+{{ define "items-page-body" }}
+<div id="main-container">
+<div style="margin-top: 45px;">
+    <h1>Welcome to the Items Page</h1>
+</div>
+</div>
+{{end}}

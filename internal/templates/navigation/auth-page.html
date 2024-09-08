@@ -1,28 +1,22 @@
-{{ define "home-page" }}
+{{ define "auth-page" }}
 {{ template "open-html-tag" .}}
 {{ template "head" . }}
 <body>
-  <div class="page">
-    {{ template "home-page-body" . }}
-  </div>
+    {{ template "navbar" . }}
+    {{ template "auth-page-body" . }}
 </body>
 {{ template "close-html-tag" .}}
 {{ end }}
 
-{{ define "home-page-body" }}
-{{ template "statusbar" . }}
+{{ define "auth-page-body" }}
 <div id="main-container">
-    <div id="welcome-div">Welcome to {{ with .Title }}{{ . }}{{end}} page </div>
-    {{ with .Authenticated }}
-    You are logged in
-    {{ else }}
+  <div>
     <button
         id="login-btn"
         type="button"
         hx-get="/login-form" 
         hx-target="#main-container" 
     >Login</button>
-        <!--hx-swap="outerHTML" -->
     <label for="#login-btn"></label>
 
     <button
@@ -32,6 +26,6 @@
         hx-target="#main-container" 
     >Register</button>
     <label for="#register-btn"></label>
+  </div>
 </div>
-{{end}}
 {{end}}

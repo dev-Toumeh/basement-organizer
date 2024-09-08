@@ -19,13 +19,6 @@ img.preview {
   height: 1rem;
 }
 
-ul li {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: space-between;
-}
-
 td[hx-get]:hover {
   cursor: pointer;
   background: #c0c0c0;
@@ -42,10 +35,6 @@ input[readonly] {
 .flex-horizontal {
   display: flex;
   flex-wrap: wrap;
-}
-
-.status-bar nav a {
-  font-size: 1em;
 }
 
 .lds-dual-ring,
@@ -81,61 +70,9 @@ input[readonly] {
   }
 }
 
-.status-bar {
-  justify-content: space-between;
-  flex-direction: row;
-}
-
 .box-container {
   background: aliceblue;
   border: solid;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-Body {
-  margin: 0.5rem;
-  font-family: "Roboto", sans-serif;
-  text-align: center;
-}
-
-nav {
-  border: 2px solid #333;
-  border-radius: 0.4rem;
-  margin: 0 auto;
-  max-width: 600px;
-  line-height: 2rem;
-  background-color: gold;
-}
-
-.page {
-  border: 2px solid #333;
-  border-radius: 0.4rem;
-  margin: 0 auto;
-  max-width: 600px;
-  line-height: 2rem;
-  text-align: center;
-}
-
-.page ul {
-  list-style-type: none;
-}
-
-.page ul li {
-  border-top: 1px solid #333;
-  display: block;
-  margin: 0 auto;
-  text-align: center;
-  text-decoration: none;
-  color: #333;
-}
-
-.page button {
-  margin: 5px;
 }
 
 button {
