@@ -26,7 +26,7 @@
             hx-post="login"
             hx-indicator="#loadingIndicator"
             hx-disabled-elt="this"
-            hx-target="#auth-label"
+            hx-target="this"
             {{ if .Authenticated }}disabled{{ end }}
         >Login</button>
 </form>

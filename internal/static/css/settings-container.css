@@ -12,23 +12,23 @@
   border-bottom: 5px solid #f2613f;
 }
 
-#main-container ul {
+#main-container #settings-ul {
   list-style-type: none;
   width: 100%;
 }
 
-#main-container ul li {
+#main-container #settings-ul li {
   border-width: 70%;
   display: block;
   text-align: center;
   text-decoration: none;
 }
 
-.half {
+.three-quarters {
   width: 70%;
 }
 
-.quartier {
+.quarter {
   width: 30%;
   margin: 10px;
   display: block;
@@ -81,10 +81,10 @@
   width: 100%;
 }
 
-input[type="file"],
-input[type="number"],
-input[type="text"],
-input[type="password"] {
+#update-user-form input[type="file"],
+#update-user-form input[type="number"],
+#update-user-form input[type="text"],
+#update-user-form input[type="password"] {
   padding: 20px;
   margin-bottom: 10px;
   border: 1px solid #333;
@@ -95,7 +95,7 @@ input[type="password"] {
   margin: 20px 0;
 }
 
-button {
+#update-user-form  button {
   border: none;
   color: white;
   padding: 15px 32px;
