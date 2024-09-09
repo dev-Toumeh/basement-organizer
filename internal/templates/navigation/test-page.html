@@ -1,0 +1,23 @@
+{{ define "test-page" }}
+{{ template "open-html-tag" .}}
+{{ template "head" . }}
+<body>
+  <div class="page">
+    {{ template "statusbar" . }}
+    {{ template "test-page-body" . }}
+  </div>
+</body>
+{{ template "close-html-tag" .}}
+{{ end }}
+
+{{ define "test-page-body" }}
+<div id="main-container">
+  <div class="nt-style" id="nt-" >Welcome To the Test Page</div>
+</div>
+{{ with .Success}}
+    <script>
+        console.log('htmx:beforeSwap event triggered!');
+    </script>
+{{end}}
+{{end}}
+

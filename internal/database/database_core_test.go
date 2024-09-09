@@ -15,26 +15,22 @@ var dbTest = &DB{}
 
 func TestMain(m *testing.M) {
 
-	err := setup()
-	if err != nil {
-		logg.Fatalf("Can't create Test DB, shutting server down")
-	}
+	setup()
+	defer teardown()
 
 	code := m.Run()
-	teardown()
 
 	os.Exit(code)
 }
 
-func setup() error {
+func setup() {
 
 	// 1. Create the sqlite database File it it wasn't exist
 	if _, err := os.Stat("./sqlite-database-test.db"); err != nil {
-		fmt.Print("Creating sqlite-database-test.db...")
+		fmt.Print("Creating sqlite-database-test.db... \n")
 		file, err := os.Create("./sqlite-database-test.db")
 		if err != nil {
 			logg.Fatalf("Failed to create database: %v", err)
-			return err
 		}
 		defer file.Close()
 		logg.Debug("sqlite-database-test.db was created")
@@ -44,31 +40,13 @@ func setup() error {
 	var err error
 	if dbTest.Sql, err = sql.Open("sqlite", "./sqlite-database-test.db"); err != nil {
 		logg.Fatalf("Failed to open database: %v", err)
-		return err
 	}
 
 	// 3. Run our DDL statements to create the required tables if they do not exist
-	for tableName, createStatement := range *statements {
-		var exists bool
-		err := dbTest.Sql.QueryRow("SELECT EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name=?)", tableName).Scan(&exists)
-		if err != nil {
-			logg.Fatalf("Failed to check if table exists: %s", err)
-			return err
-		}
-
-		if !exists {
-			_, err := dbTest.Sql.Exec(createStatement)
-			if err != nil {
-				logg.Fatalf("Failed to create table: %s", err)
-				return err
-			}
-			logg.Debugf("Table '%s' created successfully", tableName)
-		}
-	}
+	createTestTables(*statementsMainTables)
+	createTestTables(*statementVertualTabels)
 
 	//dbTest.PrintTables()
-
-	return nil
 }
 
 func teardown() {
@@ -79,12 +57,30 @@ func teardown() {
 }
 
 func EmptyTestDatabase() {
-	for tableName := range *statements {
+	statments := []string{"user", "item", "box", "item_fts", "box_fts"}
+	for _, tableName := range statments {
 		sqlStatement := fmt.Sprintf("DELETE FROM %s;", tableName)
 		_, err := dbTest.Sql.Exec(sqlStatement)
 		if err != nil {
 			logg.Fatalf("Failed to delete from table %s: %s", tableName, err)
 			return
+		}
+	}
+}
+
+func createTestTables(statements map[string]string) {
+	for tableName, createStatement := range statements {
+		var exists bool
+		err := dbTest.Sql.QueryRow("SELECT EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name=?)", tableName).Scan(&exists)
+		if err != nil {
+			logg.Fatalf("Failed to check if table exists: %s", err)
+		}
+		if !exists {
+			_, err := dbTest.Sql.Exec(createStatement)
+			if err != nil {
+				logg.Fatalf("Failed to create table: %s", err)
+			}
+			logg.Debugf("Table '%s' created successfully", tableName)
 		}
 	}
 }

@@ -11,6 +11,7 @@ import (
 )
 
 func TestInsertNewBox(t *testing.T) {
+	EmptyTestDatabase()
 	// Step 1: Get Test Data
 	boxList, items := testData()
 	boxToTest := boxList[0]
@@ -60,6 +61,7 @@ func TestInsertNewBox(t *testing.T) {
 }
 
 func TestBoxByField(t *testing.T) {
+	defer EmptyTestDatabase()
 	boxList, _ := testData()
 
 	testBox := boxList[0] // Assuming you want to test the first box
@@ -76,10 +78,10 @@ func TestBoxByField(t *testing.T) {
 	_, err = dbTest.BoxByField("non_existent_field", "some_value")
 	assert.NotEqual(t, err, nil)
 
-	EmptyTestDatabase()
 }
 
 func TestCreateNewBox(t *testing.T) {
+	defer EmptyTestDatabase()
 	boxList, _ := testData()
 
 	testBox := boxList[0]
@@ -99,10 +101,10 @@ func TestCreateNewBox(t *testing.T) {
 	_, err = dbTest.CreateBox(testBox)
 	assert.NotEqual(t, nil, err)
 
-	EmptyTestDatabase()
 }
 
 func TestBoxIDs(t *testing.T) {
+	defer EmptyTestDatabase()
 	// Prepare static test data with pre-defined UUIDs using uuid.Must
 	testBox1Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000"))
 	testBox2Id := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174001"))
@@ -132,8 +134,6 @@ func TestBoxIDs(t *testing.T) {
 
 	// Verify the results
 	assert.Equal(t, expectedIDs, actualIDs)
-
-	EmptyTestDatabase()
 }
 
 func TestBoxUpdate(t *testing.T) {
@@ -332,7 +332,7 @@ func testData() ([]*itemsPackage.Box, *[]itemsPackage.Item) {
 
 	testBox := &itemsPackage.Box{
 		Id:          testBoxId,
-		Label:       "My Special Box",
+		Label:       "TestBox",
 		Description: "This box contains my precious items.",
 		Picture:     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
 		QRcode:      "AB123CD",

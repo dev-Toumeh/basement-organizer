@@ -15,10 +15,13 @@ const DATABASE_FILE_PATH = "./internal/database/sqlite-database.db"
 var ErrExist = errors.New("the Record is already exist")
 
 // add statement to create new table
-var statements = &map[string]string{
-	"user":                   CREATE_USER_TABLE_STMT,
-	"item":                   CREATE_ITEM_TABLE_STMT,
-	"box":                    CREATE_BOX_TABLE_STMT,
+var statementsMainTables = &map[string]string{
+	"user": CREATE_USER_TABLE_STMT,
+	"item": CREATE_ITEM_TABLE_STMT,
+	"box":  CREATE_BOX_TABLE_STMT,
+}
+
+var statementVertualTabels = &map[string]string{
 	"item_fts":               CREATE_ITEM_TABLE_STMT_FTS,
 	"box_fts":                CREATE_BOX_TABLE_STMT_FTS,
 	"Item_fts_triger_insert": CREATE_ITEM_AI_TRIGGER,
@@ -55,12 +58,12 @@ func (db *DB) Connect() {
 	log.Printf("Database Connection established")
 
 	// create the Tables if were not exist
-	db.createTable()
-	db.RepopulateItemFTS() // only patch take this function out after Alex adopt the changes
+	db.createTable(*statementsMainTables)
+	db.createTable(*statementVertualTabels)
 }
 
-func (db *DB) createTable() {
-	for tableName, createStatement := range *statements {
+func (db *DB) createTable(statements map[string]string) {
+	for tableName, createStatement := range statements {
 		row, err := db.Sql.Exec(createStatement)
 		if err != nil {
 			logg.Fatalf("Failed to create table %s: %v", tableName, err)
