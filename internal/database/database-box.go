@@ -131,6 +131,18 @@ func (db *DB) DeleteBox(boxId uuid.UUID) error {
 	return nil
 }
 
+// Get Box based on his ID
+// Wrapper function for BoxByField
+func (db *DB) BoxById(id uuid.UUID) (items.Box, error) {
+	box := items.Box{}
+	b, err := db.BoxByField("id", id.String())
+	if err != nil {
+		return box, fmt.Errorf("Box() error:\n\t%w", err)
+	}
+	box = *b
+	return box, err
+}
+
 // Get Box  based on given Field
 func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 	var box *items.Box
@@ -375,13 +387,18 @@ func convertSQLItemToItem(sqlItem *SqlItem) (*items.Item, error) {
 	return item, nil
 }
 
-// functions need to be deleted when we adopt database-box
-func (db *DB) BoxById(id uuid.UUID) (items.Box, error) {
-	box := items.Box{}
-	b, err := db.BoxByField("id", id.String())
-	if err != nil {
-		return box, fmt.Errorf("Box() error:\n\t%w", err)
+// Helper function to check for null strings and return empty if null
+func ifNullString(sqlStr sql.NullString) string {
+	if sqlStr.Valid {
+		return sqlStr.String
 	}
-	box = *b
-	return box, err
+	return ""
+}
+
+// Helper function to check for null UUIDs and return uuid.Nil if null
+func ifNullUUID(sqlUUID sql.NullString) uuid.UUID {
+	if sqlUUID.Valid {
+		return uuid.FromStringOrNil(sqlUUID.String)
+	}
+	return uuid.Nil
 }

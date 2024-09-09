@@ -34,7 +34,8 @@ const (
 	CREATE_BOX_TABLE_STMT_FTS = `CREATE VIRTUAL TABLE IF NOT EXISTS box_fts USING fts5(
     box_id,
     label, 
-    description,
+    outerbox_label,
+    outerbox_id,
     tokenize = 'porter');`
 
 	// Triggers for item
@@ -62,20 +63,34 @@ const (
 
 	// Triggers for box
 	CREATE_BOX_AI_TRIGGER = `
-    CREATE TRIGGER IF NOT EXISTS box_ai BEFORE INSERT ON box 
+    CREATE TRIGGER IF NOT EXISTS box_ai BEFORE INSERT ON box
     BEGIN
-        INSERT INTO box_fts(box_id, label, description) 
-        VALUES (new.id, new.label, new.description);
+        INSERT INTO box_fts(box_id, label, outerbox_label, outerbox_id) 
+        VALUES (
+            new.id, 
+            new.label,
+            CASE 
+                WHEN new.outerbox_id IS NOT NULL THEN (SELECT label FROM box WHERE id = new.outerbox_id)
+                ELSE NULL 
+            END,
+            new.outerbox_id
+        );
     END; `
 
 	CREATE_BOX_AU_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS box_au BEFORE UPDATE ON box 
     BEGIN
-        UPDATE box_fts SET 
-            label = new.label,
-            description = new.description
+        -- Update the original box's label
+        UPDATE box_fts 
+        SET label = new.label
         WHERE box_id = old.id;
-    END; `
+
+        -- Update labels of boxes referencing this box as outerbox
+        UPDATE box_fts
+        SET outerbox_label = new.label
+        WHERE outerbox_id = old.id;
+    END;
+  `
 
 	CREATE_BOX_AD_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS box_ad BEFORE DELETE ON box 

@@ -11,6 +11,16 @@ import (
 	"golang.org/x/exp/rand"
 )
 
+type VirtualBox struct {
+	Box_Id         uuid.UUID
+	Label          string
+	OuterBox_label string
+	OuterBox_id    uuid.UUID
+	Shelve_label   string
+	Area_label     string
+	PreviewPicture string
+}
+
 type AnotherItem struct {
 	Quantity    int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
 	Weight      string    `json:"weight"      validate:"omitempty,numeric"`
