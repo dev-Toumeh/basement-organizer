@@ -55,59 +55,6 @@
 {{end}}
 
 
-{{ define "box-list" }}
-<form id="box-list">
-    <label for="search">search</label>
-    <input name="search" value="">
-    <button type="button">Alternative View</button>
-    <table class="box-list">
-        <thead>
-            <tr>
-                <th>Label</th>
-                <th>Box</th>
-                <th>Shelve</th>
-                <th>Area</th>
-                <th style="width: 10%">Image</th>
-                <th style="width: 10%">Move</th>
-                <th style="width: 10%">Delete</th>
-            </tr>
-        </thead> 
-        <tbody id="box-list-body" hx-trigger="load" hx-get="/boxes" >
-        </tbody>
-    </table>
-    <div >
-        <button hx-delete="/boxes"
-            hx-target="#box-list-body"
-        >delete</button>
-            <!--hx-include="[name='']"-->
-        <button type="button" 
-            hx-put="/boxes"
-        >move</button>
-    </div>
-</form>
-{{ end }}
-
-
-{{ define "box-list-item" }}
-<tr id="box-list-item-{{.Id}}">
-    <td hx-get="/box?id={{.Id}}"
-        hx-target="#detailed-box"
-    >{{.Label}}</td>
-    <td>{{ if .OuterBox }}{{ .OuterBox.Label }}{{ end }}</td>
-    <td></td>
-    <td></td>
-    <td style="text-align: center;">
-        <img class="preview" 
-            src="data:image/png;base64,{{.Picture}}" 
-            alt="{{.Label}} image preview"
-        >
-    </td>
-    <td style="text-align: center;"><input type="checkbox" name="move:{{.Id}}"></td>
-    <td style="text-align: center;"><input type="checkbox" name="delete:{{.Id}}"></td>
-</tr>
-{{end}}
-
-
 {{ define "style-debug" }}
 <style>
 * {
