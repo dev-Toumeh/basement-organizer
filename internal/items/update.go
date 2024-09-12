@@ -22,7 +22,7 @@ func updateItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
 	var errorMessages []string
 	updatedItem, err := item(r)
 	if err != nil {
-		templates.RenderErrorSnackbar(w, "Error while generating the User please comeback later")
+		templates.RenderErrorNotification(w, "Error while generating the User please comeback later")
 	}
 
 	if valiedItem, err := validateItem(updatedItem, &errorMessages); err != nil {

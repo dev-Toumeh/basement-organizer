@@ -121,7 +121,7 @@ func registerUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 	newUser, err := user(validInputUser)
 	if err != nil {
 		logg.Err(err)
-		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
+		templates.RenderErrorNotification(w, FAILED_MESSAGE)
 	}
 
 	// 3. Check if the username exist
@@ -139,13 +139,13 @@ func registerUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 		// 4. Create the new Record
 		if err != nil {
 			logg.Debug(err)
-			templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
+			templates.RenderErrorNotification(w, FAILED_MESSAGE)
 			return
 		}
 
 		// https://htmx.org/headers/hx-location/
 		http.RedirectHandler("/login-form", http.StatusOK)
-		templates.RenderSuccessSnackbar(w, fmt.Sprintf("the user %s was created successfully", newUser.Username))
+		templates.RenderSuccessNotification(w, fmt.Sprintf("the user %s was created successfully", newUser.Username))
 		w.Header().Add("HX-Location", "/login")
 		logg.Debugf("User %s registered successfully:", newUser.Username)
 		return
@@ -259,7 +259,7 @@ func RenderValidateErrorMessages(w io.Writer, inputUser InputUser) {
 	err := templates.Render(w, templates.TEMPLATE_REGISTER_FORM, templateError)
 	if err != nil {
 		logg.Debug(err)
-		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
+		templates.RenderErrorNotification(w, FAILED_MESSAGE)
 	}
 	*errorMessages = []string{}
 }

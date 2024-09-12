@@ -49,7 +49,7 @@ func apiRoutes(db items.ItemDatabase) {
 	http.HandleFunc("/delete-item", items.DeleteItemHandler(db))
 	http.HandleFunc("/template/item-dummy", func(w http.ResponseWriter, r *http.Request) {
 		db.InsertDummyItems()
-		templates.RenderSuccessSnackbar(w, "dummy items has been added")
+		templates.RenderSuccessNotification(w, "dummy items has been added")
 	})
 
 	http.HandleFunc("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
@@ -93,11 +93,11 @@ func staticRoutes() {
 
 func experimentalRoutes() {
 	http.HandleFunc("/switch-debug-style", SwitchDebugStyle)
-	http.HandleFunc("/snackbar-success", func(w http.ResponseWriter, r *http.Request) {
-		templates.RenderSuccessSnackbar(w, "success")
+	http.HandleFunc("/notification-success", func(w http.ResponseWriter, r *http.Request) {
+		templates.RenderSuccessNotification(w, "success")
 	})
-	http.HandleFunc("/snackbar-warning", func(w http.ResponseWriter, r *http.Request) {
-		templates.RenderWarningSnackbar(w, "warning")
+	http.HandleFunc("/notification-warning", func(w http.ResponseWriter, r *http.Request) {
+		templates.RenderWarningNotification(w, "warning")
 	})
 }
 

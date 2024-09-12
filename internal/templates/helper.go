@@ -22,17 +22,17 @@ const (
 	TEMPLATE_DIR string = "internal/templates/"
 )
 
-const errorSnackbar snackbarType = "error"
-const SuccessSnackbar snackbarType = "success"
-const warningSnackbar snackbarType = "warning"
+const errorNotification notificationType = "error"
+const SuccessNotification notificationType = "success"
+const warningNotification notificationType = "warning"
 
-type snackbarType string
+type notificationType string
 
-type oobSnackbarData struct {
-	Message    string
-	SnackbarId int
-	Duration   int
-	Type       snackbarType
+type oobNotificationData struct {
+	Message        string
+	NotificationId int
+	Duration       int
+	Type           notificationType
 }
 
 type PageTemplate struct {
@@ -145,10 +145,10 @@ func SafeRender(w io.Writer, name string, data any) error {
 	return nil
 }
 
-// RenderErrorSnackbar shows a brief error notification.
-func RenderErrorSnackbar(w io.Writer, message string) error {
-	data := newOobSnackbarData(message, errorSnackbar)
-	err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_SNACKBAR, data)
+// RenderErrorNotification shows a brief error notification.
+func RenderErrorNotification(w io.Writer, message string) error {
+	data := newOobNotificationData(message, errorNotification)
+	err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_NOTIFICATION, data)
 	if err != nil {
 		log.Println(err)
 		fmt.Fprintln(w, err)
@@ -157,11 +157,11 @@ func RenderErrorSnackbar(w io.Writer, message string) error {
 	return nil
 }
 
-// RenderWarningSnackbar shows a brief warning notification.
-func RenderWarningSnackbar(w io.Writer, message string) error {
-	data := newOobSnackbarData(message, warningSnackbar)
-	logg.Debug(data.Message, data.Type, data.Duration, data.SnackbarId)
-	err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_SNACKBAR, data)
+// RenderWarningNotification shows a brief warning notification.
+func RenderWarningNotification(w io.Writer, message string) error {
+	data := newOobNotificationData(message, warningNotification)
+	logg.Debug(data.Message, data.Type, data.Duration, data.NotificationId)
+	err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_NOTIFICATION, data)
 	if err != nil {
 		logg.Fatal(err)
 		return err
@@ -169,10 +169,10 @@ func RenderWarningSnackbar(w io.Writer, message string) error {
 	return nil
 }
 
-// RenderSuccessSnackbar shows a brief success notification.
-func RenderSuccessSnackbar(w io.Writer, message string) error {
-	data := newOobSnackbarData(message, SuccessSnackbar)
-	err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_SNACKBAR, data)
+// RenderSuccessNotification shows a brief success notification.
+func RenderSuccessNotification(w io.Writer, message string) error {
+	data := newOobNotificationData(message, SuccessNotification)
+	err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_NOTIFICATION, data)
 	if err != nil {
 		log.Println(err)
 		fmt.Fprintln(w, err)
@@ -181,15 +181,15 @@ func RenderSuccessSnackbar(w io.Writer, message string) error {
 	return nil
 }
 
-// newOobSnackbarData creates oobSnackbarData for error snackbar with default values.
+// newOobNotificationData creates newOobNotificationData for error notification with default values.
 //
 // Defaut Duration = 2000 // 2 seconds
-func newOobSnackbarData(message string, messageType snackbarType) oobSnackbarData {
-	return oobSnackbarData{
-		Message:    message,
-		SnackbarId: rand.Int(),
-		Duration:   3000,
-		Type:       messageType,
+func newOobNotificationData(message string, messageType notificationType) oobNotificationData {
+	return oobNotificationData{
+		Message:        message,
+		NotificationId: rand.Int(),
+		Duration:       3000,
+		Type:           messageType,
 	}
 }
 

@@ -3,7 +3,6 @@ package items
 import (
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
-	"fmt"
 	"net/http"
 
 	"github.com/gofrs/uuid/v5"
@@ -40,6 +39,8 @@ func prepereResponse(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
 	logg.Debug("the search was triggered")
 	templates.Render(w, "item-list-units", virtualItems)
 	if err != nil {
-		fmt.Println("Error executing template:", err)
+
+		logg.Debug(err)
+		templates.RenderErrorNotification(w, "something wrong happened")
 	}
 }

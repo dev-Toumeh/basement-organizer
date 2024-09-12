@@ -2,7 +2,8 @@
 {{ template "open-html-tag" . }} 
 {{ template "head" . }}
 <body>
-    {{ template "statusbar" . }}
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
     {{ template "page-content" . }}
 </body>
 {{ template "close-html-tag" . }}
@@ -37,6 +38,10 @@
 
 {{ define "default-style" }}<style></style>{{end}} 
 
+{{ define "notification-container" }}
+<div id="notification-container"></div>
+{{ end }}
+
 {{ define "navbar" }}
 <header class="header">
   <div class="header_content" hx-boost="true" hx-push-url="true">
@@ -64,23 +69,19 @@
 
 {{ define "page-content"  }}
 <div id="main-container">
-  <div 
-      id="snackbars"
-      class="snackbar-container">
-  </div>
+    {{ template "notification-container" . }}
 </div>
 {{end}}
 
-<!--This snackbar will load inside id="snackbar-container" no matter what target was set-->
-{{ define "oob-snackbar" }} 
+{{ define "oob-notification" }} 
 <div 
-    id="snackbars"
-    class="snackbar-container"
+    id="notification-container"
     hx-swap-oob="beforeend"
 >
-    <div id="snackbar-{{.SnackbarId}}"
-        class="snackbar noshow {{.Type}}"
-        hx-on::load="showSnackbar('snackbar-{{.SnackbarId}}', {{.Duration}})"
+    <!--This notification will load inside id="notification-container" no matter what target was set-->
+    <div id="notification-{{.NotificationId}}"
+        class="notification noshow {{.Type}}"
+        hx-on::load="showNotification('notification-{{.NotificationId}}', {{.Duration}})"
     >{{.Message}}</div>
 </div>
 {{end}}

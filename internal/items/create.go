@@ -76,7 +76,7 @@ func createNewItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
 	newItem, err := item(r)
 	if err != nil {
 		logg.Err(err)
-		templates.RenderErrorSnackbar(w, "Error while generating the User please comeback later")
+		templates.RenderErrorNotification(w, "Error while generating the User please comeback later")
 	}
 	if valiedItem, err := validateItem(newItem, &responseMessage); err != nil {
 		responseGenerator(w, responseMessage, false)
