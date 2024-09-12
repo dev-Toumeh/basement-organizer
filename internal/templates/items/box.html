@@ -44,16 +44,16 @@
                 <th style="width: 10%">Delete</th>
             </tr>
         </thead> 
-        <tbody id="box-list-body" hx-trigger="load" hx-get="/boxes" >
+        <tbody id="box-list-body" hx-trigger="load" hx-get="/boxes-list" >
         </tbody>
     </table>
     <div >
-        <button hx-delete="/boxes"
+        <button hx-delete="/boxes-list"
             hx-target="#box-list-body"
         >delete</button>
             <!--hx-include="[name='']"-->
         <button type="button" 
-            hx-put="/boxes"
+            hx-put="/boxes-list"
         >move</button>
     </div>
 </form>
