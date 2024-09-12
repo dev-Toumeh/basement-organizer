@@ -101,7 +101,7 @@ function createNotification(text, notificationType, id) {
 
     var snackbarId;
     if (id === undefined || id === "") {
-        snackbarId = Math.round((Math.random() * 100)).toString(); 
+        snackbarId = Math.round((Math.random() * 100000)).toString(); 
     } else {
         snackbarId = id;
     }
