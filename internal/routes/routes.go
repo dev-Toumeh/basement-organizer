@@ -43,6 +43,15 @@ func authRoutes(db auth.AuthDatabase) {
 }
 
 func apiRoutes(db items.ItemDatabase) {
+	http.HandleFunc("/items", itemsPage)
+	http.HandleFunc("/template/item-form", itemTemp)
+	http.HandleFunc("/template/item-search", searchItemTemp)
+	http.HandleFunc("/delete-item", items.DeleteItemHandler(db))
+	http.HandleFunc("/template/item-dummy", func(w http.ResponseWriter, r *http.Request) {
+		db.InsertDummyItems()
+		templates.RenderSuccessSnackbar(w, "dummy items has been added")
+	})
+
 	http.HandleFunc("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
 	}))
@@ -52,7 +61,7 @@ func apiRoutes(db items.ItemDatabase) {
 
 	http.HandleFunc("/api/v1/create/item", items.CreateItemHandler(db))
 	http.HandleFunc("/api/v1/read/item/{id}", items.ReadItemHandler(db, func(w io.Writer, data any) {
-		fmt.Fprint(w, data)
+		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
 	}))
 	http.HandleFunc("/api/v1/search/item", items.SearchItemHandler(db))
 	http.HandleFunc("/api/v1/update/item", items.UpdateItemHandler(db))
@@ -93,10 +102,8 @@ func experimentalRoutes() {
 }
 
 func navigationRoutes() {
+
 	http.HandleFunc("/settings", SettingsPage)
-	http.HandleFunc("/items", itemsPage)
 	http.HandleFunc("/sample-page", SamplePage)
-
 	http.HandleFunc("/personal-page", PersonalPage)
-
 }

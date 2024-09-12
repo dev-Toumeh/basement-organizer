@@ -10,6 +10,9 @@ import (
 
 func SettingsPage(w http.ResponseWriter, r *http.Request) {
 	authenticated, _ := auth.Authenticated(r)
+	if !authenticated {
+		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+	}
 	username, _ := auth.UserSessionData(r)
 	data := templates.NewPageTemplate()
 	data.Title = "Setting"
