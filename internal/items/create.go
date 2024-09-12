@@ -42,10 +42,8 @@ type ItemDatabase interface {
 	DeleteItem(itemId uuid.UUID) error
 	DeleteItems(itemId []uuid.UUID) error
 	ErrorExist() error
-	SearchItemsByLabel(query string) ([]struct {
-		Id    string
-		Label string
-	}, error)
+	ItemFuzzyFinder(query string) ([]VirtualItem, error)
+	InsertDummyItems()
 }
 
 const (

@@ -11,7 +11,7 @@ import (
 )
 
 type SqlVertualBox struct {
-	BoxID          uuid.UUID
+	BoxID          sql.NullString
 	Label          sql.NullString
 	OuterBoxLabel  sql.NullString
 	OuterBoxID     sql.NullString
@@ -20,32 +20,39 @@ type SqlVertualBox struct {
 	PreviewPicture sql.NullString
 }
 
-func (db *DB) SearchItemsByLabel(query string) ([]struct {
-	Id    string
-	Label string
-}, error) {
+type SqlVirtualItem struct {
+	ItemID         sql.NullString
+	Label          sql.NullString
+	OuterBoxLabel  sql.NullString
+	OuterBoxID     sql.NullString
+	ShelveLabel    sql.NullString
+	AreaLabel      sql.NullString
+	PreviewPicture sql.NullString
+}
+
+func (db *DB) ItemFuzzyFinder(query string) ([]items.VirtualItem, error) {
 	rows, err := db.Sql.Query(` SELECT item_id, label FROM item_fts WHERE label LIKE ? ORDER BY item_id; `, query+"%")
 	if err != nil {
-		return nil, fmt.Errorf("error while fetching the items for search engine: %w", err)
+		return nil, fmt.Errorf("error while fetching virtual items: %w", err)
 	}
 	defer rows.Close()
 
-	var results []struct {
-		Id    string
-		Label string
-	}
+	var virtualItems []items.VirtualItem
+	var sqlItem SqlVirtualItem
+
 	for rows.Next() {
-		var result struct {
-			Id    string
-			Label string
+		err = rows.Scan(&sqlItem.ItemID, &sqlItem.Label)
+		if err != nil {
+			return nil, fmt.Errorf("error while assigning the Data to the VirtualItem struct: %w", err)
 		}
-		if err := rows.Scan(&result.Id, &result.Label); err != nil {
-			return nil, fmt.Errorf("error while fetching the items for search engine: %w", err)
+		vItem, err := mapSqlVertualItemToVertualItem(sqlItem)
+		if err != nil {
+			return nil, err
 		}
-		results = append(results, result)
+		virtualItems = append(virtualItems, vItem)
 	}
 
-	return results, nil
+	return virtualItems, nil
 }
 
 // BoxFuzzyFinder retrieves virtual boxes by label.
@@ -84,7 +91,11 @@ func (db *DB) BoxFuzzyFinder(query string) ([]items.VirtualBox, error) {
 		if err != nil {
 			return []items.VirtualBox{}, fmt.Errorf("error while assigning the Data to the Virtualbox struct: %w", err)
 		}
-		virtualBoxes = append(virtualBoxes, mapSqlVertualBoxToVertualBox(sqlVertualBox))
+		vBox, err := mapSqlVertualBoxToVertualBox(sqlVertualBox)
+		if err != nil {
+			return []items.VirtualBox{}, err
+		}
+		virtualBoxes = append(virtualBoxes, vBox)
 	}
 
 	return virtualBoxes, nil
@@ -127,22 +138,48 @@ func (db *DB) VirtualBoxById(id uuid.UUID) (items.VirtualBox, error) {
 			return items.VirtualBox{}, fmt.Errorf("error while assigning the Data to the Virtualbox struct : %w", err)
 		}
 	}
-	// fmt.Printf("virtuaLBox: \n box_id: %s  box label: %s \n outerbox id; %s outerbox label %s \n ",
-	//             sqlVertualBox.BoxID.String(), sqlVertualBox.Label.String,
-	//             sqlVertualBox.OuterBoxID.String, sqlVertualBox.OuterBoxLabel.String)
 
-	return mapSqlVertualBoxToVertualBox(sqlVertualBox), nil
+	vBox, err := mapSqlVertualBoxToVertualBox(sqlVertualBox)
+	if err != nil {
+		return items.VirtualBox{}, err
+	}
+	return vBox, nil
 }
 
 // private function to map the sql virtual box into normal virtual box
-func mapSqlVertualBoxToVertualBox(sqlBox SqlVertualBox) items.VirtualBox {
+func mapSqlVertualBoxToVertualBox(sqlBox SqlVertualBox) (items.VirtualBox, error) {
+	id, err := UUIDFromSqlString(sqlBox.BoxID)
+	if err != nil {
+		return items.VirtualBox{}, err
+	}
+
 	return items.VirtualBox{
-		Box_Id:         sqlBox.BoxID,
+		Box_Id:         id,
 		Label:          ifNullString(sqlBox.Label),
 		OuterBox_label: ifNullString(sqlBox.OuterBoxLabel),
 		OuterBox_id:    ifNullUUID(sqlBox.OuterBoxID),
 		Shelve_label:   "Shelve 1",
 		Area_label:     "Area 1",
 		PreviewPicture: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAFAgL/uXBuZwAAAABJRU5ErkJggg==",
-	}
+	}, nil
 }
+
+func mapSqlVertualItemToVertualItem(sqlItem SqlVirtualItem) (items.VirtualItem, error) {
+	id, err := UUIDFromSqlString(sqlItem.ItemID)
+	if err != nil {
+		return items.VirtualItem{}, err
+	}
+	return items.VirtualItem{
+		Item_Id:        id,
+		Label:          ifNullString(sqlItem.Label),
+		Box_label:      "box 1",
+		Box_id:         uuid.Nil,
+		Shelve_label:   "shelve 1",
+		Area_label:     "shelve 1",
+		PreviewPicture: "pic1",
+	}, nil
+}
+
+// fmt.Printf("virtuaLBox: \n box_id: %s  box label: %s \n outerbox id; %s outerbox label %s \n ",
+//             sqlVertualBox.BoxID.String(), sqlVertualBox.Label.String,
+//             sqlVertualBox.OuterBoxID.String, sqlVertualBox.OuterBoxLabel.String)

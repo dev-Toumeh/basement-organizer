@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -142,10 +143,9 @@ func (db *DB) UpdateItem(ctx context.Context, item items.Item) error {
 }
 
 // Delete Item by Id
-func (db *DB) DeleteItem(ctx context.Context, itemId uuid.UUID) error {
-	id := itemId.String()
+func (db *DB) DeleteItem(itemId uuid.UUID) error {
 	sqlStatement := `DELETE FROM item WHERE id = ?;`
-	result, err := db.Sql.ExecContext(ctx, sqlStatement, id)
+	result, err := db.Sql.Exec(sqlStatement, itemId.String())
 	if err != nil {
 		logg.Err(err)
 		return err
@@ -157,11 +157,11 @@ func (db *DB) DeleteItem(ctx context.Context, itemId uuid.UUID) error {
 		return err
 	}
 	if rowsAffected == 0 {
-		err := errors.New(fmt.Sprintf("the Record with the id: %s was not found that should not happened while deleting", id))
+		err := errors.New(fmt.Sprintf("the Record with the id: %s was not found that should not happened while deleting", itemId.String()))
 		logg.Debug(err)
 		return err
 	} else if rowsAffected != 1 {
-		err := errors.New(fmt.Sprintf("the id: %s has unexpected effected number of rows (more than one or less than 0)", id))
+		err := errors.New(fmt.Sprintf("the id: %s has unexpected effected number of rows (more than one or less than 0)", itemId.String()))
 		logg.Err(err)
 		return err
 	}
@@ -230,4 +230,42 @@ func (db *DB) ItemExperement(query string, refs []interface{}) {
 		log.Printf("Error during rows iteration: %v", err)
 	}
 	fmt.Print(results)
+}
+
+// delete one item or more
+func (db *DB) DeleteItems(itemIds []uuid.UUID) error {
+	if len(itemIds) == 0 {
+		return nil
+	}
+
+	// Create placeholders and arguments
+	placeholders := make([]string, len(itemIds))
+	args := make([]interface{}, len(itemIds))
+	for i, id := range itemIds {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	// Join the placeholders with commas
+	sqlStatement := `DELETE FROM item WHERE id IN (` + strings.Join(placeholders, ",") + `);`
+
+	// Execute the query with the item IDs as arguments
+	result, err := db.Sql.Exec(sqlStatement, args...)
+	if err != nil {
+		logg.Err(err)
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		logg.Err(err)
+		return err
+	}
+	if rowsAffected != int64(len(itemIds)) {
+		err := fmt.Errorf("unexpected number of rows affected while deleting. Expected: %d, Actual: %d", len(itemIds), rowsAffected)
+		logg.Err(err)
+		return err
+	}
+
+	return nil
 }
