@@ -15,7 +15,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid/v5"
 
-	"basement/main/internal/auth"
 	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
@@ -40,8 +39,8 @@ type ItemDatabase interface {
 	ItemExist(field string, value string) bool
 	Items() ([][]string, error)
 	UpdateItem(ctx context.Context, item Item) error
-	DeleteItem(ctx context.Context, itemId uuid.UUID) error
-	ItemExperement(query string, refs []interface{})
+	DeleteItem(itemId uuid.UUID) error
+	DeleteItems(itemId []uuid.UUID) error
 	ErrorExist() error
 	SearchItemsByLabel(query string) ([]struct {
 		Id    string
@@ -68,8 +67,8 @@ func CreateItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Requ
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			createNewItem(w, r, db)
-		} else if r.Method == http.MethodGet {
-			generateAddItemForm(w, r)
+		} else {
+
 		}
 	}
 }
@@ -96,22 +95,6 @@ func createNewItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
 			responseMessage = append(responseMessage, "your Item was added successfully")
 			responseGenerator(w, responseMessage, true)
 		}
-	}
-}
-
-// this function will generate a new from if the request was from type GET
-func generateAddItemForm(w http.ResponseWriter, r *http.Request) {
-	authenticated, _ := auth.Authenticated(r)
-	user, _ := auth.UserSessionData(r)
-	data := templates.PageTemplate{
-		Title:         "Personal",
-		Authenticated: authenticated,
-		User:          user,
-	}
-
-	if err := templates.Render(w, templates.TEMPLATE_CREATE_ITEM_PAGE, data); err != nil {
-		fmt.Fprintln(w, "failed")
-		return
 	}
 }
 
@@ -234,13 +217,13 @@ func item(r *http.Request) (Item, error) {
 	if err != nil {
 		return Item{}, err
 	}
-	b64encodedPictureString := parsePicture(r)
+	// b64encodedPictureString := parsePicture(r)
 
 	newItem := Item{
 		Id:          id,
 		Label:       r.PostFormValue(LABEL),
 		Description: r.PostFormValue(DESCRIPTIO),
-		Picture:     b64encodedPictureString,
+		Picture:     "", //b64encodedPictureString,
 		Quantity:    parseQuantity(r.PostFormValue(QUANTITY)),
 		Weight:      r.PostFormValue(WEIGHT),
 		QRcode:      r.PostFormValue(QRCODE),
@@ -283,7 +266,6 @@ func parsePicture(r *http.Request) string {
 func parseQuantity(value string) int64 {
 	intValue, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
-		logg.Info("Could not parse quantity. Set quantity to 1")
 		return 1
 	}
 	return intValue

@@ -402,3 +402,14 @@ func ifNullUUID(sqlUUID sql.NullString) uuid.UUID {
 	}
 	return uuid.Nil
 }
+
+func UUIDFromSqlString(boxID sql.NullString) (uuid.UUID, error) {
+	if boxID.Valid {
+		id, err := uuid.FromString(boxID.String)
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("error while converting the string id into uuid: %w", err)
+		}
+		return id, nil
+	}
+	return uuid.Nil, fmt.Errorf("invalid VirtualItem Id string")
+}
