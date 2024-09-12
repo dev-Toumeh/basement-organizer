@@ -1,0 +1,23 @@
+{{ define "item-list-units" }}
+    {{ range . }}
+        <tr id="item-list-unit-{{.Item_Id}}"> 
+            <td hx-get="/api/v1/read/item/{{.Item_Id}}" 
+                hx-target="#data-container"
+                hx-swap="innerHTML"
+                onclick="htmx.trigger(this, 'htmx:load')"> 
+                {{.Label}}
+            </td>
+            <td>{{.Box_label}}</td> 
+            <td>{{.Shelve_label}}</td>
+            <td>{{.Area_label}}</td>
+            <td style="text-align: center;">
+                <img class="preview" 
+                    src="data:image/png;base64,{{.PreviewPicture}}" 
+                    alt="{{.Label}} image preview"
+                >
+            </td>
+            <td style="text-align: center;"><input type="checkbox" name="{{.Item_Id}}"></td>
+            <td style="text-align: center;"><input class="delete-checkbox" type="checkbox" name="{{.Item_Id}}"></td>
+        </tr>
+    {{ end }}
+{{end}}

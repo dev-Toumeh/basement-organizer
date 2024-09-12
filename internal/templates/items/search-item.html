@@ -1,19 +1,30 @@
-{{ define "search-item-page" }}
-{{ template "open-html-tag" . }}
-{{ template "head" . }}
-{{ template "search-item-form" . }}
-{{ template "close-html-tag" . }}
-{{ end }}
-
 {{define "search-item-form"}}
-<div id="form-container">
-  <h2 id="form-label">Search Items</h2>
-  <input type="text"
-    hx-post="/api/v1/search/item"
-    hx-target="#results"
-    hx-trigger="keyup changed delay:500ms"
-    id="search-bar"
-    name="query">
-  <div id="results"></div>
-</div>
+    <form id="box-list" style="display: block;"> 
+        <label for="search">search Items</label>
+        <input type="text"
+               hx-post="/api/v1/search/item"
+               hx-target="#item-list-body"
+               hx-trigger="focus, keyup changed delay:500ms"
+               hx-trigger="focus"
+               id="search-bar"
+               name="query">
+        <table class="box-list">
+            <thead>
+                <tr>
+                    <th>Label</th>
+                    <th>Box</th>
+                    <th>Shelve</th>
+                    <th>Area</th>
+                    <th style="width: 10%">Image</th>
+                    <th style="width: 10%">Move</th>
+                    <th style="width: 10%">Delete</th>
+                </tr>
+            </thead>
+            <tbody id="item-list-body"> 
+            </tbody>
+        </table>
+        <button type="submit" hx-post="/delete-item" hx-target="this" hx-on:htmx:afterOnLoad="handleDeleteRows(event)"> delete</button>
+        <button type="submit" hx-post="/move-item">move</button>
+    </form>
+    <div id="data-container" style="display: none;"></div> 
 {{end}}

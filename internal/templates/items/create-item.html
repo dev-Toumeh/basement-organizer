@@ -1,25 +1,9 @@
-{{ define "create-item-page" }}
-{{ template "open-html-tag" . }}
-{{ template "head" . }}
-<body>
-  <div class="page">
-    {{ template "statusbar" . }}
-    {{ template "create-item-form" . }}
-  </div>
-</body>
-{{ template "close-html-tag" . }}
-{{ end }}
-
 {{ define "create-item-form" }}
-<div id="main-container">
-    <div id="form-container">
-        <div id="response-div"></div>
-        <h2 id="form-label">Add new Item</h2>
-        <form id="form" name="form"
+        <form id="form-style" name="form"
             hx-post="/api/v1/create/item" 
-            hx-target="#main-container"
-            hx-encoding="multipart/form-data"
-        >
+            hx-target=".target"
+            hx-encoding="multipart/form-data">
+
             <label for="label">Label</label>
             <input type="text" id="label" name="label" required=""/>
 
@@ -39,6 +23,4 @@
 
             <button type="submit">add new item</button>
         </form>
-    </div>
-</div>
 {{ end }}
