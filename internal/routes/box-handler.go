@@ -30,7 +30,6 @@ func boxesPage(w http.ResponseWriter, r *http.Request) {
 	data.Authenticated = authenticated
 	data.User = user
 
-	triggerAllServerNotifications(w)
 	MustRender(w, r, templates.TEMPLATE_BOXES_PAGE, data)
 }
 
