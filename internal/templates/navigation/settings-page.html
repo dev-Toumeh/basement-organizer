@@ -3,6 +3,7 @@
 {{ template "head" . }}
 <body>
     {{ template "navbar" . }}
+    {{ template "notification-container" . }}
     {{ template "settings-content" . }}
     {{ template "extra-js" .}}
 </body>
@@ -12,10 +13,6 @@
 {{ define "default-style" }}<style></style>{{end}} 
 
 {{ define "settings-content"}}
-<div 
-    id="snackbars"
-    class="snackbar-container">
-</div>
 <div id="main-container">
     <div class="quarter">
     {{if .Authenticated }}

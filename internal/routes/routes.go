@@ -84,11 +84,11 @@ func staticRoutes() {
 
 func experimentalRoutes() {
 	http.HandleFunc("/switch-debug-style", SwitchDebugStyle)
-	http.HandleFunc("/snackbar-success", func(w http.ResponseWriter, r *http.Request) {
-		templates.RenderSuccessSnackbar(w, "success")
+	http.HandleFunc("/notification-success", func(w http.ResponseWriter, r *http.Request) {
+		templates.RenderSuccessNotification(w, "success")
 	})
-	http.HandleFunc("/snackbar-warning", func(w http.ResponseWriter, r *http.Request) {
-		templates.RenderWarningSnackbar(w, "warning")
+	http.HandleFunc("/notification-warning", func(w http.ResponseWriter, r *http.Request) {
+		templates.RenderWarningNotification(w, "warning")
 	})
 }
 

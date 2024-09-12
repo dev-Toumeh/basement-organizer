@@ -23,10 +23,10 @@ func DeleteItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Requ
 			} else {
 				ctx := context.TODO()
 				if err := db.DeleteItem(ctx, id); err != nil {
-					templates.RenderErrorSnackbar(w, "we was not able to delete the item please comeback later")
+					templates.RenderErrorNotification(w, "we was not able to delete the item please comeback later")
 					return
 				}
-				templates.RenderSuccessSnackbar(w, "deleted Successfully")
+				templates.RenderSuccessNotification(w, "deleted Successfully")
 				w.WriteHeader(http.StatusAccepted)
 			}
 		} else {

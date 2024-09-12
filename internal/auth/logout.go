@@ -13,7 +13,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok || !authenticated {
 		logg.Debugf("LogloutHandler - ok: %v authenticated: %v", ok, authenticated)
 		w.WriteHeader(http.StatusBadRequest)
-		templates.RenderErrorSnackbar(w, "logout failed")
+		templates.RenderErrorNotification(w, "logout failed")
 		return
 	}
 	session.Values["authenticated"] = false

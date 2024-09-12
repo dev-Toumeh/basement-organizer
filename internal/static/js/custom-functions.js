@@ -59,45 +59,45 @@ function errorResponseCallback(resInfo) {
         resInfo.detail.isError = false;
 
         if (resInfo.detail.serverResponse !== "") {
-            createAndShowSnackbar(resInfo.detail.serverResponse, "error");
+            createAndShowNotification(resInfo.detail.serverResponse, "error");
         } else {
-            createAndShowSnackbar(resInfo.detail.xhr.statusText, "error");
+            createAndShowNotification(resInfo.detail.xhr.statusText, "error");
         }
-        //resInfo.detail.target = htmx.find("#snackbars");
+        //resInfo.detail.target = htmx.find("#notification-container");
         //resInfo.detail.target.setAttribute("hx-swap", "afterend");
     }
 }
 
-const SnackbarTypeError = "error";
-const SnackbarTypeSuccess = "success";
-const SnackbarTypeWarning = "warning";
-const SnackbarTypeInfo = "";
+const NotificationTypeError = "error";
+const NotificationTypeSuccess = "success";
+const NotificationTypeWarning = "warning";
+const NotificationTypeInfo = "";
 
-/** createAndShowSnackbar is for showing errors and information on updates.
+/** createAndShowNotification is for showing errors and information on updates.
  * @param text {string} Message to display.
- * @param snackbarType {SnackbarTypeError | SnackbarTypeInfo | SnackbarTypeSuccess | SnackbarTypeWarning | undefined } Can be "error" or undefined for info.
+ * @param notificationType {NotificationTypeError | NotificationTypeInfo | NotificationTypeSuccess | NotificationTypeWarning | undefined } Can be "error" or undefined for info.
  * @param duration {number | undefined} How long is should display before removal. Default is 2000 (2 seconds).
- * @param id {number | undefined} Add Id to HTML element: <div id="snackbar-{id}</div>. Will be random by default */
-function createAndShowSnackbar(text, snackbarType, duration = 2000, id) {
-    const snackbar = createSnackbar(text, snackbarType, id);
-    const snackbarElements = document.getElementById('snackbars');
+ * @param id {number | undefined} Add Id to HTML element: <div id="notification-{id}</div>. Will be random by default */
+function createAndShowNotification(text, notificationType, duration = 2000, id) {
+    const snackbar = createNotification(text, notificationType, id);
+    const snackbarElements = document.getElementById("notification-container");
     snackbarElements.appendChild(snackbar);
 
-    showSnackbar(snackbar.id, duration)
+    showNotification(snackbar.id, duration)
 }
 
 /**
- * Creates a snackbar element but doesn't append it to the snackbars container. 
+ * Creates a snackbar element but doesn't append it to the notification-container. 
  *
  * @param {string} text - The message to be displayed in the snackbar.
- * @param snackbarType {SnackbarTypeError | SnackbarTypeInfo | SnackbarTypeSuccess | SnackbarTypeWarning | undefined } Can be "error" or undefined for info.
+ * @param notificationType {NotificationTypeError | NotificationTypeInfo | NotificationTypeSuccess | NotificationTypeWarning | undefined } Can be "error" or undefined for info.
  * @param {string} [id] - Optional unique identifier for the snackbar. If not provided, a random ID is generated.
  * @returns {HTMLDivElement} The created snackbar element.
  */
-function createSnackbar(text, snackbarType, id) {
+function createNotification(text, notificationType, id) {
     const snackbar = document.createElement('div');
 
-    snackbar.className = 'snackbar noshow ' + snackbarType;
+    snackbar.className = "notification noshow " + notificationType;
 
     var snackbarId;
     if (id === undefined || id === "") {
@@ -106,77 +106,77 @@ function createSnackbar(text, snackbarType, id) {
         snackbarId = id;
     }
 
-    snackbar.id = "snackbar-" + snackbarId;
+    snackbar.id = "notification-" + snackbarId;
     snackbar.textContent = text;
     return snackbar;
 }
 
-/** showSnackbar creates notification snackbar with id and automatically removes after duration.
+/** showNotification creates notification snackbar with id and automatically removes after duration.
  * @param id {string} HTML Element id.
  * @param text {string | undefined} Message to display.
  * @param duration {number | undefined} How long is should display before removal. Default is 2000 (2 seconds). */
-function showSnackbar(id, duration = 2000) {
-    let currentSnackbarCount = document.querySelectorAll("div.snackbar").length;
-    console.log(currentSnackbarCount);
+function showNotification(id, duration = 2000) {
+    let currentNotificationCount = document.querySelectorAll("div.notification").length;
+    console.log(currentNotificationCount);
 
-    // Add warning notification for too many snackbars
-    if (currentSnackbarCount > 10) {
-        let warnSnackbarId = 999999;
-        let warnSnackbar = document.getElementById("snackbar-" + warnSnackbarId.toString());
+    // Add warning notification for too many notifications.
+    if (currentNotificationCount > 10) {
+        let warnNotificationId = 999999;
+        let warnNotification = document.getElementById("notification-" + warnNotificationId.toString());
 
-        if (!warnSnackbar) {
-            warnSnackbar = createSnackbar("Over 10 notifications", SnackbarTypeWarning, warnSnackbarId);
-            let snackbarElements = document.getElementById('snackbars');
-            snackbarElements.prepend(warnSnackbar);
+        if (!warnNotification) {
+            warnNotification = createNotification("Over 10 notifications", NotificationTypeWarning, warnNotificationId);
+            let notificationElements = document.getElementById("notification-container");
+            notificationElements.prepend(warnNotification);
 
             setTimeout(() => {
-                warnSnackbar.className = warnSnackbar.className.replace("noshow", "show");
+                warnNotification.className = warnNotification.className.replace("noshow", "show");
             }, 50);
 
             setTimeout(function() {
-                warnSnackbar.className = warnSnackbar.className.replace("show", "noshow");
-                removeSnackbarAfter(warnSnackbar.id, 210);
+                warnNotification.className = warnNotification.className.replace("show", "noshow");
+                removeNotificationAfter(warnNotification.id, 210);
             }, duration);
         }
     }
 
-    var snackbar = document.getElementById(id);
-    if (snackbar === null) {
-        console.error("no snackbar to show");
+    var notification = document.getElementById(id);
+    if (notification === null) {
+        console.error("no notification to show. ID: ", id);
     }
 
     setTimeout(() => {
-        snackbar.className = snackbar.className.replace("noshow", "show");
+        notification.className = notification.className.replace("noshow", "show");
     }, 50);
 
 
     setTimeout(function() {
-        snackbar.className = snackbar.className.replace("show", "noshow");
-        removeSnackbarAfter(id, 210);
+        notification.className = notification.className.replace("show", "noshow");
+        removeNotificationAfter(id, 210);
     }, duration);
 }
 
-/** removeSnackbar removes snackbar HTML element.
+/** removeNotification removes snackbar HTML element.
  * @param id {string} HTML Element id. */
-function removeSnackbar(id) {
+function removeNotification(id) {
     let bar = document.getElementById(id);
     if (bar !== null) {    
         bar.remove();
     }
 }
 
-/** removeSnackbar removes snackbar HTML element after a certain duration.
+/** removeNotificationAfter removes snackbar HTML element after a certain duration.
  * @param id {string} HTML Element id. 
  * @param duration {number | undefined} How long to wait for removal. */
-function removeSnackbarAfter(id, duration) {
-    setTimeout(() => removeSnackbar(id), duration);
+function removeNotificationAfter(id, duration) {
+    setTimeout(() => removeNotification(id), duration);
 }
 
 /** noResponseCallback handles notification if requests don't respond.
  * @param resInfo {HmtxResponseInfo} */
 function noResponseCallback(resInfo) {
     console.log(resInfo.requestConfig);
-    createAndShowSnackbar("No response. Server down?", "error");
+    createAndShowNotification("No response. Server down?", "error");
 }
 
 /** 
@@ -194,7 +194,7 @@ function noResponseCallback(resInfo) {
  */
 function serverNotificationsCallback(evt){
     for (let i = 0; i < evt.detail.value.length; i++) {
-        createAndShowSnackbar(evt.detail.value[i].message, evt.detail.value[i].type, evt.detail.value[i].duration, evt.detail.value[i].id);
+        createAndShowNotification(evt.detail.value[i].message, evt.detail.value[i].type, evt.detail.value[i].duration, evt.detail.value[i].id);
     }
 }
 

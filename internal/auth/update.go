@@ -44,7 +44,7 @@ func updateUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 	newUser, err := user(validInputUser)
 	if err != nil {
 		logg.Err(err)
-		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
+		templates.RenderErrorNotification(w, FAILED_MESSAGE)
 	}
 
 	// 3. Check if the username exist
@@ -54,23 +54,23 @@ func updateUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 		err = db.UpdateUser(ctx, newUser)
 		if err != nil {
 			logg.Err(err)
-			templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
+			templates.RenderErrorNotification(w, FAILED_MESSAGE)
 		}
 	} else {
 		logg.Err("some thing wrong happened while checking the user exist")
-		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
+		templates.RenderErrorNotification(w, FAILED_MESSAGE)
 	}
 
 	// 4. Create the new Record
 	if err != nil {
 		logg.Debug(err)
-		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
+		templates.RenderErrorNotification(w, FAILED_MESSAGE)
 		return
 	}
 
 	// https://htmx.org/headers/hx-location/
 	w.Header().Add("HX-Location", "/")
-	templates.RenderSuccessSnackbar(w, fmt.Sprintf("the user %s was updated successfully", newUser.Username))
+	templates.RenderSuccessNotification(w, fmt.Sprintf("the user %s was updated successfully", newUser.Username))
 	http.Redirect(w, r, "/", http.StatusOK)
 	logg.Debugf("User %s updated successfully:", newUser.Username)
 	return
@@ -90,7 +90,7 @@ func generateUpdateFormWithData(w http.ResponseWriter, r *http.Request) {
 	err := templates.Render(w, templates.TEMPLATE_UPDATE_FORM, templateUpdateUserData)
 	if err != nil {
 		logg.Debug(err)
-		templates.RenderErrorSnackbar(w, FAILED_MESSAGE)
+		templates.RenderErrorNotification(w, FAILED_MESSAGE)
 	}
 	*errorMessages = []string{}
 }

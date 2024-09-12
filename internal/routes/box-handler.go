@@ -139,7 +139,7 @@ func BoxesHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFun
 					templates.Render(w, templates.TEMPLATE_BOX_LIST_ITEM, box)
 				}
 				for _, id := range toDelete {
-					templates.RenderSuccessSnackbar(w, "Box deleted: "+id.String())
+					templates.RenderSuccessNotification(w, "Box deleted: "+id.String())
 				}
 				return
 			}
