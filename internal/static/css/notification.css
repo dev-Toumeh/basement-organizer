@@ -13,12 +13,13 @@ div.notification {
   background-color: #3a6fff;
   color: #fff;
   border-radius: 0.4rem;
-  padding: 0.5em;
+  padding: 0.1rem;
   position: relative;
   z-index: 1;
   transition: opacity 0.2s ease;
   opacity: 0;
-  margin-bottom: 0;
+  margin-bottom: 0.1rem;
+  border-bottom: outset;
 
   /* for animation */
   /*visibility: hidden; /* Hidden by default. Visible on click */
