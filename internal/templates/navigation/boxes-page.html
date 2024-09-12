@@ -1,0 +1,17 @@
+{{ define "boxes-page" }}
+{{ template "open-html-tag" . }} 
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    {{ template "boxes-page-content" . }}
+</body>
+{{ template "close-html-tag" . }}
+{{end}} 
+
+
+{{ define "boxes-page-content"  }}
+<button hx-post="/box" hx-target="#box-list-body" hx-swap="beforeend">Create box</button>
+{{ template "box-list" . }}
+{{ end }}
+
