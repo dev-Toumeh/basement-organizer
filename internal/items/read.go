@@ -37,7 +37,7 @@ func ReadItemHandler(db ItemDatabase, responseWriter DataWriteFunc) http.Handler
 			data, err := db.ItemByField("id", id)
 			if err != nil && err != db.ErrorExist() {
 				w.WriteHeader(http.StatusInternalServerError)
-				templates.RenderErrorSnackbar(w, err.Error())
+				templates.RenderErrorNotification(w, err.Error())
 			}
 			if data.Id.IsNil() {
 				logg.Debug("item not found: ", id)

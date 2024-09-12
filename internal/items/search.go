@@ -34,7 +34,7 @@ func renderSearchForm(w http.ResponseWriter) {
 	err := templates.Render(w, "search-item-form", "")
 	if err != nil {
 		logg.Debug(err)
-		templates.RenderErrorSnackbar(w, "something wrong happened")
+		templates.RenderErrorNotification(w, "something wrong happened")
 	}
 }
 

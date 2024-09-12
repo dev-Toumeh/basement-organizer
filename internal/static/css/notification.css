@@ -1,48 +1,51 @@
-div.snackbar-container {
+div#notification-container {
   border-radius: 0.4rem;
   margin: 0 auto;
-  max-width: 600px;
+  max-width: 50vw;
   transition: opacity 0.2s;
+  position: fixed;
+  right: 0;
 }
 
-div.snackbar {
+div.notification {
   min-width: 50%;
   text-align: center;
   background-color: #3a6fff;
   color: #fff;
   border-radius: 0.4rem;
-  padding: 0.5em;
+  padding: 0.1rem;
   position: relative;
   z-index: 1;
   transition: opacity 0.2s ease;
   opacity: 0;
-  margin-bottom: 0;
+  margin-bottom: 0.1rem;
+  border-bottom: outset;
 
   /* for animation */
   /*visibility: hidden; /* Hidden by default. Visible on click */
 }
 
-div.snackbar.warning {
+div.notification.warning {
   background-color: yellow;
   color: #000;
 }
 
-div.snackbar.error {
+div.notification.error {
   background-color: red;
   color: #fff;
 }
 
-div.snackbar.success {
+div.notification.success {
   background-color: green;
   color: #fff;
 }
 
-div.snackbar.noshow {
+div.notification.noshow {
   opacity: 0;
   transition: opacity 0.2s ease;
 }
 
-div.snackbar.show {
+div.notification.show {
   opacity: 1;
   transition: opacity 0.2s ease;
 
@@ -52,7 +55,7 @@ div.snackbar.show {
   /*animation: fadein 0.2s, fadeout 0.2s 2s;*/
 }
 
-/* Animations to fade the snackbar in and out */
+/* Animations to fade the notification in and out */
 @-webkit-keyframes fadein {
   from {
     bottom: 0;

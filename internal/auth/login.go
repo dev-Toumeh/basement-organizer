@@ -101,7 +101,7 @@ func loginPage(w http.ResponseWriter, r *http.Request) {
 	logg.Debug(data)
 	err := templates.Render(w, templates.TEMPLATE_LOGIN_PAGE, data)
 	if err != nil {
-		templates.RenderErrorSnackbar(w, err.Error())
+		templates.RenderErrorNotification(w, err.Error())
 		logg.Err(err)
 		return
 	}

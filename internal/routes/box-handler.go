@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"basement/main/internal/auth"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
@@ -17,7 +18,19 @@ func registerBoxRoutes(db BoxDatabase) {
 	http.HandleFunc("/api/v2/box", BoxHandler(WriteJSON, db))
 	http.HandleFunc("/api/v2/box/{id}", BoxHandler(WriteJSON, db))
 	http.HandleFunc("/box", BoxHandler(WriteBoxTemplate, db))
-	http.HandleFunc("/boxes", BoxesHandler(WriteJSON, db))
+	http.HandleFunc("/boxes", boxesPage)
+	http.HandleFunc("/boxes-list", BoxesHandler(WriteJSON, db))
+}
+
+func boxesPage(w http.ResponseWriter, r *http.Request) {
+	authenticated, _ := auth.Authenticated(r)
+	user, _ := auth.UserSessionData(r)
+	data := templates.NewPageTemplate()
+	data.Title = "Boxes"
+	data.Authenticated = authenticated
+	data.User = user
+
+	MustRender(w, r, templates.TEMPLATE_BOXES_PAGE, data)
 }
 
 func WriteBoxTemplate(w io.Writer, data any) {
@@ -139,7 +152,7 @@ func BoxesHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFun
 					templates.Render(w, templates.TEMPLATE_BOX_LIST_ITEM, box)
 				}
 				for _, id := range toDelete {
-					templates.RenderSuccessSnackbar(w, "Box deleted: "+id.String())
+					templates.RenderSuccessNotification(w, "Box deleted: "+id.String())
 				}
 				return
 			}
