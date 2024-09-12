@@ -2,10 +2,9 @@
 {{ template "open-html-tag" . }}
 {{ template "head" . }}
 <body>
-    <div class="page">
-      {{ template "statusbar" . }}
-        {{ template "sample-page-body" . }}
-    </div>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    {{ template "sample-page-body" . }}
 </body>
 {{ template "close-html-tag" . }}
 {{end}}
