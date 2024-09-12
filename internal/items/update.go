@@ -1,7 +1,6 @@
 package items
 
 import (
-	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"context"
 	"fmt"
@@ -13,14 +12,13 @@ func UpdateItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Requ
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPut {
 			updateItem(w, r, db)
-		} else if r.Method == http.MethodGet {
-			generateAddItemForm(w, r)
+		} else {
+			return
 		}
 	}
 }
 
 func updateItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
-	logg.Debug(r.URL)
 	var errorMessages []string
 	updatedItem, err := item(r)
 	if err != nil {

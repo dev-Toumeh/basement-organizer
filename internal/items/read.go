@@ -27,8 +27,6 @@ type DataWriteFunc func(w io.Writer, data any)
 func ReadItemHandler(db ItemDatabase, responseWriter DataWriteFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			logg.Info("access: ", r.URL)
-
 			id := r.FormValue("id")
 			if id == "" {
 				id = r.PathValue("id")
@@ -45,10 +43,10 @@ func ReadItemHandler(db ItemDatabase, responseWriter DataWriteFunc) http.Handler
 				fmt.Fprintf(w, `Item with id "%s" not found`, id)
 				return
 			}
-			logg.Debugf("item: %T=%v, %T=%v", data.Id, data.Id, data.Label, data.Label)
 			responseWriter(w, data)
 			return
 		}
+
 		w.Header().Add("Allow", http.MethodGet)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		fmt.Fprint(w, "Method:'", r.Method, "' not allowed")

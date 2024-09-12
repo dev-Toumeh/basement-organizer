@@ -29,11 +29,13 @@ require (
 )
 
 require (
+	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gofrs/uuid/v5 v5.2.0
 	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/jaswdr/faker v1.19.1
 	github.com/leodido/go-urn v1.4.0 // indirect
 	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
 	golang.org/x/net v0.23.0 // indirect

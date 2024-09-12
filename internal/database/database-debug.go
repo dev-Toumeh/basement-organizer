@@ -2,11 +2,15 @@ package database
 
 import (
 	"basement/main/internal/items"
+	"basement/main/internal/logg"
 	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"log"
 
+	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gofrs/uuid/v5"
+	"golang.org/x/exp/rand"
 )
 
 func (db *DB) PrintUserRecords() {
@@ -214,3 +218,37 @@ func (db *DB) RepopulateItemFTS() error {
 // 	}
 // 	return nil
 // }
+
+func (db *DB) InsertDummyItems() {
+	gofakeit.Seed(0)
+
+	for i := 0; i < 10; i++ {
+		newItem := items.Item{
+			Id:          uuid.Must(uuid.NewV4()),
+			Label:       gofakeit.ProductName(),
+			Description: gofakeit.Sentence(5),
+			Picture:     generateRandomBase64Image(1024),
+			Quantity:    rand.Int63n(100) + 1,
+			Weight:      fmt.Sprintf("%.2f", rand.Float64()*100),
+			QRcode:      gofakeit.HipsterWord(),
+			BoxId:       uuid.Must(uuid.NewV4()),
+		}
+
+		err := db.insertNewItem(newItem)
+		if err != nil {
+			logg.Errf("error while adding dummyData", err)
+			return
+		}
+	}
+	return
+}
+
+func generateRandomBase64Image(size int) string {
+	// Generate random bytes
+	imageData := make([]byte, size)
+	rand.Read(imageData)
+
+	// Encode to base64
+	base64Image := base64.StdEncoding.EncodeToString(imageData)
+	return base64Image
+}
