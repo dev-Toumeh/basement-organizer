@@ -30,8 +30,42 @@ type SqlVirtualItem struct {
 	PreviewPicture sql.NullString
 }
 
+// Search items based on search query, return array of virtualItems
 func (db *DB) ItemFuzzyFinder(query string) ([]items.VirtualItem, error) {
 	rows, err := db.Sql.Query(` SELECT item_id, label FROM item_fts WHERE label LIKE ? ORDER BY item_id; `, query+"%")
+	if err != nil {
+		return nil, fmt.Errorf("error while fetching virtual items: %w", err)
+	}
+	defer rows.Close()
+
+	var virtualItems []items.VirtualItem
+	var sqlItem SqlVirtualItem
+
+	for rows.Next() {
+		err = rows.Scan(&sqlItem.ItemID, &sqlItem.Label)
+		if err != nil {
+			return nil, fmt.Errorf("error while assigning the Data to the VirtualItem struct: %w", err)
+		}
+		vItem, err := mapSqlVertualItemToVertualItem(sqlItem)
+		if err != nil {
+			return nil, err
+		}
+		virtualItems = append(virtualItems, vItem)
+	}
+
+	return virtualItems, nil
+}
+
+// Search items based on search query, return limited number of results used to generate pagination
+func (db *DB) ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]items.VirtualItem, error) {
+	rows, err := db.Sql.Query(`
+        SELECT item_id, label 
+        FROM item_fts 
+        WHERE label LIKE ? 
+        ORDER BY item_id 
+        LIMIT ? OFFSET ?; 
+    `, query+"%", limit, offset)
+
 	if err != nil {
 		return nil, fmt.Errorf("error while fetching virtual items: %w", err)
 	}
@@ -180,6 +214,27 @@ func mapSqlVertualItemToVertualItem(sqlItem SqlVirtualItem) (items.VirtualItem, 
 	}, nil
 }
 
-// fmt.Printf("virtuaLBox: \n box_id: %s  box label: %s \n outerbox id; %s outerbox label %s \n ",
-//             sqlVertualBox.BoxID.String(), sqlVertualBox.Label.String,
-//             sqlVertualBox.OuterBoxID.String, sqlVertualBox.OuterBoxLabel.String)
+func (db *DB) NumOfItemRecords(searchString string) (int, error) {
+	searchString = strings.TrimSpace(searchString)
+
+	var query string
+	if searchString == "" {
+		query = "SELECT COUNT(*) FROM item_fts;"
+	} else {
+		query = fmt.Sprintf("SELECT COUNT(*) FROM item_fts WHERE label LIKE ?;")
+	}
+
+	var count int
+	var err error
+	if searchString == "" {
+		err = db.Sql.QueryRow(query).Scan(&count)
+	} else {
+		err = db.Sql.QueryRow(query, searchString+"%").Scan(&count)
+	}
+
+	if err != nil {
+		return 0, fmt.Errorf("Error checking the number of records %v:", err)
+	}
+	logg.Debugf("count: %d \n", count)
+	return count, nil
+}

@@ -41,9 +41,13 @@ type ItemDatabase interface {
 	UpdateItem(ctx context.Context, item Item) error
 	DeleteItem(itemId uuid.UUID) error
 	DeleteItems(itemId []uuid.UUID) error
-	ErrorExist() error
-	ItemFuzzyFinder(query string) ([]VirtualItem, error)
 	InsertDummyItems()
+	ErrorExist() error
+
+	// search functions
+	ItemFuzzyFinder(query string) ([]VirtualItem, error)
+	ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]VirtualItem, error)
+	NumOfItemRecords(searchString string) (int, error)
 }
 
 const (

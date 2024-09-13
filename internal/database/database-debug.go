@@ -236,7 +236,7 @@ func (db *DB) InsertDummyItems() {
 
 		err := db.insertNewItem(newItem)
 		if err != nil {
-			logg.Errf("error while adding dummyData", err)
+			logg.Errf("error while adding dummyData %v", err)
 			return
 		}
 	}

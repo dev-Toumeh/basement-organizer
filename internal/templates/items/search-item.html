@@ -3,10 +3,10 @@
         <label for="search">search Items</label>
         <input type="text"
                hx-post="/api/v1/search/item"
-               hx-target="#item-list-body"
                hx-trigger="focus, keyup changed delay:500ms"
-               hx-trigger="focus"
                id="search-bar"
+               hx-target="#item-list-body"
+               hx-on:keyup="document.getElementById('pagination').innerHTML = '';"
                name="query">
         <table class="box-list">
             <thead>
@@ -27,4 +27,5 @@
         <button type="submit" hx-post="/move-item">move</button>
     </form>
     <div id="data-container" style="display: none;"></div> 
+    <div id="pagination"></div> 
 {{end}}

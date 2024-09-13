@@ -46,12 +46,13 @@ func apiRoutes(db items.ItemDatabase) {
 	http.HandleFunc("/items", itemsPage)
 	http.HandleFunc("/template/item-form", itemTemp)
 	http.HandleFunc("/template/item-search", searchItemTemp)
-	http.HandleFunc("/delete-item", items.DeleteItemHandler(db))
 	http.HandleFunc("/template/item-dummy", func(w http.ResponseWriter, r *http.Request) {
 		db.InsertDummyItems()
 		templates.RenderSuccessNotification(w, "dummy items has been added")
 	})
+	http.HandleFunc("/items-pagination", items.ItemPaginationHandler(db))
 
+	http.HandleFunc("/delete-item", items.DeleteItemHandler(db))
 	http.HandleFunc("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
 	}))

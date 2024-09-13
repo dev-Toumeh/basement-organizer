@@ -31,7 +31,6 @@ func DeleteItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Requ
 				templates.RenderErrorNotification(w, "we was not able to delete the item please comeback later")
 				return
 			}
-			logg.Debugf("items with those ids was deleted, %v", ids)
 
 			w.Header().Set("HX-Trigger-After-On-Load", "handleDeleteRows")
 			w.WriteHeader(http.StatusOK)

@@ -1,4 +1,4 @@
-{{ define "item-list-units" }}
+{{ define "item-list-units-pagination" }}
     {{ range .Records }}
         <tr id="item-list-unit-{{.Item_Id}}"> 
             <td hx-get="/api/v1/read/item/{{.Item_Id}}" 
@@ -20,4 +20,19 @@
             <td style="text-align: center;"><input class="delete-checkbox" type="checkbox" name="{{.Item_Id}}"></td>
         </tr>
     {{ end }}
+
+    {{if .TotalCount}} 
+        {{if gt .TotalCount 10}}
+            <div hx-swap-oob="innerHTML" id="pagination">
+                {{range .PaginationData}}
+                    <button hx-get="/items-pagination?query={{$.Query}}&offset={{.Offset}}" 
+                            hx-trigger="click" 
+                            hx-target="#item-list-body"
+                            hx-swap="innerHTML">
+                           {{.PageNumber}}
+                    </button>
+                {{end}}
+            </div>
+        {{end}}
+    {{end}}
 {{end}}
