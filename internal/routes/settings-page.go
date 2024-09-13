@@ -19,7 +19,7 @@ func SettingsPage(w http.ResponseWriter, r *http.Request) {
 	data.Authenticated = authenticated
 	data.User = username
 
-	err := templates.Render(w, "settings", data)
+	err := templates.Render(w, "settings-page", data)
 	if err != nil {
 		fmt.Fprintln(w, "failed")
 		return

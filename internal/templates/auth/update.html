@@ -1,11 +1,4 @@
-{{ define "register-page" }}
-{{ template "open-html-tag" . }}
-{{ template "head" . }}
-{{ template "update-form" . }}
-{{ template "close-html-tag" . }}
-{{ end }}
-
-{{define "update-form"}}
+{{define "update-user"}}
 <div id="form-container">
     <form id="update-user-form" name="form" 
          hx-put="/update"
@@ -47,6 +40,5 @@
         <button id="updateButton" type="submit">Update</button>
     </form>
 </div>
-
 {{end}}
 

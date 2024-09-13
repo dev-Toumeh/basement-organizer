@@ -15,9 +15,7 @@
     <div class="section-up">
         <div class="quarter"> </div>
         <div class="three-quarters">
-            <div id="snackbars"
-                class="snackbar-container three-quarters">
-            </div>
+          {{ template "notification-container" . }}
         </div>
     </div>
     <div class="section-down">
@@ -119,6 +117,18 @@
             } else {
                 console.error('Deletion failed:', event.detail);
             }
+        }
+        if (typeof buttons == 'undefined') {
+          const buttons = document.querySelectorAll('.menu-button');
+
+          buttons.forEach(button => {
+            button.addEventListener('click', () => {
+              if (!button.classList.contains('clicked')) { // Check if already clicked
+                buttons.forEach(btn => btn.classList.remove('clicked'));
+                button.classList.add('clicked');
+              }
+            });
+          });
         }
     </script>
 {{end}}

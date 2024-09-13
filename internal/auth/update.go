@@ -87,7 +87,7 @@ func generateUpdateFormWithData(w http.ResponseWriter, r *http.Request) {
 		InputUserData: inputUser,
 		ErrorMessages: *errorMessages,
 	}
-	err := templates.Render(w, templates.TEMPLATE_UPDATE_FORM, templateUpdateUserData)
+	err := templates.Render(w, "update-user", templateUpdateUserData)
 	if err != nil {
 		logg.Debug(err)
 		templates.RenderErrorNotification(w, FAILED_MESSAGE)
