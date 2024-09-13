@@ -34,7 +34,7 @@ type SqlItem struct {
 
 // Create New Item Record
 func (db *DB) CreateBox(newBox *items.Box) (uuid.UUID, error) {
-	if db.BoxExist("label", newBox.Label) {
+	if db.BoxExistById(newBox.Id) {
 		return uuid.Nil, db.ErrorExist()
 	}
 
@@ -45,16 +45,21 @@ func (db *DB) CreateBox(newBox *items.Box) (uuid.UUID, error) {
 	return id, nil
 }
 
+// check if the Box Exist based on Id
+// wrapper function for boxExist,
+func (db *DB) BoxExistById(id uuid.UUID) bool {
+	return db.BoxExist("id", id.String())
+}
+
 // check if the Box Exist based on given Field
 func (db *DB) BoxExist(field string, value string) bool {
 	query := fmt.Sprintf("SELECT COUNT(*) FROM box WHERE %s = ?", field)
 	var count int
 	err := db.Sql.QueryRow(query, value).Scan(&count)
 	if err != nil {
-		log.Println("Error checking item existence:", err)
+		logg.Errf("Error checking item existence: %v", err)
 		return false
 	}
-	// fmt.Printf("count is %d", count)
 	return count > 0
 }
 
@@ -90,7 +95,7 @@ func (db *DB) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
 
 // update box data
 func (db *DB) UpdateBox(box items.Box) error {
-	exist := db.BoxExist("id", box.Id.String())
+	exist := db.BoxExistById(box.Id)
 	if !exist {
 		return fmt.Errorf("the box is not exist")
 	}
@@ -118,7 +123,7 @@ func (db *DB) DeleteBox(boxId uuid.UUID) error {
 
 	// check if box is not Empty
 	itemExist := db.ItemExist("box_id", id)
-	boxExist := db.BoxExist("outerbox_id", id)
+	boxExist := db.BoxExist("outerbox_id", boxId.String())
 	if itemExist || boxExist {
 		return fmt.Errorf("the box is not empty")
 	}
@@ -135,6 +140,9 @@ func (db *DB) DeleteBox(boxId uuid.UUID) error {
 // Wrapper function for BoxByField
 func (db *DB) BoxById(id uuid.UUID) (items.Box, error) {
 	box := items.Box{}
+	if !db.BoxExistById(id) {
+		return box, fmt.Errorf("box is not exist \n")
+	}
 	b, err := db.BoxByField("id", id.String())
 	if err != nil {
 		return box, fmt.Errorf("Box() error:\n\t%w", err)
@@ -234,7 +242,6 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 				addedItems[itemSQLItem.ItemId.String] = item
 			}
 		}
-
 	}
 
 	if err := rows.Err(); err != nil {
@@ -251,7 +258,7 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 
 // insert new Box record in the Database
 func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
-	if db.BoxExist("id", box.Id.String()) {
+	if db.BoxExistById(box.Id) {
 		return uuid.Nil, db.ErrorExist()
 	}
 
@@ -317,7 +324,6 @@ func convertSQLBoxToBox(sqlBox *SQLBox) (*items.Box, error) {
 				return box, err
 			}
 		}
-
 	}
 
 	return box, nil
@@ -411,5 +417,5 @@ func UUIDFromSqlString(boxID sql.NullString) (uuid.UUID, error) {
 		}
 		return id, nil
 	}
-	return uuid.Nil, fmt.Errorf("invalid VirtualItem Id string")
+	return uuid.Nil, fmt.Errorf("invalid Virtual Id string")
 }

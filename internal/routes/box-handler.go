@@ -73,8 +73,8 @@ type BoxDatabase interface {
 	UpdateBox(box items.Box) error
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (items.Box, error)
-	BoxIDs() ([]string, error)                // @TODO: Change string to uuid.UUID
-	BoxExist(field string, value string) bool // @TODO: Change string to uuid.UUID
+	BoxIDs() ([]string, error) // @TODO: Change string to uuid.UUID
+	BoxExistById(id uuid.UUID) bool
 	ErrorExist() error
 }
 

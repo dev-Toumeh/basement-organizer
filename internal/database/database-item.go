@@ -147,8 +147,7 @@ func (db *DB) DeleteItem(itemId uuid.UUID) error {
 	sqlStatement := `DELETE FROM item WHERE id = ?;`
 	result, err := db.Sql.Exec(sqlStatement, itemId.String())
 	if err != nil {
-		logg.Err(err)
-		return err
+		return fmt.Errorf("deleting was not succeed %W", err)
 	}
 
 	rowsAffected, err := result.RowsAffected()

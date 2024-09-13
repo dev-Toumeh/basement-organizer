@@ -2,7 +2,6 @@ package database
 
 import (
 	itemsPackage "basement/main/internal/items"
-	"context"
 	"strings"
 	"testing"
 
@@ -94,7 +93,7 @@ func TestCreateNewBox(t *testing.T) {
 	}
 
 	// Verify box was created
-	exists := dbTest.BoxExist("id", testBox.Id.String())
+	exists := dbTest.BoxExistById(testBox.Id)
 	assert.Equal(t, true, exists)
 
 	// Test creating the same box again to trigger an error
@@ -193,8 +192,8 @@ func TestDeleteBox(t *testing.T) {
 
 	testBox := &itemsPackage.Box{
 		Id:          testBoxId,
-		Label:       "My Special Box",
-		Description: "This box contains my precious items.",
+		Label:       "test Box",
+		Description: "This is test Box",
 		Picture:     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
 		QRcode:      "AB123CD",
 		OuterBoxId:  uuid.Nil,
@@ -202,8 +201,8 @@ func TestDeleteBox(t *testing.T) {
 
 	innerBox := &itemsPackage.Box{
 		Id:          innerBoxId,
-		Label:       "Inner Box 1",
-		Description: "This is the first inner box",
+		Label:       "Inner InnerBox",
+		Description: "This is inner box",
 		Picture:     "base64encodedinnerbox",
 		QRcode:      "QRcodeInnerBox",
 		OuterBoxId:  testBoxId,
@@ -236,15 +235,15 @@ func TestDeleteBox(t *testing.T) {
 
 	err = dbTest.DeleteBox(testBox.Id)
 	if err != nil && !strings.Contains(err.Error(), "the box is not empty") {
-		t.Fatalf("the should not be deleted as the box is not empty")
+    t.Fatalf("the should not be deleted as the box is not empty: %s", err)
 	}
 	err = dbTest.DeleteItem(item.Id)
 	if err != nil {
-		t.Fatalf("the item was not deleted")
+    t.Fatalf("the item was not deleted: %v", err)
 	}
 	err = dbTest.DeleteBox(innerBox.Id)
 	if err != nil {
-		t.Fatalf("deleting the innerbox was not succeed")
+		t.Fatalf("deleting the innerbox was not succeed: %v", err)
 	}
 
 	err = dbTest.DeleteBox(testBox.Id)

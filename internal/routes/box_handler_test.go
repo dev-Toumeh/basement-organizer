@@ -48,8 +48,8 @@ func (db *boxDatabaseError) BoxByField(field string, value string) (*items.Box, 
 	return &items.Box{}, errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) BoxExist(field string, value string) bool {
-	return false // Simulate that the box does not exist (or an error occurred)
+func (db *boxDatabaseError) BoxExistById(id uuid.UUID) bool {
+	return false
 }
 
 func (db *boxDatabaseError) ErrorExist() error {
@@ -83,7 +83,7 @@ func (db *boxDatabaseSuccess) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) BoxExist(field string, value string) bool {
+func (db *boxDatabaseSuccess) BoxExistById(id uuid.UUID) bool {
 	return true
 }
 
