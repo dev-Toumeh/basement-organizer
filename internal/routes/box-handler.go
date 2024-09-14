@@ -119,9 +119,10 @@ func BoxesHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFun
 				writeNotFoundError("Can't find boxes", err, w, r)
 			}
 			if wantsTemplateData(r) {
+				// items.RenderBoxList(w, nil)
 				for _, id := range ids {
 					box, _ := db.BoxById(uuid.Must(uuid.FromString(id)))
-					templates.Render(w, templates.TEMPLATE_BOX_LIST_ITEM, box)
+					items.RenderBoxListItem(w, &box)
 				}
 				return
 			}
@@ -217,6 +218,11 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			// @TODO: Implement move boxes.
 			move := "true" == r.FormValue("move")
 			if move {
+				// err := db.MoveBox(uuid.FromStringOrNil("5cca42c2-5f1b-45e7-b2d2-175a0ff99b61"), uuid.FromStringOrNil("a88a1ebd-0551-4008-bdda-9677d375c7eb"))
+
+				// if err != nil {
+				// 	writeNotFoundError(errMsgForUser, err, w, r)
+				// }
 				w.WriteHeader(http.StatusNotImplemented)
 				return
 			}

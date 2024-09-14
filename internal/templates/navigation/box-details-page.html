@@ -12,28 +12,51 @@
 
 {{ define "box-details-page-content"  }}
 <h1>Box details</h1>
-{{ if .NotFound }}
-    <p>Box "{{.Id}}" doesn't exist.</p>
-    <br>
-    <p style="text-align: center">:^(</p>
-{{ else }}
-    {{ template "box-details" . }}
-{{ end }}
-
+    {{ if .NotFound }}
+        <p>Box "{{.Id}}" doesn't exist.</p>
+        <br>
+        <p style="text-align: center">:^(</p>
+    {{ else }}
+        {{ template "box-details" . }}
+        <hr>
+        {{ template "search-item-form" . }}
+        <hr>
+        {{ template "innerboxes-list" . }}
+    {{ end }}
 {{ end }}
 
 
 {{ define "box-details" }}
 <form id="box-{{.Id}}"
     class="box-container">
-    <label for="id"></label>
+    <label for="id">ID:</label>
     <input name="id" type="text" value="{{.Id}}" {{ if not .Edit}}readonly{{end}}>
 
-    <label for="label"></label>
+    <label for="label">Label:</label>
     <input name="label" type="text" value="{{.Label}}" {{ if not .Edit}}readonly{{end}}>
 
-    <label for="description"></label>
+    <label for="description">Description:</label>
     <input name="description" type="text" value="{{.Description}}" {{ if not .Edit}}readonly{{end}}>
+
+    <label for="qrcode">QRcode:</label>
+    <input type="text" id="qrcode" name="qrcode" value="{{ .QRcode }}" {{ if not .Edit}}readonly{{end}}>
+    <br>
+
+    <div id="image-preview-{{ .Id }}">
+        {{ if .Picture }}
+        <label for="picture">Picture:</label>
+        <img src="data:image/png;base64,{{ .Picture }}" alt="{{ .Label }}">
+        <br>
+        {{ else }}
+        <p>No image available</p>
+        {{ end }}
+    </div>
+
+    {{ if .Edit }}
+    <input type="file" id="picture-{{ .Id }}" name="picture" accept="image/*" >
+    <span id="image-hint-{{ .Id }}" style="color: #666;">Upload a new image or leave empty to keep the current one.</span>
+    {{ end }}
+
 <ol>
     {{ range .Items }}    
     <li style="border:solid">{{ template "item-container-2" .}}</li>
@@ -62,3 +85,39 @@
 
 </form>
 {{end}}
+
+
+{{ define "innerboxes-list" }}
+<form id="box-list">
+    <label for="search">search</label>
+    <input name="search" value="">
+    <button type="button">Alternative View</button>
+    <table class="box-list">
+        <thead>
+            <tr>
+                <th>Label</th>
+                <th>Box</th>
+                <th>Shelve</th>
+                <th>Area</th>
+                <th style="width: 10%">Image</th>
+                <th style="width: 10%">Move</th>
+                <th style="width: 10%">Delete</th>
+            </tr>
+        </thead> 
+        <tbody id="box-list-body" hx-trigger="load" hx-get="/boxes-list" >
+    {{ range .InnerBoxes }}    
+        {{ template "box-list-item" . }}
+                    {{ end }}
+        </tbody>
+    </table>
+    <div >
+        <button hx-delete="/boxes-list"
+            hx-target="#box-list-body"
+        >delete</button>
+            <!--hx-include="[name='']"-->
+        <button type="button" 
+            hx-put="/boxes-list"
+        >move</button>
+    </div>
+</form>
+{{ end }}

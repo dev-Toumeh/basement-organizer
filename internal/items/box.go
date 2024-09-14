@@ -5,6 +5,7 @@ import (
 	"basement/main/internal/templates"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"slices"
 	"time"
 
@@ -72,10 +73,21 @@ type Shelve struct {
 }
 
 type BoxTemplateData struct {
-	// Quantity    int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
-	// Weight      string    `json:"weight"      validate:"omitempty,numeric"`
 	*Box
 	Edit bool
+}
+
+type BoxListTemplateData struct {
+	Boxes []*Box
+}
+
+func RenderBoxListItem(w http.ResponseWriter, data *Box) {
+	templates.Render(w, templates.TEMPLATE_BOX_LIST_ITEM, data)
+}
+
+func RenderBoxList(w http.ResponseWriter, boxes []*Box) {
+	data := BoxListTemplateData{Boxes: boxes}
+	templates.Render(w, templates.TEMPLATE_BOX_LIST, data)
 }
 
 type boxPageTemplateData struct {
