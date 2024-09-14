@@ -40,14 +40,17 @@ type PageTemplate struct {
 	Authenticated bool
 	User          string
 	Debug         bool
+	NotFound      bool
 }
 
+// NewPageTemplate returns default data struct for page templates.
 func NewPageTemplate() PageTemplate {
 	return PageTemplate{
 		Title:         "Default Page",
 		Authenticated: false,
 		User:          "Default User",
 		Debug:         DEBUG_STYLE,
+		NotFound:      false,
 	}
 }
 

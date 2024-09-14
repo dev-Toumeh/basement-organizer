@@ -2,6 +2,7 @@ package items
 
 import (
 	"basement/main/internal/logg"
+	"basement/main/internal/templates"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -35,15 +36,39 @@ type AnotherItem struct {
 }
 
 type Box struct {
-	Id          uuid.UUID `json:"id"`
-	Label       string    `json:"label"       validate:"required,lte=128"`
-	Description string    `json:"description" validate:"omitempty,lte=256"`
-	Picture     string    `json:"picture"     validate:"omitempty,base64"`
-	QRcode      string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	OuterBoxId  uuid.UUID `json:"outerboxId"`
-	Items       []*Item   `json:"items"`
-	InnerBoxes  []*Box    `json:"innerboxes"`
-	OuterBox    *Box      `json:"outerbox" `
+	Id          uuid.UUID          `json:"id"`
+	Label       string             `json:"label"       validate:"required,lte=128"`
+	Description string             `json:"description" validate:"omitempty,lte=256"`
+	Picture     string             `json:"picture"     validate:"omitempty,base64"`
+	QRcode      string             `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	OuterBoxId  uuid.UUID          `json:"outerboxId"`
+	Items       []*Item            `json:"items"`
+	InnerBoxes  []*Box             `json:"innerboxes"`
+	OuterBox    *Box               `json:"outerbox" `
+	Shelve      *ShelveCoordinates `json:"shelveinfo" `
+}
+
+type ShelveCoordinates struct {
+	Id    uuid.UUID `json:"id"`
+	Label string    `json:"label"       validate:"required,lte=128"`
+	Rows  int
+	Cols  int
+}
+
+type Shelve struct {
+	Id             uuid.UUID      `json:"id"`
+	Label          string         `json:"label"       validate:"required,lte=128"`
+	Description    string         `json:"description" validate:"omitempty,lte=256"`
+	Picture        string         `json:"picture"     validate:"omitempty,base64"`
+	PreviewPicture string         `json:"previewpicture"     validate:"omitempty,base64"`
+	QRcode         string         `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	Items          []*VirtualItem `json:"items"`
+	Boxes          []*VirtualBox  `json:"boxes"`
+	Height         float32
+	Width          float32
+	Depth          float32
+	Rows           int
+	Cols           int
 }
 
 type BoxTemplateData struct {
@@ -51,6 +76,22 @@ type BoxTemplateData struct {
 	// Weight      string    `json:"weight"      validate:"omitempty,numeric"`
 	*Box
 	Edit bool
+}
+
+type boxPageTemplateData struct {
+	*BoxTemplateData
+	*templates.PageTemplate
+}
+
+// BoxPageTemplateData returns struct needed for "templates.TEMPLATE_BOX_DETAILS_PAGE" with default values.
+func BoxPageTemplateData() *boxPageTemplateData {
+	pageTmpl := templates.NewPageTemplate()
+	boxTmpl := BoxTemplateData{}
+	data := boxPageTemplateData{
+		BoxTemplateData: &boxTmpl,
+		PageTemplate:    &pageTmpl,
+	}
+	return &data
 }
 
 type BoxC struct {

@@ -11,6 +11,7 @@
 
 
 {{ define "boxes-page-content"  }}
+<h1>Box list</h1>
 <button hx-post="/box" hx-target="#box-list-body" hx-swap="beforeend">Create box</button>
 {{ template "box-list" . }}
 {{ end }}

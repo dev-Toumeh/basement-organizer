@@ -47,7 +47,7 @@
   <div class="header_content" hx-boost="true" hx-push-url="true">
     <nav class="nav">
         <ul class="nav_list">
-            {{with .Authenticated }}
+            {{if .Authenticated }}
               <li class="nav_item"><a class="nav_link" href="/items">Items</a></li>
               <li class="nav_item"><a class="nav_link" href="/boxes">Boxes</a></li>
               <li class="nav_item"><a class="nav_link" href="/shleves">Shelves</a></li>

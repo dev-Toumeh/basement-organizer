@@ -20,6 +20,7 @@ func registerBoxRoutes(db BoxDatabase) {
 	http.HandleFunc("/api/v2/box/{id}", BoxHandler(WriteJSON, db))
 	http.HandleFunc("/box", BoxHandler(WriteBoxTemplate, db))
 	http.HandleFunc("/boxes", boxesPage)
+	http.HandleFunc("/boxes/{id}", boxDetailsPage(db))
 	http.HandleFunc("/boxes-list", BoxesHandler(WriteJSON, db))
 }
 
@@ -34,6 +35,44 @@ func boxesPage(w http.ResponseWriter, r *http.Request) {
 	MustRender(w, r, templates.TEMPLATE_BOXES_PAGE, data)
 }
 
+func boxDetailsPage(db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authenticated, _ := auth.Authenticated(r)
+		user, _ := auth.UserSessionData(r)
+
+		id := validID(w, r, "no box")
+		if id.IsNil() {
+			return
+		}
+		logg.Debug(id)
+
+		notFound := false
+		// @TODO: Remove BoxExist when BoxById returns proper errors.
+		if !db.BoxExist("id", id.String()) {
+			notFound = true
+		}
+		var box items.Box
+		var err error
+		if !notFound {
+			box, err = db.BoxById(id)
+			if err != nil {
+				notFound = true
+			}
+		}
+		box.Id = id
+		data := items.BoxPageTemplateData()
+		data.Box = &box
+		logg.Debug(data)
+
+		data.Title = fmt.Sprintf("Box - %s", box.Label)
+		data.Authenticated = authenticated
+		data.User = user
+		data.NotFound = notFound
+
+		MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, data)
+	}
+}
+
 func WriteBoxTemplate(w io.Writer, data any) {
 	boxTemplate, ok := data.(items.BoxTemplateData)
 	errMessageForUser := "Something went wrong"
@@ -46,7 +85,7 @@ func WriteBoxTemplate(w io.Writer, data any) {
 		fmt.Fprint(ww, errMessageForUser)
 		logg.Info(errMessageForUser)
 	}
-	err := templates.Render(w, templates.TEMPLATE_BOX, boxTemplate)
+	err := templates.Render(w, templates.TEMPLATE_BOX_DETAILS, boxTemplate)
 	if err != nil {
 		ww, ok := w.(http.ResponseWriter)
 		if !ok {
@@ -183,6 +222,13 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 				return
 			}
 
+			// @TODO: Implement move boxes.
+			move := "true" == r.FormValue("move")
+			if move {
+				w.WriteHeader(http.StatusNotImplemented)
+				return
+			}
+
 			// Use API data writer
 			if !wantsTemplateData(r) {
 				writeData(w, box)
@@ -234,6 +280,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			server.RedirectWithSuccessNotification(w, "/boxes", fmt.Sprintf("%s deleted", id))
 			return
 
+		// @TODO: Implement move boxes.
 		case http.MethodPut:
 			errMsgForUser := "Can't update box."
 			id := validID(w, r, errMsgForUser)
@@ -249,7 +296,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			}
 			if wantsTemplateData(r) {
 				boxTemplate := items.BoxTemplateData{Box: &box, Edit: false}
-				RenderWithSuccessNotification(w, templates.TEMPLATE_BOX, boxTemplate, fmt.Sprintf("Updated box: %v", boxTemplate.Label))
+				RenderWithSuccessNotification(w, templates.TEMPLATE_BOX_DETAILS, boxTemplate, fmt.Sprintf("Updated box: %v", boxTemplate.Label))
 			} else {
 				writeData(w, box)
 			}

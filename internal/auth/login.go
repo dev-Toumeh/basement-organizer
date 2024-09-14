@@ -137,6 +137,7 @@ func saveSession(w http.ResponseWriter, r *http.Request, user User) {
 	session.Save(r, w)
 }
 
+// UserSessionData returns username and id from stored session.
 func UserSessionData(r *http.Request) (string, string) {
 
 	session, _ := store.Get(r, COOKIE_NAME)
