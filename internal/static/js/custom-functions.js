@@ -19,35 +19,35 @@
 //    }
 //}
 //
-   function editItem(id) {
-       const form = document.getElementById(`item-form-${id}`);
-       const inputs = form.querySelectorAll('input:not([name="id"]):not([name="picture"])');
-       inputs.forEach(input => input.removeAttribute('readonly'));
-       
-       document.getElementById(`image-preview-${id}`).style.display = 'none';
-       document.getElementById(`image-input-${id}`).style.display = 'block';
-       
-       form.querySelector('button[onclick^="editItem"]').style.display = 'none';
-       form.querySelector('button[type="submit"]').style.display = 'inline';
-       form.querySelector('button[onclick^="cancelEdit"]').style.display = 'inline';
-   }
+function editItem(id) {
+    const form = document.getElementById(`item-form-${id}`);
+    const inputs = form.querySelectorAll('input:not([name="id"]):not([name="picture"])');
+    inputs.forEach(input => input.removeAttribute('readonly'));
 
-   function cancelEdit(id) {
-       const form = document.getElementById(`item-form-${id}`);
-       const inputs = form.querySelectorAll('input:not([name="id"]):not([name="picture"])');
-       inputs.forEach(input => {
-           input.setAttribute('readonly', true);
-           input.value = input.defaultValue;
-       });
-       
-       document.getElementById(`image-preview-${id}`).style.display = 'block';
-       document.getElementById(`image-input-${id}`).style.display = 'none';
-       document.getElementById(`picture-${id}`).value = '';
-       
-       form.querySelector('button[onclick^="editItem"]').style.display = 'inline';
-       form.querySelector('button[type="submit"]').style.display = 'none';
-       form.querySelector('button[onclick^="cancelEdit"]').style.display = 'none';
-   }
+    document.getElementById(`image-preview-${id}`).style.display = 'none';
+    document.getElementById(`image-input-${id}`).style.display = 'block';
+
+    form.querySelector('button[onclick^="editItem"]').style.display = 'none';
+    form.querySelector('button[type="submit"]').style.display = 'inline';
+    form.querySelector('button[onclick^="cancelEdit"]').style.display = 'inline';
+}
+
+function cancelEdit(id) {
+    const form = document.getElementById(`item-form-${id}`);
+    const inputs = form.querySelectorAll('input:not([name="id"]):not([name="picture"])');
+    inputs.forEach(input => {
+        input.setAttribute('readonly', true);
+        input.value = input.defaultValue;
+    });
+
+    document.getElementById(`image-preview-${id}`).style.display = 'block';
+    document.getElementById(`image-input-${id}`).style.display = 'none';
+    document.getElementById(`picture-${id}`).value = '';
+
+    form.querySelector('button[onclick^="editItem"]').style.display = 'inline';
+    form.querySelector('button[type="submit"]').style.display = 'none';
+    form.querySelector('button[onclick^="cancelEdit"]').style.display = 'none';
+}
 
 /** Callback function that handles Error responses to display for the user.
  * Is registered as an eventListener
@@ -101,7 +101,7 @@ function createNotification(text, notificationType, id) {
 
     var snackbarId;
     if (id === undefined || id === "") {
-        snackbarId = Math.round((Math.random() * 100000)).toString(); 
+        snackbarId = Math.round((Math.random() * 100000)).toString();
     } else {
         snackbarId = id;
     }
@@ -160,7 +160,7 @@ function showNotification(id, duration = 2000) {
  * @param id {string} HTML Element id. */
 function removeNotification(id) {
     let bar = document.getElementById(id);
-    if (bar !== null) {    
+    if (bar !== null) {
         bar.remove();
     }
 }
@@ -192,7 +192,7 @@ function noResponseCallback(resInfo) {
  * @param {number} [evt.detail.value[].duration] - Optional duration for which the snackbar is displayed.
  * @param {string} [evt.detail.value[].id] - Optional unique identifier for the snackbar.
  */
-function serverNotificationsCallback(evt){
+function serverNotificationsCallback(evt) {
     for (let i = 0; i < evt.detail.value.length; i++) {
         createAndShowNotification(evt.detail.value[i].message, evt.detail.value[i].type, evt.detail.value[i].duration, evt.detail.value[i].id);
     }
