@@ -47,17 +47,9 @@ func boxDetailsPage(db BoxDatabase) http.HandlerFunc {
 		logg.Debug(id)
 
 		notFound := false
-		// @TODO: Remove BoxExist when BoxById returns proper errors.
-		if !db.BoxExist("id", id.String()) {
+		box, err := db.BoxById(id)
+		if err != nil {
 			notFound = true
-		}
-		var box items.Box
-		var err error
-		if !notFound {
-			box, err = db.BoxById(id)
-			if err != nil {
-				notFound = true
-			}
 		}
 		box.Id = id
 		data := items.BoxPageTemplateData()
