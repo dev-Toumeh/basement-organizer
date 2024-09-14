@@ -24,11 +24,11 @@
     <div>
         <button 
             hx-post="login"
-            hx-indicator="#loadingIndicator"
             hx-disabled-elt="this"
             hx-target="this"
             {{ if .Authenticated }}disabled{{ end }}
         >Login</button>
+            <!--hx-indicator="#loadingIndicator"-->
 </form>
 <label id="responseLabel"></label>
 {{ end }}

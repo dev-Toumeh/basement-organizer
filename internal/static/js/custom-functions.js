@@ -198,8 +198,24 @@ function serverNotificationsCallback(evt){
     }
 }
 
+/** Callback for header field "notification".
+ * Will create notification with the value of that field.
+ * */
+function serverNotificationsFromHeaderCallback(event) {
+    const serverNotification = event.detail.requestConfig.headers.notification;
+    if (serverNotification !== undefined) {
+        //debugger;
+        let message = serverNotification.message ? serverNotification.message : "";
+        let type = serverNotification.type ? serverNotification.type : "";
+        let duration = serverNotification.duration ? parseInt(serverNotification.duration) : undefined;
+        let id = serverNotification.id ? parseInt(serverNotification.id) : undefined;
+        createAndShowNotification(message, type, duration, id);
+    }
+}
+
 function registerCallbackEventListener() {
     document.body.addEventListener('htmx:beforeSwap', errorResponseCallback);
+    document.body.addEventListener('htmx:afterSwap', serverNotificationsFromHeaderCallback);
     document.body.addEventListener('htmx:sendError', noResponseCallback);
     document.body.addEventListener('ServerNotificationEvents', serverNotificationsCallback);
 }

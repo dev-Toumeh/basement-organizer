@@ -2,6 +2,7 @@ package auth
 
 import (
 	"basement/main/internal/logg"
+	"basement/main/internal/server"
 	"basement/main/internal/templates"
 	"context"
 	"fmt"
@@ -68,10 +69,7 @@ func updateUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 		return
 	}
 
-	// https://htmx.org/headers/hx-location/
-	w.Header().Add("HX-Location", "/")
-	templates.RenderSuccessNotification(w, fmt.Sprintf("the user %s was updated successfully", newUser.Username))
-	http.Redirect(w, r, "/", http.StatusOK)
+	server.RedirectWithSuccessNotification(w, "/", fmt.Sprintf("the user %s was updated successfully", newUser.Username))
 	logg.Debugf("User %s updated successfully:", newUser.Username)
 	return
 }

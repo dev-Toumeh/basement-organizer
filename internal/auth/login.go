@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"basement/main/internal/logg"
+	"basement/main/internal/server"
 	"basement/main/internal/templates"
 )
 
@@ -88,8 +89,7 @@ func loginUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 
 	logg.Info("login successful")
 
-	// https://htmx.org/headers/hx-location/
-	w.Header().Add("HX-Location", "/items")
+	server.RedirectWithSuccessNotification(w, "/items", fmt.Sprintf("Welcome %s", user.Username))
 	fmt.Fprintf(w, "Welcome %v\n", username)
 }
 

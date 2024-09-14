@@ -3,6 +3,7 @@ package auth
 import (
 	"basement/main/internal/env"
 	"basement/main/internal/logg"
+	"basement/main/internal/server"
 	"basement/main/internal/templates"
 	"context"
 	"errors"
@@ -143,10 +144,7 @@ func registerUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 			return
 		}
 
-		// https://htmx.org/headers/hx-location/
-		http.RedirectHandler("/login-form", http.StatusOK)
-		templates.RenderSuccessNotification(w, fmt.Sprintf("the user %s was created successfully", newUser.Username))
-		w.Header().Add("HX-Location", "/login")
+		server.RedirectWithSuccessNotification(w, "/", fmt.Sprintf("the user %s was created successfully", newUser.Username))
 		logg.Debugf("User %s registered successfully:", newUser.Username)
 		return
 	}

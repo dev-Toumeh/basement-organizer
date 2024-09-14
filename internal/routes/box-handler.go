@@ -4,6 +4,7 @@ import (
 	"basement/main/internal/auth"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
+	"basement/main/internal/server"
 	"basement/main/internal/templates"
 	"encoding/json"
 	"fmt"
@@ -140,7 +141,7 @@ func BoxesHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFun
 			}
 			if errOccurred {
 				errIds := strings.Join(deleteErrorIds, ",")
-				TriggerErrorNotification(w, errMsgForUser+errIds)
+				server.TriggerErrorNotification(w, errMsgForUser+errIds)
 				// @TODO: Update partial table, even if error happens.
 				return
 			}
@@ -230,7 +231,8 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 				writeNotFoundError(errMsgForUser, err, w, r)
 				return
 			}
-			break
+			server.RedirectWithSuccessNotification(w, "/boxes", fmt.Sprintf("%s deleted", id))
+			return
 
 		case http.MethodPut:
 			errMsgForUser := "Can't update box."
@@ -264,7 +266,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 
 // Render applies data to a defined template and writes result back to the writer.
 func RenderWithSuccessNotification(w http.ResponseWriter, name string, data any, successMessage string) error {
-	TriggerSuccessNotification(w, successMessage)
+	server.TriggerSuccessNotification(w, successMessage)
 	err := templates.Render(w, name, data)
 	if err != nil {
 		fmt.Fprintln(w, err)
