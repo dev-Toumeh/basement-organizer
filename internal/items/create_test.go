@@ -42,8 +42,8 @@ func TestCheckIDs(t *testing.T) {
 		if id == uuid.Nil {
 			t.Error("Expected a generated ID, but got Nil")
 		}
-		if boxID == uuid.Nil {
-			t.Error("Expected a generated BoxID, but got Nil")
+		if boxID != uuid.Nil {
+			t.Errorf("Expected BoxID is Nil, but got %s", boxID)
 		}
 	})
 
@@ -65,10 +65,19 @@ func TestCheckIDs(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(data))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-		_, _, err := checkIDs(req)
+		id, boxId, err := checkIDs(req)
 
-		if err == nil {
-			t.Error("Expected an error for one missing ID, but got none")
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+
+		if id == uuid.Nil {
+			t.Errorf("Expected a valid ID, but got uuid.Nil")
+		}
+
+		if boxId != uuid.Nil {
+			t.Errorf("Expected boxId to be uuid.Nil, but got %v", boxId)
 		}
 	})
+
 }

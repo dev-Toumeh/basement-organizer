@@ -212,7 +212,6 @@ func responseGenerator(w http.ResponseWriter, responseMessage []string, success 
 }
 
 // this function will pack the request into struct from type Item, so it will be easier to handle it
-// @TODO: Need error return in case something wrong happens
 func item(r *http.Request) (Item, error) {
 
 	id, boxId, err := checkIDs(r)
@@ -283,26 +282,31 @@ func stringToInt64(value string) int64 {
 }
 
 func checkIDs(r *http.Request) (uuid.UUID, uuid.UUID, error) {
-
+	var err error
 	id := uuid.Nil
 	boxId := uuid.Nil
+
 	lengID := len(r.PostFormValue(ID))
 	lengBoxID := len(r.PostFormValue(BOX_ID))
-	if lengID != 0 && lengBoxID != 0 {
-		currentId, err1 := uuid.FromString(r.PostFormValue(ID))
-		currentBoxId, err2 := uuid.FromString(r.PostFormValue(BOX_ID))
-		if err1 != nil || err2 != nil {
-			return uuid.Nil, uuid.Nil, fmt.Errorf("error while converting the id string into id from type uuid: %w %w", err1, err2)
-		} else {
-			return currentId, currentBoxId, nil
+
+	if lengBoxID != 0 {
+		boxId, err = uuid.FromString(r.PostFormValue(BOX_ID))
+		if err != nil {
+			logg.Errf("error while converting the boxId to type uuid: %v", err)
 		}
-	} else if lengID == 0 && lengBoxID == 0 {
-		id, err1 := uuid.NewV4()
-		boxId, err2 := uuid.NewV4()
-		if err1 != nil || err2 != nil {
-			return id, boxId, fmt.Errorf("error while generating the new item uuid: %w %w", err1, err2)
+	}
+
+	if lengID == 0 {
+		id, err = uuid.NewV4()
+		if err != nil {
+			return id, boxId, fmt.Errorf("error while generating the new item uuid: %w", err)
+		}
+		return id, boxId, nil
+	} else {
+		id, err = uuid.FromString(r.PostFormValue(ID))
+		if err != nil {
+			return id, boxId, fmt.Errorf("error while converting the itemId to type uuid: %w", err)
 		}
 		return id, boxId, nil
 	}
-	return id, boxId, fmt.Errorf("error while checking the item ids one id is empty")
 }
