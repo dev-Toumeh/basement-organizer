@@ -5,6 +5,7 @@ import (
 	"basement/main/internal/templates"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
 	"slices"
 	"time"
@@ -49,6 +50,21 @@ type Box struct {
 	Shelve      *ShelveCoordinates `json:"shelveinfo" `
 }
 
+func (box *Box) Map() map[string]any {
+	return map[string]interface{}{
+		"Id":          box.Id,
+		"Label":       box.Label,
+		"Description": box.Description,
+		"Picture":     box.Picture,
+		"Qrcode":      box.QRcode,
+		"OuterboxId":  box.OuterBoxId,
+		"Items":       box.Items,
+		"Innerboxes":  box.InnerBoxes,
+		"Outerbox":    box.OuterBox,
+		"Shelveinfo":  box.Shelve,
+	}
+}
+
 type ShelveCoordinates struct {
 	Id    uuid.UUID `json:"id"`
 	Label string    `json:"label"       validate:"required,lte=128"`
@@ -77,8 +93,19 @@ type BoxTemplateData struct {
 	Edit bool
 }
 
+func (tmpl BoxTemplateData) Map() map[string]any {
+	data := make(map[string]any, 0)
+	maps.Copy(data, tmpl.Box.Map())
+	data["Edit"] = tmpl.Edit
+	return data
+}
+
 type BoxListTemplateData struct {
 	Boxes []*Box
+}
+
+func (tmpl BoxListTemplateData) Map() map[string]any {
+	return map[string]any{"Boxes": tmpl.Boxes}
 }
 
 func RenderBoxListItem(w http.ResponseWriter, data *Box) {
@@ -86,7 +113,13 @@ func RenderBoxListItem(w http.ResponseWriter, data *Box) {
 }
 
 func RenderBoxList(w http.ResponseWriter, boxes []*Box) {
-	data := BoxListTemplateData{Boxes: boxes}
+	var data any
+	if boxes == nil {
+		data = map[string]any{}
+	} else {
+		data = map[string][]*Box{"Boxes": boxes}
+	}
+	logg.Debug(data)
 	templates.Render(w, templates.TEMPLATE_BOX_LIST, data)
 }
 
@@ -104,6 +137,13 @@ func BoxPageTemplateData() *boxPageTemplateData {
 		PageTemplate:    &pageTmpl,
 	}
 	return &data
+}
+
+func (tmpl *boxPageTemplateData) Map() map[string]any {
+	data := make(map[string]any, 0)
+	maps.Copy(data, tmpl.BoxTemplateData.Map())
+	maps.Copy(data, tmpl.PageTemplate.Map())
+	return data
 }
 
 type BoxC struct {

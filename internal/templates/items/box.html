@@ -15,8 +15,20 @@
                 <th style="width: 10%">Delete</th>
             </tr>
         </thead> 
-        <tbody id="box-list-body" hx-trigger="load" hx-get="/boxes-list" >
-        </tbody>
+        {{ if .Boxes }}
+            <tbody id="box-list-body">
+                {{ range .Boxes }}
+                {{ template "box-list-item" . }}
+                {{end}}
+            </tbody>
+        {{ else }}
+            <tbody id="box-list-body" 
+                hx-trigger="load"
+                hx-get="/boxes-list"
+                hx-swap="outerHTML"
+                hx-target="#box-list">
+            </tbody>
+        {{ end }}
     </table>
     <div >
         <button hx-delete="/boxes-list"

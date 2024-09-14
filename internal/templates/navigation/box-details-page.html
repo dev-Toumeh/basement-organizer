@@ -21,7 +21,7 @@
         <hr>
         {{ template "search-item-form" . }}
         <hr>
-        {{ template "innerboxes-list" . }}
+        {{ template "box-list" . }}
     {{ end }}
 {{ end }}
 
@@ -41,6 +41,16 @@
     <label for="qrcode">QRcode:</label>
     <input type="text" id="qrcode" name="qrcode" value="{{ .QRcode }}" {{ if not .Edit}}readonly{{end}}>
     <br>
+
+    {{ if eq .OuterboxId.String "00000000-0000-0000-0000-000000000000" }}
+    {{ else }}
+    <span>Is inside box:</span>
+    <a href="/boxes/{{.OuterboxId}}" 
+        hx-boost="true"
+        style=""
+    >{{ .Outerbox.Label }}</a>
+    <br>
+    {{ end }}
 
     <div id="image-preview-{{ .Id }}">
         {{ if .Picture }}

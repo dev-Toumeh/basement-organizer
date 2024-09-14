@@ -75,3 +75,10 @@ input[type="password"] {
   background: #e4e4e4;
 }
 
+
+.box-container a:hover {
+  background: #c0c0c0;
+  color: blue;
+  font-weight: bold;
+}
+

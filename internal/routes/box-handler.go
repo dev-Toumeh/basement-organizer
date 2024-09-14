@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"strings"
 
@@ -32,7 +33,7 @@ func boxesPage(w http.ResponseWriter, r *http.Request) {
 	data.Authenticated = authenticated
 	data.User = user
 
-	MustRender(w, r, templates.TEMPLATE_BOXES_PAGE, data)
+	MustRender(w, r, templates.TEMPLATE_BOXES_PAGE, data.Map())
 }
 
 func boxDetailsPage(db BoxDatabase) http.HandlerFunc {
@@ -54,14 +55,16 @@ func boxDetailsPage(db BoxDatabase) http.HandlerFunc {
 		box.Id = id
 		data := items.BoxPageTemplateData()
 		data.Box = &box
-		logg.Debug(data)
 
 		data.Title = fmt.Sprintf("Box - %s", box.Label)
 		data.Authenticated = authenticated
 		data.User = user
 		data.NotFound = notFound
+		nd := data.Map()
+		maps.Copy(nd, map[string]any{"Boxes": &box.InnerBoxes})
 
-		MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, data)
+		logg.Debug(nd)
+		MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, nd)
 	}
 }
 
@@ -119,11 +122,13 @@ func BoxesHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFun
 				writeNotFoundError("Can't find boxes", err, w, r)
 			}
 			if wantsTemplateData(r) {
-				// items.RenderBoxList(w, nil)
+				var boxes []*items.Box
 				for _, id := range ids {
 					box, _ := db.BoxById(uuid.Must(uuid.FromString(id)))
-					items.RenderBoxListItem(w, &box)
+					boxes = append(boxes, &box)
+					// items.RenderBoxListItem(w, &box)
 				}
+				items.RenderBoxList(w, boxes)
 				return
 			}
 			writeData(w, ids)
@@ -241,11 +246,13 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			}
 			b := items.BoxTemplateData{Box: &box, Edit: edit}
 
-			WriteBoxTemplate(w, b)
+			templates.Render(w, templates.TEMPLATE_BOX_DETAILS, b.Map())
+			// WriteBoxTemplate(w, b.Map())
 			break
 
 		case http.MethodPost:
 			box := items.NewBox()
+			logg.Debug("create box: ", box)
 			id, err := db.CreateBox(&box)
 			if err != nil {
 				writeNotFoundError("error while creating the box", err, w, r)
