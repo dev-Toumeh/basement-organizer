@@ -10,18 +10,21 @@ func TriggerAllServerNotifications(w http.ResponseWriter) {
 }
 
 // TriggerErrorNotification uses "HX-Trigger-After-Swap" to trigger client side event to create notification.
+// Must be called before any writing to w happens.
 func TriggerErrorNotification(w http.ResponseWriter, message string) {
 	msg := fmt.Sprintf(`{"ServerNotificationEvents":[{"message":"%s", "type":"error" }]}`, message)
 	w.Header().Set("HX-Trigger-After-Swap", msg)
 }
 
 // TriggerSuccessNotification uses "HX-Trigger-After-Swap" to trigger client side event to create notification.
+// Must be called before any writing to w happens.
 func TriggerSuccessNotification(w http.ResponseWriter, message string) {
 	msg := fmt.Sprintf(`{"ServerNotificationEvents":[{"message":"%s", "type":"success" }]}`, message)
 	w.Header().Set("HX-Trigger-After-Swap", msg)
 }
 
 // TriggerWarningNotification uses "HX-Trigger-After-Swap" to trigger client side event to create notification.
+// Must be called before any writing to w happens.
 func TriggerWarningNotification(w http.ResponseWriter, message string) {
 	msg := fmt.Sprintf(`{"ServerNotificationEvents":[{"message":"%s", "type":"warning" }]}`, message)
 	w.Header().Set("HX-Trigger-After-Swap", msg)
