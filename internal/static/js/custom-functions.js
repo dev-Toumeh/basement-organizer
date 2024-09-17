@@ -53,19 +53,42 @@ function cancelEdit(id) {
  * Is registered as an eventListener
  * @param {HtmxResponseInfo}resInfo */
 function errorResponseCallback(resInfo) {
+    var notificationType
+    var responseMessage
+    var showNotification
+
+    const status = resInfo.detail.xhr.status;
+
     // Show all error responses above 400 with a snackbar notification
-    if (resInfo.detail.xhr.status >= 400) {
-        console.log(resInfo);
+    switch (true) {
+        case status === 501:
+            showNotification = true
+            notificationType = NotificationTypeWarning;
+            break;
+
+        case status >= 400:
+            showNotification = true
+            notificationType = NotificationTypeError;
+            console.log(resInfo);
+            break;
+
+        default:
+            showNotification = false
+            break;
+    }
+
+    if (showNotification) {
         resInfo.detail.isError = false;
 
         if (resInfo.detail.serverResponse !== "") {
-            createAndShowNotification(resInfo.detail.serverResponse, "error");
+            responseMessage = resInfo.detail.serverResponse;
         } else {
-            createAndShowNotification(resInfo.detail.xhr.statusText, "error");
+            responseMessage = resInfo.detail.xhr.statusText;
         }
-        //resInfo.detail.target = htmx.find("#notification-container");
-        //resInfo.detail.target.setAttribute("hx-swap", "afterend");
+
+        createAndShowNotification(responseMessage, notificationType);
     }
+
 }
 
 const NotificationTypeError = "error";
@@ -108,6 +131,21 @@ function createNotification(text, notificationType, id) {
 
     snackbar.id = "notification-" + snackbarId;
     snackbar.textContent = text;
+
+    switch (notificationType) {
+        case NotificationTypeError:
+            console.error(text);
+            break;
+        case NotificationTypeInfo:
+            console.info(text);
+            break;
+        case NotificationTypeWarning:
+            console.warn(text);
+            break;
+        default:
+            console.log(text);
+            break;
+    }
     return snackbar;
 }
 
@@ -117,7 +155,7 @@ function createNotification(text, notificationType, id) {
  * @param duration {number | undefined} How long is should display before removal. Default is 2000 (2 seconds). */
 function showNotification(id, duration = 2000) {
     let currentNotificationCount = document.querySelectorAll("div.notification").length;
-    console.log(currentNotificationCount);
+    console.log("notification count: ", currentNotificationCount);
 
     // Add warning notification for too many notifications.
     if (currentNotificationCount > 10) {
@@ -145,6 +183,7 @@ function showNotification(id, duration = 2000) {
         console.error("no notification to show. ID: ", id);
     }
 
+    console.log("notification added: ", notification)
     setTimeout(() => {
         notification.className = notification.className.replace("noshow", "show");
     }, 50);
@@ -163,6 +202,10 @@ function removeNotification(id) {
     if (bar !== null) {
         bar.remove();
     }
+}
+
+function removeAllNotifications() {
+    document.getElementById("notification-container").innerHTML = "";
 }
 
 /** removeNotificationAfter removes snackbar HTML element after a certain duration.
@@ -213,11 +256,20 @@ function serverNotificationsFromHeaderCallback(event) {
     }
 }
 
+var init = false;
 function registerCallbackEventListener() {
+    if (init) {
+        return;
+    }
     document.body.addEventListener('htmx:beforeSwap', errorResponseCallback);
     document.body.addEventListener('htmx:afterSwap', serverNotificationsFromHeaderCallback);
     document.body.addEventListener('htmx:sendError', noResponseCallback);
     document.body.addEventListener('ServerNotificationEvents', serverNotificationsCallback);
+    htmx.on('htmx:beforeHistorySave', function() {
+        removeAllNotifications();
+    })
+
+    init = true;
 }
 
 console.log("registerCallbackEventListener executed")
