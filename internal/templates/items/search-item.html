@@ -1,13 +1,10 @@
 {{define "search-item-form"}}
     <form id="box-list" style="display: block;"> 
-        <label for="search">search Items</label>
-        <input type="text"
-               hx-post="/api/v1/search/item"
-               hx-trigger="focus, keyup changed delay:500ms"
-               id="search-bar"
-               hx-target="#item-list-body"
-               hx-on:keyup="document.getElementById('pagination').innerHTML = '';"
-               name="query">
+        {{ $searchInput := map 
+            "SearchInputLabel" "Search item"
+            "SearchInputHxPost" "/api/v1/search/item" 
+            "SearchInputHxTarget" "#item-list-body" }}
+        {{ template "search-input" $searchInput.Map }}
         <table class="box-list">
             <thead>
                 <tr>
@@ -29,3 +26,17 @@
     <div id="data-container" style="display: none;"></div> 
     <div id="pagination"></div> 
 {{end}}
+
+
+{{ define "search-input" }}
+<label for="search">{{ with .SearchInputLabel }}{{ . }}{{end}}</label>
+<input id="search-bar"
+    type="text"
+    {{ if .SearchInputHxPost}}
+        hx-post="{{ .SearchInputHxPost }}"
+        hx-trigger="load, keyup changed delay:500ms"
+        hx-target="{{ .SearchInputHxTarget }}"
+    {{end}}
+    hx-on:keyup="document.getElementById('pagination').innerHTML = '';"
+    name="query">
+{{ end }}

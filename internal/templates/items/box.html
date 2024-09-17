@@ -1,7 +1,6 @@
 {{ define "box-list" }}
 <form id="box-list">
-    <label for="search">search</label>
-    <input name="search" value="">
+    {{ template "search-input" . }}
     <button type="button">Alternative View</button>
     <table class="box-list">
         <thead>

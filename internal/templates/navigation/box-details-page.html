@@ -19,7 +19,6 @@
     {{ else }}
         {{ template "box-details" . }}
         <hr>
-        {{ template "search-item-form" . }}
         <hr>
         {{ template "box-list" . }}
     {{ end }}
@@ -28,7 +27,8 @@
 
 {{ define "box-details" }}
 <form id="box-{{.Id}}"
-    class="box-container">
+    class="box-container"
+    hx-encoding="multipart/form-data">
     <label for="id">ID:</label>
     <input name="id" type="text" value="{{.Id}}" {{ if not .Edit}}readonly{{end}}>
 
@@ -78,6 +78,10 @@
         hx-target="#box-{{.Id}}"
         hx-swap="outerHTML"
 >Update box</button>
+<button hx-get="/box?id={{.Id}}"
+        hx-target="#box-{{.Id}}"
+        hx-swap="outerHTML"
+>cancel</button>
 {{ else }}
 <button hx-get="/box?id={{.Id}}&edit=true"
         hx-target="#box-{{.Id}}"
@@ -99,8 +103,7 @@
 
 {{ define "innerboxes-list" }}
 <form id="box-list">
-    <label for="search">search</label>
-    <input name="search" value="">
+    {{ template "search-input" . }}
     <button type="button">Alternative View</button>
     <table class="box-list">
         <thead>
@@ -115,9 +118,9 @@
             </tr>
         </thead> 
         <tbody id="box-list-body" hx-trigger="load" hx-get="/boxes-list" >
-    {{ range .InnerBoxes }}    
-        {{ template "box-list-item" . }}
-                    {{ end }}
+        {{ range .InnerBoxes }}    
+            {{ template "box-list-item" . }}
+        {{ end }}
         </tbody>
     </table>
     <div >

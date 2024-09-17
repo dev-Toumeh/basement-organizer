@@ -96,8 +96,6 @@ func InitTemplates(directory string) error {
 	} else {
 		dir = directory
 	}
-	internalTemplate = template.New("main")
-	internalTemplate.Funcs(template.FuncMap{"map": newMap})
 	internalTemplate, _, err = ParseDirectory(dir)
 	if err != nil {
 		return logg.Errorf("Init Templates failed: %w", err)
@@ -141,6 +139,8 @@ func (v *templateInlineMap) Set(key string, value string) string {
 
 // Recursively parse all files in directory, including sub-directories.
 func ParseDirectory(dirpath string) (*template.Template, []string, error) {
+	internalTemplate = template.New("main")
+	internalTemplate.Funcs(template.FuncMap{"map": newMap})
 	paths, err := allFilePathsInDirectory(dirpath)
 	if err != nil {
 		return nil, nil, err
