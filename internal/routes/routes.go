@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"basement/main/internal/auth"
 	"basement/main/internal/database"
@@ -26,7 +27,8 @@ func MustRender(w http.ResponseWriter, r *http.Request, name string, data any) {
 	err := templates.SafeRender(w, name, data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		logg.Debug(http.StatusText(http.StatusInternalServerError))
+		errLog := logg.Errorf("Can't render template safely", err)
+		logg.Errfo(3, "%s\n\t%s", http.StatusText(http.StatusInternalServerError), errLog)
 		return
 	}
 }
@@ -43,6 +45,7 @@ func authRoutes(db auth.AuthDatabase) {
 }
 
 func apiRoutes(db items.ItemDatabase) {
+	http.HandleFunc("/api/v1/implement-me", ImplementMeHandler)
 	http.HandleFunc("/items", itemsPage)
 	http.HandleFunc("/template/item-form", itemTemp)
 	http.HandleFunc("/template/item-search", searchItemTemp)
@@ -70,6 +73,27 @@ func apiRoutes(db items.ItemDatabase) {
 	http.HandleFunc("/api/v1/read/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
 		fmt.Fprint(w, data)
 	}))
+}
+
+func ImplementMeHandler(w http.ResponseWriter, r *http.Request) {
+	returnMessage := "This is a placeholder API"
+	logs := make([]string, 0)
+	logs = append(logs, "Headers: ")
+	for i, v := range r.Header {
+		if !strings.HasPrefix(i, "Hx-") {
+			continue
+		}
+		logs = append(logs, fmt.Sprintf("%s: %v", i, v))
+	}
+	trigger := r.Header.Get("HX-Trigger")
+	if trigger != "" {
+		returnMessage = fmt.Sprintf("%s triggered request: %s", trigger, returnMessage)
+	}
+
+	logg.Info(fmt.Sprintf("\"%s: %s\". %s called /api/v1/implement-me", r.Header.Get("hx-trigger"), returnMessage, r.Referer()))
+	logg.Debug(strings.Join(logs, "\n\t"))
+	w.WriteHeader(http.StatusNotImplemented)
+	fmt.Fprint(w, returnMessage)
 }
 
 var testStyle = templates.DEBUG_STYLE

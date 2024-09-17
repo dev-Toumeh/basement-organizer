@@ -62,8 +62,12 @@ func boxDetailsPage(db BoxDatabase) http.HandlerFunc {
 		data.NotFound = notFound
 		nd := data.Map()
 		maps.Copy(nd, map[string]any{"Boxes": &box.InnerBoxes})
+		searchInput := items.NewSearchInputTemplate()
+		searchInput.SearchInputLabel = "Search boxes"
+		searchInput.SearchInputHxTarget = "#box-list-body"
+		searchInput.SearchInputHxPost = "/api/v1/implement-me"
+		maps.Copy(nd, searchInput.Map())
 
-		logg.Debug(nd)
 		MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, nd)
 	}
 }
@@ -88,7 +92,7 @@ func WriteBoxTemplate(w io.Writer, data any) {
 		}
 		ww.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(ww, errMessageForUser)
-		logg.Info(fmt.Errorf("Can't render TEMPLATE_BOX. %w", err))
+		logg.Info(logg.Errorf("Can't render TEMPLATE_BOX. %w", err))
 		return
 	}
 }
@@ -128,7 +132,15 @@ func BoxesHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFun
 					boxes = append(boxes, &box)
 					// items.RenderBoxListItem(w, &box)
 				}
-				items.RenderBoxList(w, boxes)
+				// items.RenderBoxList(w, boxes)
+				searchInput := items.NewSearchInputTemplate()
+				// logg.Debugf("searchInput %v", searchInput)
+				logg.Debugf("searchInput %v", searchInput.Map())
+				searchInput.SearchInputLabel = "Search boxes"
+				searchInput.SearchInputHxTarget = "#box-list-body"
+				searchInput.SearchInputHxPost = "/api/v1/implement-me"
+				maps := []templates.Mapable{searchInput, items.BoxListTemplateData{Boxes: boxes}}
+				templates.RenderMaps(w, templates.TEMPLATE_BOX_LIST, maps)
 				return
 			}
 			writeData(w, ids)
@@ -156,7 +168,7 @@ func BoxesHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFun
 					if err != nil {
 						w.WriteHeader(http.StatusBadRequest)
 						fmt.Fprint(w, errMsgForUser)
-						logg.Debug(fmt.Errorf("%v\n\tMalformed uuid: %v\n\t%w", errMsgForUser, k, err))
+						logg.Errorf(fmt.Sprintf("%s: Malformed uuid \"%s\"", errMsgForUser, k), err)
 						return
 					}
 					toDelete = append(toDelete, id)
@@ -171,7 +183,7 @@ func BoxesHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFun
 				if err != nil {
 					errOccurred = true
 					deleteErrorIds = append(deleteErrorIds, deleteId.String())
-					logg.Err(fmt.Errorf("%v: %v\n\t%w", errMsgForUser, deleteId, err))
+					logg.Errorf(fmt.Sprintf("%v: %v", errMsgForUser, deleteId), err)
 				} else {
 					logg.Debug("Box deleted: ", deleteId)
 				}
@@ -246,7 +258,7 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			}
 			b := items.BoxTemplateData{Box: &box, Edit: edit}
 
-			templates.Render(w, templates.TEMPLATE_BOX_DETAILS, b.Map())
+			MustRender(w, r, templates.TEMPLATE_BOX_DETAILS, b.Map())
 			// WriteBoxTemplate(w, b.Map())
 			break
 
@@ -301,7 +313,11 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 			}
 			if wantsTemplateData(r) {
 				boxTemplate := items.BoxTemplateData{Box: &box, Edit: false}
-				RenderWithSuccessNotification(w, templates.TEMPLATE_BOX_DETAILS, boxTemplate, fmt.Sprintf("Updated box: %v", boxTemplate.Label))
+				err := RenderWithSuccessNotification(w, r, templates.TEMPLATE_BOX_DETAILS, boxTemplate.Map(), fmt.Sprintf("Updated box: %v", boxTemplate.Label))
+				if err != nil {
+					writeInternalServerError(errMsgForUser, err, w, r)
+					return
+				}
 			} else {
 				writeData(w, box)
 			}
@@ -317,13 +333,14 @@ func BoxHandler(writeData items.DataWriteFunc, db BoxDatabase) http.HandlerFunc 
 }
 
 // Render applies data to a defined template and writes result back to the writer.
-func RenderWithSuccessNotification(w http.ResponseWriter, name string, data any, successMessage string) error {
-	server.TriggerSuccessNotification(w, successMessage)
-	err := templates.Render(w, name, data)
+func RenderWithSuccessNotification(w http.ResponseWriter, r *http.Request, name string, data any, successMessage string) error {
+	err := templates.CanRender(name, data)
 	if err != nil {
-		fmt.Fprintln(w, err)
-		return fmt.Errorf("RenderWithSuccessNotification() error: %w", err)
+		server.TriggerSuccessNotification(w, successMessage)
+		return logg.Errorf("Template rendering failed", err)
 	}
+	server.TriggerSuccessNotification(w, successMessage)
+	templates.Render(w, name, data)
 	return nil
 }
 
@@ -331,7 +348,14 @@ func RenderWithSuccessNotification(w http.ResponseWriter, name string, data any,
 func writeNotFoundError(message string, err error, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	fmt.Fprint(w, message)
-	logg.Info(fmt.Errorf("%s:\n\t%w", message, err))
+	logg.Info(logg.Errorf(message, err))
+}
+
+// writeNotFoundError sets not found status code 404, logs error and writes error message to client.
+func writeInternalServerError(message string, err error, w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusInternalServerError)
+	fmt.Fprint(w, message)
+	logg.Errfo(3, "%s\n\t%s", message, err)
 }
 
 // boxFromPostFormValue returns items.Box without references to inner boxes, outer box and items.
@@ -340,7 +364,7 @@ func boxFromPostFormValue(id uuid.UUID, r *http.Request) items.Box {
 	box.Id = id
 	box.Label = r.PostFormValue("label")
 	box.Description = r.PostFormValue("description")
-	// box.Picture = r.PostFormValue("picture")
+	box.Picture = items.ParsePicture(r)
 	// box.QRcode = r.PostFormValue("qrcode")
 	return box
 }
@@ -431,7 +455,7 @@ func wantsTemplateData(r *http.Request) bool {
 // func (db *sampleBoxDB) UpdateBox(box items.Box) error {
 // 	oldBox, err := db.BoxById(box.Id)
 // 	if err != nil {
-// 		return fmt.Errorf("UpdateBox(): %w", err)
+// 		return logg.Errorf("UpdateBox(): %w", err)
 // 	}
 // 	db.Boxes[oldBox.Id.String()] = &box
 // 	return nil
@@ -440,7 +464,7 @@ func wantsTemplateData(r *http.Request) bool {
 // func (db *sampleBoxDB) DeleteBox(id uuid.UUID) error {
 // 	_, err := db.BoxById(id)
 // 	if err != nil {
-// 		return fmt.Errorf("DeleteBox(): %w", err)
+// 		return logg.Errorf("DeleteBox(): %w", err)
 // 	}
 // 	delete(db.Boxes, id.String())
 // 	return nil
