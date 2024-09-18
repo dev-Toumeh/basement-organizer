@@ -89,7 +89,7 @@
 >edit</button>
 {{ end }}
 
-<button hx-get="/box?id={{.Id}}&move=true">move</button>
+<button hx-get="/box/{{.Id}}/move">move</button>
 
 <button hx-delete="/box?id={{.Id}}" 
         hx-swap="outerHTML"

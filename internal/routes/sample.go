@@ -16,5 +16,5 @@ func SamplePage(w http.ResponseWriter, r *http.Request) {
 	data.User = user
 
 	server.TriggerAllServerNotifications(w)
-	MustRender(w, r, templates.TEMPLATE_SAMPLE_PAGE, data.Map())
+	server.MustRender(w, r, templates.TEMPLATE_SAMPLE_PAGE, data.Map())
 }
