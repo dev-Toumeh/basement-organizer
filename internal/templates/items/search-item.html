@@ -1,14 +1,13 @@
 {{define "search-item-form"}}
-    <form id="box-list" style="display: block;"> 
+    <form id="search-item-form" style="display: block;"> 
         <label for="search">search Items</label>
         <input type="text"
                hx-post="/api/v1/search/item"
                hx-trigger="focus, keyup changed delay:500ms"
-               id="search-bar"
                hx-target="#item-list-body"
                hx-on:keyup="document.getElementById('pagination').innerHTML = '';"
                name="query">
-        <table class="box-list">
+        <table class="item-list">
             <thead>
                 <tr>
                     <th>Label</th>
@@ -23,8 +22,16 @@
             <tbody id="item-list-body"> 
             </tbody>
         </table>
-        <button type="submit" hx-post="/delete-item" hx-target="this" hx-on:htmx:afterOnLoad="handleDeleteRows(event)"> delete</button>
-        <button type="submit" hx-post="/move-item">move</button>
+        <button type="submit"
+                hx-post="/delete-item"
+                hx-swap="none"
+                hx-on:htmx:afterOnLoad="handleDeleteRows(event)">
+                Delete
+        </button>
+        <button type="submit"
+                hx-post="/move-item">
+                Move
+        </button>
     </form>
     <div id="data-container" style="display: none;"></div> 
     <div id="pagination"></div> 

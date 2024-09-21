@@ -53,7 +53,7 @@
         </ul>
         </div>
         <div class="three-quarters target">
-          {{ template "search-item-form" .}}
+           {{ template "search-item-form" .}}
         </div>
     </div>
 </div>
@@ -62,13 +62,15 @@
 {{ define "items-js" }}
     <script>
         function showForm() {
-            document.getElementById('box-list').style.display = 'block';
+            document.getElementById('search-item-form').style.display = 'block';
+            document.getElementById('pagination').style.display = 'block';
             document.getElementById('data-container').style.display = 'none';
         }
 
         document.body.addEventListener('htmx:afterSwap', function(event) {
             if (event.detail.target.id === 'data-container') {
-                document.getElementById('box-list').style.display = 'none';
+                document.getElementById('search-item-form').style.display = 'none';
+                document.getElementById('pagination').style.display = 'none';
                 document.getElementById('data-container').style.display = 'block';
             }
         });
@@ -96,7 +98,7 @@
 
           buttons.forEach(button => {
             button.addEventListener('click', () => {
-              if (!button.classList.contains('clicked')) { // Check if already clicked
+              if (!button.classList.contains('clicked')) {
                 buttons.forEach(btn => btn.classList.remove('clicked'));
                 button.classList.add('clicked');
               }

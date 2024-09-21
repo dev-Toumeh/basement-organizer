@@ -235,11 +235,11 @@ func TestDeleteBox(t *testing.T) {
 
 	err = dbTest.DeleteBox(testBox.Id)
 	if err != nil && !strings.Contains(err.Error(), "the box is not empty") {
-    t.Fatalf("the should not be deleted as the box is not empty: %s", err)
+		t.Fatalf("the should not be deleted as the box is not empty: %s", err)
 	}
 	err = dbTest.DeleteItem(item.Id)
 	if err != nil {
-    t.Fatalf("the item was not deleted: %v", err)
+		t.Fatalf("the item was not deleted: %v", err)
 	}
 	err = dbTest.DeleteBox(innerBox.Id)
 	if err != nil {
