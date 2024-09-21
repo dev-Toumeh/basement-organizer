@@ -224,7 +224,7 @@ func item(r *http.Request) (Item, error) {
 		Id:          id,
 		Label:       r.PostFormValue(LABEL),
 		Description: r.PostFormValue(DESCRIPTIO),
-		Picture:     "", //b64encodedPictureString,
+		Picture:     "", //b64encodedPictureString, // @TODO: Fix picture is not added while creating or updating item.
 		Quantity:    parseQuantity(r.PostFormValue(QUANTITY)),
 		Weight:      r.PostFormValue(WEIGHT),
 		QRcode:      r.PostFormValue(QRCODE),
@@ -233,8 +233,8 @@ func item(r *http.Request) (Item, error) {
 	return newItem, nil
 }
 
-// parsePicture returns base64 encoded string of picture uploaded if there is any
-func parsePicture(r *http.Request) string {
+// ParsePicture returns base64 encoded string of picture uploaded if there is any
+func ParsePicture(r *http.Request) string {
 	logg.Info("Parsing multipart/form-data for picture")
 	// 8 MB
 	var maxSize int64 = 1000 * 1000 * 8

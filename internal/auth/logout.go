@@ -2,6 +2,7 @@ package auth
 
 import (
 	"basement/main/internal/logg"
+	"basement/main/internal/server"
 	"basement/main/internal/templates"
 	"fmt"
 	"net/http"
@@ -20,7 +21,9 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	session.Save(r, w)
 	logg.Info("LogoutHandler logged out")
 
-	w.Header().Add("HX-Location", "/")
+	username, _ := UserSessionData(r)
+	server.RedirectWithSuccessNotification(w, "/", fmt.Sprintf("Good bye %s", username))
+
 	w.WriteHeader(http.StatusNoContent)
 	fmt.Fprint(w, "logged out")
 }

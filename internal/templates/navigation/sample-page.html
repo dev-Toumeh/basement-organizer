@@ -46,7 +46,7 @@
 
     <h2>Box list</h2>
     <button hx-post="/box" hx-target="#box-list-body" hx-swap="beforeend">Create box</button>
-    <button hx-post="/api/v2/box" hx-target="#box-list-body" hx-swap="beforeend">Create box API</button>
+    <button hx-post="/api/v1/box" hx-target="#box-list-body" hx-swap="beforeend">Create box API</button>
     <button hx-get="/box" hx-target="#detailed-box">Get box</button>
     {{ template "box-list" . }}
     <div id="detailed-box" ></div>

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"basement/main/internal/auth"
+	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 )
@@ -18,7 +19,7 @@ func itemsPage(w http.ResponseWriter, r *http.Request) {
 		User:          user,
 	}
 
-	err := templates.Render(w, "items-page", data)
+	err := templates.Render(w, "items-page", data.Map())
 	if err != nil {
 		fmt.Fprintln(w, "failed")
 		return
@@ -35,7 +36,8 @@ func itemTemp(w http.ResponseWriter, r *http.Request) {
 
 // generate Search Item Template, in case of get request
 func searchItemTemp(w http.ResponseWriter, r *http.Request) {
-	err := templates.Render(w, "search-item-form", "")
+	// items.NewSearchItemInputTemplate().Map()
+	err := templates.Render(w, "search-item-form", items.NewSearchItemInputTemplate().Map())
 	if err != nil {
 		logg.Debug(err)
 		templates.RenderErrorNotification(w, "something wrong happened")

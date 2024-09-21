@@ -8,7 +8,7 @@ import (
 	"basement/main/internal/auth"
 	"basement/main/internal/database"
 	"basement/main/internal/items"
-	"basement/main/internal/logg"
+	"basement/main/internal/server"
 	"basement/main/internal/templates"
 )
 
@@ -21,28 +21,19 @@ func RegisterRoutes(db *database.DB) {
 	experimentalRoutes()
 }
 
-// MustRender will only render valid templates or throw http.StatusInternalServerError.
-func MustRender(w http.ResponseWriter, r *http.Request, name string, data any) {
-	err := templates.SafeRender(w, name, data)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		logg.Debug(http.StatusText(http.StatusInternalServerError))
-		return
-	}
-}
-
 func authRoutes(db auth.AuthDatabase) {
 	http.HandleFunc("/login", auth.LoginHandler(db))
 	http.HandleFunc("/login-form", auth.LoginForm)
 	http.HandleFunc("/register", auth.RegisterHandler(db))
 	http.HandleFunc("/register-form", func(w http.ResponseWriter, r *http.Request) {
-		MustRender(w, r, templates.TEMPLATE_REGISTER_FORM, nil)
+		server.MustRender(w, r, templates.TEMPLATE_REGISTER_FORM, nil)
 	})
 	http.HandleFunc("/update", auth.UpdateHandler(db))
 	http.HandleFunc("/logout", auth.LogoutHandler)
 }
 
 func apiRoutes(db items.ItemDatabase) {
+	http.HandleFunc("/api/v1/implement-me", server.ImplementMeHandler)
 	http.HandleFunc("/items", itemsPage)
 	http.HandleFunc("/template/item-form", itemTemp)
 	http.HandleFunc("/template/item-search", searchItemTemp)

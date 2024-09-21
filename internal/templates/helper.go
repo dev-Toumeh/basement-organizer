@@ -3,10 +3,12 @@ package templates
 import (
 	"basement/main/internal/logg"
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
 	"log"
+	"maps"
 	"math/rand"
 	"net/http"
 	"os"
@@ -40,14 +42,27 @@ type PageTemplate struct {
 	Authenticated bool
 	User          string
 	Debug         bool
+	NotFound      bool
 }
 
+func (tmpl PageTemplate) Map() map[string]any {
+	return map[string]any{
+		"Title":         tmpl.Title,
+		"Authenticated": tmpl.Authenticated,
+		"User":          tmpl.User,
+		"Debug":         tmpl.Debug,
+		"NotFound":      tmpl.NotFound,
+	}
+}
+
+// NewPageTemplate returns default data struct for page templates.
 func NewPageTemplate() PageTemplate {
 	return PageTemplate{
 		Title:         "Default Page",
 		Authenticated: false,
 		User:          "Default User",
 		Debug:         DEBUG_STYLE,
+		NotFound:      false,
 	}
 }
 
@@ -83,20 +98,54 @@ func InitTemplates(directory string) error {
 	}
 	internalTemplate, _, err = ParseDirectory(dir)
 	if err != nil {
-		return fmt.Errorf("Init Templates failed: %w", err)
+		return logg.Errorf("Init Templates failed: %w", err)
 	}
 
 	log.Println("Templates initialized")
 	return nil
 }
 
+// templateInlineMap is used inside a template directly.
+type templateInlineMap struct {
+	Map map[string]string
+}
+
+// newMap defines a template function "map" for inline definition of data to be passed to other templates.
+//
+//	Example usage:
+//	// Defines a map[string]string = {"key":"value", "key2":"value2", ...}
+//	{{ $inlineMap := map "key" "value" "key2" "value2" ... }}
+//
+//	// Pass variable to a template "another-template" with .Map()
+//	{{ template "another-template" $inlineMap.Map() }}
+func newMap(values ...string) (*templateInlineMap, error) {
+	if len(values)%2 != 0 {
+		return nil, errors.New("missing keys or values")
+	}
+
+	m := make(map[string]string, 0)
+	for i := 0; i < len(values); i += 2 {
+		k := values[i]
+		v := values[i+1]
+		m[k] = v
+	}
+	return &templateInlineMap{m}, nil
+}
+
+func (v *templateInlineMap) Set(key string, value string) string {
+	v.Map[key] = value
+	return ""
+}
+
 // Recursively parse all files in directory, including sub-directories.
 func ParseDirectory(dirpath string) (*template.Template, []string, error) {
+	internalTemplate = template.New("main")
+	internalTemplate.Funcs(template.FuncMap{"map": newMap})
 	paths, err := allFilePathsInDirectory(dirpath)
 	if err != nil {
 		return nil, nil, err
 	}
-	tmpl, err := template.ParseFiles(paths...)
+	tmpl, err := internalTemplate.ParseFiles(paths...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -126,6 +175,24 @@ func allFilePathsInDirectory(dirpath string) ([]string, error) {
 func Render(w io.Writer, name string, data any) error {
 	err := internalTemplate.ExecuteTemplate(w, name, data)
 	if err != nil {
+		return logg.Errorf("Can't render template", err)
+	}
+	return nil
+}
+
+type Mapable interface {
+	Map() map[string]any
+}
+
+// RenderMaps builds multiple templates and renders it.
+func RenderMaps(w io.Writer, baseTemplateName string, templates []Mapable) error {
+	data := make(map[string]any, 0)
+	for _, tmpl := range templates {
+		maps.Copy(data, tmpl.Map())
+	}
+
+	err := internalTemplate.ExecuteTemplate(w, baseTemplateName, data)
+	if err != nil {
 		log.Println(err)
 		fmt.Fprintln(w, err)
 		return err
@@ -138,10 +205,19 @@ func SafeRender(w io.Writer, name string, data any) error {
 	wbs := bytes.NewBufferString("")
 	err := internalTemplate.ExecuteTemplate(wbs, name, data)
 	if err != nil {
-		logg.Err(err)
-		return err
+		return logg.Errorf("Can't execute template", err)
 	}
 	w.Write(wbs.Bytes())
+	return nil
+}
+
+// CanRender will return nil if rendering is ok.
+func CanRender(name string, data any) error {
+	wbs := bytes.NewBufferString("")
+	err := internalTemplate.ExecuteTemplate(wbs, name, data)
+	if err != nil {
+		return logg.Errorf("Can't execute template", err)
+	}
 	return nil
 }
 

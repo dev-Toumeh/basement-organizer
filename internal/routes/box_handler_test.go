@@ -107,10 +107,10 @@ func TestBoxHandlerDBErrors(t *testing.T) {
 
 	// Add mux handler, without it r.PathValue("id") will not work.
 	mux := http.NewServeMux()
-	mux.Handle("/box", BoxHandler(WriteFprint, dbErr))
-	mux.Handle("/box/", BoxHandler(WriteFprint, dbErr))
-	mux.Handle("/api/v2/box/{id}", BoxHandler(WriteFprint, dbErr))
-	mux.Handle("/api/v2/box/", BoxHandler(WriteFprint, dbErr))
+	mux.Handle("/box", boxHandler(dbErr))
+	mux.Handle("/box/", boxHandler(dbErr))
+	mux.Handle("/api/v1/box/{id}", boxHandler(dbErr))
+	mux.Handle("/api/v1/box/", boxHandler(dbErr))
 
 	testCases := []struct {
 		name               string
@@ -163,10 +163,10 @@ func TestBoxHandlerInputErrors(t *testing.T) {
 
 	// Add mux handler, without it r.PathValue("id") will not work.
 	mux := http.NewServeMux()
-	mux.Handle("/box", BoxHandler(WriteFprint, &dbOk))
-	mux.Handle("/box/", BoxHandler(WriteFprint, &dbOk))
-	mux.Handle("/api/v2/box/{id}", BoxHandler(WriteFprint, &dbOk))
-	mux.Handle("/api/v2/box/", BoxHandler(WriteFprint, &dbOk))
+	mux.Handle("/box", boxHandler(&dbOk))
+	mux.Handle("/box/", boxHandler(&dbOk))
+	mux.Handle("/api/v1/box/{id}", boxHandler(&dbOk))
+	mux.Handle("/api/v1/box/", boxHandler(&dbOk))
 
 	testCases := []struct {
 		name               string
@@ -184,7 +184,7 @@ func TestBoxHandlerInputErrors(t *testing.T) {
 		{
 			name: "Box not found, incorrect id path value /box/{id}",
 			input: handlerInput{
-				R: httptest.NewRequest(http.MethodGet, "/api/v2/box/"+BOX_ID_INVALID_UUID_FORMAT, nil),
+				R: httptest.NewRequest(http.MethodGet, "/api/v1/box/"+BOX_ID_INVALID_UUID_FORMAT, nil),
 				W: *httptest.NewRecorder(),
 			},
 			expectedStatusCode: http.StatusNotFound,
@@ -192,7 +192,7 @@ func TestBoxHandlerInputErrors(t *testing.T) {
 		{
 			name: "Box not found, empty path id",
 			input: handlerInput{
-				R: httptest.NewRequest(http.MethodGet, "/api/v2/box/"+BOX_ID_INVALID_EMPTY, nil),
+				R: httptest.NewRequest(http.MethodGet, "/api/v1/box/"+BOX_ID_INVALID_EMPTY, nil),
 				W: *httptest.NewRecorder(),
 			},
 			expectedStatusCode: http.StatusNotFound,
@@ -231,10 +231,10 @@ func TestBoxHandlerOK(t *testing.T) {
 
 	// Add mux handler, without it r.PathValue("id") will not work.
 	mux := http.NewServeMux()
-	mux.Handle("/box", BoxHandler(WriteBoxTemplate, &dbOk))
-	mux.Handle("/box/", BoxHandler(WriteBoxTemplate, &dbOk))
-	mux.Handle("/api/v2/box/{id}", BoxHandler(WriteFprint, &dbOk))
-	mux.Handle("/api/v2/box", BoxHandler(WriteFprint, &dbOk))
+	mux.Handle("/box", boxHandler(&dbOk))
+	mux.Handle("/box/", boxHandler(&dbOk))
+	mux.Handle("/api/v1/box/{id}", boxHandler(&dbOk))
+	mux.Handle("/api/v1/box", boxHandler(&dbOk))
 
 	testCases := []struct {
 		name               string
@@ -254,7 +254,7 @@ func TestBoxHandlerOK(t *testing.T) {
 		{
 			name: "Create box ok data only response",
 			input: handlerInput{
-				R: httptest.NewRequest(http.MethodPost, "/api/v2/box", nil),
+				R: httptest.NewRequest(http.MethodPost, "/api/v1/box", nil),
 				W: *httptest.NewRecorder(),
 			},
 			expectedStatusCode: http.StatusOK,
@@ -272,7 +272,7 @@ func TestBoxHandlerOK(t *testing.T) {
 		{
 			name: "Should use path value id /box/{id}",
 			input: handlerInput{
-				R: httptest.NewRequest(http.MethodGet, "/api/v2/box/"+BOX_ID_VALID, nil),
+				R: httptest.NewRequest(http.MethodGet, "/api/v1/box/"+BOX_ID_VALID, nil),
 				W: *httptest.NewRecorder(),
 			},
 			expectedStatusCode: http.StatusOK,

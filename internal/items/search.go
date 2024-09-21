@@ -31,6 +31,28 @@ type PaginationData struct {
 	PageNumber int
 }
 
+type SearchInputTemplate struct {
+	SearchInputLabel    string
+	SearchInputHxPost   string
+	SearchInputHxTarget string
+}
+
+func NewSearchInputTemplate() *SearchInputTemplate {
+	return &SearchInputTemplate{SearchInputLabel: "Search", SearchInputHxPost: "/api/v1/implement-me", SearchInputHxTarget: "#item-list-body"}
+}
+
+func NewSearchItemInputTemplate() *SearchInputTemplate {
+	return &SearchInputTemplate{SearchInputLabel: "Search items", SearchInputHxPost: "/api/v1/search/item", SearchInputHxTarget: "#item-list-body"}
+}
+
+func (tmpl *SearchInputTemplate) Map() map[string]any {
+	return map[string]any{
+		"SearchInputLabel":    tmpl.SearchInputLabel,
+		"SearchInputHxPost":   tmpl.SearchInputHxPost,
+		"SearchInputHxTarget": tmpl.SearchInputHxTarget,
+	}
+}
+
 // update the item based on ID
 func SearchItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

@@ -14,8 +14,8 @@
 
 {{ define "script" }}
 <!--HTMX from local sources-->
-<script src="static/js/htmx.min.js"></script>
-<script src="static/js/custom-functions.js"></script>
+<script src="/static/js/htmx.min.js"></script>
+<script src="/static/js/custom-functions.js"></script>
 {{end}}
 
 {{ define "head" }}
@@ -24,11 +24,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     {{ template "script" . }}
-    <link rel="stylesheet" href="static/css/layout.css" />
-    <link rel="manifest" href="static/manifest.json" />
+    <link rel="stylesheet" href="/static/css/layout.css" />
+    <link rel="manifest" href="/static/manifest.json" />
     <link
         rel="icon"
-        href="static/basement-organizer-icon512.png"
+        href="/static/basement-organizer-icon512.png"
         type="image/png"
     />
     {{ block "head-extras" . }}{{end}}
@@ -47,7 +47,7 @@
   <div class="header_content" hx-boost="true" hx-push-url="true">
     <nav class="nav">
         <ul class="nav_list">
-            {{with .Authenticated }}
+            {{if .Authenticated }}
               <li class="nav_item"><a class="nav_link" href="/items">Items</a></li>
               <li class="nav_item"><a class="nav_link" href="/boxes">Boxes</a></li>
               <li class="nav_item"><a class="nav_link" href="/shleves">Shelves</a></li>

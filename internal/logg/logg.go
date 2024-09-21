@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
+	"strings"
 )
 
 var logger = log.New(os.Stdout, "", log.Ltime|log.Lshortfile)
@@ -44,6 +46,21 @@ func Errf(format string, v ...any) {
 	errorLogger.Output(2, fmt.Sprintf(format, v...))
 }
 
+// Errfo logs with internal detailed information with custom calldepth for log.Output.
+// Used for logging information that happened outside this scope.
+//
+// calldepth = 2: This function.
+//
+// calldepth = 3: Outer function that called this.
+//
+// calldepth = ...
+func Errfo(calldepth int, format string, v ...any) {
+	if !errorLoggerEnabled {
+		return
+	}
+	errorLogger.Output(calldepth, fmt.Sprintf(format, v...))
+}
+
 // Debug is for logs with internal detailed information.
 func Debug(v ...any) {
 	if !debugLoggerEnabled {
@@ -58,6 +75,41 @@ func Debugf(format string, v ...any) {
 		return
 	}
 	debugLogger.Output(2, fmt.Sprintf(format, v...))
+}
+
+// Debugfo logs with internal detailed information with custom calldepth for log.Output.
+// Used for logging information that happened outside this scope.
+//
+// calldepth = 2: This function.
+//
+// calldepth = 3: Outer function that called this.
+//
+// calldepth = ...
+func Debugfo(calldepth int, format string, v ...any) {
+	if !debugLoggerEnabled {
+		return
+	}
+	debugLogger.Output(2, fmt.Sprintf(format, v...))
+}
+
+func DebugLogger() *log.Logger {
+	return debugLogger
+}
+
+// Errorf works similar to fmt.Errorf but adds line number and function name to output.
+func Errorf(msg string, err error) error {
+	pc, filename, line, _ := runtime.Caller(1)
+
+	fullFuncName := runtime.FuncForPC(pc).Name()
+	funSplit := strings.Split(fullFuncName, "/")
+	shortFuncName := funSplit[len(funSplit)-1]
+	shortFuncName = strings.Split(shortFuncName, ".")[1]
+
+	nameSplit := strings.Split(filename, "/")
+	shortFileName := nameSplit[len(nameSplit)-1]
+	// Example output:
+	// "file.go:69 Func: Something happened here."
+	return fmt.Errorf("%s:%d\t%s: %s\n\t%w", shortFileName, line, shortFuncName, msg, err)
 }
 
 // Fatal is equivalent to log.Fatal().

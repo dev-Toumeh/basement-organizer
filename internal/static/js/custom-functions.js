@@ -19,53 +19,76 @@
 //    }
 //}
 //
-   function editItem(id) {
-       const form = document.getElementById(`item-form-${id}`);
-       const inputs = form.querySelectorAll('input:not([name="id"]):not([name="picture"])');
-       inputs.forEach(input => input.removeAttribute('readonly'));
-       
-       document.getElementById(`image-preview-${id}`).style.display = 'none';
-       document.getElementById(`image-input-${id}`).style.display = 'block';
-       
-       form.querySelector('button[onclick^="editItem"]').style.display = 'none';
-       form.querySelector('button[type="submit"]').style.display = 'inline';
-       form.querySelector('button[onclick^="cancelEdit"]').style.display = 'inline';
-   }
+function editItem(id) {
+    const form = document.getElementById(`item-form-${id}`);
+    const inputs = form.querySelectorAll('input:not([name="id"]):not([name="picture"])');
+    inputs.forEach(input => input.removeAttribute('readonly'));
 
-   function cancelEdit(id) {
-       const form = document.getElementById(`item-form-${id}`);
-       const inputs = form.querySelectorAll('input:not([name="id"]):not([name="picture"])');
-       inputs.forEach(input => {
-           input.setAttribute('readonly', true);
-           input.value = input.defaultValue;
-       });
-       
-       document.getElementById(`image-preview-${id}`).style.display = 'block';
-       document.getElementById(`image-input-${id}`).style.display = 'none';
-       document.getElementById(`picture-${id}`).value = '';
-       
-       form.querySelector('button[onclick^="editItem"]').style.display = 'inline';
-       form.querySelector('button[type="submit"]').style.display = 'none';
-       form.querySelector('button[onclick^="cancelEdit"]').style.display = 'none';
-   }
+    document.getElementById(`image-preview-${id}`).style.display = 'none';
+    document.getElementById(`image-input-${id}`).style.display = 'block';
+
+    form.querySelector('button[onclick^="editItem"]').style.display = 'none';
+    form.querySelector('button[type="submit"]').style.display = 'inline';
+    form.querySelector('button[onclick^="cancelEdit"]').style.display = 'inline';
+}
+
+function cancelEdit(id) {
+    const form = document.getElementById(`item-form-${id}`);
+    const inputs = form.querySelectorAll('input:not([name="id"]):not([name="picture"])');
+    inputs.forEach(input => {
+        input.setAttribute('readonly', true);
+        input.value = input.defaultValue;
+    });
+
+    document.getElementById(`image-preview-${id}`).style.display = 'block';
+    document.getElementById(`image-input-${id}`).style.display = 'none';
+    document.getElementById(`picture-${id}`).value = '';
+
+    form.querySelector('button[onclick^="editItem"]').style.display = 'inline';
+    form.querySelector('button[type="submit"]').style.display = 'none';
+    form.querySelector('button[onclick^="cancelEdit"]').style.display = 'none';
+}
 
 /** Callback function that handles Error responses to display for the user.
  * Is registered as an eventListener
  * @param {HtmxResponseInfo}resInfo */
 function errorResponseCallback(resInfo) {
+    var notificationType
+    var responseMessage
+    var showNotification
+
+    const status = resInfo.detail.xhr.status;
+
     // Show all error responses above 400 with a snackbar notification
-    if (resInfo.detail.xhr.status >= 400) {
-        console.log(resInfo);
+    switch (true) {
+        case status === 501:
+            showNotification = true
+            notificationType = NotificationTypeWarning;
+            break;
+
+        case status >= 400:
+            showNotification = true
+            notificationType = NotificationTypeError;
+            console.log(resInfo);
+            break;
+
+        default:
+            showNotification = false
+            break;
+    }
+
+    if (showNotification) {
         resInfo.detail.isError = false;
 
         if (resInfo.detail.serverResponse !== "") {
-            createAndShowNotification(resInfo.detail.serverResponse, "error");
+            responseMessage = resInfo.detail.serverResponse;
         } else {
-            createAndShowNotification(resInfo.detail.xhr.statusText, "error");
+            responseMessage = resInfo.detail.xhr.statusText;
         }
-        //resInfo.detail.target = htmx.find("#notification-container");
-        //resInfo.detail.target.setAttribute("hx-swap", "afterend");
+
+        createAndShowNotification(responseMessage, notificationType);
     }
+
 }
 
 const NotificationTypeError = "error";
@@ -101,13 +124,28 @@ function createNotification(text, notificationType, id) {
 
     var snackbarId;
     if (id === undefined || id === "") {
-        snackbarId = Math.round((Math.random() * 100000)).toString(); 
+        snackbarId = Math.round((Math.random() * 100000)).toString();
     } else {
         snackbarId = id;
     }
 
     snackbar.id = "notification-" + snackbarId;
     snackbar.textContent = text;
+
+    switch (notificationType) {
+        case NotificationTypeError:
+            console.error(text);
+            break;
+        case NotificationTypeInfo:
+            console.info(text);
+            break;
+        case NotificationTypeWarning:
+            console.warn(text);
+            break;
+        default:
+            console.log(text);
+            break;
+    }
     return snackbar;
 }
 
@@ -117,7 +155,7 @@ function createNotification(text, notificationType, id) {
  * @param duration {number | undefined} How long is should display before removal. Default is 2000 (2 seconds). */
 function showNotification(id, duration = 2000) {
     let currentNotificationCount = document.querySelectorAll("div.notification").length;
-    console.log(currentNotificationCount);
+    console.log("notification count: ", currentNotificationCount);
 
     // Add warning notification for too many notifications.
     if (currentNotificationCount > 10) {
@@ -145,6 +183,7 @@ function showNotification(id, duration = 2000) {
         console.error("no notification to show. ID: ", id);
     }
 
+    console.log("notification added: ", notification)
     setTimeout(() => {
         notification.className = notification.className.replace("noshow", "show");
     }, 50);
@@ -160,9 +199,13 @@ function showNotification(id, duration = 2000) {
  * @param id {string} HTML Element id. */
 function removeNotification(id) {
     let bar = document.getElementById(id);
-    if (bar !== null) {    
+    if (bar !== null) {
         bar.remove();
     }
+}
+
+function removeAllNotifications() {
+    document.getElementById("notification-container").innerHTML = "";
 }
 
 /** removeNotificationAfter removes snackbar HTML element after a certain duration.
@@ -192,16 +235,41 @@ function noResponseCallback(resInfo) {
  * @param {number} [evt.detail.value[].duration] - Optional duration for which the snackbar is displayed.
  * @param {string} [evt.detail.value[].id] - Optional unique identifier for the snackbar.
  */
-function serverNotificationsCallback(evt){
+function serverNotificationsCallback(evt) {
     for (let i = 0; i < evt.detail.value.length; i++) {
         createAndShowNotification(evt.detail.value[i].message, evt.detail.value[i].type, evt.detail.value[i].duration, evt.detail.value[i].id);
     }
 }
 
+/** Callback for header field "notification".
+ * Will create notification with the value of that field.
+ * */
+function serverNotificationsFromHeaderCallback(event) {
+    const serverNotification = event.detail.requestConfig.headers.notification;
+    if (serverNotification !== undefined) {
+        //debugger;
+        let message = serverNotification.message ? serverNotification.message : "";
+        let type = serverNotification.type ? serverNotification.type : "";
+        let duration = serverNotification.duration ? parseInt(serverNotification.duration) : undefined;
+        let id = serverNotification.id ? parseInt(serverNotification.id) : undefined;
+        createAndShowNotification(message, type, duration, id);
+    }
+}
+
+var init = false;
 function registerCallbackEventListener() {
+    if (init) {
+        return;
+    }
     document.body.addEventListener('htmx:beforeSwap', errorResponseCallback);
+    document.body.addEventListener('htmx:afterSwap', serverNotificationsFromHeaderCallback);
     document.body.addEventListener('htmx:sendError', noResponseCallback);
     document.body.addEventListener('ServerNotificationEvents', serverNotificationsCallback);
+    htmx.on('htmx:beforeHistorySave', function() {
+        removeAllNotifications();
+    })
+
+    init = true;
 }
 
 console.log("registerCallbackEventListener executed")
