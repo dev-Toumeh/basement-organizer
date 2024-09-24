@@ -57,7 +57,7 @@
             alt="{{.Label}} image preview"
         >
     </td>
-    <td style="text-align: center;"><input type="checkbox" name="move:{{.Id}}"></td>
-    <td style="text-align: center;"><input type="checkbox" name="delete:{{.Id}}"></td>
+    <td style="text-align: center;"><input class="move-checkbox" type="checkbox" name="{{.Id}}"></td>
+    <td style="text-align: center;"><input class="delete-checkbox" type="checkbox" name="{{.Id}}"></td>
 </tr>
 {{end}}

@@ -62,6 +62,40 @@
 
 {{ define "items-js" }}
     <script>
+        // responsible of deleting the checked Items
+        document.body.addEventListener('htmx:afterOnLoad', function(event) {
+            handleDeleteRows(event);
+        });
+        
+        function handleDeleteRows(event) {
+            if (event.detail.successful) {
+                const checkedCheckboxes = document.querySelectorAll('input.delete-checkbox:checked');
+                checkedCheckboxes.forEach(checkbox => {
+                    const rowToDelete = checkbox.closest('tr');
+                    if (rowToDelete) {
+                        rowToDelete.remove();
+                    }
+                });
+            } else {
+                console.error('Deletion failed:', event.detail);
+            }
+        }
+
+        // responsible of keeping the button color fixed after click
+        if (typeof buttons == 'undefined') {
+          const buttons = document.querySelectorAll('.menu-button');
+
+          buttons.forEach(button => {
+            button.addEventListener('click', () => {
+              if (!button.classList.contains('clicked')) {
+                buttons.forEach(btn => btn.classList.remove('clicked'));
+                button.classList.add('clicked');
+              }
+            });
+          });
+        }
+
+        // responsible of switching between search-form and the clicked item display/hide
         function showForm() {
             document.getElementById('search-item-form').style.display = 'block';
             document.getElementById('pagination').style.display = 'block';
@@ -76,36 +110,13 @@
             }
         });
 
-
-        document.body.addEventListener('htmx:afterOnLoad', function(event) {
-            handleDeleteRows(event);
-        });
-
-        function handleDeleteRows(event) {
-            if (event.detail.successful) {
-                const checkedCheckboxes = document.querySelectorAll('input.delete-checkbox:checked');
-                checkedCheckboxes.forEach(checkbox => {
-                    const rowToDelete = checkbox.closest('tr');
-                    if (rowToDelete) {
-                        rowToDelete.remove();
-                    }
-                });
-            } else {
-                console.error('Deletion failed:', event.detail);
+        document.body.addEventListener('checked', function(event) {
+            if (event.detail.target.id === 'data-container') {
+                document.getElementById('search-item-form').style.display = 'none';
+                document.getElementById('pagination').style.display = 'none';
+                document.getElementById('data-container').style.display = 'block';
             }
-        }
-        if (typeof buttons == 'undefined') {
-          const buttons = document.querySelectorAll('.menu-button');
-
-          buttons.forEach(button => {
-            button.addEventListener('click', () => {
-              if (!button.classList.contains('clicked')) {
-                buttons.forEach(btn => btn.classList.remove('clicked'));
-                button.classList.add('clicked');
-              }
-            });
-          });
-        }
+        });
     </script>
 {{end}}
 

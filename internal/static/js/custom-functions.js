@@ -268,10 +268,33 @@ function registerCallbackEventListener() {
     htmx.on('htmx:beforeHistorySave', function() {
         removeAllNotifications();
     })
-
+    document.addEventListener('change', function(event) {
+        if (event.target.classList.contains('move-checkbox') || event.target.classList.contains('delete-checkbox')) {
+            handleCheckboxChange();
+        }
+    });
     init = true;
 }
 
 console.log("registerCallbackEventListener executed")
 //htmx.logAll();
 htmx.onLoad(registerCallbackEventListener)
+
+
+// responsible of disable checkBoxes if other type was checked
+const MoveCheckboxes = document.getElementsByClassName('move-checkbox');
+const DeleteCheckboxes = document.getElementsByClassName('delete-checkbox');
+
+function handleCheckboxChange() {
+    const moveChecked = document.querySelector('.move-checkbox:checked');
+    const deleteChecked = document.querySelector('.delete-checkbox:checked');
+
+    toggleCheckboxes(MoveCheckboxes, !!deleteChecked);
+    toggleCheckboxes(DeleteCheckboxes, !!moveChecked);
+}
+
+function toggleCheckboxes(checkboxes, disable) {
+    for (let i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].disabled = disable;
+    }
+}
