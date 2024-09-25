@@ -298,3 +298,17 @@ function toggleCheckboxes(checkboxes, disable) {
         checkboxes[i].disabled = disable;
     }
 }
+
+
+let selectedIds = [];
+
+function handleMoveItems(event) {
+    const checkedCheckboxes = document.querySelectorAll('input.move-checkbox:checked');
+    
+    selectedIds = [];
+    checkedCheckboxes.forEach((checkbox) => {
+        selectedIds.push(checkbox.name);
+    });
+    
+    console.log(selectedIds);
+}

@@ -2,7 +2,7 @@
     {{ range .Records }}
         <tr id="item-list-unit-{{.Item_Id}}"> 
             <td hx-get="/api/v1/read/item/{{.Item_Id}}" 
-                hx-target="#data-container"
+                hx-target="#level-two"
                 hx-swap="innerHTML"
                 onclick="htmx.trigger(this, 'htmx:load')"> 
                 {{.Label}}

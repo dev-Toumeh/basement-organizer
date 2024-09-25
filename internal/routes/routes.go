@@ -15,7 +15,8 @@ import (
 func RegisterRoutes(db *database.DB) {
 	staticRoutes()
 	authRoutes(db)
-	apiRoutes(db)
+	itemsRoutes(db)
+	shelvesRoutes()
 	registerBoxRoutes(db)
 	navigationRoutes()
 	experimentalRoutes()
@@ -32,7 +33,7 @@ func authRoutes(db auth.AuthDatabase) {
 	http.HandleFunc("/logout", auth.LogoutHandler)
 }
 
-func apiRoutes(db items.ItemDatabase) {
+func itemsRoutes(db items.ItemDatabase) {
 	http.HandleFunc("/api/v1/implement-me", server.ImplementMeHandler)
 	http.HandleFunc("/items", itemsPage)
 	http.HandleFunc("/template/item-form", itemTemp)
@@ -44,6 +45,7 @@ func apiRoutes(db items.ItemDatabase) {
 	http.HandleFunc("/items-pagination", items.ItemPaginationHandler(db))
 
 	http.HandleFunc("/delete-item", items.DeleteItemHandler(db))
+	http.HandleFunc("/move-item", moveItem)
 	http.HandleFunc("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
 	}))
@@ -61,6 +63,10 @@ func apiRoutes(db items.ItemDatabase) {
 	http.HandleFunc("/api/v1/read/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
 		fmt.Fprint(w, data)
 	}))
+}
+
+func shelvesRoutes() {
+	http.HandleFunc("/shelves", shelvesPage)
 }
 
 var testStyle = templates.DEBUG_STYLE

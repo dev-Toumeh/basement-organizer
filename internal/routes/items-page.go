@@ -36,8 +36,15 @@ func itemTemp(w http.ResponseWriter, r *http.Request) {
 
 // generate Search Item Template, in case of get request
 func searchItemTemp(w http.ResponseWriter, r *http.Request) {
-	// items.NewSearchItemInputTemplate().Map()
 	err := templates.Render(w, "search-item-form", items.NewSearchItemInputTemplate().Map())
+	if err != nil {
+		logg.Debug(err)
+		templates.RenderErrorNotification(w, "something wrong happened")
+	}
+}
+
+func moveItem(w http.ResponseWriter, r *http.Request) {
+	err := templates.Render(w, "item-move-to", "")
 	if err != nil {
 		logg.Debug(err)
 		templates.RenderErrorNotification(w, "something wrong happened")

@@ -5,9 +5,9 @@
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
     {{ template "items-page-content" . }}
-    {{ template "items-js" .}}
+    {{ template "items-js" . }}
 </body>
-{{ template "close-html-tag" .}}
+{{ template "close-html-tag" . }}
 {{ end }}
 
 {{ define "items-page-content" }}
@@ -97,24 +97,24 @@
 
         // responsible of switching between search-form and the clicked item display/hide
         function showForm() {
-            document.getElementById('search-item-form').style.display = 'block';
+            document.getElementById('level-one').style.display = 'block';
             document.getElementById('pagination').style.display = 'block';
-            document.getElementById('data-container').style.display = 'none';
+            document.getElementById('level-two').style.display = 'none';
         }
 
         document.body.addEventListener('htmx:afterSwap', function(event) {
-            if (event.detail.target.id === 'data-container') {
-                document.getElementById('search-item-form').style.display = 'none';
+            if (event.detail.target.id === 'level-two') {
+                document.getElementById('level-one').style.display = 'none';
                 document.getElementById('pagination').style.display = 'none';
-                document.getElementById('data-container').style.display = 'block';
+                document.getElementById('level-two').style.display = 'block';
             }
         });
 
-        document.body.addEventListener('checked', function(event) {
-            if (event.detail.target.id === 'data-container') {
-                document.getElementById('search-item-form').style.display = 'none';
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            if (event.detail.target.id === 'level-two') {
+                document.getElementById('level-one').style.display = 'none';
                 document.getElementById('pagination').style.display = 'none';
-                document.getElementById('data-container').style.display = 'block';
+                document.getElementById('level-two').style.display = 'block';
             }
         });
     </script>

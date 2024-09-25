@@ -1,8 +1,9 @@
 {{define "search-item-form"}}
-    <form id="search-item-form" style="display: block;"> 
-        {{ $searchInput := map 
+<div id="level-one" style="display: block;">
+    <form id="search-item-form" >
+        {{ $searchInput := map
             "SearchInputLabel" "Search item"
-            "SearchInputHxPost" "/api/v1/search/item" 
+            "SearchInputHxPost" "/api/v1/search/item"
             "SearchInputHxTarget" "#item-list-body" }}
         {{ template "search-input" $searchInput.Map }}
         <table class="item-list">
@@ -17,22 +18,26 @@
                     <th style="width: 10%">Delete</th>
                 </tr>
             </thead>
-            <tbody id="item-list-body"> 
+            <tbody id="item-list-body">
             </tbody>
         </table>
         <button type="submit"
                 hx-post="/delete-item"
-                hx-swap="none"
-                hx-on:htmx:afterOnLoad="handleDeleteRows(event)">
+                hx-swap="none">
                 Delete
         </button>
         <button type="submit"
-                hx-post="/move-item">
+                hx-swap="innerHTML"
+                hx-target="#level-two"
+                hx-post="/move-item"
+                onclick="handleMoveItems()">
                 Move
         </button>
     </form>
-    <div id="data-container" style="display: none;"></div> 
-    <div id="pagination"></div> 
+</div>
+    <div id="level-two" style="display: none;"></div>
+    <div id="level-three" style="display: none;"></div>
+    <div id="pagination"></div>
 {{end}}
 
 
