@@ -1,0 +1,128 @@
+{{ define "box-list" }}
+<form id="box-list">
+    {{/* template "search-input" . */}}
+    <label for="search">{{ with .SearchInputLabel }}{{ . }}{{end}}</label>
+    <input id="search-bar"
+        type="text"
+        hx-get="/boxes?page={{.PageNumber}}"
+        hx-trigger="keyup changed delay:500ms"
+        hx-target="#box-list"
+        hx-select="#box-list"
+        hx-include="[name='limit']"
+        hx-push-url="true"
+        hx-swap="outerHTML"
+        value="{{ .SearchInputValue }}"
+        name="query">
+
+    <button type="button">Alternative View</button>
+
+    <div id="pagination">
+        <input type="number" name="limit" value="{{ if .Limit}}{{.Limit}}{{else}}5{{end}}"
+            hx-get="/boxes?page={{.PageNumber}}"
+            hx-target="#box-list"
+            hx-select="#box-list"
+            hx-include="[name='query']"
+            hx-swap="outerHTML"
+        >
+        <!--<input type="number" name="limit" value="{{ if .Limit}}{{.Limit}}{{else}}5{{end}}"-->
+        <!--    hx-get="/boxes?page={{.PageNumber}}"-->
+        <!--    hx-target="#pagination"-->
+        <!--    hx-select="#pagination"-->
+        <!--    hx-select-oob="#box-list"-->
+        <!--    hx-swap="outerHTML"-->
+        <!-->-->
+        <button id="{{.ID}}"
+            hx-get="/boxes?page={{.PrevPage}}" 
+            hx-include="[name='limit']"
+            hx-target="#box-list"
+            hx-swap="outerHTML"
+            hx-select="#box-list"
+            hx-push-url="true">
+            <!--hx-select-oob="#pagination"-->
+            <!--hx-select-oob="button.selected"-->
+            <!--hx-oob-swap="outerHTML"-->
+          < 
+        </button>
+        {{  range .Pages }}
+    <!--&limit={{.Limit}}-->
+        <button id="{{.ID}}"
+            hx-get="/boxes?page={{.PageNumber}}" 
+            hx-include="[name='limit']"
+            {{ if .Selected }}
+                class="selected"
+            {{end}}
+            hx-target="#box-list"
+            hx-swap="outerHTML"
+            hx-select="#box-list"
+            hx-push-url="true">
+            <!--hx-select-oob="#pagination"-->
+            <!--hx-select-oob="button.selected"-->
+            <!--hx-oob-swap="outerHTML"-->
+           {{.PageNumber}}
+        </button>
+        {{ end }}
+        <button id="{{.ID}}"
+            hx-get="/boxes?page={{.NextPage}}" 
+            hx-include="[name='limit']"
+            hx-target="#box-list"
+            hx-swap="outerHTML"
+            hx-select="#box-list"
+            hx-push-url="true">
+            <!--hx-select-oob="#pagination"-->
+            <!--hx-select-oob="button.selected"-->
+            <!--hx-oob-swap="outerHTML"-->
+          > 
+        </button>
+    </div> 
+
+    <table class="box-list">
+        <thead>
+            <tr>
+                <th>Label</th>
+                <th>Box</th>
+                <th>Shelve</th>
+                <th>Area</th>
+                <th style="width: 10%">Image</th>
+                <th style="width: 10%">Move</th>
+                {{ if not .Move }}
+                <th style="width: 10%">Delete</th>
+                {{ end }}
+            </tr>
+        </thead> 
+        <!--boxes are created directly by backend with template-->
+        <tbody id="box-list-body">
+        {{ if .Boxes }}
+            {{ range .Boxes }}
+            {{ template "box-list-item" . }}
+            {{ end }}
+        {{ end }}
+        </tbody>
+    </table>
+    <div >
+        <button hx-delete="/boxes-list"
+            hx-target="#box-list"
+            hx-select="#box-list"
+            hx-push-url="true"
+        >delete</button>
+            <!--hx-include="[name='']"-->
+        <button type="button" 
+            hx-get="/boxes/move"
+        >move</button>
+    </div>
+</form>
+
+<div id="data-container" style="display: none;"></div> 
+{{ end }}
+
+
+{{ define "asdfsadf" }} 
+{{range .PaginationData}}
+<button hx-get="/items-pagination?query={{$.Query}}&offset={{.Offset}}" 
+        hx-target="#item-list-body"
+        hx-swap="innerHTML">
+       {{.PageNumber}}
+</button>
+{{end}}
+
+{{end}}
+
