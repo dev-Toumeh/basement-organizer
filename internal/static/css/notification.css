@@ -1,10 +1,8 @@
 div#notification-container {
-  border-radius: 0.4rem;
-  margin: 0 auto;
   max-width: 50vw;
-  transition: opacity 0.2s;
-  position: fixed;
-  right: 0;
+  position: absolute;
+  top: 0.1rem;
+  right: 0.1rem;
 }
 
 div.notification {

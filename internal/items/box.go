@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid/v5"
-	"golang.org/x/exp/rand"
 )
 
 type VirtualBox struct {
@@ -22,6 +21,40 @@ type VirtualBox struct {
 	Shelve_label   string
 	Area_label     string
 	PreviewPicture string
+}
+
+func (box *VirtualBox) Map() map[string]any {
+	return map[string]interface{}{
+		"Box_Id":         box.Box_Id,
+		"Label":          box.Label,
+		"OuterBox_label": box.OuterBox_label,
+		"OuterBox_id":    box.OuterBox_id,
+		"Shelve_label":   box.Shelve_label,
+		"Area_label":     box.Area_label,
+		"PreviewPicture": box.PreviewPicture,
+	}
+}
+
+type BoxListItem struct {
+	Box_Id         uuid.UUID
+	Label          string
+	OuterBox_label string
+	OuterBox_id    uuid.UUID
+	Shelve_label   string
+	Area_label     string
+	PreviewPicture string
+}
+
+func (box *BoxListItem) Map() map[string]any {
+	return map[string]interface{}{
+		"Box_Id":         box.Box_Id,
+		"Label":          box.Label,
+		"OuterBox_label": box.OuterBox_label,
+		"OuterBox_id":    box.OuterBox_id,
+		"Shelve_label":   box.Shelve_label,
+		"Area_label":     box.Area_label,
+		"PreviewPicture": box.PreviewPicture,
+	}
 }
 
 type AnotherItem struct {
@@ -105,7 +138,11 @@ type BoxListTemplateData struct {
 }
 
 func (tmpl BoxListTemplateData) Map() map[string]any {
-	return map[string]any{"Boxes": tmpl.Boxes}
+	data := make([]map[string]any, 0)
+	for i := range tmpl.Boxes {
+		data = append(data, tmpl.Boxes[i].Map())
+	}
+	return map[string]any{"Boxes": data}
 }
 
 func RenderBoxListItem(w http.ResponseWriter, data *Box) {
@@ -161,12 +198,13 @@ type BoxC struct {
 
 // NewBox returns an empty box with a new uuid.
 func NewBox() Box {
-	rand.Seed(uint64(time.Now().UnixNano()))
-	num := rand.Intn(10000)
+	label := time.Now().Format("2006-01-02_15_04_05")
+	// rand.Seed(uint64(time.Now().UnixNano()))
+	// num := rand.Intn(10000)
 	return Box{
 		Id:          uuid.Must(uuid.NewV4()),
-		Label:       fmt.Sprintf("Box %d", num),
-		Description: fmt.Sprintf("Box description %d", num),
+		Label:       fmt.Sprintf("Box_%s", label),
+		Description: fmt.Sprintf("Box description %s", label),
 	}
 }
 
@@ -188,6 +226,22 @@ func (b *Box) MarshalJSON() ([]byte, error) {
 }
 
 func (b Box) String() string {
+	// @TODO: Shorteing picture to now blow up logs with base64 encoding.
+	// A little dirty but is ok for now.
+	shortenPicture := true
+	if shortenPicture {
+		b.Picture = shortenPictureForLogs(b.Picture)
+		if b.OuterBox != nil {
+			b.OuterBox.Picture = shortenPictureForLogs(b.OuterBox.Picture)
+		}
+		for i := range b.InnerBoxes {
+			b.InnerBoxes[i].Picture = shortenPictureForLogs(b.InnerBoxes[i].Picture)
+		}
+		for i := range b.Items {
+			b.Items[i].Picture = shortenPictureForLogs(b.Items[i].Picture)
+		}
+	}
+
 	data, err := json.Marshal(b)
 	if err != nil {
 		logg.Err("Can't JSON box to string:", err)
@@ -195,6 +249,13 @@ func (b Box) String() string {
 	}
 	s := fmt.Sprintf("%s", data)
 	return s
+}
+
+func shortenPictureForLogs(picture string) string {
+	if len(picture) < 4 {
+		return ""
+	}
+	return picture[0:3] + "...(shortened)"
 }
 
 func (box *Box) MoveTo(other any) error {

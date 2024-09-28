@@ -43,6 +43,8 @@
     <button type="button" onclick="editItem({{ .Id }})">Edit</button>
     <button type="submit" style="display: none;">Update</button>
     <button type="button" onclick="cancelEdit({{ .Id }})" style="display: none;">Cancel</button>
+    <input type="text" name="id2" value="8a8d6753-cad5-41d9-9734-d2e4b1e6e839">
+    <button hx-post="/api/v1/move/item">move</button>
 </form>
 {{ end }}
 

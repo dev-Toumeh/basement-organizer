@@ -9,7 +9,7 @@
 {{ template "close-html-tag" . }}
 {{end}} 
 
-{{ define "open-html-tag" }}<html lang="en">{{ end }}
+{{ define "open-html-tag" }}<!DOCTYPE html><html lang="en">{{ end }}
 {{ define "close-html-tag" }}</html>{{ end }}
 
 {{ define "script" }}
@@ -41,31 +41,6 @@
 {{ define "notification-container" }}
 <div id="notification-container"></div>
 {{ end }}
-
-{{ define "navbar" }}
-<header class="header">
-  <div class="header_content" hx-boost="true" hx-push-url="true">
-    <nav class="nav">
-        <ul class="nav_list">
-            {{if .Authenticated }}
-              <li class="nav_item"><a class="nav_link" href="/items">Items</a></li>
-              <li class="nav_item"><a class="nav_link" href="/boxes">Boxes</a></li>
-              <li class="nav_item"><a class="nav_link" href="/shleves">Shelves</a></li>
-              <li class="nav_item"><a class="nav_link" href="/areas">Areas</a></li>
-              <li class="nav_item"><a class="nav_link" href="/settings">Settings</a></li>
-              <li class="nav_item"><a class="nav_link" href="/sample-page" hx-swap="innerHTML show:html:top" >Sample Page</a></li>
-            {{end}}
-        </ul>
-    </nav>
-    <div class="hamburger">
-      <div class="bar"></div>
-      <div class="bar"></div>
-      <div class="bar"></div>
-    </div>
-  </div>
-</header>
-{{end}}
-
 
 {{ define "page-content"  }}
 <div id="main-container">

@@ -180,8 +180,23 @@ func Render(w io.Writer, name string, data any) error {
 	return nil
 }
 
+// Mapable is used for rendering templates.
+// It is more convenient than using only structs.
+// You can check if keys are available without gettings errors during runtime.
+//
+// For example a struct which implements this interface.
+//
+//	Mystruct {.FieldX string}
+//
+// Mystruct doesn't have a "FieldY".
+// A check check inside a template `{{ if .FieldY }}` will usually return an error.
+// But if this struct implements this interface, passing the Map() to the template will work as expected.
 type Mapable interface {
 	Map() map[string]any
+}
+
+type Renderable interface {
+	Render() error
 }
 
 // RenderMaps builds multiple templates and renders it.
@@ -189,13 +204,13 @@ func RenderMaps(w io.Writer, baseTemplateName string, templates []Mapable) error
 	data := make(map[string]any, 0)
 	for _, tmpl := range templates {
 		maps.Copy(data, tmpl.Map())
+		// logg.Debug(tmpl.Map())
 	}
 
-	err := internalTemplate.ExecuteTemplate(w, baseTemplateName, data)
+	// logg.Debug(data)
+	err := SafeRender(w, baseTemplateName, data)
 	if err != nil {
-		log.Println(err)
-		fmt.Fprintln(w, err)
-		return err
+		return logg.Errorf("Can't render maps", err)
 	}
 	return nil
 }
@@ -205,7 +220,8 @@ func SafeRender(w io.Writer, name string, data any) error {
 	wbs := bytes.NewBufferString("")
 	err := internalTemplate.ExecuteTemplate(wbs, name, data)
 	if err != nil {
-		return logg.Errorf("Can't execute template", err)
+		// return logg.Errorf("Can't execute template \"%s\" with data \"%v\"", err)
+		return logg.Errorf2("Can't execute template \"%s\" with data \"%v\".\n\t%w", name, data, err)
 	}
 	w.Write(wbs.Bytes())
 	return nil

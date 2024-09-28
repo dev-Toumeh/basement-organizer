@@ -16,6 +16,7 @@ func main() {
 		logg.EnableDebugLogger()
 		logg.EnableInfoLogger()
 	}
+	logg.Info(env.Description())
 
 	db := &database.DB{}
 

@@ -1,0 +1,23 @@
+{{ define "navbar" }}
+<header class="header">
+  <div class="header_content" hx-boost="true" hx-push-url="true">
+    <nav class="nav">
+        <ul class="nav_list">
+            {{if .Authenticated }}
+              <li class="nav_item"><a class="nav_link" href="/items">I</a></li>
+              <li class="nav_item"><a class="nav_link" href="/boxes">B</a></li>
+              <li class="nav_item"><a class="nav_link" href="/shleves">S</a></li>
+              <li class="nav_item"><a class="nav_link" href="/areas">A</a></li>
+              <li class="nav_item"><a class="nav_link" href="/settings">S</a></li>
+              <li class="nav_item"><a class="nav_link" href="/sample-page" hx-swap="innerHTML show:html:top" >Sa</a></li>
+            {{end}}
+        </ul>
+    </nav>
+    <div class="hamburger">
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+    </div>
+  </div>
+</header>
+{{end}}

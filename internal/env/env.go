@@ -2,10 +2,16 @@ package env
 
 import (
 	"basement/main/internal/logg"
+	"fmt"
 )
 
 var isDevelopment = false
 var isProduction = true
+var defaultTableSize = 15
+
+func Description() string {
+	return fmt.Sprintf("isProduction: %t, isDevelopment: %t, defaultTableSize: %d", isProduction, isDevelopment, defaultTableSize)
+}
 
 // SetDevelopment sets environment setting to development.
 //
@@ -14,6 +20,7 @@ var isProduction = true
 func SetDevelopment() {
 	isProduction = false
 	isDevelopment = true
+	defaultTableSize = 5
 	logg.InfoForceOutput(3, "Environment is development")
 }
 
@@ -37,6 +44,10 @@ func SetProduction() {
 // Default is true.
 func Production() bool {
 	return isProduction
+}
+
+func DefaultTableSize() int {
+	return defaultTableSize
 }
 
 // var configurations = make(map[string]string)

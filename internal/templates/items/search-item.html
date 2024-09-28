@@ -40,16 +40,3 @@
     <div id="pagination"></div>
 {{end}}
 
-
-{{ define "search-input" }}
-<label for="search">{{ with .SearchInputLabel }}{{ . }}{{end}}</label>
-<input id="search-bar"
-    type="text"
-    {{ if .SearchInputHxPost}}
-        hx-post="{{ .SearchInputHxPost }}"
-        hx-trigger="load, keyup changed delay:500ms"
-        hx-target="{{ .SearchInputHxTarget }}"
-    {{end}}
-    hx-on:keyup="document.getElementById('pagination').innerHTML = '';"
-    name="query">
-{{ end }}

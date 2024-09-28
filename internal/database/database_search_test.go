@@ -172,7 +172,7 @@ func TestBoxFuzzyFinder(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			virtualBoxes, err := dbTest.BoxFuzzyFinder(tc.query)
+			virtualBoxes, err := dbTest.BoxFuzzyFinder(tc.query, 10, 1)
 			if err != nil {
 				t.Fatalf("error occurred while testing boxFuzzyFinder(): %v", err)
 			}

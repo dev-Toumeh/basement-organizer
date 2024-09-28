@@ -1,4 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto&Display=swap"); /* @TODO: Import into project to not depend on internet access or Google provider. */
+/* @TODO: Import into project to not depend on internet access or Google provider. */
+/*@import url("https://fonts.googleapis.com/css2?family=Roboto&Display=swap"); */
 @import url("navbar.css");
 @import url("containers.css");
 @import url("menu.css");
@@ -10,6 +11,19 @@
 html {
   scrollbar-gutter: stable;
   scroll-behavior: smooth;
+  height: -webkit-fill-available;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  /*font-size: 2.8rem;*/
+  background-color: #faf0e6;
+  /*height: 5000px;*/
+  /*padding-top: 90px;*/
+  display: flex;
+  flex-direction: column;
+  height: -webkit-fill-available;
+  margin: auto;
 }
 
 img {
@@ -21,14 +35,15 @@ img {
 img.preview {
   width: 1rem;
   height: 1rem;
+  overflow: hidden;
 }
 
-td[hx-get]:hover {
-  cursor: pointer;
-  background: #c0c0c0;
-  color: blue;
-  font-weight: bold;
-}
+/*td[hx-get]:hover {*/
+/*  cursor: pointer;*/
+/*  background: #c0c0c0;*/
+/*  color: blue;*/
+/*  font-weight: bold;*/
+/*}*/
 
 input[readonly] {
   background: transparent;
@@ -79,20 +94,113 @@ input[readonly] {
   border: solid;
 }
 
-button {
+button,
+input[type="submit"] {
   padding: 7px 12px;
-  background-color: #008080;
+  background-color: var(--base);
   color: white;
   border: none;
   border-radius: 3px;
   cursor: pointer;
 }
 
-button:hover {
-  background-color: #008080;
+.clickable:hover {
+  filter: brightness(110%);
+  cursor: pointer;
+  /*background: #c0c0c0;*/
+  color: blue;
 }
 
-button:disabled {
-  background-color: #333;
+/**[hx-get]:hover,*/
+/**[hx-post]:hover,*/
+/**[hx-put]:hover,*/
+/**[hx-delete]:hover {*/
+/*  cursor: pointer;*/
+/*  color: blue;*/
+/*}*/
+  /*font-weight: bold;*/
+  /*background: #c0c0c0;*/
+
+/**[attribute^="hx"]:hover {*/
+/*  cursor: pointer;*/
+/*  background: #c0c0c0;*/
+/*  color: blue;*/
+/*  font-weight: bold;*/
+/*}*/
+
+button:hover,
+input[type=submit]:hover {
+  filter: brightness(110%);
+}
+
+button:active,
+input[type=submit]:active {
+  filter: brightness(90%);
+}
+
+/*button:hover {*/
+/*  background-color: var(--base-lighter);*/
+/*}*/
+
+/*button:active,*/
+/*input[type=submit]:active { */
+/*  background-color: var(--base-darker);*/
+/*}*/
+
+button.selected,
+input[type=submit].selected {
+  background-color: var(--selected);
+}
+
+/*button.selected:hover {*/
+/*  background-color: var(--selected-lighter);*/
+/*}*/
+
+/**:not(body):not(html):hover:not(:has(:hover)) {*/
+/*  filter: brightness(110%);*/
+/*}*/
+
+/**:not(body):not(html):active:not(:has(:active)) {*/
+/*  filter: brightness(90%);*/
+/*}*/
+
+
+button:disabled,
+input[type=submit]:disabled {
+  background-color: #99B3B3;
   cursor: not-allowed;
+  filter: brightness(100%);
+}
+
+#pagination {
+  /*margin-top: auto;*/
+  /*position: sticky;*/
+  /*bottom: 0;*/
+}
+
+/*unicode zero width space character*/
+.empty::before {
+  content: "\200b";
+}
+
+:root {
+  --lighter: 10%;
+  --darker: -10%;
+
+  /* #008080 */
+  --base-hue: 180;
+  --base-saturation: 100%;
+  --base-lightness: 25%;
+
+  --base: hsl(var(--base-hue), var(--base-saturation), var(--base-lightness));
+  --base-lighter: hsl(var(--base-hue), var(--base-saturation), calc(var(--base-lightness) + var(--lighter)));
+  --base-darker: hsl(var(--base-hue), var(--base-saturation), calc(var(--base-lightness) + var(--darker)));
+
+  /* #ffa600 */
+  --selected-hue: 39;
+  --selected-lightness: 50%;
+
+  --selected: hsl(var(--selected-hue), var(--base-saturation), var(--selected-lightness));
+  --selected-lighter: hsl(var(--selected-hue), var(--base-saturation), calc(var(--selected-lightness) + var(--lighter)));
+  --selected-darker: hsl(var(--selected-hue), var(--base-saturation), calc(var(--selected-lightness) + var(--darker)));
 }

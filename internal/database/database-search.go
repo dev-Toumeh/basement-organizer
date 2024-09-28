@@ -91,20 +91,25 @@ func (db *DB) ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]
 
 // BoxFuzzyFinder retrieves virtual boxes by label.
 // If the query is empty or contains only spaces, it returns 10 default results.
-func (db *DB) BoxFuzzyFinder(query string) ([]items.VirtualBox, error) {
+func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.VirtualBox, error) {
 	var rows *sql.Rows
 	var err error
+	if page == 0 {
+		panic("page starts at 1, cant be 0")
+	}
 
 	if strings.TrimSpace(query) == "" {
 		rows, err = db.Sql.Query(`SELECT box_id, label, outerbox_id, outerbox_label 
                                   FROM box_fts 
-                                  ORDER BY label ASC 
-                                  LIMIT 10;`)
+                                  ORDER BY label ASC
+				LIMIT ? OFFSET ?;`, limit, (page-1)*limit)
+
 	} else {
 		rows, err = db.Sql.Query(`SELECT box_id, label, outerbox_id, outerbox_label 
                                   FROM box_fts 
                                   WHERE label LIKE ? 
-                                  ORDER BY label ASC;`, query+"%")
+                                  ORDER BY label ASC
+				LIMIT ? OFFSET ?;`, query+"%", limit, (page-1)*limit)
 	}
 
 	if err != nil {
@@ -123,7 +128,7 @@ func (db *DB) BoxFuzzyFinder(query string) ([]items.VirtualBox, error) {
 			&sqlVertualBox.OuterBoxLabel,
 		)
 		if err != nil {
-			return []items.VirtualBox{}, fmt.Errorf("error while assigning the Data to the Virtualbox struct: %w", err)
+			return []items.VirtualBox{}, logg.Errorf("error while assigning the Data to the Virtualbox struct: %w", err)
 		}
 		vBox, err := mapSqlVertualBoxToVertualBox(sqlVertualBox)
 		if err != nil {

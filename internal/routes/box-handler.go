@@ -2,13 +2,16 @@ package routes
 
 import (
 	"basement/main/internal/auth"
+	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
 	"fmt"
 	"maps"
+	"math"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gofrs/uuid/v5"
@@ -21,6 +24,8 @@ type BoxDatabase interface {
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (items.Box, error)
 	BoxIDs() ([]string, error) // @TODO: Change string to uuid.UUID
+	BoxFuzzyFinder(query string, limit int, page int) ([]items.VirtualBox, error)
+	VirtualBoxById(id uuid.UUID) (items.VirtualBox, error)
 }
 
 func registerBoxRoutes(db BoxDatabase) {
@@ -32,7 +37,7 @@ func registerBoxRoutes(db BoxDatabase) {
 	http.HandleFunc("/api/v1/box/{id}", boxHandler(db))
 	http.HandleFunc("/api/v1/box/{id}/move", moveBox(db))
 	// Boxes templates
-	http.HandleFunc("/boxes", boxesPage)
+	http.HandleFunc("/boxes", boxesPage(db))
 	http.HandleFunc("/boxes/{id}", boxDetailsPage(db))
 	http.HandleFunc("/boxes/move", boxesPageMove(db))
 	http.HandleFunc("/boxes-list", boxesHandler(db))
@@ -41,13 +46,14 @@ func registerBoxRoutes(db BoxDatabase) {
 	http.HandleFunc("/api/v1/boxes/move", moveBoxes(db))
 }
 
+// boxHandler handles read, create, update and delete for single box.
 func boxHandler(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			const errMsgForUser = "Can't find box"
 
-			id := ValidID(w, r, errMsgForUser)
+			id := server.ValidID(w, r, errMsgForUser)
 			if id.IsNil() {
 				return
 			}
@@ -89,21 +95,51 @@ func boxHandler(db BoxDatabase) http.HandlerFunc {
 	}
 }
 
+// boxesHandler handles read and delete for multiple boxes.
 func boxesHandler(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			ids, err := db.BoxIDs()
+			// query := r.FormValue("query")
+			// page := r.FormValue("page")
+			// limit := r.FormValue("limit")
+			// query limited and paginated boxes
+			if !wantsTemplateData(r) {
+				// if query != "" || page != "" || limit != "" {
+				boxes, err := db.BoxFuzzyFinder("", 5, 1)
+				if err != nil {
+					server.WriteInternalServerError("cant query boxes", logg.Errorf("cant query boxes", err), w, r)
+				}
+				server.WriteJSON(w, boxes)
+				return
+			}
+
+			// no query, all boxes
+			// boxes, err := db.BoxIDs()
+			boxes, err := db.BoxFuzzyFinder("", 2, 1)
 			if err != nil {
 				server.WriteNotFoundError("Can't find boxes", err, w, r)
 			}
-
 			if wantsTemplateData(r) {
-				renderBoxesListTemplate(w, r, db, ids)
+				err = renderBoxesListTemplate2(w, r, db, boxes, "")
+				if err != nil {
+					server.WriteInternalServerError("Can't render box list", err, w, r)
+				}
 			} else {
-				server.WriteJSON(w, ids)
+				server.WriteJSON(w, boxes)
 			}
 			break
+		case http.MethodPost:
+			query := r.PostFormValue("query")
+			logg.Debugf("search query: %s", query)
+			boxes, err := db.BoxFuzzyFinder(query, 5, 1)
+			if err != nil {
+				server.WriteInternalServerError("cant query boxes", err, w, r)
+			}
+			err = renderBoxesListTemplate2(w, r, db, boxes, query)
+			if err != nil {
+				server.WriteInternalServerError("cant render boxlist", err, w, r)
+			}
 
 		case http.MethodPut:
 			server.WriteNotImplementedWarning("Multiple boxes edit?", w, r)
@@ -120,23 +156,207 @@ func boxesHandler(db BoxDatabase) http.HandlerFunc {
 	}
 }
 
-func boxesPage(w http.ResponseWriter, r *http.Request) {
-	authenticated, _ := auth.Authenticated(r)
-	user, _ := auth.UserSessionData(r)
-	data := templates.NewPageTemplate()
-	data.Title = "Boxes"
-	data.Authenticated = authenticated
-	data.User = user
+// boxesPage shows a page with a box list.
+func boxesPage(db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authenticated, _ := auth.Authenticated(r)
+		user, _ := auth.UserSessionData(r)
 
-	server.MustRender(w, r, templates.TEMPLATE_BOXES_PAGE, data.Map())
+		page := templates.NewPageTemplate()
+		page.Title = "Boxes"
+		page.Authenticated = authenticated
+		page.User = user
+		data := page.Map()
+
+		query := r.FormValue("query")
+		searchInput := items.NewSearchInputTemplate()
+		searchInput.SearchInputLabel = "Search boxes"
+		searchInput.SearchInputValue = query
+		// searchInput.SearchInputHxTarget = "#box-list"
+		// searchInput.SearchInputHxPost = "/boxes-list"
+		logg.Debugf("searchInput %v", searchInput.Map())
+		maps.Copy(data, searchInput.Map())
+
+		// @TODO: Implement move page
+		move := false
+		urlQuery := r.URL.Query()
+		logg.Debugf("query values: %v", urlQuery)
+
+		pageNr, err := strconv.Atoi(r.FormValue("page"))
+		if err != nil || pageNr < 1 {
+			pageNr = 1
+		}
+		limit, err := strconv.Atoi(r.FormValue("limit"))
+		if err != nil {
+			limit = env.DefaultTableSize()
+		}
+		if limit == 0 {
+			limit = env.DefaultTableSize()
+		}
+
+		logg.Info("has query: ", urlQuery.Has("query"))
+		var boxes []items.VirtualBox
+		err = nil
+		usedSearch := false
+		if urlQuery.Has("query") && query != "" {
+			boxes, err = db.BoxFuzzyFinder(query, 10000, 1)
+			usedSearch = true
+		} else {
+			boxes, err = db.BoxFuzzyFinder(query, limit, pageNr)
+		}
+		if err != nil {
+			server.WriteInternalServerError("cant query boxes", err, w, r)
+		}
+
+		results := 0
+		totalPages := 1
+		if usedSearch {
+			results = len(boxes)
+
+		} else {
+			ids, _ := db.BoxIDs()
+			results = len(ids)
+		}
+		logg.Debugf("limit: %d, boxes: %d, totalPages: %d, results: %d", limit, results, totalPages, results)
+
+		totalPagesF := float64(results) / float64(limit)
+		totalPagesCeil := math.Ceil(float64(totalPagesF))
+		totalPages = int(totalPagesCeil)
+		if totalPages < 1 {
+			totalPages = 1
+		}
+
+		currentPage := 1
+		if pageNr > totalPages {
+			currentPage = totalPages
+		} else {
+			currentPage = pageNr
+		}
+
+		if totalPages == 0 {
+			totalPages = 1
+		}
+
+		nextPage := currentPage + 1
+		if nextPage < 1 {
+			nextPage = 1
+		}
+		if nextPage > totalPages {
+			nextPage = totalPages
+		}
+
+		prevPage := currentPage - 1
+		if prevPage < 1 {
+			prevPage = 1
+		}
+		if prevPage > totalPages {
+			prevPage = totalPages
+		}
+
+		logg.Debugf("currentPage %d", currentPage)
+		// Limit items per page manually
+		if usedSearch {
+			fromOffset := (currentPage - 1) * limit
+			toOffset := currentPage * limit
+			if toOffset > results {
+				toOffset = results
+			}
+			if toOffset < 0 {
+				toOffset = 0
+			}
+			if fromOffset < 0 {
+				fromOffset = 0
+			}
+			logg.Debugf("fromOffset: %d, toOffset: %d", fromOffset, toOffset)
+			boxes = boxes[fromOffset:toOffset]
+		}
+
+		boxesMaps := make([]map[string]any, len(boxes))
+		for i := range boxes {
+			boxesMaps[i] = boxes[i].Map()
+			boxesMaps[i]["Move"] = move
+		}
+		fillEmpty := limit - len(boxes)
+		for range fillEmpty {
+			boxesMaps = append(boxesMaps, map[string]any{})
+		}
+		maps.Copy(data, map[string]any{"Boxes": boxesMaps})
+		pages := make([]map[string]any, 0)
+
+		// for i := range totalPages {
+		// 	selected := false
+		// 	if pageNr == i+1 {
+		// 		selected = true
+		// 		logg.Debug(i)
+		// 	}
+		// 	pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", i+1), "Limit": fmt.Sprint(limit), "Selected": selected, "ID": fmt.Sprintf("pagination-%d", i+1)})
+		// }
+
+		disablePrev := false
+		disableNext := false
+		disableFirst := false
+		disableLast := false
+		if currentPage == nextPage {
+			disableNext = true
+		}
+		if currentPage == totalPages {
+			disableLast = true
+		}
+		if currentPage == prevPage {
+			disablePrev = true
+		}
+		if currentPage == 1 {
+			disableFirst = true
+		}
+
+		pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", 1), "Limit": fmt.Sprint(limit), "ID": fmt.Sprintf("pagination-%d", 1), "Disabled": disableFirst})
+
+		if totalPages >= 10 {
+			disabled := false
+			prevFive := currentPage - 5
+			if prevFive < 1 {
+				prevFive = 1
+			}
+			if currentPage == prevFive {
+				disabled = true
+			}
+			pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", prevFive), "Limit": fmt.Sprint(limit), "ID": fmt.Sprintf("pagination-%d", prevFive), "Disabled": disabled})
+		}
+		pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", prevPage), "Limit": fmt.Sprint(limit), "ID": fmt.Sprintf("pagination-%d", prevPage), "Disabled": disablePrev})
+		pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", currentPage), "Limit": fmt.Sprint(limit), "Selected": true, "ID": fmt.Sprintf("pagination-%d", currentPage)})
+		pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", nextPage), "Limit": fmt.Sprint(limit), "ID": fmt.Sprintf("pagination-%d", nextPage), "Disabled": disableNext})
+		if totalPages >= 10 {
+			disabled := false
+			nextFive := currentPage + 5
+			if nextFive > totalPages {
+				nextFive = totalPages
+			}
+			if currentPage == nextFive {
+				disabled = true
+			}
+			pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", nextFive), "Limit": fmt.Sprint(limit), "ID": fmt.Sprintf("pagination-%d", nextFive), "Disabled": disabled})
+		}
+
+		pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", totalPages), "Limit": fmt.Sprint(limit), "ID": fmt.Sprintf("pagination-%d", totalPages), "Disabled": disableLast})
+
+		data["Pages"] = pages
+		data["Limit"] = fmt.Sprint(limit)
+		data["NextPage"] = nextPage
+		data["PrevPage"] = prevPage
+		data["PageNumber"] = currentPage
+		data["Move"] = move
+
+		server.MustRender(w, r, templates.TEMPLATE_BOXES_PAGE, data)
+	}
 }
 
+// boxDetailsPage shows a page with details of a specific box.
 func boxDetailsPage(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authenticated, _ := auth.Authenticated(r)
 		user, _ := auth.UserSessionData(r)
 
-		id := ValidID(w, r, "no box")
+		id := server.ValidID(w, r, "no box")
 		if id.IsNil() {
 			return
 		}
@@ -159,8 +379,8 @@ func boxDetailsPage(db BoxDatabase) http.HandlerFunc {
 		maps.Copy(nd, map[string]any{"Boxes": &box.InnerBoxes})
 		searchInput := items.NewSearchInputTemplate()
 		searchInput.SearchInputLabel = "Search boxes"
-		searchInput.SearchInputHxTarget = "#box-list-body"
-		searchInput.SearchInputHxPost = "/api/v1/implement-me"
+		searchInput.SearchInputHxTarget = "#box-list"
+		searchInput.SearchInputHxPost = "/boxes"
 		maps.Copy(nd, searchInput.Map())
 
 		server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, nd)
@@ -176,13 +396,13 @@ func createBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		return
 	}
 	if wantsTemplateData(r) {
-		box, err := db.BoxById(id)
+		box, err := db.VirtualBoxById(id)
 		logg.Debug(box)
 		if err != nil {
 			server.WriteNotFoundError("error while fetching the box based on Id", err, w, r)
 			return
 		}
-		templates.Render(w, templates.TEMPLATE_BOX_LIST_ITEM, box)
+		server.MustRender(w, r, templates.TEMPLATE_BOX_LIST_ITEM, box.Map())
 	} else {
 		server.WriteJSON(w, id)
 	}
@@ -190,7 +410,7 @@ func createBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 
 func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	errMsgForUser := "Can't update box."
-	id := ValidID(w, r, errMsgForUser)
+	id := server.ValidID(w, r, errMsgForUser)
 	if id.IsNil() {
 		return
 	}
@@ -260,11 +480,9 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	}
 
 	if wantsTemplateData(r) {
-		newids, _ := db.BoxIDs()
-		for _, id := range newids {
-			box, _ := db.BoxById(uuid.Must(uuid.FromString(id)))
-			templates.Render(w, templates.TEMPLATE_BOX_LIST_ITEM, box)
-		}
+		// boxes, _ := db.BoxFuzzyFinder("", 5, 1)
+		// renderBoxesListTemplate2(w, r, db, boxes, "")
+		boxesPage(db).ServeHTTP(w, r)
 		for _, id := range toDelete {
 			templates.RenderSuccessNotification(w, "Box deleted: "+id.String())
 		}
@@ -277,7 +495,7 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 // deleteBox deletes a single box.
 func deleteBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	errMsgForUser := "Can't delete box"
-	id := ValidID(w, r, errMsgForUser)
+	id := server.ValidID(w, r, errMsgForUser)
 	if id.IsNil() {
 		return
 	}
@@ -290,6 +508,7 @@ func deleteBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 }
 
 // @TODO: Implement move box.
+// boxPageMove shows the page where client can choose where to move the box.
 func boxPageMove(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		server.WriteNotImplementedWarning("Move single box page", w, r)
@@ -302,6 +521,7 @@ func boxPageMove(db BoxDatabase) http.HandlerFunc {
 	}
 }
 
+// boxesPageMove shows the page where client can choose where to move the selected boxes from the boxes page.
 func boxesPageMove(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		server.WriteNotImplementedWarning("Move multiple boxes page", w, r)
@@ -334,33 +554,8 @@ func boxFromPostFormValue(id uuid.UUID, r *http.Request) items.Box {
 	return box
 }
 
-// ValidID returns valid uuid from request and handles errors.
-// Check for uuid.Nil! If error occurs return will be uuid.Nil.
-func ValidID(w http.ResponseWriter, r *http.Request, errorMessage string) uuid.UUID {
-	id := r.FormValue("id")
-	logg.Debugf("Query param id: '%v'.", id)
-	if id == "" {
-		id = r.PathValue("id")
-		if id == "" {
-			w.WriteHeader(http.StatusNotFound)
-			logg.Debug("Empty id")
-			fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
-			return uuid.Nil
-		}
-		logg.Debugf("path value id: '%v'.", id)
-	}
-
-	newId, err := uuid.FromString(id)
-	if err != nil {
-		logg.Debugf("Wrong id: '%v'. %v", id, err)
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
-		return uuid.Nil
-	}
-	return newId
-}
-
 // wantsTemplateData checks if current request requires template data.
+// Helps deciding how to write the data.
 func wantsTemplateData(r *http.Request) bool {
 	return !strings.Contains(r.URL.Path, "/api/")
 }
@@ -375,23 +570,50 @@ func renderBoxTemplate(box *items.Box, w http.ResponseWriter, r *http.Request) {
 	server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS, b.Map())
 }
 
-func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatabase, ids []string) {
-	var boxes []*items.Box
-	for _, id := range ids {
-		box, _ := db.BoxById(uuid.Must(uuid.FromString(id)))
-		boxes = append(boxes, &box)
-		// items.RenderBoxListItem(w, &box)
-	}
-	// items.RenderBoxList(w, boxes)
+// func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatabase, ids []string) error {
+// 	var boxes []*items.Box
+// 	for _, id := range ids {
+// 		box, _ := db.BoxById(uuid.Must(uuid.FromString(id)))
+// 		boxes = append(boxes, &box)
+// 		// items.RenderBoxListItem(w, &box)
+// 	}
+// 	// items.RenderBoxList(w, boxes)
+// 	searchInput := items.NewSearchInputTemplate()
+// 	// logg.Debugf("searchInput %v", searchInput)
+// 	logg.Debugf("searchInput %v", searchInput.Map())
+// 	searchInput.SearchInputLabel = "Search boxes"
+// 	searchInput.SearchInputHxTarget = "#box-list"
+// 	searchInput.SearchInputHxPost = "/boxes-list"
+// 	maps := []templates.Mapable{searchInput, items.BoxListTemplateData{Boxes: boxes}}
+// 	err := templates.RenderMaps(w, templates.TEMPLATE_BOX_LIST, maps)
+// 	if err != nil {
+// 		return logg.Errorf(fmt.Sprintf("Can't render \"%s\"", templates.TEMPLATE_BOX_LIST), err)
+// 	}
+// 	return nil
+// }
+
+func renderBoxesListTemplate2(w http.ResponseWriter, r *http.Request, db BoxDatabase, boxes []items.VirtualBox, query string) error {
 	searchInput := items.NewSearchInputTemplate()
-	// logg.Debugf("searchInput %v", searchInput)
-	logg.Debugf("searchInput %v", searchInput.Map())
 	searchInput.SearchInputLabel = "Search boxes"
-	searchInput.SearchInputHxTarget = "#box-list-body"
-	searchInput.SearchInputHxPost = "/api/v1/implement-me"
-	maps := []templates.Mapable{searchInput, items.BoxListTemplateData{Boxes: boxes}}
-	templates.RenderMaps(w, templates.TEMPLATE_BOX_LIST, maps)
-	return
+	searchInput.SearchInputHxTarget = "#box-list"
+	searchInput.SearchInputHxPost = "/boxes-list"
+	searchInput.SearchInputValue = query
+	logg.Debugf("searchInput %v", searchInput.Map())
+	// boxesmap := map[string]any{"Boxes": boxes}
+	// maps := map[string]any{searchInput, boxesmap}
+	boxesMaps := make([]map[string]any, len(boxes))
+	for i := range boxes {
+		boxesMaps[i] = boxes[i].Map()
+	}
+	data := map[string]any{"Boxes": boxesMaps}
+	maps.Copy(data, searchInput.Map())
+	logg.Debug(data)
+
+	err := templates.SafeRender(w, templates.TEMPLATE_BOX_LIST, data)
+	if err != nil {
+		return logg.Errorf2("%w", err)
+	}
+	return nil
 }
 
 // // sampleBoxDB to test request handler.

@@ -68,9 +68,10 @@
     {{ end }}
 
 <ol>
-    {{ range .Items }}    
-    <li style="border:solid">{{ template "item-container-2" .}}</li>
-    {{ end}}
+    {{/* template "item-list-units-pagination" . */}}
+    <!--{{ range .Items }}    -->
+        <!--<li style="border:solid">{{/* template "item-container-2" . */}}</li>-->
+    <!--{{ end}}-->
 </ol>
 
 {{ if .Edit }}

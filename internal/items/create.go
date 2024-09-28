@@ -43,6 +43,7 @@ type ItemDatabase interface {
 	DeleteItems(itemId []uuid.UUID) error
 	InsertDummyItems()
 	ErrorExist() error
+	MoveItem(id1 uuid.UUID, id2 uuid.UUID) error
 
 	// search functions
 	ItemFuzzyFinder(query string) ([]VirtualItem, error)

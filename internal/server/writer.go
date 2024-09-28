@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 func WriteFprint(w io.Writer, data any) {
@@ -37,7 +39,7 @@ func WriteNotImplementedWarning(message string, w http.ResponseWriter, r *http.R
 func WriteInternalServerError(message string, err error, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusInternalServerError)
 	fmt.Fprint(w, message)
-	logg.Errfo(3, "%s\n\t%s", message, err)
+	logg.Errfo(3, "%s\t%s", message, err)
 }
 
 func ImplementMeHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,8 +68,8 @@ func MustRender(w http.ResponseWriter, r *http.Request, name string, data any) {
 	err := templates.SafeRender(w, name, data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		errLog := logg.Errorf("Can't render template safely", err)
-		logg.Errfo(3, "%s\n\t%s", http.StatusText(http.StatusInternalServerError), errLog)
+		errLog := logg.Errorf2("%w", err)
+		logg.Errfo(3, "%s: %s", http.StatusText(http.StatusInternalServerError), errLog)
 		return
 	}
 }
@@ -84,28 +86,28 @@ func RenderWithSuccessNotification(w http.ResponseWriter, r *http.Request, name 
 	return nil
 }
 
-// // validID returns valid uuid from request and handles errors.
-// // Check for uuid.Nil! If error occurs return will be uuid.Nil.
-// func validID(w http.ResponseWriter, r *http.Request, errorMessage string) uuid.UUID {
-// 	id := r.FormValue("id")
-// 	logg.Debugf("Query param id: '%v'.", id)
-// 	if id == "" {
-// 		id = r.PathValue("id")
-// 		if id == "" {
-// 			w.WriteHeader(http.StatusNotFound)
-// 			logg.Debug("Empty id")
-// 			fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
-// 			return uuid.Nil
-// 		}
-// 		logg.Debugf("path value id: '%v'.", id)
-// 	}
-//
-// 	newId, err := uuid.FromString(id)
-// 	if err != nil {
-// 		logg.Debugf("Wrong id: '%v'. %v", id, err)
-// 		w.WriteHeader(http.StatusNotFound)
-// 		fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
-// 		return uuid.Nil
-// 	}
-// 	return newId
-// }
+// ValidID returns valid uuid from request and handles errors.
+// Check for uuid.Nil! If error occurs return will be uuid.Nil.
+func ValidID(w http.ResponseWriter, r *http.Request, errorMessage string) uuid.UUID {
+	id := r.FormValue("id")
+	logg.Debugf("Query param id: '%v'.", id)
+	if id == "" {
+		id = r.PathValue("id")
+		if id == "" {
+			w.WriteHeader(http.StatusNotFound)
+			logg.Debug("Empty id")
+			fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
+			return uuid.Nil
+		}
+		logg.Debugf("path value id: '%v'.", id)
+	}
+
+	newId, err := uuid.FromString(id)
+	if err != nil {
+		logg.Debugf("Wrong id: '%v'. %v", id, err)
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
+		return uuid.Nil
+	}
+	return newId
+}

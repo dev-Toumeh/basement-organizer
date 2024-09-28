@@ -101,15 +101,41 @@ func Errorf(msg string, err error) error {
 	pc, filename, line, _ := runtime.Caller(1)
 
 	fullFuncName := runtime.FuncForPC(pc).Name()
+	Debug(fullFuncName)
 	funSplit := strings.Split(fullFuncName, "/")
 	shortFuncName := funSplit[len(funSplit)-1]
-	shortFuncName = strings.Split(shortFuncName, ".")[1]
+	// shortFuncName = strings.Split(shortFuncName, ".")[1]
 
 	nameSplit := strings.Split(filename, "/")
 	shortFileName := nameSplit[len(nameSplit)-1]
 	// Example output:
 	// "file.go:69 Func: Something happened here."
 	return fmt.Errorf("%s:%d\t%s: %s\n\t%w", shortFileName, line, shortFuncName, msg, err)
+}
+
+// Errorf2 works similar to fmt.Errorf but adds line number and function name to output.
+func Errorf2(format string, a ...any) error {
+	pc, filename, line, _ := runtime.Caller(1)
+
+	fullFuncName := runtime.FuncForPC(pc).Name()
+	// Debug(fullFuncName)
+	funSplit := strings.Split(fullFuncName, "/")
+	shortFuncName := funSplit[len(funSplit)-1]
+	// shortFuncName = strings.Split(shortFuncName, ".")[1]
+
+	nameSplit := strings.Split(filename, "/")
+	shortFileName := nameSplit[len(nameSplit)-1]
+	// Example output:
+	// "file.go:69 Func: Something happened here."
+	// pre := fmt.Sprintf("%s:%d\t%s", shortFileName, line, shortFuncName)
+	pre := fmt.Sprintf("\n\t%s:%d [%s()]:\t", shortFileName, line, shortFuncName)
+	// a = append(a, "\n\t")
+	// format = format + "\n\t"
+	err := fmt.Errorf(pre+format, a...)
+	// err = fmt.Errorf("%w\n", err)
+	// aaa := fmt.Sprintf("%s", err)
+	// Debug(aaa)
+	return err
 }
 
 // Fatal is equivalent to log.Fatal().
