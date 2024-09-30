@@ -64,12 +64,12 @@ func (db *boxDatabaseError) DeleteBox(boxId uuid.UUID) error {
 	return errors.New("AAAAA")
 }
 
-func (db *boxDatabaseError) BoxFuzzyFinder(query string, limit int, page int) ([]items.VirtualBox, error) {
-	return make([]items.VirtualBox, 0), errors.New("AAAAAAAA")
+func (db *boxDatabaseError) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListItem, error) {
+	return make([]items.BoxListItem, 0), errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) VirtualBoxById(id uuid.UUID) (items.VirtualBox, error) {
-	return items.VirtualBox{}, errors.New("AAAAAAAA")
+func (db *boxDatabaseError) VirtualBoxById(id uuid.UUID) (items.BoxListItem, error) {
+	return items.BoxListItem{}, errors.New("AAAAAAAA")
 }
 
 // boxDatabaseSuccess never returns errors.
@@ -107,12 +107,12 @@ func (db *boxDatabaseSuccess) DeleteBox(boxId uuid.UUID) error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) BoxFuzzyFinder(query string, limit int, page int) ([]items.VirtualBox, error) {
-	return make([]items.VirtualBox, 0), nil
+func (db *boxDatabaseSuccess) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListItem, error) {
+	return make([]items.BoxListItem, 0), nil
 }
 
-func (db *boxDatabaseSuccess) VirtualBoxById(id uuid.UUID) (items.VirtualBox, error) {
-	return items.VirtualBox{}, nil
+func (db *boxDatabaseSuccess) VirtualBoxById(id uuid.UUID) (items.BoxListItem, error) {
+	return items.BoxListItem{}, nil
 }
 
 func TestBoxHandlerDBErrors(t *testing.T) {

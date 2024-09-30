@@ -13,28 +13,6 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-type VirtualBox struct {
-	Box_Id         uuid.UUID
-	Label          string
-	OuterBox_label string
-	OuterBox_id    uuid.UUID
-	Shelve_label   string
-	Area_label     string
-	PreviewPicture string
-}
-
-func (box *VirtualBox) Map() map[string]any {
-	return map[string]interface{}{
-		"Box_Id":         box.Box_Id,
-		"Label":          box.Label,
-		"OuterBox_label": box.OuterBox_label,
-		"OuterBox_id":    box.OuterBox_id,
-		"Shelve_label":   box.Shelve_label,
-		"Area_label":     box.Area_label,
-		"PreviewPicture": box.PreviewPicture,
-	}
-}
-
 type BoxListItem struct {
 	Box_Id         uuid.UUID
 	Label          string
@@ -113,7 +91,7 @@ type Shelve struct {
 	PreviewPicture string         `json:"previewpicture"     validate:"omitempty,base64"`
 	QRcode         string         `json:"qrcode"      validate:"omitempty,alphanumunicode"`
 	Items          []*VirtualItem `json:"items"`
-	Boxes          []*VirtualBox  `json:"boxes"`
+	Boxes          []*BoxListItem `json:"boxes"`
 	Height         float32
 	Width          float32
 	Depth          float32

@@ -91,7 +91,7 @@ func (db *DB) ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]
 
 // BoxFuzzyFinder retrieves virtual boxes by label.
 // If the query is empty or contains only spaces, it returns 10 default results.
-func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.VirtualBox, error) {
+func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListItem, error) {
 	var rows *sql.Rows
 	var err error
 	if page == 0 {
@@ -113,12 +113,12 @@ func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.Virtual
 	}
 
 	if err != nil {
-		return []items.VirtualBox{}, fmt.Errorf("error while fetching the virtualBox from box_fts: %w", err)
+		return []items.BoxListItem{}, fmt.Errorf("error while fetching the virtualBox from box_fts: %w", err)
 	}
 	defer rows.Close()
 
 	var sqlVertualBox SqlVertualBox
-	var virtualBoxes []items.VirtualBox
+	var virtualBoxes []items.BoxListItem
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -128,11 +128,11 @@ func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.Virtual
 			&sqlVertualBox.OuterBoxLabel,
 		)
 		if err != nil {
-			return []items.VirtualBox{}, logg.Errorf("error while assigning the Data to the Virtualbox struct: %w", err)
+			return []items.BoxListItem{}, logg.Errorf("error while assigning the Data to the Virtualbox struct: %w", err)
 		}
 		vBox, err := mapSqlVertualBoxToVertualBox(sqlVertualBox)
 		if err != nil {
-			return []items.VirtualBox{}, err
+			return []items.BoxListItem{}, err
 		}
 		virtualBoxes = append(virtualBoxes, vBox)
 	}
@@ -153,16 +153,16 @@ func (db *DB) VirtualBoxExist(id uuid.UUID) bool {
 }
 
 // Get the virtual Box based on his ID
-func (db *DB) VirtualBoxById(id uuid.UUID) (items.VirtualBox, error) {
+func (db *DB) VirtualBoxById(id uuid.UUID) (items.BoxListItem, error) {
 
 	if !db.VirtualBoxExist(id) {
-		return items.VirtualBox{}, fmt.Errorf("the Box Id does not exsist in the virtual table")
+		return items.BoxListItem{}, fmt.Errorf("the Box Id does not exsist in the virtual table")
 	}
 
 	query := fmt.Sprintf("SELECT box_id, label, outerbox_id, outerbox_label FROM box_fts WHERE box_id = ?")
 	row, err := db.Sql.Query(query, id.String())
 	if err != nil {
-		return items.VirtualBox{}, fmt.Errorf("error while fetching the virtual box: %w", err)
+		return items.BoxListItem{}, fmt.Errorf("error while fetching the virtual box: %w", err)
 	}
 
 	var sqlVertualBox SqlVertualBox
@@ -174,25 +174,25 @@ func (db *DB) VirtualBoxById(id uuid.UUID) (items.VirtualBox, error) {
 			&sqlVertualBox.OuterBoxLabel,
 		)
 		if err != nil {
-			return items.VirtualBox{}, fmt.Errorf("error while assigning the Data to the Virtualbox struct : %w", err)
+			return items.BoxListItem{}, fmt.Errorf("error while assigning the Data to the Virtualbox struct : %w", err)
 		}
 	}
 
 	vBox, err := mapSqlVertualBoxToVertualBox(sqlVertualBox)
 	if err != nil {
-		return items.VirtualBox{}, err
+		return items.BoxListItem{}, err
 	}
 	return vBox, nil
 }
 
 // private function to map the sql virtual box into normal virtual box
-func mapSqlVertualBoxToVertualBox(sqlBox SqlVertualBox) (items.VirtualBox, error) {
+func mapSqlVertualBoxToVertualBox(sqlBox SqlVertualBox) (items.BoxListItem, error) {
 	id, err := UUIDFromSqlString(sqlBox.BoxID)
 	if err != nil {
-		return items.VirtualBox{}, err
+		return items.BoxListItem{}, err
 	}
 
-	return items.VirtualBox{
+	return items.BoxListItem{
 		Box_Id:         id,
 		Label:          ifNullString(sqlBox.Label),
 		OuterBox_label: ifNullString(sqlBox.OuterBoxLabel),

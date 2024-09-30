@@ -24,8 +24,8 @@ type BoxDatabase interface {
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (items.Box, error)
 	BoxIDs() ([]string, error) // @TODO: Change string to uuid.UUID
-	BoxFuzzyFinder(query string, limit int, page int) ([]items.VirtualBox, error)
-	VirtualBoxById(id uuid.UUID) (items.VirtualBox, error)
+	BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListItem, error)
+	VirtualBoxById(id uuid.UUID) (items.BoxListItem, error)
 }
 
 func registerBoxRoutes(db BoxDatabase) {
@@ -195,7 +195,7 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 		}
 
 		logg.Info("has query: ", urlQuery.Has("query"))
-		var boxes []items.VirtualBox
+		var boxes []items.BoxListItem
 		err = nil
 		usedSearch := false
 		if urlQuery.Has("query") && query != "" {
@@ -592,7 +592,7 @@ func renderBoxTemplate(box *items.Box, w http.ResponseWriter, r *http.Request) {
 // 	return nil
 // }
 
-func renderBoxesListTemplate2(w http.ResponseWriter, r *http.Request, db BoxDatabase, boxes []items.VirtualBox, query string) error {
+func renderBoxesListTemplate2(w http.ResponseWriter, r *http.Request, db BoxDatabase, boxes []items.BoxListItem, query string) error {
 	searchInput := items.NewSearchInputTemplate()
 	searchInput.SearchInputLabel = "Search boxes"
 	searchInput.SearchInputHxTarget = "#box-list"
