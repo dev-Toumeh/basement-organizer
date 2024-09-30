@@ -1,11 +1,13 @@
 {{define "search-item-form"}}
 <div id="level-one" style="display: block;">
     <form id="search-item-form" >
-        {{ $searchInput := map
-            "SearchInputLabel" "Search item"
-            "SearchInputHxPost" "/api/v1/search/item"
-            "SearchInputHxTarget" "#item-list-body" }}
-        {{ template "search-input" $searchInput.Map }}
+        <label for="search">search Items</label>
+        <input type="text"
+               hx-post="/api/v1/search/item"
+               hx-trigger="focus, keyup changed delay:500ms"
+               hx-target="#item-list-body"
+               hx-on:keyup="document.getElementById('pagination').innerHTML = '';"
+               name="query">
         <table class="item-list">
             <thead>
                 <tr>
