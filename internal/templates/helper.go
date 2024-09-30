@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"bytes"
 	"errors"
@@ -38,31 +39,34 @@ type oobNotificationData struct {
 }
 
 type PageTemplate struct {
-	Title         string
-	Authenticated bool
-	User          string
-	Debug         bool
-	NotFound      bool
+	Title          string
+	Authenticated  bool
+	User           string
+	Debug          bool
+	NotFound       bool
+	EnvDevelopment bool
 }
 
 func (tmpl PageTemplate) Map() map[string]any {
 	return map[string]any{
-		"Title":         tmpl.Title,
-		"Authenticated": tmpl.Authenticated,
-		"User":          tmpl.User,
-		"Debug":         tmpl.Debug,
-		"NotFound":      tmpl.NotFound,
+		"Title":          tmpl.Title,
+		"Authenticated":  tmpl.Authenticated,
+		"User":           tmpl.User,
+		"Debug":          tmpl.Debug,
+		"NotFound":       tmpl.NotFound,
+		"EnvDevelopment": tmpl.EnvDevelopment,
 	}
 }
 
 // NewPageTemplate returns default data struct for page templates.
 func NewPageTemplate() PageTemplate {
 	return PageTemplate{
-		Title:         "Default Page",
-		Authenticated: false,
-		User:          "Default User",
-		Debug:         DEBUG_STYLE,
-		NotFound:      false,
+		Title:          "Default Page",
+		Authenticated:  false,
+		User:           "Default User",
+		Debug:          DEBUG_STYLE,
+		NotFound:       false,
+		EnvDevelopment: env.Development(),
 	}
 }
 
