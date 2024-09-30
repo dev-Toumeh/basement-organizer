@@ -38,6 +38,14 @@ img.preview {
   overflow: hidden;
 }
 
+img.detail {
+  min-width: 5rem;
+  min-height: 5rem;
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
 /*td[hx-get]:hover {*/
 /*  cursor: pointer;*/
 /*  background: #c0c0c0;*/
@@ -203,4 +211,10 @@ input[type=submit]:disabled {
   --selected: hsl(var(--selected-hue), var(--base-saturation), var(--selected-lightness));
   --selected-lighter: hsl(var(--selected-hue), var(--base-saturation), calc(var(--selected-lightness) + var(--lighter)));
   --selected-darker: hsl(var(--selected-hue), var(--base-saturation), calc(var(--selected-lightness) + var(--darker)));
+}
+
+
+/*diagonal stripes*/
+.background-diagonal-stripes {
+  background: repeating-linear-gradient(-45deg, #ffffff00, #ffffff00 13px, #c0c0c075 13px, #c0c0c075 15px);
 }

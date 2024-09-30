@@ -71,3 +71,22 @@
 /*  font-weight: bold;*/
 /*}*/
 
+.box-info-container {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin: 0.5rem;
+}
+
+.box-detail-info {
+  display: flex;
+  flex-direction: column;
+  /* width: 100%; */
+  flex-grow: 0.9;"
+}
+
+.box-detail-picture {
+  display: flex;
+  flex-direction: column;
+}

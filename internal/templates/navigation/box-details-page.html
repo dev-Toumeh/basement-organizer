@@ -18,9 +18,10 @@
         <p style="text-align: center">:^(</p>
     {{ else }}
         {{ template "box-details" . }}
-        <hr>
-        <hr>
-        {{ template "box-list" . }}
+        <h2>Inner Boxes</h2>
+        {{ template "item-list" . }}
+        <h2>Items</h2>
+        {{ template "innerboxes-list" . }}
     {{ end }}
 {{ end }}
 
@@ -29,50 +30,57 @@
 <form id="box-{{.Id}}"
     class="box-container"
     hx-encoding="multipart/form-data">
-    <label for="id">ID:</label>
-    <input name="id" type="text" value="{{.Id}}" {{ if not .Edit}}readonly{{end}}>
+    <div class="box-info-container">
+        <div class="box-detail-info">
+            <label for="id">ID:</label>
+            <input name="id" type="text" value="{{.Id}}" {{ if not .Edit}}disabled{{end}}>
 
-    <label for="label">Label:</label>
-    <input name="label" type="text" value="{{.Label}}" {{ if not .Edit}}readonly{{end}}>
+            <label for="label">Label:</label>
+            <input name="label" type="text" value="{{.Label}}" {{ if not .Edit}}disabled{{end}}>
 
-    <label for="description">Description:</label>
-    <input name="description" type="text" value="{{.Description}}" {{ if not .Edit}}readonly{{end}}>
+            <label for="description">Description:</label>
+            <input name="description" type="text" value="{{.Description}}" {{ if not .Edit}}disabled{{end}}>
 
-    <label for="qrcode">QRcode:</label>
-    <input type="text" id="qrcode" name="qrcode" value="{{ .QRcode }}" {{ if not .Edit}}readonly{{end}}>
-    <br>
+            <label for="qrcode">QRcode:</label>
+            <input type="text" id="qrcode" name="qrcode" value="{{ .QRcode }}" {{ if not .Edit}}disabled{{end}}>
+            <br>
 
-    {{ if eq .OuterboxId.String "00000000-0000-0000-0000-000000000000" }}
-    {{ else }}
-    <span>Is inside box:</span>
-    <a href="/boxes/{{.OuterboxId}}" 
-        hx-boost="true"
-        style=""
-    >{{ .Outerbox.Label }}</a>
-    <br>
-    {{ end }}
+            {{ if eq .OuterboxId.String "00000000-0000-0000-0000-000000000000" }}
+            {{ else }}
+            <span>Is inside box:</span>
+            <a href="/boxes/{{.OuterboxId}}" 
+                hx-boost="true"
+                style=""
+            >{{ .Outerbox.Label }}</a>
+            <br>
+            {{ end }}
+        </div>
 
-    <div id="image-preview-{{ .Id }}">
-        {{ if .Picture }}
-        <label for="picture">Picture:</label>
-        <img src="data:image/png;base64,{{ .Picture }}" alt="{{ .Label }}">
-        <br>
-        {{ else }}
-        <p>No image available</p>
-        {{ end }}
-    </div>
+        <div id="image-preview-{{ .Id }}" class="box-detail-picture">
+            {{ if .Picture }}
+            <label for="picture">Picture:</label>
+            <img class="detail" src="data:image/png;base64,{{ .Picture }}" alt="{{ .Label }}">
+            {{ else }}
+            <p>No image available</p>
+            {{ end }}
 
-    {{ if .Edit }}
-    <input type="file" id="picture-{{ .Id }}" name="picture" accept="image/*" >
-    <span id="image-hint-{{ .Id }}" style="color: #666;">Upload a new image or leave empty to keep the current one.</span>
-    {{ end }}
+            {{ if .Edit }}
+            <input type="file" id="picture-{{ .Id }}" name="picture" accept="image/*" >
+            {{ else }}
+            <input type="file" id="picture-{{ .Id }}" name="picture" accept="image/*" disabled>
+            {{ end }}
+        </div>
+    </div>  
 
-<ol>
-    {{/* template "item-list-units-pagination" . */}}
-    <!--{{ range .Items }}    -->
-        <!--<li style="border:solid">{{/* template "item-container-2" . */}}</li>-->
-    <!--{{ end}}-->
-</ol>
+
+{{ if .EnvDevelopment }}
+<div style="outline:solid;font-size:0.7rem" class="background-diagonal-stripes">
+    <div>Development info</div>
+    <div>API data: /api/v1/box/{{.Id}}</div>
+    <p hx-trigger="load" hx-get="/api/v1/box/{{.Id}}" ></p>
+</div>
+{{ end }}
+
 
 {{ if .Edit }}
 <button hx-put="/box" 
@@ -90,6 +98,7 @@
 >edit</button>
 {{ end }}
 
+
 <button hx-get="/box/{{.Id}}/move">move</button>
 
 <button hx-delete="/box?id={{.Id}}" 
@@ -99,13 +108,18 @@
 >delete</button>
 
 </form>
+
+
 {{end}}
 
-
-{{ define "innerboxes-list" }}
-<form id="box-list">
-    {{ template "search-input" . }}
-    <button type="button">Alternative View</button>
+{{ define "empty-list" }}
+<form id="inner-boxes-list"
+    hx-get="/boxes"
+    hx-push-url="true"
+    hx-target="body"
+    hx-swap="outerHTML"
+    hx-trigger="keyup changed delay:500ms from:#search-bar, keyup changed delay:500ms from:#item-limit"
+>
     <table class="box-list">
         <thead>
             <tr>
@@ -115,23 +129,176 @@
                 <th>Area</th>
                 <th style="width: 10%">Image</th>
                 <th style="width: 10%">Move</th>
+                {{ if not .Move }}
                 <th style="width: 10%">Delete</th>
+                {{ end }}
             </tr>
         </thead> 
-        <tbody id="box-list-body" hx-trigger="load" hx-get="/boxes-list" >
-        {{ range .InnerBoxes }}    
+        <tbody id="box-list-body">
+            <tr id="box-list-item-{{.Box_Id}}">
+                <td colspan="7" style="text-align:center">No Entries</td>  
+            </tr>
+        </tbody>
+    </table>
+    <div >
+        <button hx-delete="/boxes-list"
+            hx-target="#box-list"
+            hx-select="#box-list"
+            hx-push-url="true"
+            disabled
+        >delete</button>
+        <button type="button" 
+            hx-get="/boxes/move"
+            disabled
+        >move</button>
+    </div>
+</form>
+{{ end }}
+
+
+{{ define "innerboxes-list" }}
+<form id="inner-boxes-list"
+    hx-get="/boxes"
+    hx-push-url="true"
+    hx-target="body"
+    hx-swap="outerHTML"
+    hx-trigger="keyup changed delay:500ms from:#search-bar, keyup changed delay:500ms from:#item-limit"
+>
+    <table class="box-list">
+        <thead>
+            <tr>
+                <th>Label</th>
+                <th>Box</th>
+                <th>Shelve</th>
+                <th>Area</th>
+                <th style="width: 10%">Image</th>
+                <th style="width: 10%">Move</th>
+                {{ if not .Move }}
+                <th style="width: 10%">Delete</th>
+                {{ end }}
+            </tr>
+        </thead> 
+        <!--boxes are created directly by backend with template-->
+        <tbody id="box-list-body">
+        {{ if .InnerBoxes }}
+            {{ range .InnerBoxes }}
             {{ template "box-list-item" . }}
+            {{ end }}
+        {{ else }}
+            <tr id="box-list-item-{{.Box_Id}}">
+                <td colspan="7" style="text-align:center">No Entries</td>  
+            </tr>
         {{ end }}
         </tbody>
     </table>
     <div >
         <button hx-delete="/boxes-list"
-            hx-target="#box-list-body"
+            hx-target="#box-list"
+            hx-select="#box-list"
+            hx-push-url="true"
         >delete</button>
-            <!--hx-include="[name='']"-->
         <button type="button" 
-            hx-put="/boxes-list"
+            hx-get="/boxes/move"
         >move</button>
     </div>
 </form>
+
+<div id="data-container" style="display: none;"></div> 
 {{ end }}
+
+
+{{ define "item-list" }}
+<form id="item-list"
+    hx-get="/boxes"
+    hx-push-url="true"
+    hx-target="body"
+    hx-swap="outerHTML"
+    hx-trigger="keyup changed delay:500ms from:#search-bar, keyup changed delay:500ms from:#item-limit"
+>
+    <table class="box-list">
+        <thead>
+            <tr>
+                <th>Label</th>
+                <th>Box</th>
+                <th>Shelve</th>
+                <th>Area</th>
+                <th style="width: 10%">Image</th>
+                <th style="width: 10%">Move</th>
+                {{ if not .Move }}
+                <th style="width: 10%">Delete</th>
+                {{ end }}
+            </tr>
+        </thead> 
+        <!--boxes are created directly by backend with template-->
+        <tbody id="box-list-body">
+        {{ if .ItemListItems }}
+            {{ range .ItemListItems }}
+            {{ template "item-list-row" . }}
+            {{ end }}
+        {{ else }}
+            <tr id="empty-list-item">
+                <td colspan="7" style="text-align:center">No Entries</td>  
+            </tr>
+        {{ end }}
+        </tbody>
+    </table>
+    <div >
+        <button hx-delete="/boxes-list"
+            hx-target="#box-list"
+            hx-select="#box-list"
+            hx-push-url="true"
+        >delete</button>
+        <button type="button" 
+            hx-get="/boxes/move"
+        >move</button>
+    </div>
+</form>
+
+<div id="data-container" style="display: none;"></div> 
+{{ end }}
+
+
+{{ define "item-list-row" }}
+    {{ $empty := false }}
+    {{ if not . }}
+        {{ $empty = true }}
+    {{ end }}
+
+    {{ if $empty }}
+    <tr id="box-list-item-{{.Box_Id}}">
+        <td colspan="7" style="text-align:center">
+            <span class="empty">empty<img class="preview" style="opacity:0"></span>
+        </td>  
+    </tr>
+    {{ else }}
+    <tr id="item-list-item-{{.Item_Id}}">
+         <!--hx-get="/items/{{.Item_Id}}"-->
+        <td
+            hx-get="/api/v1/read/item/{{.Item_Id}}"
+            hx-push-url="true"
+            hx-target="#item-list"
+            class="clickable"
+        >{{.Label}}</td>
+        <td>{{.Box_label}}</td> 
+        <td>{{.Shelve_label}}</td>
+        <td>{{.Area_label}}</td>
+        <td style="text-align: center;width:0;text-wrap: nowrap;">
+            <div>
+            <img class="preview" 
+                src="data:image/png;base64,{{.PreviewPicture}}" 
+                {{if .PreviewPicture}}alt="{{.Label}}"{{end}}
+            >
+            </div>
+        </td>
+        {{ if not .Move}}
+        <td style="text-align: center;"><input type="checkbox" name="move:{{.Box_Id}}"></td>
+        <td style="text-align: center;"><input type="checkbox" name="delete:{{.Box_Id}}"></td>
+        {{ else }}
+        <td style="text-align: center;">
+            <button type="">move here</button>
+        </td>
+        {{ end }}
+    </tr>
+    {{ end }}
+{{ end }}
+

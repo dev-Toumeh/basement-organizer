@@ -6,13 +6,9 @@
 
 {{ if $empty }}
 <tr id="box-list-item-{{.Box_Id}}">
-    <td ><span class="empty"></span></td> 
-    <td></td> 
-    <td></td> 
-    <td></td> 
-    <td></td> 
-    <td></td> 
-    <td></td> 
+    <td colspan="7" style="text-align:center">
+        <span class="empty">empty<img class="preview" style="opacity:0"></span>
+    </td>  
 </tr>
 {{ else }}
 <tr id="box-list-item-{{.Box_Id}}">
