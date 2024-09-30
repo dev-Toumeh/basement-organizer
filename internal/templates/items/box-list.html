@@ -6,7 +6,6 @@
     hx-swap="outerHTML"
     hx-trigger="keyup changed delay:500ms from:#search-bar, keyup changed delay:500ms from:#item-limit"
 >
-    {{/* template "search-input" . */}}
     <label for="search">{{ with .SearchInputLabel }}{{ . }}{{end}}</label>
     <input id="search-bar"
         type="text"
