@@ -67,7 +67,8 @@ func itemsRoutes(db items.ItemDatabase) {
 }
 
 func shelvesRoutes() {
-	http.HandleFunc("/shelves", shelvesPage)
+	// @TODO: Implement shelves page.
+	http.HandleFunc("/shelves", server.ImplementMeHandler)
 }
 
 var testStyle = templates.DEBUG_STYLE
