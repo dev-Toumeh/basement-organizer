@@ -3,7 +3,10 @@ package database
 import (
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
+	"basement/main/internal/server"
+	"bytes"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -256,7 +259,66 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 	return box, nil
 }
 
-		return item, logg.Errorf("error while fetching virtual items %w", err)
+// Box2ById returns Box with items suitable for lists.
+func (db *DB) Box2ById(id uuid.UUID) (*items.Box2, error) {
+	box := &items.Box2{}
+	if !db.BoxExistById(id) {
+		return box, errors.New(fmt.Sprintf("Box not found: \"%s\"", id))
+	}
+
+	query := `
+		SELECT 
+            b.id, b.label, b.description, b.picture, b.qrcode, b.outerbox_id,
+            i.id, i.label, i.picture
+        FROM 
+            box AS b
+        LEFT JOIN 
+            item As i ON b.id = i.box_id 
+        WHERE 
+            b.id = ?;`
+
+	rows, err := db.Sql.Query(query, id)
+	if err != nil {
+		return nil, logg.Errorf("Error in Query %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var boxSQLBox SQLBox
+		var itemSQLItem SqlItem
+
+		err := rows.Scan(
+			&boxSQLBox.Id, &boxSQLBox.Label, &boxSQLBox.Description, &boxSQLBox.Picture, &boxSQLBox.QRcode, &boxSQLBox.OuterboxId,
+			&itemSQLItem.ItemId, &itemSQLItem.ItemLabel, &itemSQLItem.ItemPicture,
+		)
+		if err != nil {
+			return nil, logg.Errorf("Error scanning row %w", err)
+		}
+		b := bytes.Buffer{}
+		i := bytes.Buffer{}
+		server.WriteJSON(&b, boxSQLBox)
+		server.WriteJSON(&i, itemSQLItem)
+		logg.Debugf("boxSQLBox: %v", b.String())
+		logg.Debugf("itemSQLItem: %v", i.String())
+
+		if itemSQLItem.ItemId.Valid {
+			item := &items.VirtualItem{}
+			item.Item_Id = uuid.Must(uuid.FromString(itemSQLItem.ItemId.String))
+			item.Label = itemSQLItem.ItemLabel.String
+			item.PreviewPicture = itemSQLItem.ItemPicture.String
+			item.Box_Id = uuid.Must(uuid.FromString(boxSQLBox.Id.String))
+			item.Box_label = boxSQLBox.Label.String
+
+			box.Items = append(box.Items, item)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, logg.Errorf("Error in row iteration %w", err)
+	}
+	return box, nil
+}
+
 // insert new Box record in the Database
 func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
 	if db.BoxExistById(box.Id) {

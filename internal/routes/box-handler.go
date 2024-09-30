@@ -2,6 +2,7 @@ package routes
 
 import (
 	"basement/main/internal/auth"
+	"basement/main/internal/database"
 	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
@@ -23,12 +24,13 @@ type BoxDatabase interface {
 	UpdateBox(box items.Box) error
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (items.Box, error)
+	Box2ById(id uuid.UUID) (*items.Box2, error)
 	BoxIDs() ([]string, error) // @TODO: Change string to uuid.UUID
 	BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListItem, error)
 	VirtualBoxById(id uuid.UUID) (items.BoxListItem, error)
 }
 
-func registerBoxRoutes(db BoxDatabase) {
+func registerBoxRoutes(db *database.DB) {
 	// Box templates
 	http.HandleFunc("/box", boxHandler(db))
 	http.HandleFunc("/box/{id}/move", boxPageMove(db))
@@ -351,7 +353,7 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 }
 
 // boxDetailsPage shows a page with details of a specific box.
-func boxDetailsPage(db BoxDatabase) http.HandlerFunc {
+func boxDetailsPage(db *database.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authenticated, _ := auth.Authenticated(r)
 		user, _ := auth.UserSessionData(r)
@@ -362,6 +364,11 @@ func boxDetailsPage(db BoxDatabase) http.HandlerFunc {
 		}
 		logg.Debug(id)
 
+		box2, err := db.Box2ById(id)
+		if err != nil {
+			server.WriteInternalServerError("box2", err, w, r)
+			return
+		}
 		notFound := false
 		box, err := db.BoxById(id)
 		if err != nil {
@@ -382,6 +389,11 @@ func boxDetailsPage(db BoxDatabase) http.HandlerFunc {
 		searchInput.SearchInputHxTarget = "#box-list"
 		searchInput.SearchInputHxPost = "/boxes"
 		maps.Copy(nd, searchInput.Map())
+		itemsMap := make([]map[string]any, len(box2.Items))
+		for i, v := range box2.Items {
+			itemsMap[i] = v.Map()
+		}
+		nd["ItemListItems"] = itemsMap
 
 		server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, nd)
 	}
@@ -467,7 +479,7 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		if err != nil {
 			errOccurred = true
 			deleteErrorIds = append(deleteErrorIds, deleteId.String())
-			logg.Errorf("%v: %v. %w", errMsgForUser, deleteId, err)
+			logg.Errorf(fmt.Sprintf("%v: %v. %w", errMsgForUser, deleteId), err)
 		} else {
 			logg.Debug("Box deleted: ", deleteId)
 		}

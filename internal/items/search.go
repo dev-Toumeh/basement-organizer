@@ -19,6 +19,18 @@ type VirtualItem struct {
 	PreviewPicture string
 }
 
+func (vi *VirtualItem) Map() map[string]any {
+	return map[string]any{
+		"Item_Id":        vi.Item_Id,
+		"Label":          vi.Label,
+		"Box_label":      vi.Box_label,
+		"Box_Id":         vi.Box_Id,
+		"Shelve_label":   vi.Shelve_label,
+		"Area_label":     vi.Area_label,
+		"PreviewPicture": vi.PreviewPicture,
+	}
+}
+
 type SearchItemData struct {
 	Query          string
 	TotalCount     int
