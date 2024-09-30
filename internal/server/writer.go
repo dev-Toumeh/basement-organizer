@@ -25,7 +25,7 @@ func WriteJSON(w io.Writer, data any) {
 func WriteNotFoundError(message string, err error, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	fmt.Fprint(w, message)
-	logg.Info(logg.Errorf(message, err))
+	logg.Info("%s: %s", message, err.Error())
 }
 
 // WriteNotFoundError sets not found status code 404, logs error and writes error message to client.
@@ -68,7 +68,7 @@ func MustRender(w http.ResponseWriter, r *http.Request, name string, data any) {
 	err := templates.SafeRender(w, name, data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		errLog := logg.Errorf2("%w", err)
+		errLog := logg.Errorf("%w", err)
 		logg.Errfo(3, "%s: %s", http.StatusText(http.StatusInternalServerError), errLog)
 		return
 	}
@@ -79,7 +79,7 @@ func RenderWithSuccessNotification(w http.ResponseWriter, r *http.Request, name 
 	err := templates.CanRender(name, data)
 	if err != nil {
 		TriggerSuccessNotification(w, successMessage)
-		return logg.Errorf("Template rendering failed", err)
+		return logg.Errorf("Template rendering failed %w", err)
 	}
 	TriggerSuccessNotification(w, successMessage)
 	templates.Render(w, name, data)

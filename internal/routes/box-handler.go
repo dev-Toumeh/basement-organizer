@@ -108,7 +108,7 @@ func boxesHandler(db BoxDatabase) http.HandlerFunc {
 				// if query != "" || page != "" || limit != "" {
 				boxes, err := db.BoxFuzzyFinder("", 5, 1)
 				if err != nil {
-					server.WriteInternalServerError("cant query boxes", logg.Errorf("cant query boxes", err), w, r)
+					server.WriteInternalServerError("cant query boxes", logg.Errorf("%w", err), w, r)
 				}
 				server.WriteJSON(w, boxes)
 				return
@@ -452,7 +452,7 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				fmt.Fprint(w, errMsgForUser)
-				logg.Errorf(fmt.Sprintf("%s: Malformed uuid \"%s\"", errMsgForUser, k), err)
+				logg.Errorf("%s: Malformed uuid \"%s\". %w", errMsgForUser, k, err)
 				return
 			}
 			toDelete = append(toDelete, id)
@@ -467,7 +467,7 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		if err != nil {
 			errOccurred = true
 			deleteErrorIds = append(deleteErrorIds, deleteId.String())
-			logg.Errorf(fmt.Sprintf("%v: %v", errMsgForUser, deleteId), err)
+			logg.Errorf("%v: %v. %w", errMsgForUser, deleteId, err)
 		} else {
 			logg.Debug("Box deleted: ", deleteId)
 		}
@@ -611,7 +611,7 @@ func renderBoxesListTemplate2(w http.ResponseWriter, r *http.Request, db BoxData
 
 	err := templates.SafeRender(w, templates.TEMPLATE_BOX_LIST, data)
 	if err != nil {
-		return logg.Errorf2("%w", err)
+		return logg.Errorf("%w", err)
 	}
 	return nil
 }

@@ -256,6 +256,7 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 	return box, nil
 }
 
+		return item, logg.Errorf("error while fetching virtual items %w", err)
 // insert new Box record in the Database
 func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
 	if db.BoxExistById(box.Id) {

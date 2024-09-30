@@ -24,7 +24,7 @@ func MoveItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Reques
 		id2, _ := uuid.FromString(r.PostFormValue("id2"))
 		err := db.MoveItem(id, id2)
 		if err != nil {
-			err = logg.Errorf(errMsgForUser, err)
+			err = logg.Errorf("%s %w", errMsgForUser, err)
 			server.WriteInternalServerError(errMsgForUser, err, w, r)
 			return
 		}

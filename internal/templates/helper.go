@@ -98,7 +98,7 @@ func InitTemplates(directory string) error {
 	}
 	internalTemplate, _, err = ParseDirectory(dir)
 	if err != nil {
-		return logg.Errorf("Init Templates failed: %w", err)
+		return logg.Errorf("Init Templates failed %w", err)
 	}
 
 	log.Println("Templates initialized")
@@ -175,7 +175,7 @@ func allFilePathsInDirectory(dirpath string) ([]string, error) {
 func Render(w io.Writer, name string, data any) error {
 	err := internalTemplate.ExecuteTemplate(w, name, data)
 	if err != nil {
-		return logg.Errorf("Can't render template", err)
+		return logg.Errorf("Can't render template %w", err)
 	}
 	return nil
 }
@@ -210,7 +210,7 @@ func RenderMaps(w io.Writer, baseTemplateName string, templates []Mapable) error
 	// logg.Debug(data)
 	err := SafeRender(w, baseTemplateName, data)
 	if err != nil {
-		return logg.Errorf("Can't render maps", err)
+		return logg.Errorf("Can't render maps %w", err)
 	}
 	return nil
 }
@@ -221,7 +221,7 @@ func SafeRender(w io.Writer, name string, data any) error {
 	err := internalTemplate.ExecuteTemplate(wbs, name, data)
 	if err != nil {
 		// return logg.Errorf("Can't execute template \"%s\" with data \"%v\"", err)
-		return logg.Errorf2("Can't execute template \"%s\" with data \"%v\".\n\t%w", name, data, err)
+		return logg.Errorf("Can't execute template \"%s\" with data \"%v\".\n\t%w", name, data, err)
 	}
 	w.Write(wbs.Bytes())
 	return nil
@@ -232,7 +232,7 @@ func CanRender(name string, data any) error {
 	wbs := bytes.NewBufferString("")
 	err := internalTemplate.ExecuteTemplate(wbs, name, data)
 	if err != nil {
-		return logg.Errorf("Can't execute template", err)
+		return logg.Errorf("Can't execute template %w", err)
 	}
 	return nil
 }

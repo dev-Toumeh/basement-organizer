@@ -274,7 +274,7 @@ func (db *DB) MoveItem(id1 uuid.UUID, id2 uuid.UUID) error {
 	updateStmt := `UPDATE item SET box_id = ? WHERE id = ?;`
 	_, err := db.Sql.Exec(updateStmt, id2, id1)
 	if err != nil {
-		return logg.Errorf("Placeholder function", err)
+		return logg.Errorf("Placeholder function %w", err)
 	}
 	return nil
 }

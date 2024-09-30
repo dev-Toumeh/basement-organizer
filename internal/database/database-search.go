@@ -128,7 +128,7 @@ func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxList
 			&sqlVertualBox.OuterBoxLabel,
 		)
 		if err != nil {
-			return []items.BoxListItem{}, logg.Errorf("error while assigning the Data to the Virtualbox struct: %w", err)
+			return []items.BoxListItem{}, logg.Errorf("error while assigning the Data to the Virtualbox struct %w", err)
 		}
 		vBox, err := mapSqlVertualBoxToVertualBox(sqlVertualBox)
 		if err != nil {

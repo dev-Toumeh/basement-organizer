@@ -97,24 +97,7 @@ func DebugLogger() *log.Logger {
 }
 
 // Errorf works similar to fmt.Errorf but adds line number and function name to output.
-func Errorf(msg string, err error) error {
-	pc, filename, line, _ := runtime.Caller(1)
-
-	fullFuncName := runtime.FuncForPC(pc).Name()
-	Debug(fullFuncName)
-	funSplit := strings.Split(fullFuncName, "/")
-	shortFuncName := funSplit[len(funSplit)-1]
-	// shortFuncName = strings.Split(shortFuncName, ".")[1]
-
-	nameSplit := strings.Split(filename, "/")
-	shortFileName := nameSplit[len(nameSplit)-1]
-	// Example output:
-	// "file.go:69 Func: Something happened here."
-	return fmt.Errorf("%s:%d\t%s: %s\n\t%w", shortFileName, line, shortFuncName, msg, err)
-}
-
-// Errorf2 works similar to fmt.Errorf but adds line number and function name to output.
-func Errorf2(format string, a ...any) error {
+func Errorf(format string, a ...any) error {
 	pc, filename, line, _ := runtime.Caller(1)
 
 	fullFuncName := runtime.FuncForPC(pc).Name()
@@ -136,6 +119,23 @@ func Errorf2(format string, a ...any) error {
 	// aaa := fmt.Sprintf("%s", err)
 	// Debug(aaa)
 	return err
+}
+
+// Errorf2 works similar to fmt.Errorf2 but adds line number and function name to output.
+func Errorf2(msg string, err error) error {
+	pc, filename, line, _ := runtime.Caller(1)
+
+	fullFuncName := runtime.FuncForPC(pc).Name()
+	Debug(fullFuncName)
+	funSplit := strings.Split(fullFuncName, "/")
+	shortFuncName := funSplit[len(funSplit)-1]
+	// shortFuncName = strings.Split(shortFuncName, ".")[1]
+
+	nameSplit := strings.Split(filename, "/")
+	shortFileName := nameSplit[len(nameSplit)-1]
+	// Example output:
+	// "file.go:69 Func: Something happened here."
+	return fmt.Errorf("%s:%d\t%s: %s\n\t%w", shortFileName, line, shortFuncName, msg, err)
 }
 
 // Fatal is equivalent to log.Fatal().
