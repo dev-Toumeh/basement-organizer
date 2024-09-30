@@ -13,7 +13,7 @@ type VirtualItem struct {
 	Item_Id        uuid.UUID
 	Label          string
 	Box_label      string
-	Box_id         uuid.UUID
+	Box_Id         uuid.UUID
 	Shelve_label   string
 	Area_label     string
 	PreviewPicture string
