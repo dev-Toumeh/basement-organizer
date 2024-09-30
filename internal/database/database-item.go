@@ -1,8 +1,11 @@
 package database
 
 import (
+	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
+	"basement/main/internal/server"
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
@@ -61,6 +64,53 @@ func (db *DB) ItemExist(field string, value string) bool {
 // Item returns new Item struct if id matches.
 func (db *DB) Item(id string) (items.Item, error) {
 	return db.ItemByField("id", id)
+}
+
+// ListItemById returns a single item with less information suitable for a list row.
+func (db *DB) ListItemById(id uuid.UUID) (*items.VirtualItem, error) {
+	item := &items.VirtualItem{}
+	rows, err := db.Sql.Query(`
+		SELECT 
+            i.id, i.label, i.picture, i.box_id,
+            b.id, b.label 
+        FROM 
+            item AS i
+        LEFT JOIN 
+            box AS b ON b.id = i.box_id 
+        WHERE 
+            i.id = ?;`, id.String())
+
+	if err != nil {
+		return item, logg.Errorf("%w", err)
+	}
+	defer rows.Close()
+
+	var sqlItem SqlVirtualItem
+
+	for rows.Next() {
+		err = rows.Scan(&sqlItem.ItemID, &sqlItem.Label, &sqlItem.PreviewPicture, &sqlItem.OuterBoxID, &sqlItem.OuterBoxID, &sqlItem.OuterBoxLabel)
+		if err != nil {
+			return nil, logg.Errorf("%w", err)
+		}
+
+		if env.Development() {
+			b := bytes.Buffer{}
+			server.WriteJSON(&b, sqlItem)
+			logg.Debugf("virtual item: %v", b.String())
+		}
+
+		if sqlItem.ItemID.Valid {
+			item.Item_Id = uuid.Must(uuid.FromString(sqlItem.ItemID.String))
+			item.Label = sqlItem.Label.String
+			item.PreviewPicture = sqlItem.PreviewPicture.String
+			item.Box_Id = uuid.Must(uuid.FromString(sqlItem.OuterBoxID.String))
+			item.Box_label = sqlItem.OuterBoxLabel.String
+		} else {
+			return item, errors.New(fmt.Sprintf("Invalid UUID: \"%s\"", sqlItem.ItemID.String))
+		}
+	}
+
+	return item, nil
 }
 
 // return items id's in array from type string
