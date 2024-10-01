@@ -10,7 +10,7 @@
 
 html {
   scrollbar-gutter: stable;
-  scroll-behavior: smooth;
+  /*scroll-behavior: smooth;*/
   height: -webkit-fill-available;
 }
 
