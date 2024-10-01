@@ -14,7 +14,7 @@ type VirtualItem struct {
 	Label          string
 	Box_label      string
 	Box_Id         uuid.UUID
-	Shelve_label   string
+	Shelf_label    string
 	Area_label     string
 	PreviewPicture string
 }
@@ -25,7 +25,7 @@ func (vi *VirtualItem) Map() map[string]any {
 		"Label":          vi.Label,
 		"Box_label":      vi.Box_label,
 		"Box_Id":         vi.Box_Id,
-		"Shelve_label":   vi.Shelve_label,
+		"Shelf_label":    vi.Shelf_label,
 		"Area_label":     vi.Area_label,
 		"PreviewPicture": vi.PreviewPicture,
 	}

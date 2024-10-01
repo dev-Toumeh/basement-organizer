@@ -10,7 +10,7 @@
 ***[#lightblue] items
 ***[#lightgreen] boxes
 ***[#lightgreen] shelves
-'**** shelve 
+'**** shelf
 ****[#Orange] label 
 ****[#Orange] description
 ****[#lightblue] items

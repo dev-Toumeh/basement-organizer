@@ -15,7 +15,7 @@ type SqlVertualBox struct {
 	Label          sql.NullString
 	OuterBoxLabel  sql.NullString
 	OuterBoxID     sql.NullString
-	ShelveLabel    sql.NullString
+	ShelfLabel     sql.NullString
 	AreaLabel      sql.NullString
 	PreviewPicture sql.NullString
 }
@@ -25,7 +25,7 @@ type SqlVirtualItem struct {
 	Label          sql.NullString
 	OuterBoxLabel  sql.NullString
 	OuterBoxID     sql.NullString
-	ShelveLabel    sql.NullString
+	ShelfLabel     sql.NullString
 	AreaLabel      sql.NullString
 	PreviewPicture sql.NullString
 }
@@ -197,7 +197,7 @@ func mapSqlVertualBoxToVertualBox(sqlBox SqlVertualBox) (items.BoxListItem, erro
 		Label:          ifNullString(sqlBox.Label),
 		OuterBox_label: ifNullString(sqlBox.OuterBoxLabel),
 		OuterBox_id:    ifNullUUID(sqlBox.OuterBoxID),
-		Shelve_label:   "Shelve 1",
+		Shelf_label:    "Shelf 1",
 		Area_label:     "Area 1",
 		PreviewPicture: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAFAgL/uXBuZwAAAABJRU5ErkJggg==",
 	}, nil
@@ -213,8 +213,8 @@ func mapSqlVertualItemToVertualItem(sqlItem SqlVirtualItem) (items.VirtualItem, 
 		Label:          ifNullString(sqlItem.Label),
 		Box_label:      "box 1",
 		Box_Id:         uuid.Nil,
-		Shelve_label:   "shelve 1",
-		Area_label:     "shelve 1",
+		Shelf_label:    "shelf 1",
+		Area_label:     "shelf 1",
 		PreviewPicture: "pic1",
 	}, nil
 }

@@ -17,7 +17,7 @@ type BoxListItem struct {
 	Label          string
 	OuterBox_label string
 	OuterBox_id    uuid.UUID
-	Shelve_label   string
+	Shelf_label    string
 	Area_label     string
 	PreviewPicture string
 }
@@ -28,23 +28,23 @@ func (box *BoxListItem) Map() map[string]any {
 		"Label":          box.Label,
 		"OuterBox_label": box.OuterBox_label,
 		"OuterBox_id":    box.OuterBox_id,
-		"Shelve_label":   box.Shelve_label,
+		"Shelf_label":    box.Shelf_label,
 		"Area_label":     box.Area_label,
 		"PreviewPicture": box.PreviewPicture,
 	}
 }
 
 type Box struct {
-	Id          uuid.UUID          `json:"id"`
-	Label       string             `json:"label"       validate:"required,lte=128"`
-	Description string             `json:"description" validate:"omitempty,lte=256"`
-	Picture     string             `json:"picture"     validate:"omitempty,base64"`
-	QRcode      string             `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	OuterBoxId  uuid.UUID          `json:"outerboxId"`
-	Items       []*Item            `json:"items"`
-	InnerBoxes  []*Box             `json:"innerboxes"`
-	OuterBox    *Box               `json:"outerbox" `
-	Shelve      *ShelveCoordinates `json:"shelveinfo" `
+	Id          uuid.UUID         `json:"id"`
+	Label       string            `json:"label"       validate:"required,lte=128"`
+	Description string            `json:"description" validate:"omitempty,lte=256"`
+	Picture     string            `json:"picture"     validate:"omitempty,base64"`
+	QRcode      string            `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	OuterBoxId  uuid.UUID         `json:"outerboxId"`
+	Items       []*Item           `json:"items"`
+	InnerBoxes  []*Box            `json:"innerboxes"`
+	OuterBox    *Box              `json:"outerbox" `
+	Shelf       *ShelfCoordinates `json:"shelfinfo" `
 }
 
 func (box *Box) Map() map[string]any {
@@ -58,21 +58,21 @@ func (box *Box) Map() map[string]any {
 		"Items":       box.Items,
 		"Innerboxes":  box.InnerBoxes,
 		"Outerbox":    box.OuterBox,
-		"Shelveinfo":  box.Shelve,
+		"Shelfinfo":   box.Shelf,
 	}
 }
 
 type Box2 struct {
-	Id          uuid.UUID          `json:"id"`
-	Label       string             `json:"label"       validate:"required,lte=128"`
-	Description string             `json:"description" validate:"omitempty,lte=256"`
-	Picture     string             `json:"picture"     validate:"omitempty,base64"`
-	QRcode      string             `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	OuterBoxId  uuid.UUID          `json:"outerboxid"`
-	Items       []*VirtualItem     `json:"items"`
-	InnerBoxes  []*BoxListItem     `json:"innerboxes"`
-	OuterBox    *BoxListItem       `json:"outerbox" `
-	Shelve      *ShelveCoordinates `json:"shelve" `
+	Id          uuid.UUID         `json:"id"`
+	Label       string            `json:"label"       validate:"required,lte=128"`
+	Description string            `json:"description" validate:"omitempty,lte=256"`
+	Picture     string            `json:"picture"     validate:"omitempty,base64"`
+	QRcode      string            `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	OuterBoxId  uuid.UUID         `json:"outerboxid"`
+	Items       []*VirtualItem    `json:"items"`
+	InnerBoxes  []*BoxListItem    `json:"innerboxes"`
+	OuterBox    *BoxListItem      `json:"outerbox" `
+	Shelf       *ShelfCoordinates `json:"shelf" `
 }
 
 func (box *Box2) Map() map[string]any {
@@ -86,31 +86,8 @@ func (box *Box2) Map() map[string]any {
 		"Items":       box.Items,
 		"Innerboxes":  box.InnerBoxes,
 		"Outerbox":    box.OuterBox,
-		"Shelve":      box.Shelve,
+		"Shelf":       box.Shelf,
 	}
-}
-
-type ShelveCoordinates struct {
-	Id    uuid.UUID `json:"id"`
-	Label string    `json:"label"       validate:"required,lte=128"`
-	Rows  int
-	Cols  int
-}
-
-type Shelve struct {
-	Id             uuid.UUID      `json:"id"`
-	Label          string         `json:"label"       validate:"required,lte=128"`
-	Description    string         `json:"description" validate:"omitempty,lte=256"`
-	Picture        string         `json:"picture"     validate:"omitempty,base64"`
-	PreviewPicture string         `json:"previewpicture"     validate:"omitempty,base64"`
-	QRcode         string         `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	Items          []*VirtualItem `json:"items"`
-	Boxes          []*BoxListItem `json:"boxes"`
-	Height         float32
-	Width          float32
-	Depth          float32
-	Rows           int
-	Cols           int
 }
 
 type BoxTemplateData struct {

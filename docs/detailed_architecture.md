@@ -17,13 +17,13 @@
 ## Functions
 * Login
 * Register
-* View, create, modify item/box/shelve/area
-* Delete box/shelve/area
+* View, create, modify item/box/shelf/area
+* Delete box/shelf/area
     * What to do with items?
-* View items in box/area/shelve
-* Move items in/out of box/area/shelve
-* Search for item/box/shelve/area
-* Create QR code for item/box/(shelve?)
+* View items in box/area/shelf
+* Move items in/out of box/area/shelf
+* Search for item/box/shelf/area
+* Create QR code for item/box/(shelf?)
 * Export data as JSON
 
 ![](https://www.plantuml.com/plantuml/png/TP11JiCm44NtESMNs41KAKTehm1RXD0G_pI3R4zbJvFszYXf4Ag0tRVythTd3jMbUD8SafoQ5iCvzwwMAvgsHRIZvZKL7hKwov8dvRn3NoZE7P857QvGP-e-xDBLaN5Y9uMom86HJlo-QTynZ-9mGp3CwkFQKVVVJzoEqBp8gxKrB42oYJz01pixRFYBh9JIZnYi_FV7ruShOxJvRPi9po_eBV3UURn9-wSxWvUJ5KSG5qZ5PxNS79Z3jj4l)
@@ -36,8 +36,8 @@
     * Description
     * Items
     * Boxes
-    * Shelves
-    * Shelve
+    * shelves
+    * shelf
     * Label
     * Description
     * Items
