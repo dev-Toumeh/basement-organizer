@@ -326,7 +326,7 @@ func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
 	}
 
 	sqlStatement := `INSERT INTO box (id, label, description, picture, qrcode, outerbox_id) VALUES (?, ?, ?, ?, ?, ?)`
-	logg.Debugf("fuck %s", sqlStatement)
+	logg.Debugf("SQL: %s", sqlStatement)
 	result, err := db.Sql.Exec(sqlStatement, box.Id.String(), box.Label, box.Description, box.Picture, box.QRcode, box.OuterBoxId.String())
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("Error while executing create new box statement: %w", err)
