@@ -146,6 +146,7 @@ func Fatal(v ...any) {
 
 // Fatalf is equivalent to log.Fatalf().
 func Fatalf(format string, v ...any) {
+	errorLogger.Output(2, "Fatal error")
 	logger.Fatalf(format, v...)
 }
 
