@@ -11,10 +11,14 @@ const (
     label TEXT NOT NULL,
     description TEXT,
     picture TEXT,
+    preview_picture TEXT,
     quantity INTEGER,
     weight TEXT,
     qrcode TEXT,
-    box_id TEXT REFERENCES box(id));`
+    box_id TEXT REFERENCES box(id),
+    shelf_id TEXT REFERENCES shelf(id),
+    area_id TEXT REFERENCES area(id)
+	);`
 
 	CREATE_BOX_TABLE_STMT = `CREATE TABLE IF NOT EXISTS box (
     id TEXT PRIMARY KEY,
@@ -23,6 +27,28 @@ const (
     picture TEXT,
     qrcode TEXT,
     outerbox_id TEXT REFERENCES box(id));`
+
+	CREATE_SHELF_TABLE_STMT = `CREATE TABLE IF NOT EXISTS shelf (
+    id TEXT PRIMARY KEY,
+    label TEXT NOT NULL, 
+    description TEXT,
+    picture TEXT,
+    preview_picture TEXT,
+    qrcode TEXT,
+    height REAL,
+    width REAL,
+    depth REAL,
+    rows INTEGER,
+    cols INTEGER
+	);`
+
+	CREATE_AREA_TABLE_STMT = `CREATE TABLE IF NOT EXISTS area (
+    id TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    description TEXT,
+    picture TEXT 
+    preview_picture TEXT 
+	);`
 
 	CREATE_ITEM_TABLE_STMT_FTS = `CREATE VIRTUAL TABLE IF NOT EXISTS item_fts USING fts5(
     item_id,
