@@ -479,7 +479,7 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		if err != nil {
 			errOccurred = true
 			deleteErrorIds = append(deleteErrorIds, deleteId.String())
-			logg.Errorf(fmt.Sprintf("%v: %v. %w", errMsgForUser, deleteId), err)
+			logg.Errorf("%v: %v. %w", errMsgForUser, deleteId, err)
 		} else {
 			logg.Debug("Box deleted: ", deleteId)
 		}

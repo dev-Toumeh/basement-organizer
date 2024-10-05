@@ -6,6 +6,7 @@
 package logg
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -28,6 +29,14 @@ func Info(v ...any) {
 		return
 	}
 	infoLogger.Output(2, fmt.Sprint(v...))
+}
+
+// Infof is for logs like "server started".
+func Infof(format string, v ...any) {
+	if !infoLoggerEnabled {
+		return
+	}
+	infoLogger.Output(2, fmt.Sprintf(format, v...))
 }
 
 // Err is for logging errors which indicate internal problems (not user errors).
@@ -111,7 +120,7 @@ func Errorf(format string, a ...any) error {
 	// Example output:
 	// "file.go:69 Func: Something happened here."
 	// pre := fmt.Sprintf("%s:%d\t%s", shortFileName, line, shortFuncName)
-	pre := fmt.Sprintf("\n\t%s:%d [%s()]:\t", shortFileName, line, shortFuncName)
+	pre := fmt.Sprintf("\n\t%s:%d [%s()] - ", shortFileName, line, shortFuncName)
 	// a = append(a, "\n\t")
 	// format = format + "\n\t"
 	err := fmt.Errorf(pre+format, a...)
@@ -136,6 +145,29 @@ func Errorf2(msg string, err error) error {
 	// Example output:
 	// "file.go:69 Func: Something happened here."
 	return fmt.Errorf("%s:%d\t%s: %s\n\t%w", shortFileName, line, shortFuncName, msg, err)
+}
+
+// WrapErr wraps an error with additional logg details.
+func WrapErr(err error) error {
+	return WrapErrWithSkip(err, 2)
+}
+
+// WrapErrWithSkip wraps error with logg details and skips stack frames.
+// Used in other error wrapper functions to capture outside information.
+func WrapErrWithSkip(err error, stackframes int) error {
+	pc, filename, line, _ := runtime.Caller(stackframes)
+	fullFuncName := runtime.FuncForPC(pc).Name()
+	funSplit := strings.Split(fullFuncName, "/")
+	shortFuncName := funSplit[len(funSplit)-1]
+	nameSplit := strings.Split(filename, "/")
+	shortFileName := nameSplit[len(nameSplit)-1]
+	err2 := fmt.Errorf("\n\t%s:%d [%s()]: %w", shortFileName, line, shortFuncName, err)
+	return err2
+}
+
+// NewError creates new error with added logg details.
+func NewError(text string) error {
+	return WrapErrWithSkip(errors.New(text), 2)
 }
 
 // Fatal is equivalent to log.Fatal().
