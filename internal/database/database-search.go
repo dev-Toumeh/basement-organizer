@@ -31,14 +31,14 @@ type SqlVirtualItem struct {
 }
 
 // Search items based on search query, return array of virtualItems
-func (db *DB) ItemFuzzyFinder(query string) ([]items.VirtualItem, error) {
+func (db *DB) ItemFuzzyFinder(query string) ([]items.ItemListRow, error) {
 	rows, err := db.Sql.Query(` SELECT item_id, label FROM item_fts WHERE label LIKE ? ORDER BY item_id; `, query+"%")
 	if err != nil {
 		return nil, fmt.Errorf("error while fetching virtual items: %w", err)
 	}
 	defer rows.Close()
 
-	var virtualItems []items.VirtualItem
+	var virtualItems []items.ItemListRow
 	var sqlItem SqlVirtualItem
 
 	for rows.Next() {
@@ -57,7 +57,7 @@ func (db *DB) ItemFuzzyFinder(query string) ([]items.VirtualItem, error) {
 }
 
 // Search items based on search query, return limited number of results used to generate pagination
-func (db *DB) ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]items.VirtualItem, error) {
+func (db *DB) ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]items.ItemListRow, error) {
 	rows, err := db.Sql.Query(`
         SELECT item_id, label 
         FROM item_fts 
@@ -71,7 +71,7 @@ func (db *DB) ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]
 	}
 	defer rows.Close()
 
-	var virtualItems []items.VirtualItem
+	var virtualItems []items.ItemListRow
 	var sqlItem SqlVirtualItem
 
 	for rows.Next() {
@@ -91,7 +91,7 @@ func (db *DB) ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]
 
 // BoxFuzzyFinder retrieves virtual boxes by label.
 // If the query is empty or contains only spaces, it returns 10 default results.
-func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListItem, error) {
+func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListRow, error) {
 	var rows *sql.Rows
 	var err error
 	if page == 0 {
@@ -113,12 +113,12 @@ func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxList
 	}
 
 	if err != nil {
-		return []items.BoxListItem{}, fmt.Errorf("error while fetching the virtualBox from box_fts: %w", err)
+		return []items.BoxListRow{}, fmt.Errorf("error while fetching the virtualBox from box_fts: %w", err)
 	}
 	defer rows.Close()
 
 	var sqlVertualBox SqlVertualBox
-	var virtualBoxes []items.BoxListItem
+	var virtualBoxes []items.BoxListRow
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -128,11 +128,11 @@ func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxList
 			&sqlVertualBox.OuterBoxLabel,
 		)
 		if err != nil {
-			return []items.BoxListItem{}, logg.Errorf("error while assigning the Data to the Virtualbox struct %w", err)
+			return []items.BoxListRow{}, logg.Errorf("error while assigning the Data to the Virtualbox struct %w", err)
 		}
 		vBox, err := mapSqlVertualBoxToVertualBox(sqlVertualBox)
 		if err != nil {
-			return []items.BoxListItem{}, err
+			return []items.BoxListRow{}, err
 		}
 		virtualBoxes = append(virtualBoxes, vBox)
 	}
@@ -153,16 +153,16 @@ func (db *DB) VirtualBoxExist(id uuid.UUID) bool {
 }
 
 // Get the virtual Box based on his ID
-func (db *DB) VirtualBoxById(id uuid.UUID) (items.BoxListItem, error) {
+func (db *DB) VirtualBoxById(id uuid.UUID) (items.BoxListRow, error) {
 
 	if !db.VirtualBoxExist(id) {
-		return items.BoxListItem{}, fmt.Errorf("the Box Id does not exsist in the virtual table")
+		return items.BoxListRow{}, fmt.Errorf("the Box Id does not exsist in the virtual table")
 	}
 
 	query := fmt.Sprintf("SELECT box_id, label, outerbox_id, outerbox_label FROM box_fts WHERE box_id = ?")
 	row, err := db.Sql.Query(query, id.String())
 	if err != nil {
-		return items.BoxListItem{}, fmt.Errorf("error while fetching the virtual box: %w", err)
+		return items.BoxListRow{}, fmt.Errorf("error while fetching the virtual box: %w", err)
 	}
 
 	var sqlVertualBox SqlVertualBox
@@ -174,47 +174,47 @@ func (db *DB) VirtualBoxById(id uuid.UUID) (items.BoxListItem, error) {
 			&sqlVertualBox.OuterBoxLabel,
 		)
 		if err != nil {
-			return items.BoxListItem{}, fmt.Errorf("error while assigning the Data to the Virtualbox struct : %w", err)
+			return items.BoxListRow{}, fmt.Errorf("error while assigning the Data to the Virtualbox struct : %w", err)
 		}
 	}
 
 	vBox, err := mapSqlVertualBoxToVertualBox(sqlVertualBox)
 	if err != nil {
-		return items.BoxListItem{}, err
+		return items.BoxListRow{}, err
 	}
 	return vBox, nil
 }
 
 // private function to map the sql virtual box into normal virtual box
-func mapSqlVertualBoxToVertualBox(sqlBox SqlVertualBox) (items.BoxListItem, error) {
+func mapSqlVertualBoxToVertualBox(sqlBox SqlVertualBox) (items.BoxListRow, error) {
 	id, err := UUIDFromSqlString(sqlBox.BoxID)
 	if err != nil {
-		return items.BoxListItem{}, err
+		return items.BoxListRow{}, err
 	}
 
-	return items.BoxListItem{
-		Box_Id:         id,
+	return items.BoxListRow{
+		BoxID:          id,
 		Label:          ifNullString(sqlBox.Label),
-		OuterBox_label: ifNullString(sqlBox.OuterBoxLabel),
-		OuterBox_id:    ifNullUUID(sqlBox.OuterBoxID),
-		Shelf_label:    "Shelf 1",
-		Area_label:     "Area 1",
+		OuterBoxLabel:  ifNullString(sqlBox.OuterBoxLabel),
+		OuterBoxID:     ifNullUUID(sqlBox.OuterBoxID),
+		ShelfLabel:     "Shelf 1",
+		AreaLabel:      "Area 1",
 		PreviewPicture: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAFAgL/uXBuZwAAAABJRU5ErkJggg==",
 	}, nil
 }
 
-func mapSqlVertualItemToVertualItem(sqlItem SqlVirtualItem) (items.VirtualItem, error) {
+func mapSqlVertualItemToVertualItem(sqlItem SqlVirtualItem) (items.ItemListRow, error) {
 	id, err := UUIDFromSqlString(sqlItem.ItemID)
 	if err != nil {
-		return items.VirtualItem{}, err
+		return items.ItemListRow{}, err
 	}
-	return items.VirtualItem{
-		Item_Id:        id,
+	return items.ItemListRow{
+		ItemID:         id,
 		Label:          ifNullString(sqlItem.Label),
-		Box_label:      "box 1",
-		Box_Id:         uuid.Nil,
-		Shelf_label:    "shelf 1",
-		Area_label:     "shelf 1",
+		BoxLabel:       "box 1",
+		BoxID:          uuid.Nil,
+		ShelfLabel:     "shelf 1",
+		AreaLabel:      "shelf 1",
 		PreviewPicture: "pic1",
 	}, nil
 }

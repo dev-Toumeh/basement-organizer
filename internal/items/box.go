@@ -12,81 +12,59 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-type BoxListItem struct {
-	Box_Id         uuid.UUID
+type BoxListRow struct {
+	BoxID          uuid.UUID
 	Label          string
-	OuterBox_label string
-	OuterBox_id    uuid.UUID
-	Shelf_label    string
-	Area_label     string
+	OuterBoxID     uuid.UUID
+	OuterBoxLabel  string
+	ShelfID        uuid.UUID
+	ShelfLabel     string
+	AreaID         uuid.UUID
+	AreaLabel      string
 	PreviewPicture string
 }
 
-func (box *BoxListItem) Map() map[string]any {
+func (box *BoxListRow) Map() map[string]any {
 	return map[string]interface{}{
-		"Box_Id":         box.Box_Id,
+		"BoxID":          box.BoxID,
 		"Label":          box.Label,
-		"OuterBox_label": box.OuterBox_label,
-		"OuterBox_id":    box.OuterBox_id,
-		"Shelf_label":    box.Shelf_label,
-		"Area_label":     box.Area_label,
+		"OuterBoxID":     box.OuterBoxID,
+		"OuterBoxLabel":  box.OuterBoxLabel,
+		"ShelfID":        box.ShelfID,
+		"ShelfLabel":     box.ShelfLabel,
+		"AreaID":         box.AreaID,
+		"AreaLabel":      box.AreaLabel,
 		"PreviewPicture": box.PreviewPicture,
 	}
 }
 
 type Box struct {
-	Id          uuid.UUID         `json:"id"`
-	Label       string            `json:"label"       validate:"required,lte=128"`
-	Description string            `json:"description" validate:"omitempty,lte=256"`
-	Picture     string            `json:"picture"     validate:"omitempty,base64"`
-	QRcode      string            `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	OuterBoxId  uuid.UUID         `json:"outerboxId"`
-	Items       []*Item           `json:"items"`
-	InnerBoxes  []*Box            `json:"innerboxes"`
-	OuterBox    *Box              `json:"outerbox" `
-	Shelf       *ShelfCoordinates `json:"shelfinfo" `
+	ID               uuid.UUID         `json:"id"`
+	Label            string            `json:"label"       validate:"required,lte=128"`
+	Description      string            `json:"description" validate:"omitempty,lte=256"`
+	Picture          string            `json:"picture"     validate:"omitempty,base64"`
+	PreviewPicture   string            `json:"previewpicture"     validate:"omitempty,base64"`
+	QRcode           string            `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	OuterBoxID       uuid.UUID         `json:"outerboxid"`
+	Items            []*ItemListRow    `json:"items"`
+	InnerBoxes       []*BoxListRow     `json:"innerboxes"`
+	OuterBox         *BoxListRow       `json:"outerbox"`
+	ShelfCoordinates *ShelfCoordinates `json:"shelfcoordinates"`
 }
 
 func (box *Box) Map() map[string]any {
 	return map[string]interface{}{
-		"Id":          box.Id,
-		"Label":       box.Label,
-		"Description": box.Description,
-		"Picture":     box.Picture,
-		"Qrcode":      box.QRcode,
-		"OuterboxId":  box.OuterBoxId,
-		"Items":       box.Items,
-		"Innerboxes":  box.InnerBoxes,
-		"Outerbox":    box.OuterBox,
-		"Shelfinfo":   box.Shelf,
-	}
-}
-
-type Box2 struct {
-	Id          uuid.UUID         `json:"id"`
-	Label       string            `json:"label"       validate:"required,lte=128"`
-	Description string            `json:"description" validate:"omitempty,lte=256"`
-	Picture     string            `json:"picture"     validate:"omitempty,base64"`
-	QRcode      string            `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	OuterBoxId  uuid.UUID         `json:"outerboxid"`
-	Items       []*VirtualItem    `json:"items"`
-	InnerBoxes  []*BoxListItem    `json:"innerboxes"`
-	OuterBox    *BoxListItem      `json:"outerbox" `
-	Shelf       *ShelfCoordinates `json:"shelf" `
-}
-
-func (box *Box2) Map() map[string]any {
-	return map[string]interface{}{
-		"Id":          box.Id,
-		"Label":       box.Label,
-		"Description": box.Description,
-		"Picture":     box.Picture,
-		"Qrcode":      box.QRcode,
-		"OuterboxId":  box.OuterBoxId,
-		"Items":       box.Items,
-		"Innerboxes":  box.InnerBoxes,
-		"Outerbox":    box.OuterBox,
-		"Shelf":       box.Shelf,
+		"ID":               box.ID,
+		"Label":            box.Label,
+		"Description":      box.Description,
+		"Picture":          box.Picture,
+		"PreviewPicture":   box.PreviewPicture,
+		"QRcode":           box.QRcode,
+		"OuterBoxID":       box.OuterBoxID,
+		"Items":            box.Items,
+		"InnerBoxes":       box.InnerBoxes,
+		"OuterBox":         box.OuterBox,
+		"ShelfCoordinates": box.ShelfCoordinates,
 	}
 }
 
@@ -153,8 +131,6 @@ func (tmpl *boxPageTemplateData) Map() map[string]any {
 }
 
 type BoxC struct {
-	// Quantity    int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
-	// Weight      string    `json:"weight"      validate:"omitempty,numeric"`
 	Id          uuid.UUID `json:"id"`
 	Label       string    `json:"label"       validate:"required,lte=128"`
 	Description string    `json:"description" validate:"omitempty,lte=256"`
@@ -169,21 +145,21 @@ type BoxC struct {
 func NewBox() Box {
 	label := time.Now().Format("2006-01-02_15_04_05")
 	return Box{
-		Id:          uuid.Must(uuid.NewV4()),
+		ID:          uuid.Must(uuid.NewV4()),
 		Label:       fmt.Sprintf("Box_%s", label),
 		Description: fmt.Sprintf("Box description %s", label),
 	}
 }
 
 func (b *Box) MarshalJSON() ([]byte, error) {
-	c := BoxC{}
+	c := Box{}
 	for _, item := range b.Items {
 		it := *item
-		c.Items = append(c.Items, it)
+		c.Items = append(c.Items, &ItemListRow{ItemID: it.ItemID, Label: it.Label, PreviewPicture: it.PreviewPicture})
 	}
 
 	for _, innerb := range b.InnerBoxes {
-		c.InnerBoxes = append(c.InnerBoxes, *innerb)
+		c.InnerBoxes = append(c.InnerBoxes, &BoxListRow{BoxID: innerb.BoxID, Label: innerb.Label, PreviewPicture: innerb.PreviewPicture})
 	}
 
 	// if b.OuterBox != nil {
@@ -199,13 +175,13 @@ func (b Box) String() string {
 	if shortenPicture {
 		b.Picture = shortenPictureForLogs(b.Picture)
 		if b.OuterBox != nil {
-			b.OuterBox.Picture = shortenPictureForLogs(b.OuterBox.Picture)
+			b.OuterBox.PreviewPicture = shortenPictureForLogs(b.OuterBox.PreviewPicture)
 		}
 		for i := range b.InnerBoxes {
-			b.InnerBoxes[i].Picture = shortenPictureForLogs(b.InnerBoxes[i].Picture)
+			b.InnerBoxes[i].PreviewPicture = shortenPictureForLogs(b.InnerBoxes[i].PreviewPicture)
 		}
 		for i := range b.Items {
-			b.Items[i].Picture = shortenPictureForLogs(b.Items[i].Picture)
+			b.Items[i].PreviewPicture = shortenPictureForLogs(b.Items[i].PreviewPicture)
 		}
 	}
 

@@ -25,6 +25,7 @@ const (
     label TEXT NOT NULL, 
     description TEXT,
     picture TEXT,
+    preview_picture TEXT,
     qrcode TEXT,
     outerbox_id TEXT REFERENCES box(id));`
 

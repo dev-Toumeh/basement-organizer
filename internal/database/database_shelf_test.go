@@ -51,7 +51,7 @@ func TestCreateShelf(t *testing.T) {
 	previewpicdata64 := base64.StdEncoding.EncodeToString(previewpicdata)
 
 	shelf := &items.Shelf{
-		Id:             SHELF_VALID_UUID,
+		ID:             SHELF_VALID_UUID,
 		Label:          "Test Shelf",
 		Description:    "A shelf for testing",
 		Picture:        picdata64,
@@ -112,7 +112,7 @@ func TestUpdateShelf(t *testing.T) {
 	EmptyTestDatabase()
 
 	shelf := &items.Shelf{
-		Id:             SHELF_VALID_UUID,
+		ID:             SHELF_VALID_UUID,
 		Label:          "Original Label",
 		Description:    "Original Description",
 		Picture:        "", // No picture initially
@@ -147,7 +147,7 @@ func TestUpdateShelf(t *testing.T) {
 	err = dbTest.UpdateShelf(shelf)
 	assert.Equal(t, err, nil)
 
-	updatedShelf, err := dbTest.Shelf(shelf.Id)
+	updatedShelf, err := dbTest.Shelf(shelf.ID)
 	assert.Equal(t, err, nil)
 
 	assert.Equal(t, "Updated Label", updatedShelf.Label)
@@ -185,20 +185,20 @@ func TestMoveItemToShelf(t *testing.T) {
 	EmptyTestDatabase()
 
 	// Create a test item
-	item := items.Item2{
-		Id:          ITEM_VALID_UUID,
+	item := items.Item{
+		ID:          ITEM_VALID_UUID,
 		Label:       "Test Item",
 		Description: "A test item",
 		Quantity:    1,
 		Weight:      "1kg",
 		QRcode:      "testitemqrcode",
 	}
-	err := dbTest.CreateNewItem2(item)
+	err := dbTest.CreateNewItem(item)
 	assert.Equal(t, err, nil)
 
 	// Create a test shelf
 	shelf := &items.Shelf{
-		Id:          SHELF_VALID_UUID,
+		ID:          SHELF_VALID_UUID,
 		Label:       "Test Shelf",
 		Description: "A test shelf",
 	}
@@ -206,28 +206,28 @@ func TestMoveItemToShelf(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	// Move the item to the shelf
-	err = dbTest.MoveItemToShelf(item.Id, shelf.Id)
+	err = dbTest.MoveItemToShelf(item.ID, shelf.ID)
 	assert.Equal(t, err, nil)
 
 	// Verify item is associated with the shelf
-	updatedItem, err := dbTest.ListItemById2(item.Id)
+	updatedItem, err := dbTest.ItemListRowByID(item.ID)
 	assert.Equal(t, err, nil)
-	assert.Equal(t, shelf.Id, updatedItem.Shelf_Id)
+	assert.Equal(t, shelf.ID, updatedItem.ShelfID)
 
 	// Move the item out of the shelf
-	err = dbTest.MoveItemToShelf(item.Id, uuid.Nil)
+	err = dbTest.MoveItemToShelf(item.ID, uuid.Nil)
 	assert.Equal(t, err, nil)
-	updatedItem, err = dbTest.ListItemById2(item.Id)
+	updatedItem, err = dbTest.ItemListRowByID(item.ID)
 	assert.Equal(t, err, nil)
-	assert.Equal(t, uuid.Nil, updatedItem.Shelf_Id)
+	assert.Equal(t, uuid.Nil, updatedItem.ShelfID)
 
 	// Attempt to move a non-existent item
-	err = dbTest.MoveItemToShelf(VALID_UUID_NOT_EXISTING, shelf.Id)
+	err = dbTest.MoveItemToShelf(VALID_UUID_NOT_EXISTING, shelf.ID)
 	// logg.Err(err)
 	assert.NotEqual(t, err, nil)
 
 	// Attempt to move the item to a non-existent shelf
-	err = dbTest.MoveItemToShelf(item.Id, VALID_UUID_NOT_EXISTING)
+	err = dbTest.MoveItemToShelf(item.ID, VALID_UUID_NOT_EXISTING)
 	// logg.Err(err)
 	assert.NotEqual(t, err, nil)
 }

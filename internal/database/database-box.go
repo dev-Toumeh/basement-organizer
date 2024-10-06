@@ -3,47 +3,45 @@ package database
 import (
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
-	"basement/main/internal/server"
-	"bytes"
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-type Exist func(filename string) bool
-
 type SQLBox struct {
-	Id          sql.NullString
-	Label       sql.NullString
-	Description sql.NullString
-	Picture     sql.NullString
-	QRcode      sql.NullString
-	OuterboxId  sql.NullString
+	ID             sql.NullString
+	Label          sql.NullString
+	Description    sql.NullString
+	Picture        sql.NullString
+	PreviewPicture sql.NullString
+	QRcode         sql.NullString
+	OuterboxID     sql.NullString
 }
 
 type SqlItem struct {
-	ItemId          sql.NullString `json:"id"`
-	ItemLabel       sql.NullString `json:"label"`
-	ItemDescription sql.NullString `json:"description"`
-	ItemPicture     sql.NullString `json:"picture"`
-	ItemQRCode      sql.NullString `json:"qrcode"`
-	ItemBoxId       sql.NullString `json:"box_id"`
-	ItemQuantity    sql.NullInt64  `json:"quantity"`
-	ItemWeight      sql.NullString `json:"weight"`
+	ItemID             sql.NullString
+	ItemLabel          sql.NullString
+	ItemDescription    sql.NullString
+	ItemPicture        sql.NullString
+	ItemPreviewPicture sql.NullString
+	ItemQRCode         sql.NullString
+	ItemQuantity       sql.NullInt64
+	ItemWeight         sql.NullString
+	ItemBoxID          sql.NullString
+	ItemShelfID        sql.NullString
+	ItemAreaID         sql.NullString
 }
 
 // Create New Item Record
 func (db *DB) CreateBox(newBox *items.Box) (uuid.UUID, error) {
-	if db.BoxExistById(newBox.Id) {
+	if db.BoxExistById(newBox.ID) {
 		return uuid.Nil, db.ErrorExist()
 	}
 
 	id, err := db.insertNewBox(newBox)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("error while creating new Box: %v", err)
+		return uuid.Nil, logg.Errorf("error while creating new Box: %v", err)
 	}
 	return id, nil
 }
@@ -72,13 +70,13 @@ func (db *DB) BoxIDs() ([]string, error) {
 	sqlStatement := `SELECT id FROM BOX`
 	rows, err := db.Sql.Query(sqlStatement)
 	if err != nil {
-		return ids, fmt.Errorf("Error while executing Box ids: %w", err)
+		return ids, logg.Errorf("Error while executing Box ids: %w", err)
 	}
 	for rows.Next() {
 		var idStr string
 		err := rows.Scan(&idStr)
 		if err != nil {
-			return []string{}, fmt.Errorf("Error scanning Box ids: %v", err)
+			return []string{}, logg.Errorf("Error scanning Box ids: %v", err)
 		}
 		ids = append(ids, idStr)
 	}
@@ -98,24 +96,24 @@ func (db *DB) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
 
 // update box data
 func (db *DB) UpdateBox(box items.Box) error {
-	exist := db.BoxExistById(box.Id)
+	exist := db.BoxExistById(box.ID)
 	if !exist {
-		return fmt.Errorf("the box is not exist")
+		return logg.Errorf("the box is not exist")
 	}
 	sqlStatement := fmt.Sprintf(`UPDATE box SET label = '%s', description = '%s', picture = '%s', qrcode = '%s' WHERE id = ?`, box.Label, box.Description, box.Picture, box.QRcode)
-	result, err := db.Sql.Exec(sqlStatement, box.Id)
+	result, err := db.Sql.Exec(sqlStatement, box.ID)
 	if err != nil {
-		return fmt.Errorf("something wrong happened while runing the box update query: %w", err)
+		return logg.Errorf("something wrong happened while runing the box update query: %w", err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("error while finding the item %w", err)
+		return logg.Errorf("error while finding the item %w", err)
 	}
 	if rowsAffected == 0 {
-		return fmt.Errorf("the Record with the id: %s was not found; this should not have happened while updating", box.Id.String())
+		return logg.Errorf("the Record with the id: %s was not found; this should not have happened while updating", box.ID.String())
 	} else if rowsAffected != 1 {
-		return fmt.Errorf("the id: %s has an unexpected number of rows affected (more than one or less than 0)", box.Id.String())
+		return logg.Errorf("the id: %s has an unexpected number of rows affected (more than one or less than 0)", box.ID.String())
 	}
 	return nil
 }
@@ -128,13 +126,13 @@ func (db *DB) DeleteBox(boxId uuid.UUID) error {
 	itemExist := db.ItemExist("box_id", id)
 	boxExist := db.BoxExist("outerbox_id", boxId.String())
 	if itemExist || boxExist {
-		return fmt.Errorf("the box is not empty")
+		return logg.Errorf("the box is not empty")
 	}
 
 	sqlStatement := `DELETE FROM box WHERE id = ?;`
 	_, err := db.Sql.Exec(sqlStatement, id)
 	if err != nil {
-		return fmt.Errorf("error whiel deleting the box: %W", err)
+		return logg.Errorf("error whiel deleting the box: %W", err)
 	}
 	return nil
 }
@@ -144,11 +142,11 @@ func (db *DB) DeleteBox(boxId uuid.UUID) error {
 func (db *DB) BoxById(id uuid.UUID) (items.Box, error) {
 	box := items.Box{}
 	if !db.BoxExistById(id) {
-		return box, fmt.Errorf("box is not exist \n")
+		return box, logg.Errorf("box is not exist \n")
 	}
 	b, err := db.BoxByField("id", id.String())
 	if err != nil {
-		return box, fmt.Errorf("Box() error:\n\t%w", err)
+		return box, logg.WrapErr(err)
 	}
 	box = *b
 	return box, err
@@ -158,8 +156,8 @@ func (db *DB) BoxById(id uuid.UUID) (items.Box, error) {
 func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 	var box *items.Box
 	var outerBox = &items.Box{}
-	var itemsList = []*items.Item{}
-	var inBoxList = []*items.Box{}
+	var itemsList = []*items.ItemListRow{}
+	var inBoxList = []*items.BoxListRow{}
 	boxInitialized := false
 	outerBoxInitialized := false
 	addedInBoxes := make(map[string]bool)
@@ -168,9 +166,9 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 	query := fmt.Sprintf(
 		`SELECT 
             b.id, b.label, b.description, b.picture, b.qrcode, b.outerbox_id,
-            ob.id, ob.label, ob.description, ob.picture, ob.qrcode, ob.outerbox_id,
-            ib.id, ib.label, ib.description, ib.picture, ib.qrcode, ib.outerbox_id,
-            i.id, i.label, i.description, i.picture, i.quantity, i.weight, i.qrcode, i.box_id
+            ob.id, ob.label, ob.preview_picture,
+            ib.id, ib.label, ib.preview_picture,
+            i.id, i.label, i.preview_picture, i.box_id, i.shelf_id, i.area_id
         FROM 
             box AS b
         LEFT JOIN 
@@ -183,7 +181,7 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
             b.%s = ?;`, field)
 	rows, err := db.Sql.Query(query, value)
 	if err != nil {
-		return nil, fmt.Errorf("error executing query: %w", err)
+		return nil, logg.WrapErr(err)
 	}
 	defer rows.Close()
 
@@ -197,149 +195,89 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 		)
 
 		err := rows.Scan(
-			&boxSQLBox.Id, &boxSQLBox.Label, &boxSQLBox.Description, &boxSQLBox.Picture, &boxSQLBox.QRcode, &boxSQLBox.OuterboxId,
-			&outboxSQLBox.Id, &outboxSQLBox.Label, &outboxSQLBox.Description, &outboxSQLBox.Picture, &outboxSQLBox.QRcode, &outboxSQLBox.OuterboxId,
-			&inboxSQLBox.Id, &inboxSQLBox.Label, &inboxSQLBox.Description, &inboxSQLBox.Picture, &inboxSQLBox.QRcode, &inboxSQLBox.OuterboxId,
-			&itemSQLItem.ItemId, &itemSQLItem.ItemLabel, &itemSQLItem.ItemDescription, &itemSQLItem.ItemPicture, &itemSQLItem.ItemQuantity, &itemSQLItem.ItemWeight, &itemSQLItem.ItemQRCode, &itemSQLItem.ItemBoxId,
+			&boxSQLBox.ID, &boxSQLBox.Label, &boxSQLBox.Description, &boxSQLBox.Picture, &boxSQLBox.QRcode, &boxSQLBox.OuterboxID,
+			&outboxSQLBox.ID, &outboxSQLBox.Label, &outboxSQLBox.PreviewPicture,
+			&inboxSQLBox.ID, &inboxSQLBox.Label, &inboxSQLBox.PreviewPicture,
+			&itemSQLItem.ItemID, &itemSQLItem.ItemLabel, &itemSQLItem.ItemPreviewPicture, &itemSQLItem.ItemBoxID, &itemSQLItem.ItemShelfID, &itemSQLItem.ItemAreaID,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("error scanning row: %w", err)
+			return nil, logg.Errorf("error scanning row: %w", err)
 		}
 
 		// Initialize the main Box only once
 		if !boxInitialized {
 			box, err = convertSQLBoxToBox(&boxSQLBox)
 			if err != nil {
-				return nil, fmt.Errorf("error assigning the box data: %w", err)
+				return nil, logg.Errorf("error assigning the box data: %w", err)
 			}
 			boxInitialized = true
 		}
 
 		// Initialize outer box only once
-		if !outerBoxInitialized && outboxSQLBox.Id.Valid {
+		if !outerBoxInitialized && outboxSQLBox.ID.Valid {
 			outerBox, err = convertSQLBoxToBox(&outboxSQLBox)
 			if err != nil {
-				return &items.Box{}, fmt.Errorf("something wrong happened while assigning the outboxSQLBox data %w", err)
+				return &items.Box{}, logg.Errorf("something wrong happened while assigning the outboxSQLBox data %w", err)
 			}
 			outerBoxInitialized = true
 		}
 
 		// Add the inboxes if its ID is valid and not added before
-		if inboxSQLBox.Id.Valid && !addedInBoxes[inboxSQLBox.Id.String] {
+		if inboxSQLBox.ID.Valid && !addedInBoxes[inboxSQLBox.ID.String] {
 			inbox, err = convertSQLBoxToBox(&inboxSQLBox)
 			if err != nil {
-				return nil, fmt.Errorf("error converting SQLBox to Box: %w", err)
+				return nil, logg.Errorf("error converting SQLBox to Box: %w", err)
 			}
-			inBoxList = append(inBoxList, inbox)
-			addedInBoxes[inboxSQLBox.Id.String] = true
+			inBoxList = append(inBoxList, &items.BoxListRow{BoxID: inbox.ID, Label: inbox.Label, PreviewPicture: inbox.PreviewPicture})
+			addedInBoxes[inboxSQLBox.ID.String] = true
 		}
 
 		// Add the item to the itemsList if itemId is valid
-		if itemSQLItem.ItemId.Valid {
-			if _, exists := addedItems[itemSQLItem.ItemId.String]; !exists {
+		if itemSQLItem.ItemID.Valid {
+			if _, exists := addedItems[itemSQLItem.ItemID.String]; !exists {
 				item, err := convertSQLItemToItem(&itemSQLItem)
 				if err != nil {
-					return nil, fmt.Errorf("error converting SQLItem to Item: %w", err)
+					return nil, logg.Errorf("error converting SQLItem to Item: %w", err)
 				}
-				itemsList = append(itemsList, item)
-				addedItems[itemSQLItem.ItemId.String] = item
+				itemsList = append(itemsList, &items.ItemListRow{ItemID: item.ID, Label: item.Label})
+				addedItems[itemSQLItem.ItemID.String] = item
 			}
 		}
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating through rows: %w", err)
+		return nil, logg.Errorf("error iterating through rows: %w", err)
 	}
 
 	// Assign the items list to the box
-	box.OuterBox = outerBox
+	box.OuterBox = &items.BoxListRow{BoxID: outerBox.ID, Label: outerBox.Label}
 	box.Items = itemsList
 	box.InnerBoxes = inBoxList
 
 	return box, nil
 }
 
-// Box2ById returns Box with items suitable for lists.
-func (db *DB) Box2ById(id uuid.UUID) (*items.Box2, error) {
-	box := &items.Box2{}
-	if !db.BoxExistById(id) {
-		return box, errors.New(fmt.Sprintf("Box not found: \"%s\"", id))
-	}
-
-	query := `
-		SELECT 
-            b.id, b.label, b.description, b.picture, b.qrcode, b.outerbox_id,
-            i.id, i.label, i.picture
-        FROM 
-            box AS b
-        LEFT JOIN 
-            item As i ON b.id = i.box_id 
-        WHERE 
-            b.id = ?;`
-
-	rows, err := db.Sql.Query(query, id)
-	if err != nil {
-		return nil, logg.Errorf("Error in Query %w", err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var boxSQLBox SQLBox
-		var itemSQLItem SqlItem
-
-		err := rows.Scan(
-			&boxSQLBox.Id, &boxSQLBox.Label, &boxSQLBox.Description, &boxSQLBox.Picture, &boxSQLBox.QRcode, &boxSQLBox.OuterboxId,
-			&itemSQLItem.ItemId, &itemSQLItem.ItemLabel, &itemSQLItem.ItemPicture,
-		)
-		if err != nil {
-			return nil, logg.Errorf("Error scanning row %w", err)
-		}
-		b := bytes.Buffer{}
-		i := bytes.Buffer{}
-		server.WriteJSON(&b, boxSQLBox)
-		server.WriteJSON(&i, itemSQLItem)
-		logg.Debugf("boxSQLBox: %v", b.String())
-		logg.Debugf("itemSQLItem: %v", i.String())
-
-		if itemSQLItem.ItemId.Valid {
-			item := &items.VirtualItem{}
-			item.Item_Id = uuid.Must(uuid.FromString(itemSQLItem.ItemId.String))
-			item.Label = itemSQLItem.ItemLabel.String
-			item.PreviewPicture = itemSQLItem.ItemPicture.String
-			item.Box_Id = uuid.Must(uuid.FromString(boxSQLBox.Id.String))
-			item.Box_label = boxSQLBox.Label.String
-
-			box.Items = append(box.Items, item)
-		}
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, logg.Errorf("Error in row iteration %w", err)
-	}
-	return box, nil
-}
-
 // insert new Box record in the Database
 func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
-	if db.BoxExistById(box.Id) {
+	if db.BoxExistById(box.ID) {
 		return uuid.Nil, db.ErrorExist()
 	}
 
-	sqlStatement := `INSERT INTO box (id, label, description, picture, qrcode, outerbox_id) VALUES (?, ?, ?, ?, ?, ?)`
+	sqlStatement := `INSERT INTO box (id, label, description, picture, preview_picture, qrcode, outerbox_id) VALUES (?, ?, ?, ?, ?, ?, ?)`
 	logg.Debugf("SQL: %s", sqlStatement)
-	result, err := db.Sql.Exec(sqlStatement, box.Id.String(), box.Label, box.Description, box.Picture, box.QRcode, box.OuterBoxId.String())
+	result, err := db.Sql.Exec(sqlStatement, box.ID.String(), box.Label, box.Description, box.Picture, box.PreviewPicture, box.QRcode, box.OuterBoxID.String())
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("Error while executing create new box statement: %w", err)
+		return uuid.Nil, logg.Errorf("Error while executing create new box statement: %w", err)
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("Error while executing create new box statement: %w", err)
+		return uuid.Nil, logg.Errorf("Error while executing create new box statement: %w", err)
 	}
 	if rowsAffected != 1 {
-		return uuid.Nil, fmt.Errorf("unexpected number of effected rows, check insirtNewBox")
+		return uuid.Nil, logg.Errorf("unexpected number of effected rows, check insirtNewBox")
 	}
 
-	return box.Id, nil
+	return box.ID, nil
 }
 
 // this function used inside of BoxByField to convert the box sql struct into normal struct
@@ -347,12 +285,11 @@ func convertSQLBoxToBox(sqlBox *SQLBox) (*items.Box, error) {
 	box := &items.Box{}
 
 	// Convert and assign the ID
-	if sqlBox.Id.Valid {
+	if sqlBox.ID.Valid {
 		var err error
-		box.Id, err = uuid.FromString(sqlBox.Id.String)
+		box.ID, err = uuid.FromString(sqlBox.ID.String)
 		if err != nil {
-			log.Printf("Error parsing UUID for box: %v", err)
-			return box, err
+			return box, logg.Errorf("Error parsing UUID for box: %w", err)
 		}
 
 		// Assign other fields only if they are valid
@@ -374,17 +311,22 @@ func convertSQLBoxToBox(sqlBox *SQLBox) (*items.Box, error) {
 			box.Picture = ""
 		}
 
+		if sqlBox.PreviewPicture.Valid {
+			box.PreviewPicture = sqlBox.PreviewPicture.String
+		} else {
+			box.PreviewPicture = ""
+		}
+
 		if sqlBox.QRcode.Valid {
 			box.QRcode = sqlBox.QRcode.String
 		} else {
 			box.QRcode = ""
 		}
 
-		if sqlBox.OuterboxId.Valid {
-			box.OuterBoxId, err = uuid.FromString(sqlBox.OuterboxId.String)
+		if sqlBox.OuterboxID.Valid {
+			box.OuterBoxID, err = uuid.FromString(sqlBox.OuterboxID.String)
 			if err != nil {
-				log.Printf("Error parsing UUID for box: %v", err)
-				return box, err
+				return box, logg.Errorf("Error parsing UUID for box: %w", err)
 			}
 		}
 	}
@@ -397,12 +339,11 @@ func convertSQLItemToItem(sqlItem *SqlItem) (*items.Item, error) {
 	item := &items.Item{}
 
 	// Convert and assign the ID
-	if sqlItem.ItemId.Valid {
+	if sqlItem.ItemID.Valid {
 		var err error
-		item.Id, err = uuid.FromString(sqlItem.ItemId.String)
+		item.ID, err = uuid.FromString(sqlItem.ItemID.String)
 		if err != nil {
-			log.Printf("Error parsing UUID for item: %v", err)
-			return nil, err
+			return nil, logg.Errorf("Error parsing UUID for item: %w", err)
 		}
 		// Assign other fields only if they are valid
 		if sqlItem.ItemLabel.Valid {
@@ -429,15 +370,14 @@ func convertSQLItemToItem(sqlItem *SqlItem) (*items.Item, error) {
 			item.QRcode = ""
 		}
 
-		if sqlItem.ItemBoxId.Valid {
+		if sqlItem.ItemBoxID.Valid {
 			var err error
-			item.BoxId, err = uuid.FromString(sqlItem.ItemBoxId.String)
+			item.BoxID, err = uuid.FromString(sqlItem.ItemBoxID.String)
 			if err != nil {
-				log.Printf("Error parsing UUID for box ID: %v", err)
-				return nil, err
+				return nil, logg.Errorf("Error parsing UUID for box ID: '%v' %w", sqlItem.ItemBoxID, err)
 			}
 		} else {
-			return nil, fmt.Errorf("box ID is required but was null")
+			return nil, logg.NewError(fmt.Sprintf("box ID is required but was null in item %v", sqlItem.ItemBoxID.String))
 		}
 
 		if sqlItem.ItemQuantity.Valid {
@@ -451,6 +391,9 @@ func convertSQLItemToItem(sqlItem *SqlItem) (*items.Item, error) {
 		} else {
 			item.Weight = ""
 		}
+
+	} else {
+		return item, logg.NewError("invalid")
 
 	}
 	return item, nil
@@ -476,9 +419,9 @@ func UUIDFromSqlString(boxID sql.NullString) (uuid.UUID, error) {
 	if boxID.Valid {
 		id, err := uuid.FromString(boxID.String)
 		if err != nil {
-			return uuid.Nil, fmt.Errorf("error while converting the string id into uuid: %w", err)
+			return uuid.Nil, logg.Errorf("error while converting the string id into uuid: %w", err)
 		}
 		return id, nil
 	}
-	return uuid.Nil, fmt.Errorf("invalid Virtual Id string")
+	return uuid.Nil, logg.Errorf("invalid Virtual Id string")
 }

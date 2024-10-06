@@ -24,10 +24,9 @@ type BoxDatabase interface {
 	UpdateBox(box items.Box) error
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (items.Box, error)
-	Box2ById(id uuid.UUID) (*items.Box2, error)
 	BoxIDs() ([]string, error) // @TODO: Change string to uuid.UUID
-	BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListItem, error)
-	VirtualBoxById(id uuid.UUID) (items.BoxListItem, error)
+	BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListRow, error)
+	VirtualBoxById(id uuid.UUID) (items.BoxListRow, error)
 }
 
 func registerBoxRoutes(db *database.DB) {
@@ -197,7 +196,7 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 		}
 
 		logg.Info("has query: ", urlQuery.Has("query"))
-		var boxes []items.BoxListItem
+		var boxes []items.BoxListRow
 		err = nil
 		usedSearch := false
 		if urlQuery.Has("query") && query != "" {
@@ -364,17 +363,12 @@ func boxDetailsPage(db *database.DB) http.HandlerFunc {
 		}
 		logg.Debug(id)
 
-		box2, err := db.Box2ById(id)
-		if err != nil {
-			server.WriteInternalServerError("box2", err, w, r)
-			return
-		}
 		notFound := false
 		box, err := db.BoxById(id)
 		if err != nil {
 			notFound = true
 		}
-		box.Id = id
+		box.ID = id
 		data := items.BoxPageTemplateData()
 		data.Box = &box
 
@@ -389,8 +383,8 @@ func boxDetailsPage(db *database.DB) http.HandlerFunc {
 		searchInput.SearchInputHxTarget = "#box-list"
 		searchInput.SearchInputHxPost = "/boxes"
 		maps.Copy(nd, searchInput.Map())
-		itemsMap := make([]map[string]any, len(box2.Items))
-		for i, v := range box2.Items {
+		itemsMap := make([]map[string]any, len(box.Items))
+		for i, v := range box.Items {
 			itemsMap[i] = v.Map()
 		}
 		nd["ItemListItems"] = itemsMap
@@ -558,7 +552,7 @@ func moveBoxes(db BoxDatabase) http.HandlerFunc {
 // boxFromPostFormValue returns items.Box without references to inner boxes, outer box and items.
 func boxFromPostFormValue(id uuid.UUID, r *http.Request) items.Box {
 	box := items.Box{}
-	box.Id = id
+	box.ID = id
 	box.Label = r.PostFormValue("label")
 	box.Description = r.PostFormValue("description")
 	box.Picture = items.ParsePicture(r)
@@ -604,7 +598,7 @@ func renderBoxTemplate(box *items.Box, w http.ResponseWriter, r *http.Request) {
 // 	return nil
 // }
 
-func renderBoxesListTemplate2(w http.ResponseWriter, r *http.Request, db BoxDatabase, boxes []items.BoxListItem, query string) error {
+func renderBoxesListTemplate2(w http.ResponseWriter, r *http.Request, db BoxDatabase, boxes []items.BoxListRow, query string) error {
 	searchInput := items.NewSearchInputTemplate()
 	searchInput.SearchInputLabel = "Search boxes"
 	searchInput.SearchInputHxTarget = "#box-list"

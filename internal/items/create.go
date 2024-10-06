@@ -21,19 +21,23 @@ import (
 )
 
 type Item struct {
-	Id          uuid.UUID `json:"id"`
-	Label       string    `json:"label"       validate:"required,lte=128"`
-	Description string    `json:"description" validate:"omitempty,lte=256"`
-	Picture     string    `json:"picture"     validate:"omitempty,base64"`
-	Quantity    int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
-	Weight      string    `json:"weight"      validate:"omitempty,numeric"`
-	QRcode      string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	BoxId       uuid.UUID `json:"box_id"`
+	ID             uuid.UUID `json:"id"`
+	Label          string    `json:"label"       validate:"required,lte=128"`
+	Description    string    `json:"description" validate:"omitempty,lte=256"`
+	Picture        string    `json:"picture"     validate:"omitempty,base64"`
+	PreviewPicture string    `json:"preview_picture"     validate:"omitempty,base64"`
+	Quantity       int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
+	Weight         string    `json:"weight"      validate:"omitempty,numeric"`
+	QRcode         string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	BoxID          uuid.UUID `json:"box_id"`
+	ShelfID        uuid.UUID `json:"shelf_id"`
+	AreaID         uuid.UUID `json:"area_id"`
 }
 
 type ItemDatabase interface {
 	CreateNewItem(newItem Item) error
 	ItemByField(field string, value string) (Item, error)
+	ItemListRowByID(id uuid.UUID) (*ItemListRow, error)
 	Item(id string) (Item, error)
 	ItemIDs() ([]string, error)
 	ItemExist(field string, value string) bool
@@ -46,8 +50,8 @@ type ItemDatabase interface {
 	MoveItem(id1 uuid.UUID, id2 uuid.UUID) error
 
 	// search functions
-	ItemFuzzyFinder(query string) ([]VirtualItem, error)
-	ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]VirtualItem, error)
+	ItemFuzzyFinder(query string) ([]ItemListRow, error)
+	ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]ItemListRow, error)
 	NumOfItemRecords(searchString string) (int, error)
 }
 
@@ -222,14 +226,14 @@ func item(r *http.Request) (Item, error) {
 	// b64encodedPictureString := parsePicture(r)
 
 	newItem := Item{
-		Id:          id,
+		ID:          id,
 		Label:       r.PostFormValue(LABEL),
 		Description: r.PostFormValue(DESCRIPTIO),
 		Picture:     "", //b64encodedPictureString, // @TODO: Fix picture is not added while creating or updating item.
 		Quantity:    parseQuantity(r.PostFormValue(QUANTITY)),
 		Weight:      r.PostFormValue(WEIGHT),
 		QRcode:      r.PostFormValue(QRCODE),
-		BoxId:       boxId,
+		BoxID:       boxId,
 	}
 	return newItem, nil
 }

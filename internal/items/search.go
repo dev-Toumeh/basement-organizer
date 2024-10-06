@@ -9,24 +9,28 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-type VirtualItem struct {
-	Item_Id        uuid.UUID
+type ItemListRow struct {
+	ItemID         uuid.UUID
 	Label          string
-	Box_label      string
-	Box_Id         uuid.UUID
-	Shelf_label    string
-	Area_label     string
+	BoxID          uuid.UUID
+	BoxLabel       string
+	ShelfID        uuid.UUID
+	ShelfLabel     string
+	AreaID         uuid.UUID
+	AreaLabel      string
 	PreviewPicture string
 }
 
-func (vi *VirtualItem) Map() map[string]any {
+func (vi *ItemListRow) Map() map[string]any {
 	return map[string]any{
-		"Item_Id":        vi.Item_Id,
+		"ItemID":         vi.ItemID,
 		"Label":          vi.Label,
-		"Box_label":      vi.Box_label,
-		"Box_Id":         vi.Box_Id,
-		"Shelf_label":    vi.Shelf_label,
-		"Area_label":     vi.Area_label,
+		"BoxID":          vi.BoxID,
+		"BoxLabel":       vi.BoxLabel,
+		"ShelfID":        vi.ShelfID,
+		"ShelfLabel":     vi.ShelfLabel,
+		"AreaID":         vi.AreaID,
+		"AreaLabel":      vi.AreaLabel,
 		"PreviewPicture": vi.PreviewPicture,
 	}
 }
@@ -34,7 +38,7 @@ func (vi *VirtualItem) Map() map[string]any {
 type SearchItemData struct {
 	Query          string
 	TotalCount     int
-	Records        []VirtualItem
+	Records        []ItemListRow
 	PaginationData []PaginationData
 }
 

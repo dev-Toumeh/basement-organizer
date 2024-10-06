@@ -5,21 +5,21 @@
 {{ end }}
 
 {{ if $empty }}
-<tr id="box-list-item-{{.Box_Id}}">
+<tr id="box-list-item-{{.BoxID}}">
     <td colspan="7" style="text-align:center">
         <span class="empty">empty<img class="preview" style="opacity:0"></span>
     </td>  
 </tr>
 {{ else }}
-<tr id="box-list-item-{{.Box_Id}}">
-    <td hx-get="/boxes/{{.Box_Id}}"
+<tr id="box-list-item-{{.BoxID}}">
+    <td hx-get="/boxes/{{.BoxID}}"
         hx-push-url="true"
         hx-target="body"
         class="clickable"
     >{{.Label}}</td>
-    <td>{{.Box_label}}</td> 
-    <td>{{.Shelf_label}}</td>
-    <td>{{.Area_label}}</td>
+    <td>{{.BoxLabel}}</td> 
+    <td>{{.ShelfLabel}}</td>
+    <td>{{.AreaLabel}}</td>
     <td style="text-align: center;width:0;text-wrap: nowrap;">
         <div>
         <img class="preview" 
@@ -29,8 +29,8 @@
         </div>
     </td>
     {{ if not .Move}}
-    <td style="text-align: center;"><input type="checkbox" name="move:{{.Box_Id}}"></td>
-    <td style="text-align: center;"><input type="checkbox" name="delete:{{.Box_Id}}"></td>
+    <td style="text-align: center;"><input type="checkbox" name="move:{{.BoxID}}"></td>
+    <td style="text-align: center;"><input type="checkbox" name="delete:{{.BoxID}}"></td>
     {{ else }}
     <td style="text-align: center;">
         <button type="">move here</button>

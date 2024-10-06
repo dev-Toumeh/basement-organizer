@@ -33,7 +33,7 @@ func (db *boxDatabaseError) CreateBox(newBox *items.Box) (uuid.UUID, error) {
 }
 
 func (db *boxDatabaseError) BoxById(id uuid.UUID) (items.Box, error) {
-	return items.Box{Id: uuid.Nil}, errors.New("AAAAAAAA")
+	return items.Box{ID: uuid.Nil}, errors.New("AAAAAAAA")
 }
 
 func (db *boxDatabaseError) BoxIDs() ([]string, error) {
@@ -64,12 +64,12 @@ func (db *boxDatabaseError) DeleteBox(boxId uuid.UUID) error {
 	return errors.New("AAAAA")
 }
 
-func (db *boxDatabaseError) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListItem, error) {
-	return make([]items.BoxListItem, 0), errors.New("AAAAAAAA")
+func (db *boxDatabaseError) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListRow, error) {
+	return make([]items.BoxListRow, 0), errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) VirtualBoxById(id uuid.UUID) (items.BoxListItem, error) {
-	return items.BoxListItem{}, errors.New("AAAAAAAA")
+func (db *boxDatabaseError) VirtualBoxById(id uuid.UUID) (items.BoxListRow, error) {
+	return items.BoxListRow{}, errors.New("AAAAAAAA")
 }
 
 // boxDatabaseSuccess never returns errors.
@@ -80,7 +80,7 @@ func (db *boxDatabaseSuccess) CreateBox(newBox *items.Box) (uuid.UUID, error) {
 }
 
 func (db *boxDatabaseSuccess) BoxById(id uuid.UUID) (items.Box, error) {
-	return items.Box{Id: uuid.Must(uuid.FromString(BOX_ID_VALID))}, nil
+	return items.Box{ID: uuid.Must(uuid.FromString(BOX_ID_VALID))}, nil
 }
 
 func (db *boxDatabaseSuccess) BoxIDs() ([]string, error) {
@@ -107,12 +107,12 @@ func (db *boxDatabaseSuccess) DeleteBox(boxId uuid.UUID) error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListItem, error) {
-	return make([]items.BoxListItem, 0), nil
+func (db *boxDatabaseSuccess) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListRow, error) {
+	return make([]items.BoxListRow, 0), nil
 }
 
-func (db *boxDatabaseSuccess) VirtualBoxById(id uuid.UUID) (items.BoxListItem, error) {
-	return items.BoxListItem{}, nil
+func (db *boxDatabaseSuccess) VirtualBoxById(id uuid.UUID) (items.BoxListRow, error) {
+	return items.BoxListRow{}, nil
 }
 
 func TestBoxHandlerDBErrors(t *testing.T) {

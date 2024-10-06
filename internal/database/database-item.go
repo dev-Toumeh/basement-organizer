@@ -32,21 +32,26 @@ func (db *DB) CreateNewItem(newItem items.Item) error {
 func (db *DB) ItemByField(field string, value string) (items.Item, error) {
 
 	if !db.ItemExist(field, value) {
-		return items.Item{}, sql.ErrNoRows
+		return items.Item{}, logg.WrapErr(sql.ErrNoRows)
 	}
 
-	query := fmt.Sprintf("SELECT id, label, description, picture, quantity, weight, qrcode FROM item WHERE %s = ? \n", field)
+	query := fmt.Sprintf(`SELECT 
+		id, label, description, picture, preview_picture, quantity, weight, qrcode, box_id, shelf_id, area_id
+	FROM item WHERE %s = ?;`, field)
 	row := db.Sql.QueryRow(query, value)
 
-	var item items.Item
-	var idStr string
-	err := row.Scan(&idStr, &item.Label, &item.Description, &item.Picture, &item.Quantity, &item.Weight, &item.QRcode)
+	sqlItem := &SqlItem{}
+	err := row.Scan(&sqlItem.ItemID, &sqlItem.ItemLabel, &sqlItem.ItemDescription, &sqlItem.ItemPicture, &sqlItem.ItemPreviewPicture, &sqlItem.ItemQuantity, &sqlItem.ItemWeight, &sqlItem.ItemQRCode, &sqlItem.ItemBoxID, &sqlItem.ItemShelfID, &sqlItem.ItemAreaID)
 
 	if err != nil {
-		return items.Item{}, fmt.Errorf("Error while checking if the Item is available: %w ", err)
+		return items.Item{}, logg.Errorf("Error while checking if the Item is available: %w ", err)
 	}
-	item.Id = uuid.Must(uuid.FromString(idStr))
-	return item, nil
+	item, err := convertSQLItemToItem(sqlItem)
+	if err != nil {
+		return items.Item{}, logg.WrapErr(err)
+	}
+
+	return *item, nil
 }
 
 // check if the Item exist
@@ -67,8 +72,8 @@ func (db *DB) Item(id string) (items.Item, error) {
 }
 
 // ListItemById returns a single item with less information suitable for a list row.
-func (db *DB) ListItemById(id uuid.UUID) (*items.VirtualItem, error) {
-	item := &items.VirtualItem{}
+func (db *DB) ListItemById(id uuid.UUID) (*items.ItemListRow, error) {
+	item := &items.ItemListRow{}
 	rows, err := db.Sql.Query(`
 		SELECT 
             i.id, i.label, i.picture, i.box_id,
@@ -81,7 +86,7 @@ func (db *DB) ListItemById(id uuid.UUID) (*items.VirtualItem, error) {
             i.id = ?;`, id.String())
 
 	if err != nil {
-		return item, logg.Errorf("%w", err)
+		return item, logg.WrapErr(err)
 	}
 	defer rows.Close()
 
@@ -90,7 +95,7 @@ func (db *DB) ListItemById(id uuid.UUID) (*items.VirtualItem, error) {
 	for rows.Next() {
 		err = rows.Scan(&sqlItem.ItemID, &sqlItem.Label, &sqlItem.PreviewPicture, &sqlItem.OuterBoxID, &sqlItem.OuterBoxID, &sqlItem.OuterBoxLabel)
 		if err != nil {
-			return nil, logg.Errorf("%w", err)
+			return nil, logg.WrapErr(err)
 		}
 
 		if env.Development() {
@@ -100,14 +105,82 @@ func (db *DB) ListItemById(id uuid.UUID) (*items.VirtualItem, error) {
 		}
 
 		if sqlItem.ItemID.Valid {
-			item.Item_Id = uuid.Must(uuid.FromString(sqlItem.ItemID.String))
+			item.ItemID = uuid.Must(uuid.FromString(sqlItem.ItemID.String))
 			item.Label = sqlItem.Label.String
 			item.PreviewPicture = sqlItem.PreviewPicture.String
-			item.Box_Id = uuid.Must(uuid.FromString(sqlItem.OuterBoxID.String))
-			item.Box_label = sqlItem.OuterBoxLabel.String
+			item.BoxID = uuid.Must(uuid.FromString(sqlItem.OuterBoxID.String))
+			item.BoxLabel = sqlItem.OuterBoxLabel.String
 		} else {
 			return item, errors.New(fmt.Sprintf("Invalid UUID: \"%s\"", sqlItem.ItemID.String))
 		}
+	}
+
+	return item, nil
+}
+
+// ListItemById returns a single item with less information suitable for a list row.
+func (db *DB) ItemListRowByID(id uuid.UUID) (*items.ItemListRow, error) {
+	item := &items.ItemListRow{}
+	rows, err := db.Sql.Query(`
+		SELECT 
+            i.id, i.label, i.preview_picture,
+            b.id, b.label,
+			s.id, s.label,
+			a.id, a.label
+        FROM 
+            item AS i
+        LEFT JOIN 
+            box AS b ON b.id = i.box_id 
+        LEFT JOIN 
+            shelf AS s ON s.id = i.shelf_id 
+        LEFT JOIN 
+            area AS a ON a.id = i.area_id 
+        WHERE 
+            i.id = ?;`, id.String())
+
+	if err != nil {
+		return item, logg.WrapErr(err)
+	}
+	defer rows.Close()
+
+	var (
+		ItemID    sql.NullString
+		ItemLabel sql.NullString
+		// Picture        sql.NullString
+		PreviewPicture sql.NullString
+		BoxID          sql.NullString
+		BoxLabel       sql.NullString
+		ShelfID        sql.NullString
+		ShelfLabel     sql.NullString
+		AreaID         sql.NullString
+		AreaLabel      sql.NullString
+	)
+
+	for rows.Next() {
+		err = rows.Scan(&ItemID, &ItemLabel, &PreviewPicture, &BoxID, &BoxLabel, &ShelfID, &ShelfLabel, &AreaID, &AreaLabel)
+		if err != nil {
+			return nil, logg.WrapErr(err)
+		}
+		if ItemID.Valid {
+			item.ItemID = uuid.Must(uuid.FromString(ItemID.String))
+			item.Label = ItemLabel.String
+			item.PreviewPicture = PreviewPicture.String
+			item.BoxID = uuid.FromStringOrNil(BoxID.String)
+			item.BoxLabel = BoxLabel.String
+			item.ShelfID = uuid.FromStringOrNil(ShelfID.String)
+			item.BoxLabel = BoxLabel.String
+			item.AreaID = uuid.FromStringOrNil(AreaID.String)
+			item.AreaLabel = AreaLabel.String
+		} else {
+			return item, errors.New(fmt.Sprintf("Invalid UUID: \"%s\"", ItemID.String))
+		}
+
+		if env.Development() {
+			b := bytes.Buffer{}
+			server.WriteJSON(&b, item)
+			logg.Debugf("virtual item: %v", b.String())
+		}
+
 	}
 
 	return item, nil
@@ -145,21 +218,28 @@ func (db *DB) ItemIDs() ([]string, error) {
 // here we run the insert new Item query separate from the public function
 // it make the code more readable
 func (db *DB) insertNewItem(item items.Item) error {
-	sqlStatement := `INSERT INTO item (id, label, description, picture, quantity, weight, qrcode, box_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-	result, err := db.Sql.Exec(sqlStatement, item.Id.String(), item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode, item.BoxId.String())
+	var err error = nil
+	uuid.Must(item.ID, err)
 	if err != nil {
-		log.Printf("Error while executing create new item statement: %v", err)
-		return err
+		return logg.NewError("not valid")
+	}
+	uuid.Must(item.BoxID, err)
+	if err != nil {
+		return logg.NewError("not valid")
+	}
+
+	sqlStatement := `INSERT INTO item (id, label, description, picture, preview_picture, quantity, weight, qrcode, box_id, shelf_id, area_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	result, err := db.Sql.Exec(sqlStatement, item.ID.String(), item.Label, item.Description, item.Picture, item.PreviewPicture, item.Quantity, item.Weight, item.QRcode, item.BoxID.String(), item.ShelfID.String(), item.AreaID.String())
+	if err != nil {
+		return logg.Errorf("Error while executing create new item statement: %w", err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		log.Printf("Error checking rows affected while executing create new item statement: %v", err)
-		return err
+		return logg.Errorf("Error checking rows affected while executing create new item statement: %w", err)
 	}
 	if rowsAffected != 1 {
-		log.Println("No rows affected, item not added")
-		return errors.New("item not added")
+		return logg.NewError("item not added")
 	}
 	return nil
 }
@@ -169,7 +249,7 @@ func (db *DB) UpdateItem(ctx context.Context, item items.Item) error {
 	sqlStatement := fmt.Sprintf(`UPDATE item Set label = "%s", description = "%s", picture = "%s",
     quantity = "%d", weight = "%s", qrcode = "%s" WHERE id = ?`,
 		item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode)
-	result, err := db.Sql.ExecContext(ctx, sqlStatement, item.Id.String())
+	result, err := db.Sql.ExecContext(ctx, sqlStatement, item.ID.String())
 	if err != nil {
 		logg.Err(err)
 		return err
@@ -181,11 +261,11 @@ func (db *DB) UpdateItem(ctx context.Context, item items.Item) error {
 		return err
 	}
 	if rowsAffected == 0 {
-		err := errors.New(fmt.Sprintf("the Record with the id: %s was not found that should not happened while updating", item.Id.String()))
+		err := errors.New(fmt.Sprintf("the Record with the id: %s was not found that should not happened while updating", item.ID.String()))
 		logg.Debug(err)
 		return err
 	} else if rowsAffected != 1 {
-		err := errors.New(fmt.Sprintf("the id: %s has unexpected effected number of rows (more than one or less than 0)", item.Id.String()))
+		err := errors.New(fmt.Sprintf("the id: %s has unexpected effected number of rows (more than one or less than 0)", item.ID.String()))
 		logg.Err(err)
 		return err
 	}

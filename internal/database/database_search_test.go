@@ -22,39 +22,39 @@ var boxId4 = &uuidValue4
 
 // Clone 4
 var box1 = &items.Box{
-	Id:          *boxId1,
+	ID:          *boxId1,
 	Label:       "box 1",
 	Description: "This is the sixth box",
 	Picture:     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAFAgL/uXBuZwAAAABJRU5ErkJggg==",
 	QRcode:      "uvwxyzabcdefg",
-	OuterBoxId:  uuid.Nil,
+	OuterBoxID:  uuid.Nil,
 }
 
 var box3 = &items.Box{
-	Id:          *boxId2,
+	ID:          *boxId2,
 	Label:       "box 3",
 	Description: "This is the third box",
 	Picture:     box1.Picture,
 	QRcode:      "abababababcd",
-	OuterBoxId:  *boxId1,
+	OuterBoxID:  *boxId1,
 }
 
 var box4 = &items.Box{
-	Id:          *boxId3,
+	ID:          *boxId3,
 	Label:       "box 4",
 	Description: "This is the fourth box",
 	Picture:     box1.Picture,
 	QRcode:      "efghefghefgh",
-	OuterBoxId:  *boxId1,
+	OuterBoxID:  *boxId1,
 }
 
 var box5 = &items.Box{
-	Id:          *boxId4,
+	ID:          *boxId4,
 	Label:       "box 5",
 	Description: "This is the fifth box",
 	Picture:     box1.Picture,
 	QRcode:      "ijklmnopqrst",
-	OuterBoxId:  *boxId1,
+	OuterBoxID:  *boxId1,
 }
 
 func TestVirtualBoxInsirt(t *testing.T) {
@@ -69,16 +69,16 @@ func TestVirtualBoxInsirt(t *testing.T) {
 	}
 
 	// Check if the outerbox exists in box_fts
-	exist := dbTest.VirtualBoxExist(testBox.Id)
+	exist := dbTest.VirtualBoxExist(testBox.ID)
 	assert.Equal(t, exist, true)
 
-	virtualBox, err := dbTest.VirtualBoxById(testBox.Id)
+	virtualBox, err := dbTest.VirtualBoxById(testBox.ID)
 	if err != nil {
 		t.Fatalf("Failed to create outer box: %v", err)
 	}
-	assert.Equal(t, testBox.Id, virtualBox.Box_Id)
+	assert.Equal(t, testBox.ID, virtualBox.BoxID)
 	assert.Equal(t, testBox.Label, virtualBox.Label)
-	assert.Equal(t, testBox.OuterBoxId, virtualBox.OuterBox_id)
+	assert.Equal(t, testBox.OuterBoxID, virtualBox.OuterBoxID)
 
 	EmptyTestDatabase()
 
@@ -114,12 +114,12 @@ func TestVirtualBoxUpdate(t *testing.T) {
 	dbTest.UpdateBox(outerBoxClone)
 
 	// Get the box_fts to check if the outerbox_label  was updated
-	afterUpdate, err := dbTest.VirtualBoxById(testbox.Id)
+	afterUpdate, err := dbTest.VirtualBoxById(testbox.ID)
 	if err != nil {
 		t.Fatalf("Failed to fetch the testbox while checking the BoxTriger: %v", err)
 	}
 
-	assert.Equal(t, afterUpdate.OuterBox_label, outerBoxClone.Label)
+	assert.Equal(t, afterUpdate.OuterBoxLabel, outerBoxClone.Label)
 	assert.Equal(t, afterUpdate.Label, testboxClone.Label)
 }
 
@@ -135,13 +135,13 @@ func TestVirtualBoxDelete(t *testing.T) {
 		t.Fatalf("Failed to create outer box while checking the BoxTriger: %v", err)
 	}
 
-	dbTest.DeleteBox(testbox.Id)
+	dbTest.DeleteBox(testbox.ID)
 	if err != nil {
 		t.Fatalf("error while Deleting the the box: %v", err)
 	}
 
 	// Check if the outerbox exists in box_fts
-	exist := dbTest.VirtualBoxExist(testbox.Id)
+	exist := dbTest.VirtualBoxExist(testbox.ID)
 	assert.NotEqual(t, exist, true)
 }
 

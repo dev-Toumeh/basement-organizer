@@ -13,7 +13,7 @@
 {{ define "box-details-page-content"  }}
 <h1>Box details</h1>
     {{ if .NotFound }}
-        <p>Box "{{.Id}}" doesn't exist.</p>
+        <p>Box "{{.ID}}" doesn't exist.</p>
         <br>
         <p style="text-align: center">:^(</p>
     {{ else }}
@@ -27,13 +27,13 @@
 
 
 {{ define "box-details" }}
-<form id="box-{{.Id}}"
+<form id="box-{{.ID}}"
     class="box-container"
     hx-encoding="multipart/form-data">
     <div class="box-info-container">
         <div class="box-detail-info">
             <label for="id">ID:</label>
-            <input name="id" type="text" value="{{.Id}}" {{ if not .Edit}}disabled{{end}}>
+            <input name="id" type="text" value="{{.ID}}" {{ if not .Edit}}disabled{{end}}>
 
             <label for="label">Label:</label>
             <input name="label" type="text" value="{{.Label}}" {{ if not .Edit}}disabled{{end}}>
@@ -45,10 +45,10 @@
             <input type="text" id="qrcode" name="qrcode" value="{{ .QRcode }}" {{ if not .Edit}}disabled{{end}}>
             <br>
 
-            {{ if eq .OuterboxId.String "00000000-0000-0000-0000-000000000000" }}
+            {{ if eq .OuterboxID.String "00000000-0000-0000-0000-000000000000" }}
             {{ else }}
             <span>Is inside box:</span>
-            <a href="/boxes/{{.OuterboxId}}" 
+            <a href="/boxes/{{.OuterboxID}}" 
                 hx-boost="true"
                 style=""
             >{{ .Outerbox.Label }}</a>
@@ -56,7 +56,7 @@
             {{ end }}
         </div>
 
-        <div id="image-preview-{{ .Id }}" class="box-detail-picture">
+        <div id="image-preview-{{ .ID }}" class="box-detail-picture">
             {{ if .Picture }}
             <label for="picture">Picture:</label>
             <img class="detail" src="data:image/png;base64,{{ .Picture }}" alt="{{ .Label }}">
@@ -65,9 +65,9 @@
             {{ end }}
 
             {{ if .Edit }}
-            <input type="file" id="picture-{{ .Id }}" name="picture" accept="image/*" >
+            <input type="file" id="picture-{{ .ID }}" name="picture" accept="image/*" >
             {{ else }}
-            <input type="file" id="picture-{{ .Id }}" name="picture" accept="image/*" disabled>
+            <input type="file" id="picture-{{ .ID }}" name="picture" accept="image/*" disabled>
             {{ end }}
         </div>
     </div>  
@@ -76,41 +76,41 @@
 {{ if .EnvDevelopment }}
 <div style="outline:solid;font-size:0.7rem" class="background-diagonal-stripes">
     <div>Development info</div>
-    <div>API data: /api/v1/box/{{.Id}}</div>
-    <p hx-trigger="load" hx-get="/api/v1/box/{{.Id}}" ></p>
+    <div>API data: /api/v1/box/{{.ID}}</div>
+    <p hx-trigger="load" hx-get="/api/v1/box/{{.ID}}" ></p>
 </div>
 {{ end }}
 
 
+
 {{ if .Edit }}
 <button hx-put="/box" 
-        hx-target="#box-{{.Id}}"
+        hx-target="#box-{{.ID}}"
         hx-swap="outerHTML"
 >Update box</button>
-<button hx-get="/box?id={{.Id}}"
-        hx-target="#box-{{.Id}}"
+<button hx-get="/box?id={{.ID}}"
+        hx-target="#box-{{.ID}}"
         hx-swap="outerHTML"
 >cancel</button>
 {{ else }}
-<button hx-get="/box?id={{.Id}}&edit=true"
-        hx-target="#box-{{.Id}}"
+<button hx-get="/box?id={{.ID}}&edit=true"
+        hx-target="#box-{{.ID}}"
         hx-swap="outerHTML"
 >edit</button>
 {{ end }}
 
 
-<button hx-get="/box/{{.Id}}/move">move</button>
+<button hx-get="/box/{{.ID}}/move">move</button>
 
-<button hx-delete="/box?id={{.Id}}" 
+<button hx-delete="/box?id={{.ID}}" 
         hx-swap="outerHTML"
-        hx-target="#box-{{.Id}}"
+        hx-target="#box-{{.ID}}"
         hx-confirm="Are you sure?"
 >delete</button>
 
 </form>
-
-
 {{end}}
+
 
 {{ define "empty-list" }}
 <form id="inner-boxes-list"
@@ -135,7 +135,7 @@
             </tr>
         </thead> 
         <tbody id="box-list-body">
-            <tr id="box-list-item-{{.Box_Id}}">
+            <tr id="box-list-item-{{.BoxID}}">
                 <td colspan="7" style="text-align:center">No Entries</td>  
             </tr>
         </tbody>
@@ -185,7 +185,7 @@
             {{ template "box-list-item" . }}
             {{ end }}
         {{ else }}
-            <tr id="box-list-item-{{.Box_Id}}">
+            <tr id="box-list-item-{{.BoxID}}">
                 <td colspan="7" style="text-align:center">No Entries</td>  
             </tr>
         {{ end }}
@@ -265,23 +265,23 @@
     {{ end }}
 
     {{ if $empty }}
-    <tr id="box-list-item-{{.Box_Id}}">
+    <tr id="box-list-item-{{.BoxID}}">
         <td colspan="7" style="text-align:center">
             <span class="empty">empty<img class="preview" style="opacity:0"></span>
         </td>  
     </tr>
     {{ else }}
-    <tr id="item-list-item-{{.Item_Id}}">
-         <!--hx-get="/items/{{.Item_Id}}"-->
+    <tr id="item-list-item-{{.ItemID}}">
+         <!--hx-get="/items/{{.ItemID}}"-->
         <td
-            hx-get="/api/v1/read/item/{{.Item_Id}}"
+            hx-get="/api/v1/read/item/{{.ItemID}}"
             hx-push-url="true"
             hx-target="#item-list"
             class="clickable"
         >{{.Label}}</td>
         <td>{{.Box_label}}</td> 
-        <td>{{.Shelf_label}}</td>
-        <td>{{.Area_label}}</td>
+        <td>{{.ShelfLabel}}</td>
+        <td>{{.AreaLabel}}</td>
         <td style="text-align: center;width:0;text-wrap: nowrap;">
             <div>
             <img class="preview" 
@@ -291,8 +291,8 @@
             </div>
         </td>
         {{ if not .Move}}
-        <td style="text-align: center;"><input type="checkbox" name="move:{{.Box_Id}}"></td>
-        <td style="text-align: center;"><input type="checkbox" name="delete:{{.Box_Id}}"></td>
+        <td style="text-align: center;"><input type="checkbox" name="move:{{.BoxID}}"></td>
+        <td style="text-align: center;"><input type="checkbox" name="delete:{{.BoxID}}"></td>
         {{ else }}
         <td style="text-align: center;">
             <button type="">move here</button>
