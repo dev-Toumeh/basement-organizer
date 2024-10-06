@@ -6,6 +6,7 @@ const (
     username TEXT UNIQUE,
     passwordhash TEXT);`
 
+	// Item
 	CREATE_ITEM_TABLE_STMT = `CREATE TABLE IF NOT EXISTS item (
     id TEXT PRIMARY KEY,
     label TEXT NOT NULL,
@@ -20,37 +21,6 @@ const (
     area_id TEXT REFERENCES area(id)
 	);`
 
-	CREATE_BOX_TABLE_STMT = `CREATE TABLE IF NOT EXISTS box (
-    id TEXT PRIMARY KEY,
-    label TEXT NOT NULL, 
-    description TEXT,
-    picture TEXT,
-    preview_picture TEXT,
-    qrcode TEXT,
-    outerbox_id TEXT REFERENCES box(id));`
-
-	CREATE_SHELF_TABLE_STMT = `CREATE TABLE IF NOT EXISTS shelf (
-    id TEXT PRIMARY KEY,
-    label TEXT NOT NULL, 
-    description TEXT,
-    picture TEXT,
-    preview_picture TEXT,
-    qrcode TEXT,
-    height REAL,
-    width REAL,
-    depth REAL,
-    rows INTEGER,
-    cols INTEGER
-	);`
-
-	CREATE_AREA_TABLE_STMT = `CREATE TABLE IF NOT EXISTS area (
-    id TEXT PRIMARY KEY,
-    label TEXT NOT NULL,
-    description TEXT,
-    picture TEXT 
-    preview_picture TEXT 
-	);`
-
 	CREATE_ITEM_TABLE_STMT_FTS = `CREATE VIRTUAL TABLE IF NOT EXISTS item_fts USING fts5(
     item_id UNINDEXED,
     label, 
@@ -59,16 +29,6 @@ const (
     tokenize = 'porter'
 	);`
 
-	CREATE_BOX_TABLE_STMT_FTS = `CREATE VIRTUAL TABLE IF NOT EXISTS box_fts USING fts5(
-    box_id UNINDEXED,
-    label, 
-    outerbox_label,
-    outerbox_id UNINDEXED,
-	preview_picture UNINDEXED,
-    tokenize = 'porter'
-	); `
-
-	// Triggers for item
 	CREATE_ITEM_INSERT_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS item_ai BEFORE INSERT ON item 
     BEGIN
@@ -92,7 +52,28 @@ const (
         DELETE FROM item_fts WHERE item_id = old.id;
     END; `
 
-	// Triggers for box
+	// Box
+	CREATE_BOX_TABLE_STMT = `CREATE TABLE IF NOT EXISTS box (
+    id TEXT PRIMARY KEY,
+    label TEXT NOT NULL, 
+    description TEXT,
+    picture TEXT,
+    preview_picture TEXT,
+    qrcode TEXT,
+    outerbox_id TEXT REFERENCES box(id)
+	); `
+
+	CREATE_BOX_TABLE_STMT_FTS = `CREATE VIRTUAL TABLE IF NOT EXISTS box_fts USING fts5(
+    box_id UNINDEXED,
+    label, 
+    outerbox_label,
+    outerbox_id UNINDEXED,
+	area_id UNINDEXED,
+	area_label,
+	preview_picture UNINDEXED,
+    tokenize = 'porter'
+	); `
+
 	CREATE_BOX_INSERT_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS box_ai BEFORE INSERT ON box
     BEGIN
@@ -130,4 +111,67 @@ const (
     BEGIN
         DELETE FROM box_fts WHERE box_id = old.id;
     END; `
+
+	// Shelf
+	CREATE_SHELF_TABLE_STMT = `CREATE TABLE IF NOT EXISTS shelf (
+    id TEXT PRIMARY KEY,
+    label TEXT NOT NULL, 
+    description TEXT,
+    picture TEXT,
+    preview_picture TEXT,
+    qrcode TEXT,
+    height REAL,
+    width REAL,
+    depth REAL,
+    rows INTEGER,
+    cols INTEGER
+	);`
+
+	CREATE_SHELF_TABLE_STMT_FTS = `CREATE VIRTUAL TABLE IF NOT EXISTS shelf_fts USING fts5(
+    id UNINDEXED,
+    label,
+    area_id UNINDEXED,
+    area_label,
+    preview_picture UNINDEXED,
+    tokenize = 'porter'
+	);`
+
+	CREATE_SHELF_INSERT_TRIGGER = `
+	CREATE TRIGGER IF NOT EXISTS shelf_ai BEFORE INSERT ON shelf
+	BEGIN
+		INSERT INTO shelf_fts(id, label, area_label, area_id, preview_picture)
+		VALUES (
+			new.id,
+			new.label,
+			(SELECT label FROM area WHERE id = new.area_id),
+			new.area_id,
+			new.preview_picture
+		);
+	END;`
+
+	CREATE_SHELF_UPDATE_TRIGGER = `
+	CREATE TRIGGER IF NOT EXISTS shelf_au BEFORE UPDATE ON shelf
+	BEGIN
+		UPDATE shelf_fts SET
+			label = new.label,
+			area_label = (SELECT label FROM area WHERE id = new.area_id),
+			area_id = new.area_id,
+			preview_picture = new.preview_picture
+		WHERE id = old.id;
+	END;`
+
+	CREATE_SHELF_DELETE_TRIGGER = `
+	CREATE TRIGGER IF NOT EXISTS shelf_ad BEFORE DELETE ON shelf
+	BEGIN
+		DELETE FROM shelf_fts WHERE shelf_id = old.id;
+	END;`
+
+	// Area
+	CREATE_AREA_TABLE_STMT = `CREATE TABLE IF NOT EXISTS area (
+    id TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    description TEXT,
+    picture TEXT,
+    preview_picture TEXT 
+	);`
 )
