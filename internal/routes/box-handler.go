@@ -385,7 +385,7 @@ func boxDetailsPage(db *database.DB) http.HandlerFunc {
 		for i, v := range box.Items {
 			itemsMap[i] = v.Map()
 		}
-		nd["ItemListItems"] = itemsMap
+		nd["ItemListRows"] = itemsMap
 
 		server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, nd)
 	}

@@ -18,9 +18,9 @@
         <p style="text-align: center">:^(</p>
     {{ else }}
         {{ template "box-details" . }}
-        <h2>Inner Boxes</h2>
-        {{ template "item-list" . }}
         <h2>Items</h2>
+        {{ template "item-list" . }}
+        <h2>Inner Boxes</h2>
         {{ template "innerboxes-list" . }}
     {{ end }}
 {{ end }}
@@ -234,8 +234,8 @@
         </thead> 
         <!--boxes are created directly by backend with template-->
         <tbody id="box-list-body">
-        {{ if .ItemListItems }}
-            {{ range .ItemListItems }}
+        {{ if .ItemListRows }}
+            {{ range .ItemListRows }}
             {{ template "item-list-row" . }}
             {{ end }}
         {{ else }}
@@ -274,7 +274,7 @@
         </td>  
     </tr>
     {{ else }}
-    <tr id="item-list-item-{{.ItemID}}">
+    <tr id="item-list-row-{{.ItemID}}">
          <!--hx-get="/items/{{.ItemID}}"-->
         <td
             hx-get="/api/v1/read/item/{{.ItemID}}"
@@ -282,7 +282,7 @@
             hx-target="#item-list"
             class="clickable"
         >{{.Label}}</td>
-        <td>{{.Box_label}}</td> 
+        <td>{{.BoxLabel}}</td> 
         <td>{{.ShelfLabel}}</td>
         <td>{{.AreaLabel}}</td>
         <td style="text-align: center;width:0;text-wrap: nowrap;">

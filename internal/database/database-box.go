@@ -29,8 +29,11 @@ type SqlItem struct {
 	ItemQuantity       sql.NullInt64
 	ItemWeight         sql.NullString
 	ItemBoxID          sql.NullString
+	ItemBoxLabel       sql.NullString
 	ItemShelfID        sql.NullString
+	ItemShelfLabel     sql.NullString
 	ItemAreaID         sql.NullString
+	ItemAreaLabel      sql.NullString
 }
 
 // Create New Item Record
@@ -247,7 +250,7 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 				if err != nil {
 					return nil, logg.Errorf("error converting SQLItem to Item: %w", err)
 				}
-				itemsList = append(itemsList, &items.ItemListRow{ItemID: item.ID, Label: item.Label})
+				itemsList = append(itemsList, &items.ItemListRow{ItemID: item.ID, Label: item.Label, BoxID: item.BoxID, BoxLabel: box.Label, ShelfID: item.ShelfID, AreaID: item.AreaID, PreviewPicture: item.PreviewPicture})
 				addedItems[itemSQLItem.ItemID.String] = item
 			}
 		}
@@ -366,11 +369,8 @@ func convertSQLItemToItem(sqlItem *SqlItem) (*items.Item, error) {
 			item.Description = ""
 		}
 
-		if sqlItem.ItemPicture.Valid {
-			item.Picture = sqlItem.ItemPicture.String
-		} else {
-			item.Picture = ""
-		}
+		item.Picture = ifNullString(sqlItem.ItemPicture)
+		item.PreviewPicture = ifNullString(sqlItem.ItemPreviewPicture)
 
 		if sqlItem.ItemQRCode.Valid {
 			item.QRcode = sqlItem.ItemQRCode.String

@@ -232,6 +232,8 @@ func (db *DB) insertNewItem(item items.Item) error {
 		return logg.NewError("not valid")
 	}
 
+	updatePicture(&item.Picture, &item.PreviewPicture)
+
 	sqlStatement := `INSERT INTO item (id, label, description, picture, preview_picture, quantity, weight, qrcode, box_id, shelf_id, area_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	result, err := db.Sql.Exec(sqlStatement, item.ID.String(), item.Label, item.Description, item.Picture, item.PreviewPicture, item.Quantity, item.Weight, item.QRcode, item.BoxID.String(), item.ShelfID.String(), item.AreaID.String())
 	if err != nil {
@@ -250,10 +252,10 @@ func (db *DB) insertNewItem(item items.Item) error {
 
 // update the item based on the id
 func (db *DB) UpdateItem(ctx context.Context, item items.Item) error {
-	sqlStatement := fmt.Sprintf(`UPDATE item Set label = "%s", description = "%s", picture = "%s",
-    quantity = "%d", weight = "%s", qrcode = "%s" WHERE id = ?`,
-		item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode)
-	result, err := db.Sql.ExecContext(ctx, sqlStatement, item.ID.String())
+	updatePicture(&item.Picture, &item.PreviewPicture)
+
+	sqlStatement := `UPDATE item Set label = ?, description = ?, picture = ?, preview_picture = ?, quantity = ?, weight = ?, qrcode = ? WHERE id = ?`
+	result, err := db.Sql.ExecContext(ctx, sqlStatement, item.Label, item.Description, item.Picture, item.PreviewPicture, item.Quantity, item.Weight, item.QRcode, item.ID.String())
 	if err != nil {
 		logg.Err(err)
 		return err
