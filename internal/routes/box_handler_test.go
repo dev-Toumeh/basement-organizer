@@ -36,6 +36,10 @@ func (db *boxDatabaseError) BoxById(id uuid.UUID) (items.Box, error) {
 	return items.Box{ID: uuid.Nil}, errors.New("AAAAAAAA")
 }
 
+func (db *boxDatabaseError) Box2ById(id uuid.UUID) (*items.Box2, error) {
+	return &items.Box2{Id: uuid.Must(uuid.FromString(BOX_ID_VALID))}, errors.New("AAAAAAAA")
+}
+
 func (db *boxDatabaseError) BoxIDs() ([]string, error) {
 	return nil, errors.New("AAAAAAAA")
 }
@@ -81,6 +85,10 @@ func (db *boxDatabaseSuccess) CreateBox(newBox *items.Box) (uuid.UUID, error) {
 
 func (db *boxDatabaseSuccess) BoxById(id uuid.UUID) (items.Box, error) {
 	return items.Box{ID: uuid.Must(uuid.FromString(BOX_ID_VALID))}, nil
+}
+
+func (db *boxDatabaseSuccess) Box2ById(id uuid.UUID) (*items.Box2, error) {
+	return &items.Box2{Id: uuid.Must(uuid.FromString(BOX_ID_VALID))}, nil
 }
 
 func (db *boxDatabaseSuccess) BoxIDs() ([]string, error) {
