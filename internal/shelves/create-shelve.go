@@ -12,20 +12,29 @@ import (
 )
 
 type Shelf struct {
-	Id             uuid.UUID            `json:"id"`
+	ID             uuid.UUID            `json:"id"`
 	Label          string               `json:"label"       validate:"required,lte=128"`
 	Description    string               `json:"description" validate:"omitempty,lte=256"`
 	Picture        string               `json:"picture"     validate:"omitempty,base64"`
 	PreviewPicture string               `json:"previewpicture"     validate:"omitempty,base64"`
 	QRcode         string               `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	Items          []*items.VirtualItem `json:"items"`
-	Boxes          []*items.BoxListItem `json:"boxes"`
+	Items          []*items.ItemListRow `json:"items"`
+	Boxes          []*items.BoxListRow  `json:"boxes"`
 	Height         float32
 	Width          float32
 	Depth          float32
 	Rows           int
 	Cols           int
-	AreaId         uuid.UUID
+	AreaID         uuid.UUID
+}
+
+// @TODO: Fix import cycle with items package.
+type ShelfCoordinates struct {
+	ID      uuid.UUID `json:"id"`
+	ShelfID uuid.UUID `json:"shelfid"`
+	Label   string    `json:"label"       validate:"required,lte=128"`
+	Row     int       `json:"row"`
+	Col     int       `json:"col"`
 }
 
 const (
@@ -77,7 +86,7 @@ func shelve(r *http.Request) (*Shelf, error) {
 	}
 
 	newShelve := &Shelf{
-		Id:             id,
+		ID:             id,
 		Label:          r.PostFormValue(LABEL),
 		Description:    r.PostFormValue(DESCRIPTION),
 		Picture:        "",
@@ -88,7 +97,7 @@ func shelve(r *http.Request) (*Shelf, error) {
 		Depth:          common.StringToFloat32(r.PostFormValue(DEPTH)),
 		Rows:           common.StringToInt(r.PostFormValue(ROWS)),
 		Cols:           common.StringToInt(r.PostFormValue(COLS)),
-		AreaId:         areaId,
+		AreaID:         areaId,
 	}
 	return newShelve, nil
 }

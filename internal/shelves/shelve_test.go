@@ -7,7 +7,7 @@ import (
 )
 
 var shelve1 *Shelf = &Shelf{
-	Id:             uuid.Must(uuid.FromString("111e4567-e89b-12d3-a456-426614174000")),
+	ID:             uuid.Must(uuid.FromString("111e4567-e89b-12d3-a456-426614174000")),
 	Label:          "Storage Shelve 1",
 	Description:    "This is the first dummy shelve",
 	Picture:        "base64PictureData1",
@@ -18,11 +18,11 @@ var shelve1 *Shelf = &Shelf{
 	Depth:          60.0,
 	Rows:           4,
 	Cols:           3,
-	AreaId:         uuid.Must(uuid.FromString("222e4567-e89b-12d3-a456-426614174001")),
+	AreaID:         uuid.Must(uuid.FromString("222e4567-e89b-12d3-a456-426614174001")),
 }
 
 var shelve2 *Shelf = &Shelf{
-	Id:             uuid.Must(uuid.FromString("333e4567-e89b-12d3-a456-426614174002")),
+	ID:             uuid.Must(uuid.FromString("333e4567-e89b-12d3-a456-426614174002")),
 	Label:          "Storage Shelve 2",
 	Description:    "This is the second dummy shelve",
 	Picture:        "base64PictureData2",
@@ -33,7 +33,7 @@ var shelve2 *Shelf = &Shelf{
 	Depth:          70.0,
 	Rows:           5,
 	Cols:           4,
-	AreaId:         uuid.Must(uuid.FromString("444e4567-e89b-12d3-a456-426614174003")),
+	AreaID:         uuid.Must(uuid.FromString("444e4567-e89b-12d3-a456-426614174003")),
 }
 
 type ShelfDatabaseError struct{}
@@ -62,7 +62,7 @@ func (db *ShelfDatabaseSuccess) CreateShelf(shelf *Shelf) error {
 }
 
 func (db *ShelfDatabaseSuccess) Shelf(id uuid.UUID) (*Shelf, error) {
-	return &Shelf{Id: id}, nil
+	return &Shelf{ID: id}, nil
 }
 
 func (db *ShelfDatabaseSuccess) UpdateShelf(shelf *Shelf) error {

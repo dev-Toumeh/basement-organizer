@@ -39,32 +39,34 @@ func (box *BoxListRow) Map() map[string]any {
 }
 
 type Box struct {
-	ID               uuid.UUID         `json:"id"`
-	Label            string            `json:"label"       validate:"required,lte=128"`
-	Description      string            `json:"description" validate:"omitempty,lte=256"`
-	Picture          string            `json:"picture"     validate:"omitempty,base64"`
-	PreviewPicture   string            `json:"previewpicture"     validate:"omitempty,base64"`
-	QRcode           string            `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	OuterBoxID       uuid.UUID         `json:"outerboxid"`
-	Items            []*ItemListRow    `json:"items"`
-	InnerBoxes       []*BoxListRow     `json:"innerboxes"`
-	OuterBox         *BoxListRow       `json:"outerbox"`
-	ShelfCoordinates *ShelfCoordinates `json:"shelfcoordinates"`
+	ID             uuid.UUID      `json:"id"`
+	Label          string         `json:"label"       validate:"required,lte=128"`
+	Description    string         `json:"description" validate:"omitempty,lte=256"`
+	Picture        string         `json:"picture"     validate:"omitempty,base64"`
+	PreviewPicture string         `json:"previewpicture"     validate:"omitempty,base64"`
+	QRcode         string         `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	OuterBoxID     uuid.UUID      `json:"outerboxid"`
+	Items          []*ItemListRow `json:"items"`
+	InnerBoxes     []*BoxListRow  `json:"innerboxes"`
+	OuterBox       *BoxListRow    `json:"outerbox"`
+	// @TODO: Fix import cycle with shelves package.
+	// ShelfCoordinates *shelf         `json:"shelfcoordinates"`
 }
 
 func (box *Box) Map() map[string]any {
 	return map[string]interface{}{
-		"ID":               box.ID,
-		"Label":            box.Label,
-		"Description":      box.Description,
-		"Picture":          box.Picture,
-		"PreviewPicture":   box.PreviewPicture,
-		"QRcode":           box.QRcode,
-		"OuterBoxID":       box.OuterBoxID,
-		"Items":            box.Items,
-		"InnerBoxes":       box.InnerBoxes,
-		"OuterBox":         box.OuterBox,
-		"ShelfCoordinates": box.ShelfCoordinates,
+		"ID":             box.ID,
+		"Label":          box.Label,
+		"Description":    box.Description,
+		"Picture":        box.Picture,
+		"PreviewPicture": box.PreviewPicture,
+		"QRcode":         box.QRcode,
+		"OuterBoxID":     box.OuterBoxID,
+		"Items":          box.Items,
+		"InnerBoxes":     box.InnerBoxes,
+		"OuterBox":       box.OuterBox,
+		// @TODO: Fix import cycle with shelves package.
+		// "ShelfCoordinates": box.ShelfCoordinates,
 	}
 }
 
