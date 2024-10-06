@@ -324,6 +324,7 @@ func (db *DB) MoveItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
 
 // ShelfListRowsPaginated returns always a slice with the number of rows specified.
 // If rows=5 with 3 results, the last 2 rows will be nil.
+// rows and page must be above 1.
 func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*shelves.ShelfListRow, error) {
 	shelfRows := make([]*shelves.ShelfListRow, rows)
 
@@ -353,12 +354,12 @@ func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*shelves.ShelfListRo
 
 	i := 0
 	for results.Next() {
-		sqlShlef := SqlShelfListRow{}
-		err = results.Scan(&sqlShlef.ID, &sqlShlef.Label, &sqlShlef.AreaID, &sqlShlef.AreaLabel, &sqlShlef.PreviewPicture)
+		sqlShelf := SqlShelfListRow{}
+		err = results.Scan(&sqlShelf.ID, &sqlShelf.Label, &sqlShelf.AreaID, &sqlShelf.AreaLabel, &sqlShelf.PreviewPicture)
 		if err != nil {
 			return shelfRows, logg.WrapErr(err)
 		}
-		shelfRows[i] = sqlShlef.ToShelfListRow()
+		shelfRows[i] = sqlShelf.ToShelfListRow()
 		i += 1
 	}
 	if results.Err() != nil {
