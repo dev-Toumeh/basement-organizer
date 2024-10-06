@@ -12,11 +12,11 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-type BoxListRow struct {
-	BoxID          uuid.UUID
+type ListRow struct {
+	ID             uuid.UUID
 	Label          string
-	OuterBoxID     uuid.UUID
-	OuterBoxLabel  string
+	BoxID          uuid.UUID
+	BoxLabel       string
 	ShelfID        uuid.UUID
 	ShelfLabel     string
 	AreaID         uuid.UUID
@@ -24,31 +24,52 @@ type BoxListRow struct {
 	PreviewPicture string
 }
 
-func (box *BoxListRow) Map() map[string]any {
+type BasicInfo struct {
+	ID             uuid.UUID
+	Label          string
+	Description    string
+	Picture        string
+	PreviewPicture string
+	QRcode         string
+}
+
+// type ListRow struct {
+// 	BoxID          uuid.UUID
+// 	Label          string
+// 	OuterBoxID     uuid.UUID
+// 	OuterBoxLabel  string
+// 	ShelfID        uuid.UUID
+// 	ShelfLabel     string
+// 	AreaID         uuid.UUID
+// 	AreaLabel      string
+// 	PreviewPicture string
+// }
+
+func (row *ListRow) Map() map[string]any {
 	return map[string]interface{}{
-		"BoxID":          box.BoxID,
-		"Label":          box.Label,
-		"OuterBoxID":     box.OuterBoxID,
-		"OuterBoxLabel":  box.OuterBoxLabel,
-		"ShelfID":        box.ShelfID,
-		"ShelfLabel":     box.ShelfLabel,
-		"AreaID":         box.AreaID,
-		"AreaLabel":      box.AreaLabel,
-		"PreviewPicture": box.PreviewPicture,
+		"ID":             row.ID,
+		"Label":          row.Label,
+		"BoxID":          row.BoxID,
+		"BoxLabel":       row.BoxLabel,
+		"ShelfID":        row.ShelfID,
+		"ShelfLabel":     row.ShelfLabel,
+		"AreaID":         row.AreaID,
+		"AreaLabel":      row.AreaLabel,
+		"PreviewPicture": row.PreviewPicture,
 	}
 }
 
 type Box struct {
-	ID             uuid.UUID      `json:"id"`
-	Label          string         `json:"label"       validate:"required,lte=128"`
-	Description    string         `json:"description" validate:"omitempty,lte=256"`
-	Picture        string         `json:"picture"     validate:"omitempty,base64"`
-	PreviewPicture string         `json:"previewpicture"     validate:"omitempty,base64"`
-	QRcode         string         `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	OuterBoxID     uuid.UUID      `json:"outerboxid"`
-	Items          []*ItemListRow `json:"items"`
-	InnerBoxes     []*BoxListRow  `json:"innerboxes"`
-	OuterBox       *BoxListRow    `json:"outerbox"`
+	ID             uuid.UUID  `json:"id"`
+	Label          string     `json:"label"       validate:"required,lte=128"`
+	Description    string     `json:"description" validate:"omitempty,lte=256"`
+	Picture        string     `json:"picture"     validate:"omitempty,base64"`
+	PreviewPicture string     `json:"previewpicture"     validate:"omitempty,base64"`
+	QRcode         string     `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	OuterBoxID     uuid.UUID  `json:"outerboxid"`
+	Items          []*ListRow `json:"items"`
+	InnerBoxes     []*ListRow `json:"innerboxes"`
+	OuterBox       *ListRow   `json:"outerbox"`
 	// @TODO: Fix import cycle with shelves package.
 	// ShelfCoordinates *shelf         `json:"shelfcoordinates"`
 }
@@ -157,11 +178,11 @@ func (b *Box) MarshalJSON() ([]byte, error) {
 	c := Box{}
 	for _, item := range b.Items {
 		it := *item
-		c.Items = append(c.Items, &ItemListRow{ItemID: it.ItemID, Label: it.Label, PreviewPicture: it.PreviewPicture})
+		c.Items = append(c.Items, &ListRow{ID: it.ID, Label: it.Label, PreviewPicture: it.PreviewPicture})
 	}
 
 	for _, innerb := range b.InnerBoxes {
-		c.InnerBoxes = append(c.InnerBoxes, &BoxListRow{BoxID: innerb.BoxID, Label: innerb.Label, PreviewPicture: innerb.PreviewPicture})
+		c.InnerBoxes = append(c.InnerBoxes, &ListRow{BoxID: innerb.BoxID, Label: innerb.Label, PreviewPicture: innerb.PreviewPicture})
 	}
 
 	// if b.OuterBox != nil {

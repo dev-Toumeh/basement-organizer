@@ -19,7 +19,24 @@ type Shelf struct {
 	PreviewPicture string               `json:"previewpicture"     validate:"omitempty,base64"`
 	QRcode         string               `json:"qrcode"      validate:"omitempty,alphanumunicode"`
 	Items          []*items.ItemListRow `json:"items"`
-	Boxes          []*items.BoxListRow  `json:"boxes"`
+	Boxes          []*items.ListRow     `json:"boxes"`
+	Height         float32
+	Width          float32
+	Depth          float32
+	Rows           int
+	Cols           int
+	AreaID         uuid.UUID
+}
+
+type Shelf2 struct {
+	ID             uuid.UUID            `json:"id"`
+	Label          string               `json:"label"       validate:"required,lte=128"`
+	Description    string               `json:"description" validate:"omitempty,lte=256"`
+	Picture        string               `json:"picture"     validate:"omitempty,base64"`
+	PreviewPicture string               `json:"previewpicture"     validate:"omitempty,base64"`
+	QRcode         string               `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	Items          []*items.ItemListRow `json:"items"`
+	Boxes          []*items.ListRow     `json:"boxes"`
 	Height         float32
 	Width          float32
 	Depth          float32

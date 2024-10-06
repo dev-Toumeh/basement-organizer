@@ -16,6 +16,63 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
+type SQLBasicInfo struct {
+	ID             sql.NullString
+	Label          sql.NullString
+	Description    sql.NullString
+	Picture        sql.NullString
+	PreviewPicture sql.NullString
+	QRCode         sql.NullString
+}
+
+func (s SQLBasicInfo) ToBasicInfo() (*items.BasicInfo, error) {
+	id, err := uuid.FromString(s.ID.String)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	return &items.BasicInfo{
+		ID:             id,
+		Label:          ifNullString(s.Label),
+		Description:    ifNullString(s.Description),
+		Picture:        ifNullString(s.Picture),
+		PreviewPicture: ifNullString(s.PreviewPicture),
+		QRcode:         ifNullString(s.QRCode),
+	}, nil
+}
+
+type SQLListRow struct {
+	ID             sql.NullString
+	Label          sql.NullString
+	BoxID          sql.NullString
+	BoxLabel       sql.NullString
+	ShelfID        sql.NullString
+	ShelfLabel     sql.NullString
+	AreaID         sql.NullString
+	AreaLabel      sql.NullString
+	PreviewPicture sql.NullString
+}
+
+func (s SQLListRow) ToListRow() (*items.ListRow, error) {
+	id, err := uuid.FromString(s.ID.String)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	return &items.ListRow{
+		ID:             id,
+		Label:          ifNullString(s.Label),
+		BoxID:          ifNullUUID(s.BoxID),
+		BoxLabel:       ifNullString(s.BoxLabel),
+		ShelfID:        ifNullUUID(s.ShelfID),
+		ShelfLabel:     ifNullString(s.ShelfLabel),
+		AreaID:         ifNullUUID(s.AreaID),
+		AreaLabel:      ifNullString(s.AreaLabel),
+		PreviewPicture: ifNullString(s.PreviewPicture),
+	}, nil
+
+}
+
 // Create New Item Record
 func (db *DB) CreateNewItem(newItem items.Item) error {
 	exist, err := db.Exists("item", newItem.ID)
@@ -45,7 +102,7 @@ func (db *DB) ItemByField(field string, value string) (items.Item, error) {
 	row := db.Sql.QueryRow(query, value)
 
 	sqlItem := &SqlItem{}
-	err := row.Scan(&sqlItem.ItemID, &sqlItem.ItemLabel, &sqlItem.ItemDescription, &sqlItem.ItemPicture, &sqlItem.ItemPreviewPicture, &sqlItem.ItemQuantity, &sqlItem.ItemWeight, &sqlItem.ItemQRCode, &sqlItem.ItemBoxID, &sqlItem.ItemShelfID, &sqlItem.ItemAreaID)
+	err := row.Scan(&sqlItem.ID, &sqlItem.Label, &sqlItem.Description, &sqlItem.Picture, &sqlItem.PreviewPicture, &sqlItem.ItemQuantity, &sqlItem.ItemWeight, &sqlItem.QRCode, &sqlItem.ItemBoxID, &sqlItem.ItemShelfID, &sqlItem.ItemAreaID)
 
 	if err != nil {
 		return items.Item{}, logg.Errorf("Error while checking if the Item is available: %w ", err)
@@ -76,8 +133,8 @@ func (db *DB) Item(id string) (items.Item, error) {
 }
 
 // ListItemById returns a single item with less information suitable for a list row.
-func (db *DB) ListItemById(id uuid.UUID) (*items.ItemListRow, error) {
-	item := &items.ItemListRow{}
+func (db *DB) ListItemById(id uuid.UUID) (*items.ListRow, error) {
+	item := &items.ListRow{}
 	rows, err := db.Sql.Query(`
 		SELECT 
             i.id, i.label, i.picture, i.box_id,
@@ -94,10 +151,10 @@ func (db *DB) ListItemById(id uuid.UUID) (*items.ItemListRow, error) {
 	}
 	defer rows.Close()
 
-	var sqlItem SqlVirtualItem
+	var sqlItem SQLListRow
 
 	for rows.Next() {
-		err = rows.Scan(&sqlItem.ItemID, &sqlItem.Label, &sqlItem.PreviewPicture, &sqlItem.OuterBoxID, &sqlItem.OuterBoxID, &sqlItem.OuterBoxLabel)
+		err = rows.Scan(&sqlItem.ID, &sqlItem.Label, &sqlItem.PreviewPicture, &sqlItem.BoxID, &sqlItem.BoxID, &sqlItem.BoxLabel)
 		if err != nil {
 			return nil, logg.WrapErr(err)
 		}
@@ -108,14 +165,14 @@ func (db *DB) ListItemById(id uuid.UUID) (*items.ItemListRow, error) {
 			logg.Debugf("virtual item: %v", b.String())
 		}
 
-		if sqlItem.ItemID.Valid {
-			item.ItemID = uuid.Must(uuid.FromString(sqlItem.ItemID.String))
+		if sqlItem.ID.Valid {
+			item.ID = uuid.Must(uuid.FromString(sqlItem.ID.String))
 			item.Label = sqlItem.Label.String
 			item.PreviewPicture = sqlItem.PreviewPicture.String
-			item.BoxID = uuid.Must(uuid.FromString(sqlItem.OuterBoxID.String))
-			item.BoxLabel = sqlItem.OuterBoxLabel.String
+			item.BoxID = uuid.Must(uuid.FromString(sqlItem.BoxID.String))
+			item.BoxLabel = sqlItem.BoxLabel.String
 		} else {
-			return item, errors.New(fmt.Sprintf("Invalid UUID: \"%s\"", sqlItem.ItemID.String))
+			return item, errors.New(fmt.Sprintf("Invalid UUID: \"%s\"", sqlItem.ID.String))
 		}
 	}
 
@@ -123,8 +180,8 @@ func (db *DB) ListItemById(id uuid.UUID) (*items.ItemListRow, error) {
 }
 
 // ListItemById returns a single item with less information suitable for a list row.
-func (db *DB) ItemListRowByID(id uuid.UUID) (*items.ItemListRow, error) {
-	item := &items.ItemListRow{}
+func (db *DB) ItemListRowByID(id uuid.UUID) (*items.ListRow, error) {
+	item := &items.ListRow{}
 	rows, err := db.Sql.Query(`
 		SELECT 
             i.id, i.label, i.preview_picture,
@@ -166,7 +223,7 @@ func (db *DB) ItemListRowByID(id uuid.UUID) (*items.ItemListRow, error) {
 			return nil, logg.WrapErr(err)
 		}
 		if ItemID.Valid {
-			item.ItemID = uuid.Must(uuid.FromString(ItemID.String))
+			item.ID = uuid.Must(uuid.FromString(ItemID.String))
 			item.Label = ItemLabel.String
 			item.PreviewPicture = PreviewPicture.String
 			item.BoxID = uuid.FromStringOrNil(BoxID.String)

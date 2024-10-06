@@ -340,14 +340,16 @@ func testData() ([]*itemsPackage.Box, *[]itemsPackage.Item) {
 		Picture:     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
 		QRcode:      "AB123CD",
 		OuterBoxID:  outerBoxId,
-		InnerBoxes: []*itemsPackage.BoxListRow{
+		InnerBoxes: []*itemsPackage.ListRow{
 			{
-				BoxID:          innerBox.ID,
+				ID:             innerBox.ID,
 				Label:          innerBox.Label,
+				BoxID:          testBoxId,
 				PreviewPicture: innerBox.PreviewPicture,
 			},
 			{
-				BoxID:          innerBox2.ID,
+				ID:             innerBox2.ID,
+				BoxID:          testBoxId,
 				Label:          innerBox2.Label,
 				PreviewPicture: innerBox2.PreviewPicture,
 			},

@@ -58,6 +58,7 @@ var box5 = &items.Box{
 }
 
 func TestVirtualBoxInsirt(t *testing.T) {
+	EmptyTestDatabase()
 	// Setup
 	boxList, _ := testData()
 	testBox := boxList[0]
@@ -78,13 +79,14 @@ func TestVirtualBoxInsirt(t *testing.T) {
 	}
 	assert.Equal(t, testBox.ID, virtualBox.BoxID)
 	assert.Equal(t, testBox.Label, virtualBox.Label)
-	assert.Equal(t, testBox.OuterBoxID, virtualBox.OuterBoxID)
+	assert.Equal(t, testBox.OuterBoxID, virtualBox.BoxID)
 
 	EmptyTestDatabase()
 
 }
 
 func TestVirtualBoxUpdate(t *testing.T) {
+	EmptyTestDatabase()
 	defer EmptyTestDatabase()
 
 	boxList, _ := testData()
@@ -119,7 +121,7 @@ func TestVirtualBoxUpdate(t *testing.T) {
 		t.Fatalf("Failed to fetch the testbox while checking the BoxTriger: %v", err)
 	}
 
-	assert.Equal(t, afterUpdate.OuterBoxLabel, outerBoxClone.Label)
+	assert.Equal(t, afterUpdate.BoxLabel, outerBoxClone.Label)
 	assert.Equal(t, afterUpdate.Label, testboxClone.Label)
 }
 
