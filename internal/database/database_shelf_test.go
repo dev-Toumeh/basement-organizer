@@ -3,7 +3,6 @@ package database
 import (
 	"basement/main/internal/items"
 	"basement/main/internal/shelves"
-	"encoding/base64"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -19,6 +18,10 @@ func init() {
 var SHELF_VALID_UUID uuid.UUID = uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000"))
 var ITEM_VALID_UUID uuid.UUID = uuid.Must(uuid.FromString("133e4567-e89b-12d3-a456-426614174000"))
 var VALID_UUID_NOT_EXISTING uuid.UUID = uuid.Must(uuid.FromString("033e4567-e89b-12d3-a456-426614174000"))
+
+const VALID_BASE64_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAtUlEQVR4nGJp2XGEAQb+/P49J7cgY8ZUuAgTnDUjI7vUQf3m5e3/zxyakZENFW3ZcURGQf/r52cQBGfLKhq0bD/MqKBu+ufnL4jSm5e3QxjmtuEfPnyCGn7z8na4BAMDg7quZ2mia2thMAMDA0j31TMb4XJr5s2BMKr71zIwMLAwYIDq/rWMMDaLobs7mjTEWJC6CeuYjL08+o/eU9f1RDPgsbpTxvQpjMjBAvEucrAAAgAA//+Elk5AOfCu8QAAAABJRU5ErkJggg=="
+const VALID_BASE64_PREVIEW_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAEElEQVR4nGJaOLEJEAAA//8DkwG35JmAnAAAAABJRU5ErkJggg=="
+const INVALID_BASE64_PNG = "invalid base 64"
 
 func TestExistShelf(t *testing.T) {
 	EmptyTestDatabase()
@@ -37,26 +40,17 @@ func TestCreateNewShelf(t *testing.T) {
 	id, err := dbTest.CreateNewShelf()
 	assert.Equal(t, err, nil)
 	assert.NotEqual(t, id, uuid.Nil)
-
-	// shelf, err := dbTest.Shelf(id)
-	// assert.Equal(t, err, nil)
-	// assert.Equal(t, len(shelf.Picture), 0)
-	// assert.Equal(t, len(shelf.PreviewPicture), 0)
 }
 
 func TestCreateShelf(t *testing.T) {
 	EmptyTestDatabase()
-	picdata := []byte("test picture data")
-	previewpicdata := []byte("test preview data")
-	picdata64 := base64.StdEncoding.EncodeToString(picdata)
-	previewpicdata64 := base64.StdEncoding.EncodeToString(previewpicdata)
 
 	shelf := &shelves.Shelf{
 		ID:             SHELF_VALID_UUID,
 		Label:          "Test Shelf",
 		Description:    "A shelf for testing",
-		Picture:        picdata64,
-		PreviewPicture: previewpicdata64,
+		Picture:        VALID_BASE64_PNG,
+		PreviewPicture: "",
 		QRcode:         "testqrcode",
 		Height:         2.0,
 		Width:          1.5,
@@ -74,8 +68,8 @@ func TestCreateShelf(t *testing.T) {
 
 	assert.Equal(t, shelf.Label, createdShelf.Label)
 	assert.Equal(t, shelf.Description, createdShelf.Description)
-	assert.Equal(t, picdata64, createdShelf.Picture)
-	assert.Equal(t, previewpicdata64, createdShelf.PreviewPicture)
+	assert.Equal(t, VALID_BASE64_PNG, createdShelf.Picture)
+	assert.NotEqual(t, "", createdShelf.PreviewPicture)
 	assert.Equal(t, shelf.QRcode, createdShelf.QRcode)
 	assert.Equal(t, shelf.Height, createdShelf.Height)
 	assert.Equal(t, shelf.Width, createdShelf.Width)
@@ -83,19 +77,17 @@ func TestCreateShelf(t *testing.T) {
 	assert.Equal(t, shelf.Rows, createdShelf.Rows)
 	assert.Equal(t, shelf.Cols, createdShelf.Cols)
 
-	// created pic data should be encoded in base64
-	// pic64 := bytes.Buffer{}
-	// pic64enc := base64.NewEncoder(base64.StdEncoding, &pic64)
-	// pic64enc.Write(picdata)
-	// pic64enc.Close()
-	// assert.Equal(t, pic64.Bytes(), createdShelf.Picture)
+	EmptyTestDatabase()
+	shelf.Picture = INVALID_BASE64_PNG
 
-	// created preview pic data should be encoded in base64
-	// previewpic64 := bytes.Buffer{}
-	// previewpic64enc := base64.NewEncoder(base64.StdEncoding, &previewpic64)
-	// previewpic64enc.Write(previewpicdata)
-	// previewpic64enc.Close()
-	// assert.Equal(t, previewpic64.Bytes(), createdShelf.PreviewPicture)
+	// Expected error log converting picture
+	// but NO error returned!
+	err = dbTest.CreateShelf(shelf)
+	assert.Equal(t, err, nil)
+	assert.NotEqual(t, uuid.Nil, SHELF_VALID_UUID)
+
+	createdShelf, err = dbTest.Shelf(SHELF_VALID_UUID)
+	assert.Equal(t, "", createdShelf.Picture)
 }
 
 func TestDeleteShelf(t *testing.T) {
@@ -126,12 +118,6 @@ func TestUpdateShelf(t *testing.T) {
 		Cols:           4,
 	}
 
-	picdata := []byte("test picture data")
-	previewpicdata := []byte("test preview data")
-
-	picdata64 := base64.StdEncoding.EncodeToString(picdata)
-	previewpicdata64 := base64.StdEncoding.EncodeToString(previewpicdata)
-
 	err := dbTest.createNewShelf(SHELF_VALID_UUID)
 	assert.Equal(t, err, nil)
 
@@ -142,8 +128,7 @@ func TestUpdateShelf(t *testing.T) {
 	shelf.Depth = 0.7
 	shelf.Rows = 4
 	shelf.Cols = 5
-	shelf.Picture = picdata64
-	shelf.PreviewPicture = previewpicdata64
+	shelf.Picture = VALID_BASE64_PNG
 
 	err = dbTest.UpdateShelf(shelf)
 	assert.Equal(t, err, nil)
@@ -159,27 +144,9 @@ func TestUpdateShelf(t *testing.T) {
 	assert.Equal(t, 4, updatedShelf.Rows)
 	assert.Equal(t, 5, updatedShelf.Cols)
 
-	// pictureData, err := base64.StdEncoding.DecodeString(updatedShelf.Picture)
-	// base64.StdEncoding.Decode(picture, updatedShelf.Picture)
-
-	// pic64 := bytes.Buffer{}
-	// pic64enc := base64.NewEncoder(base64.StdEncoding, &pic64)
-	// pic64enc.Write(pic)
-	// pic64enc.Close()
-	// expectedPicture := pic64.Bytes()
-	// assert.Equal(t, err, nil)
-	expectedPicture := picdata64
+	expectedPicture := VALID_BASE64_PNG
 	assert.Equal(t, expectedPicture, updatedShelf.Picture)
-	//
-	// previewpic64 := bytes.Buffer{}
-	// previewpic64enc := base64.NewEncoder(base64.StdEncoding, &previewpic64)
-	// previewpic64enc.Write(previewpic)
-	// previewpic64enc.Close()
-	// expectedPreviewPicture := previewpic64.Bytes()
-
-	expectedPreviewPicture := previewpicdata64
-	// assert.Equal(t, err, nil)
-	assert.Equal(t, expectedPreviewPicture, updatedShelf.PreviewPicture)
+	assert.NotEqual(t, "", updatedShelf.PreviewPicture)
 }
 
 func TestMoveItemToShelf(t *testing.T) {

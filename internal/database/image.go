@@ -12,6 +12,27 @@ import (
 	"golang.org/x/image/draw"
 )
 
+// updatePicture checks for valid base64 encoding and creates a resized preview image
+// in `previewPicture` with max side length of 50 pixel.
+// In case of error the strings will be set to empty string.
+func updatePicture(picture *string, previewPicture *string) error {
+	if *picture != "" {
+		_, err := Base64StringToByte(*picture)
+		if err != nil {
+			*picture = ""
+			*previewPicture = ""
+			return logg.Errorf("CreateShelf: invalid base64 in Picture %w", err)
+		}
+
+		*previewPicture, err = ResizePNG(*picture, 50)
+		if err != nil {
+			*previewPicture = ""
+			return logg.WrapErr(err)
+		}
+	}
+	return nil
+}
+
 // ResizePNG2 resizes image while keeping aspect ratio.
 // Longest side will fit the pixel value of `fitLongestSideToPixel`.
 func ResizePNG(input64 string, fitLongestSideToPixel int) (string, error) {
