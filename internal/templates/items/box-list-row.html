@@ -1,17 +1,17 @@
-{{ define "box-list-item" }}
+{{ define "box-list-row" }}
 {{ $empty := false }}
 {{ if not . }}
     {{ $empty = true }}
 {{ end }}
 
 {{ if $empty }}
-<tr id="box-list-item-{{.BoxID}}">
+<tr id="box-list-row-{{.BoxID}}">
     <td colspan="7" style="text-align:center">
         <span class="empty">empty<img class="preview" style="opacity:0"></span>
     </td>  
 </tr>
 {{ else }}
-<tr id="box-list-item-{{.BoxID}}">
+<tr id="box-list-row-{{.BoxID}}">
     <td hx-get="/boxes/{{.BoxID}}"
         hx-push-url="true"
         hx-target="body"

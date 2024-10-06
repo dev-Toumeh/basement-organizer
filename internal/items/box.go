@@ -95,7 +95,7 @@ func (tmpl BoxListTemplateData) Map() map[string]any {
 }
 
 func RenderBoxListItem(w http.ResponseWriter, data *Box) {
-	templates.Render(w, templates.TEMPLATE_BOX_LIST_ITEM, data)
+	templates.Render(w, templates.TEMPLATE_BOX_LIST_ROW, data)
 }
 
 func RenderBoxList(w http.ResponseWriter, boxes []*Box) {
