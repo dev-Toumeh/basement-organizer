@@ -28,14 +28,18 @@ var statementsMainTables = &map[string]string{
 }
 
 var statementVertualTabels = &map[string]string{
-	"item_fts":               CREATE_ITEM_TABLE_STMT_FTS,
-	"box_fts":                CREATE_BOX_TABLE_STMT_FTS,
-	"Item_fts_triger_insert": CREATE_ITEM_INSERT_TRIGGER,
-	"item_fts_triger_update": CREATE_ITEM_UPDATE_TRIGGER,
-	"item_fts_triger_delete": CREATE_ITEM_DELETE_TRIGGER,
-	"box_fts_triger_insert":  CREATE_BOX_INSERT_TRIGGER,
-	"box_fts_triger_update":  CREATE_BOX_UPDATE_TRIGGER,
-	"box_fts_triger_delete":  CREATE_BOX_DELETE_TRIGGER,
+	"item_fts":                 CREATE_ITEM_TABLE_STMT_FTS,
+	"box_fts":                  CREATE_BOX_TABLE_STMT_FTS,
+	"shelf_fts":                CREATE_SHELF_TABLE_STMT_FTS,
+	"Item_fts_trigger_insert":  CREATE_ITEM_INSERT_TRIGGER,
+	"item_fts_trigger_update":  CREATE_ITEM_UPDATE_TRIGGER,
+	"item_fts_trigger_delete":  CREATE_ITEM_DELETE_TRIGGER,
+	"box_fts_trigger_insert":   CREATE_BOX_INSERT_TRIGGER,
+	"box_fts_trigger_update":   CREATE_BOX_UPDATE_TRIGGER,
+	"box_fts_trigger_delete":   CREATE_BOX_DELETE_TRIGGER,
+	"shelf_fts_trigger_insert": CREATE_SHELF_INSERT_TRIGGER,
+	"shelf_fts_trigger_update": CREATE_SHELF_UPDATE_TRIGGER,
+	"shelf_fts_trigger_delete": CREATE_SHELF_DELETE_TRIGGER,
 }
 
 type DB struct {

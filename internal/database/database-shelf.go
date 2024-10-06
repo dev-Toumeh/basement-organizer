@@ -45,6 +45,24 @@ func (s SQLShelf) ToShelf() (*shelves.Shelf, error) {
 	}, nil
 }
 
+type SqlShelfListRow struct {
+	ID             sql.NullString
+	Label          sql.NullString
+	AreaID         sql.NullString
+	AreaLabel      sql.NullString
+	PreviewPicture sql.NullString
+}
+
+func (s SqlShelfListRow) ToShelfListRow() *shelves.ShelfListRow {
+	return &shelves.ShelfListRow{
+		ID:             ifNullUUID(s.ID),
+		Label:          ifNullString(s.Label),
+		AreaID:         ifNullUUID(s.AreaID),
+		AreaLabel:      ifNullString(s.AreaLabel),
+		PreviewPicture: ifNullString(s.PreviewPicture),
+	}
+}
+
 // CreateNewShelf creates a new empty shelf in database.
 func (db *DB) CreateNewShelf() (uuid.UUID, error) {
 	nID, err := uuid.NewV4()
@@ -302,6 +320,52 @@ func (db *DB) MoveItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
 		return logg.WrapErr(err)
 	}
 	return nil
+}
+
+// ShelfListRowsPaginated returns always a slice with the number of rows specified.
+// If rows=5 with 3 results, the last 2 rows will be nil.
+func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*shelves.ShelfListRow, error) {
+	shelfRows := make([]*shelves.ShelfListRow, rows)
+
+	if page < 1 {
+		return shelfRows, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
+	}
+
+	if rows < 1 {
+		return shelfRows, logg.NewError(fmt.Sprintf("invalid rows '%d', needs at least 1 row", rows))
+	}
+
+	shelfRows = make([]*shelves.ShelfListRow, rows)
+
+	limit := rows
+	offset := (page - 1) * rows
+
+	queryNoSearch := `
+		SELECT
+			id, label, area_id, area_label, preview_picture
+		FROM shelf_fts
+			ORDER BY label ASC
+		LIMIT ? OFFSET ?;`
+	results, err := db.Sql.Query(queryNoSearch, limit, offset)
+	if err != nil {
+		return shelfRows, logg.WrapErr(err)
+	}
+
+	i := 0
+	for results.Next() {
+		sqlShlef := SqlShelfListRow{}
+		err = results.Scan(&sqlShlef.ID, &sqlShlef.Label, &sqlShlef.AreaID, &sqlShlef.AreaLabel, &sqlShlef.PreviewPicture)
+		if err != nil {
+			return shelfRows, logg.WrapErr(err)
+		}
+		shelfRows[i] = sqlShlef.ToShelfListRow()
+		i += 1
+	}
+	if results.Err() != nil {
+		return shelfRows, logg.WrapErr(err)
+	}
+
+	return shelfRows, nil
 }
 
 // MoveBoxToShelf moves box to a shelf.

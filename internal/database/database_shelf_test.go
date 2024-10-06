@@ -200,6 +200,23 @@ func TestMoveItemToShelf(t *testing.T) {
 	assert.NotEqual(t, err, nil)
 }
 
+func TestShelfListRowsPaginated(t *testing.T) {
+	EmptyTestDatabase()
+	id1, _ := dbTest.CreateNewShelf()
+	id2, _ := dbTest.CreateNewShelf()
+	id3, _ := dbTest.CreateNewShelf()
+	shelves, err := dbTest.ShelfListRowsPaginated(1, 2)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 2)
+	assert.Equal(t, id1, shelves[0].ID)
+	assert.Equal(t, id2, shelves[1].ID)
+
+	shelves, err = dbTest.ShelfListRowsPaginated(2, 2)
+	assert.Equal(t, id3, shelves[0].ID)
+	assert.Equal(t, len(shelves), 2)
+	assert.Equal(t, nil, shelves[1])
+}
+
 // func TestMoveItemToShelf(t *testing.T) {
 // 	EmptyTestDatabase()
 //

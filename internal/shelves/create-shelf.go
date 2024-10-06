@@ -28,6 +28,14 @@ type Shelf struct {
 	AreaID         uuid.UUID
 }
 
+type ShelfListRow struct {
+	ID             uuid.UUID
+	Label          string
+	AreaID         uuid.UUID
+	AreaLabel      string
+	PreviewPicture string
+}
+
 // @TODO: Fix import cycle with items package.
 type ShelfCoordinates struct {
 	ID      uuid.UUID `json:"id"`

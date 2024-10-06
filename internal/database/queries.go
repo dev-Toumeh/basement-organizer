@@ -124,7 +124,8 @@ const (
     width REAL,
     depth REAL,
     rows INTEGER,
-    cols INTEGER
+    cols INTEGER,
+	area_id TEXT REFERENCES area(id)
 	);`
 
 	CREATE_SHELF_TABLE_STMT_FTS = `CREATE VIRTUAL TABLE IF NOT EXISTS shelf_fts USING fts5(
@@ -163,7 +164,7 @@ const (
 	CREATE_SHELF_DELETE_TRIGGER = `
 	CREATE TRIGGER IF NOT EXISTS shelf_ad BEFORE DELETE ON shelf
 	BEGIN
-		DELETE FROM shelf_fts WHERE shelf_id = old.id;
+		DELETE FROM shelf_fts WHERE id = old.id;
 	END;`
 
 	// Area
