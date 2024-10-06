@@ -15,6 +15,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid/v5"
 
+	"basement/main/internal/common"
 	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
@@ -215,7 +216,7 @@ func responseGenerator(w http.ResponseWriter, responseMessage []string, success 
 // this function will pack the request into struct from type Item, so it will be easier to handle it
 func item(r *http.Request) (Item, error) {
 
-	id, boxId, err := checkIDs(r)
+	id, boxId, err := common.CheckIDs(r.PostFormValue(ID), r.PostFormValue(BOX_ID))
 	if err != nil {
 		return Item{}, err
 	}
@@ -271,43 +272,4 @@ func parseQuantity(value string) int64 {
 		return 1
 	}
 	return intValue
-}
-
-func stringToInt64(value string) int64 {
-	intValue, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		log.Printf("Error converting string to int64: %v", err)
-		return 0
-	}
-	return intValue
-}
-
-func checkIDs(r *http.Request) (uuid.UUID, uuid.UUID, error) {
-	var err error
-	id := uuid.Nil
-	boxId := uuid.Nil
-
-	lengID := len(r.PostFormValue(ID))
-	lengBoxID := len(r.PostFormValue(BOX_ID))
-
-	if lengBoxID != 0 {
-		boxId, err = uuid.FromString(r.PostFormValue(BOX_ID))
-		if err != nil {
-			logg.Errf("error while converting the boxId to type uuid: %v", err)
-		}
-	}
-
-	if lengID == 0 {
-		id, err = uuid.NewV4()
-		if err != nil {
-			return id, boxId, fmt.Errorf("error while generating the new item uuid: %w", err)
-		}
-		return id, boxId, nil
-	} else {
-		id, err = uuid.FromString(r.PostFormValue(ID))
-		if err != nil {
-			return id, boxId, fmt.Errorf("error while converting the itemId to type uuid: %w", err)
-		}
-		return id, boxId, nil
-	}
 }
