@@ -2,6 +2,7 @@ package routes
 
 import (
 	"basement/main/internal/auth"
+	"basement/main/internal/common"
 	"basement/main/internal/database"
 	"basement/main/internal/env"
 	"basement/main/internal/items"
@@ -559,8 +560,8 @@ func boxFromPostFormValue(id uuid.UUID, r *http.Request) items.Box {
 	box.ID = id
 	box.Label = r.PostFormValue("label")
 	box.Description = r.PostFormValue("description")
-	box.Picture = items.ParsePicture(r)
-	// box.QRcode = r.PostFormValue("qrcode")
+	box.Picture = common.ParsePicture(r)
+	box.QRcode = r.PostFormValue("qrcode")
 	return box
 }
 

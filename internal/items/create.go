@@ -2,13 +2,10 @@ package items
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"text/template"
 
@@ -224,56 +221,16 @@ func item(r *http.Request) (Item, error) {
 	if err != nil {
 		return Item{}, err
 	}
-	// b64encodedPictureString := parsePicture(r)
 
 	newItem := Item{
 		ID:          id,
 		Label:       r.PostFormValue(LABEL),
 		Description: r.PostFormValue(DESCRIPTIO),
-		Picture:     "", //b64encodedPictureString, // @TODO: Fix picture is not added while creating or updating item.
-		Quantity:    parseQuantity(r.PostFormValue(QUANTITY)),
+		Picture:     common.ParsePicture(r),
+		Quantity:    common.ParseQuantity(r.PostFormValue(QUANTITY)),
 		Weight:      r.PostFormValue(WEIGHT),
 		QRcode:      r.PostFormValue(QRCODE),
 		BoxID:       boxId,
 	}
 	return newItem, nil
-}
-
-// ParsePicture returns base64 encoded string of picture uploaded if there is any
-func ParsePicture(r *http.Request) string {
-	logg.Info("Parsing multipart/form-data for picture")
-	// 8 MB
-	var maxSize int64 = 1000 * 1000 * 8
-	err := r.ParseMultipartForm(maxSize)
-	if err != nil {
-		logg.Err(err)
-		return ""
-	}
-
-	file, header, err := r.FormFile(PICTURE)
-	if header != nil {
-		logg.Debug("picture filename:", header.Filename)
-	}
-	if err != nil {
-		logg.Err(err)
-		return ""
-	}
-
-	readbytes, err := io.ReadAll(file)
-	logg.Debug("picture size:", len(readbytes)/1000, "KB")
-	if err != nil {
-		logg.Err(err)
-		return ""
-	}
-
-	return base64.StdEncoding.EncodeToString(readbytes)
-}
-
-// parseQuantity returns by default at least 1
-func parseQuantity(value string) int64 {
-	intValue, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		return 1
-	}
-	return intValue
 }
