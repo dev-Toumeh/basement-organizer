@@ -16,7 +16,7 @@ func shelvesPage(w http.ResponseWriter, r *http.Request) {
 		User:          user,
 	}
 
-	err := templates.Render(w, "shelves-page", data.Map())
+	err := templates.Render(w, templates.TEMPLATE_SHELVES_PAGE, data.Map())
 	if err != nil {
 		fmt.Fprintln(w, "failed")
 		return
@@ -32,7 +32,7 @@ func newShef(w http.ResponseWriter, r *http.Request) {
 		User:          user,
 	}
 
-	err := templates.Render(w, "new-shelf", data.Map())
+	err := templates.Render(w, templates.TEMPLATE_NEW_SHELF, data.Map())
 	if err != nil {
 		fmt.Fprintln(w, "failed")
 		return
