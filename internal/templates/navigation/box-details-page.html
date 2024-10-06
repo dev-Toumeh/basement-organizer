@@ -77,7 +77,10 @@
 <div style="outline:solid;font-size:0.7rem" class="background-diagonal-stripes">
     <div>Development info</div>
     <div>API data: /api/v1/box/{{.ID}}</div>
-    <p hx-trigger="load" hx-get="/api/v1/box/{{.ID}}" ></p>
+    <p hx-trigger="load" hx-get="/api/v1/box/{{.ID}}" style="overflow:scroll"></p>
+    <div>preview picture
+        <img class="detail" src="data:image/png;base64,{{ .PreviewPicture }}">
+    </div>
 </div>
 {{ end }}
 

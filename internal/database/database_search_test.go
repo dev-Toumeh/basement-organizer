@@ -72,7 +72,7 @@ func TestVirtualBoxInsirt(t *testing.T) {
 	exist := dbTest.VirtualBoxExist(testBox.ID)
 	assert.Equal(t, exist, true)
 
-	virtualBox, err := dbTest.VirtualBoxById(testBox.ID)
+	virtualBox, err := dbTest.BoxListRowByID(testBox.ID)
 	if err != nil {
 		t.Fatalf("Failed to create outer box: %v", err)
 	}
@@ -114,7 +114,7 @@ func TestVirtualBoxUpdate(t *testing.T) {
 	dbTest.UpdateBox(outerBoxClone)
 
 	// Get the box_fts to check if the outerbox_label  was updated
-	afterUpdate, err := dbTest.VirtualBoxById(testbox.ID)
+	afterUpdate, err := dbTest.BoxListRowByID(testbox.ID)
 	if err != nil {
 		t.Fatalf("Failed to fetch the testbox while checking the BoxTriger: %v", err)
 	}

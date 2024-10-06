@@ -52,47 +52,51 @@ const (
 	);`
 
 	CREATE_ITEM_TABLE_STMT_FTS = `CREATE VIRTUAL TABLE IF NOT EXISTS item_fts USING fts5(
-    item_id,
+    item_id UNINDEXED,
     label, 
     description, 
+    preview_picture UNINDEXED,
     tokenize = 'porter'
-);`
+	);`
 
 	CREATE_BOX_TABLE_STMT_FTS = `CREATE VIRTUAL TABLE IF NOT EXISTS box_fts USING fts5(
-    box_id,
+    box_id UNINDEXED,
     label, 
     outerbox_label,
-    outerbox_id,
-    tokenize = 'porter');`
+    outerbox_id UNINDEXED,
+	preview_picture UNINDEXED,
+    tokenize = 'porter'
+	); `
 
 	// Triggers for item
-	CREATE_ITEM_AI_TRIGGER = `
+	CREATE_ITEM_INSERT_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS item_ai BEFORE INSERT ON item 
     BEGIN
-        INSERT INTO item_fts(item_id, label, description) 
-        VALUES (new.id, new.label, new.description);
-    END; `
+        INSERT INTO item_fts(item_id, label, description, preview_picture) 
+        VALUES (new.id, new.label, new.description, new.preview_picture);
+    END;`
 
-	CREATE_ITEM_AU_TRIGGER = `
+	CREATE_ITEM_UPDATE_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS item_au BEFORE UPDATE ON item 
     BEGIN
         UPDATE item_fts SET 
             label = new.label,
-            description = new.description
+            description = new.description,
+            preview_picture = new.preview_picture
         WHERE item_id = old.id;
     END; `
 
-	CREATE_ITEM_AD_TRIGGER = `
+	CREATE_ITEM_DELETE_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS item_ad BEFORE DELETE ON item 
     BEGIN
         DELETE FROM item_fts WHERE item_id = old.id;
     END; `
 
 	// Triggers for box
-	CREATE_BOX_AI_TRIGGER = `
+	CREATE_BOX_INSERT_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS box_ai BEFORE INSERT ON box
     BEGIN
-        INSERT INTO box_fts(box_id, label, outerbox_label, outerbox_id) 
+        INSERT INTO box_fts(box_id, label, outerbox_label, outerbox_id, preview_picture) 
         VALUES (
             new.id, 
             new.label,
@@ -100,26 +104,28 @@ const (
                 WHEN new.outerbox_id IS NOT NULL THEN (SELECT label FROM box WHERE id = new.outerbox_id)
                 ELSE NULL 
             END,
-            new.outerbox_id
+            new.outerbox_id,
+            new.preview_picture
         );
     END; `
 
-	CREATE_BOX_AU_TRIGGER = `
+	CREATE_BOX_UPDATE_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS box_au BEFORE UPDATE ON box 
     BEGIN
         -- Update the original box's label
         UPDATE box_fts 
-        SET label = new.label
+        SET 
+			label = new.label, 
+			preview_picture = new.preview_picture
         WHERE box_id = old.id;
 
         -- Update labels of boxes referencing this box as outerbox
         UPDATE box_fts
         SET outerbox_label = new.label
         WHERE outerbox_id = old.id;
-    END;
-  `
+    END; `
 
-	CREATE_BOX_AD_TRIGGER = `
+	CREATE_BOX_DELETE_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS box_ad BEFORE DELETE ON box 
     BEGIN
         DELETE FROM box_fts WHERE box_id = old.id;

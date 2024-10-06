@@ -68,7 +68,7 @@ func (db *boxDatabaseError) BoxFuzzyFinder(query string, limit int, page int) ([
 	return make([]items.BoxListRow, 0), errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) VirtualBoxById(id uuid.UUID) (items.BoxListRow, error) {
+func (db *boxDatabaseError) BoxListRowByID(id uuid.UUID) (items.BoxListRow, error) {
 	return items.BoxListRow{}, errors.New("AAAAAAAA")
 }
 
@@ -111,7 +111,7 @@ func (db *boxDatabaseSuccess) BoxFuzzyFinder(query string, limit int, page int) 
 	return make([]items.BoxListRow, 0), nil
 }
 
-func (db *boxDatabaseSuccess) VirtualBoxById(id uuid.UUID) (items.BoxListRow, error) {
+func (db *boxDatabaseSuccess) BoxListRowByID(id uuid.UUID) (items.BoxListRow, error) {
 	return items.BoxListRow{}, nil
 }
 

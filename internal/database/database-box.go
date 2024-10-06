@@ -98,10 +98,18 @@ func (db *DB) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
 func (db *DB) UpdateBox(box items.Box) error {
 	exist := db.BoxExistById(box.ID)
 	if !exist {
-		return logg.Errorf("the box is not exist")
+		return logg.Errorf("the box does not exist")
 	}
-	sqlStatement := fmt.Sprintf(`UPDATE box SET label = '%s', description = '%s', picture = '%s', qrcode = '%s' WHERE id = ?`, box.Label, box.Description, box.Picture, box.QRcode)
-	result, err := db.Sql.Exec(sqlStatement, box.ID)
+
+	var err error
+	box.PreviewPicture, err = ResizePNG(box.Picture, 50)
+	if err != nil {
+		logg.Errorf2(fmt.Sprintf("Error while resizing picture of box '%s' to create a preview picture", box.Label), err)
+	}
+
+	sqlStatement := "UPDATE box SET label = ?, description = ?, picture = ?, preview_picture = ?, qrcode = ? WHERE id = ?"
+	result, err := db.Sql.Exec(sqlStatement, box.Label, box.Description, box.Picture, box.PreviewPicture, box.QRcode, box.ID)
+
 	if err != nil {
 		return logg.Errorf("something wrong happened while runing the box update query: %w", err)
 	}
@@ -165,7 +173,7 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 
 	query := fmt.Sprintf(
 		`SELECT 
-            b.id, b.label, b.description, b.picture, b.qrcode, b.outerbox_id,
+            b.id, b.label, b.description, b.picture, b.preview_picture, b.qrcode, b.outerbox_id,
             ob.id, ob.label, ob.preview_picture,
             ib.id, ib.label, ib.preview_picture,
             i.id, i.label, i.preview_picture, i.box_id, i.shelf_id, i.area_id
@@ -195,7 +203,7 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 		)
 
 		err := rows.Scan(
-			&boxSQLBox.ID, &boxSQLBox.Label, &boxSQLBox.Description, &boxSQLBox.Picture, &boxSQLBox.QRcode, &boxSQLBox.OuterboxID,
+			&boxSQLBox.ID, &boxSQLBox.Label, &boxSQLBox.Description, &boxSQLBox.Picture, &boxSQLBox.PreviewPicture, &boxSQLBox.QRcode, &boxSQLBox.OuterboxID,
 			&outboxSQLBox.ID, &outboxSQLBox.Label, &outboxSQLBox.PreviewPicture,
 			&inboxSQLBox.ID, &inboxSQLBox.Label, &inboxSQLBox.PreviewPicture,
 			&itemSQLItem.ItemID, &itemSQLItem.ItemLabel, &itemSQLItem.ItemPreviewPicture, &itemSQLItem.ItemBoxID, &itemSQLItem.ItemShelfID, &itemSQLItem.ItemAreaID,

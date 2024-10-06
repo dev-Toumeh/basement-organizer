@@ -18,10 +18,14 @@ import (
 
 // Create New Item Record
 func (db *DB) CreateNewItem(newItem items.Item) error {
-	if exist := db.ItemExist("label", string(newItem.Label)); exist {
+	exist, err := db.Exists("item", newItem.ID)
+	if exist {
 		return db.ErrorExist()
 	}
-	err := db.insertNewItem(newItem)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	err = db.insertNewItem(newItem)
 	if err != nil {
 		return err
 	}

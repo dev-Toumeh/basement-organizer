@@ -30,12 +30,12 @@ var statementsMainTables = &map[string]string{
 var statementVertualTabels = &map[string]string{
 	"item_fts":               CREATE_ITEM_TABLE_STMT_FTS,
 	"box_fts":                CREATE_BOX_TABLE_STMT_FTS,
-	"Item_fts_triger_insert": CREATE_ITEM_AI_TRIGGER,
-	"item_fts_triger_update": CREATE_ITEM_AU_TRIGGER,
-	"item_fts_triger_delete": CREATE_ITEM_AD_TRIGGER,
-	"box_fts_triger_insert":  CREATE_BOX_AI_TRIGGER,
-	"box_fts_triger_update":  CREATE_BOX_AU_TRIGGER,
-	"box_fts_triger_delete":  CREATE_BOX_AD_TRIGGER,
+	"Item_fts_triger_insert": CREATE_ITEM_INSERT_TRIGGER,
+	"item_fts_triger_update": CREATE_ITEM_UPDATE_TRIGGER,
+	"item_fts_triger_delete": CREATE_ITEM_DELETE_TRIGGER,
+	"box_fts_triger_insert":  CREATE_BOX_INSERT_TRIGGER,
+	"box_fts_triger_update":  CREATE_BOX_UPDATE_TRIGGER,
+	"box_fts_triger_delete":  CREATE_BOX_DELETE_TRIGGER,
 }
 
 type DB struct {

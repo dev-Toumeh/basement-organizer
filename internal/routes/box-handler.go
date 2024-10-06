@@ -26,7 +26,7 @@ type BoxDatabase interface {
 	BoxById(id uuid.UUID) (items.Box, error)
 	BoxIDs() ([]string, error) // @TODO: Change string to uuid.UUID
 	BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListRow, error)
-	VirtualBoxById(id uuid.UUID) (items.BoxListRow, error)
+	BoxListRowByID(id uuid.UUID) (items.BoxListRow, error)
 }
 
 func registerBoxRoutes(db *database.DB) {
@@ -110,6 +110,7 @@ func boxesHandler(db BoxDatabase) http.HandlerFunc {
 				boxes, err := db.BoxFuzzyFinder("", 5, 1)
 				if err != nil {
 					server.WriteInternalServerError("cant query boxes", logg.Errorf("%w", err), w, r)
+					return
 				}
 				server.WriteJSON(w, boxes)
 				return
@@ -120,6 +121,7 @@ func boxesHandler(db BoxDatabase) http.HandlerFunc {
 			boxes, err := db.BoxFuzzyFinder("", 2, 1)
 			if err != nil {
 				server.WriteNotFoundError("Can't find boxes", err, w, r)
+				return
 			}
 			if wantsTemplateData(r) {
 				err = renderBoxesListTemplate2(w, r, db, boxes, "")
@@ -136,6 +138,7 @@ func boxesHandler(db BoxDatabase) http.HandlerFunc {
 			boxes, err := db.BoxFuzzyFinder(query, 5, 1)
 			if err != nil {
 				server.WriteInternalServerError("cant query boxes", err, w, r)
+				return
 			}
 			err = renderBoxesListTemplate2(w, r, db, boxes, query)
 			if err != nil {
@@ -207,6 +210,7 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 		}
 		if err != nil {
 			server.WriteInternalServerError("cant query boxes", err, w, r)
+			return
 		}
 
 		results := 0
@@ -402,7 +406,7 @@ func createBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		return
 	}
 	if wantsTemplateData(r) {
-		box, err := db.VirtualBoxById(id)
+		box, err := db.BoxListRowByID(id)
 		logg.Debug(box)
 		if err != nil {
 			server.WriteNotFoundError("error while fetching the box based on Id", err, w, r)

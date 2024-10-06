@@ -20,13 +20,11 @@
     <td>{{.BoxLabel}}</td> 
     <td>{{.ShelfLabel}}</td>
     <td>{{.AreaLabel}}</td>
-    <td style="text-align: center;width:0;text-wrap: nowrap;">
-        <div>
+    <td style="text-align: center;">
         <img class="preview" 
-            src="data:image/png;base64,{{.Picture}}" 
-            {{if .Picture}}alt="{{.Label}}"{{end}}
+            src="data:image/png;base64,{{.PreviewPicture}}" 
+            {{if .PreviewPicture}}alt="{{.Label}}"{{end}}
         >
-        </div>
     </td>
     {{ if not .Move}}
     <td style="text-align: center;"><input type="checkbox" name="move:{{.BoxID}}"></td>

@@ -10,12 +10,14 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-type SqlVertualBox struct {
+type SQLBoxListRow struct {
 	BoxID          sql.NullString
 	Label          sql.NullString
-	OuterBoxLabel  sql.NullString
 	OuterBoxID     sql.NullString
+	OuterBoxLabel  sql.NullString
+	ShelfID        sql.NullString
 	ShelfLabel     sql.NullString
+	AreaID         sql.NullString
 	AreaLabel      sql.NullString
 	PreviewPicture sql.NullString
 }
@@ -23,9 +25,11 @@ type SqlVertualBox struct {
 type SqlVirtualItem struct {
 	ItemID         sql.NullString
 	Label          sql.NullString
-	OuterBoxLabel  sql.NullString
 	OuterBoxID     sql.NullString
+	OuterBoxLabel  sql.NullString
+	ShelfID        sql.NullString
 	ShelfLabel     sql.NullString
+	AreaID         sql.NullString
 	AreaLabel      sql.NullString
 	PreviewPicture sql.NullString
 }
@@ -97,42 +101,49 @@ func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxList
 	if page == 0 {
 		panic("page starts at 1, cant be 0")
 	}
+	queryNoSearch := `
+		SELECT
+			box_id, label, outerbox_id, outerbox_label, preview_picture
+		FROM box_fts AS b_fts
+		ORDER BY label ASC
+		LIMIT ? OFFSET ?;`
+
+	queryWithSearch := `
+		SELECT 
+			box_id, label, outerbox_id, outerbox_label, preview_picture
+		FROM box_fts
+		WHERE label LIKE ?
+		ORDER BY label ASC
+		LIMIT ? OFFSET ?;`
 
 	if strings.TrimSpace(query) == "" {
-		rows, err = db.Sql.Query(`SELECT box_id, label, outerbox_id, outerbox_label 
-                                  FROM box_fts 
-                                  ORDER BY label ASC
-				LIMIT ? OFFSET ?;`, limit, (page-1)*limit)
-
+		rows, err = db.Sql.Query(queryNoSearch, limit, (page-1)*limit)
 	} else {
-		rows, err = db.Sql.Query(`SELECT box_id, label, outerbox_id, outerbox_label 
-                                  FROM box_fts 
-                                  WHERE label LIKE ? 
-                                  ORDER BY label ASC
-				LIMIT ? OFFSET ?;`, query+"%", limit, (page-1)*limit)
+		rows, err = db.Sql.Query(queryWithSearch, query+"%", limit, (page-1)*limit)
 	}
 
 	if err != nil {
-		return []items.BoxListRow{}, fmt.Errorf("error while fetching the virtualBox from box_fts: %w", err)
+		return []items.BoxListRow{}, logg.Errorf("error while fetching the virtualBox from box_fts: %w", err)
 	}
 	defer rows.Close()
 
-	var sqlVertualBox SqlVertualBox
+	var sqlBoxListRow SQLBoxListRow
 	var virtualBoxes []items.BoxListRow
 
 	for rows.Next() {
 		err := rows.Scan(
-			&sqlVertualBox.BoxID,
-			&sqlVertualBox.Label,
-			&sqlVertualBox.OuterBoxID,
-			&sqlVertualBox.OuterBoxLabel,
+			&sqlBoxListRow.BoxID,
+			&sqlBoxListRow.Label,
+			&sqlBoxListRow.OuterBoxID,
+			&sqlBoxListRow.OuterBoxLabel,
+			&sqlBoxListRow.PreviewPicture,
 		)
 		if err != nil {
 			return []items.BoxListRow{}, logg.Errorf("error while assigning the Data to the Virtualbox struct %w", err)
 		}
-		vBox, err := mapSqlVertualBoxToVertualBox(sqlVertualBox)
+		vBox, err := mapSqlVertualBoxToVertualBox(sqlBoxListRow)
 		if err != nil {
-			return []items.BoxListRow{}, err
+			return []items.BoxListRow{}, logg.WrapErr(err)
 		}
 		virtualBoxes = append(virtualBoxes, vBox)
 	}
@@ -153,7 +164,7 @@ func (db *DB) VirtualBoxExist(id uuid.UUID) bool {
 }
 
 // Get the virtual Box based on his ID
-func (db *DB) VirtualBoxById(id uuid.UUID) (items.BoxListRow, error) {
+func (db *DB) BoxListRowByID(id uuid.UUID) (items.BoxListRow, error) {
 
 	if !db.VirtualBoxExist(id) {
 		return items.BoxListRow{}, fmt.Errorf("the Box Id does not exsist in the virtual table")
@@ -165,7 +176,7 @@ func (db *DB) VirtualBoxById(id uuid.UUID) (items.BoxListRow, error) {
 		return items.BoxListRow{}, fmt.Errorf("error while fetching the virtual box: %w", err)
 	}
 
-	var sqlVertualBox SqlVertualBox
+	var sqlVertualBox SQLBoxListRow
 	for row.Next() {
 		err := row.Scan(
 			&sqlVertualBox.BoxID,
@@ -186,20 +197,22 @@ func (db *DB) VirtualBoxById(id uuid.UUID) (items.BoxListRow, error) {
 }
 
 // private function to map the sql virtual box into normal virtual box
-func mapSqlVertualBoxToVertualBox(sqlBox SqlVertualBox) (items.BoxListRow, error) {
+func mapSqlVertualBoxToVertualBox(sqlBox SQLBoxListRow) (items.BoxListRow, error) {
 	id, err := UUIDFromSqlString(sqlBox.BoxID)
 	if err != nil {
-		return items.BoxListRow{}, err
+		return items.BoxListRow{}, logg.WrapErr(err)
 	}
 
 	return items.BoxListRow{
 		BoxID:          id,
 		Label:          ifNullString(sqlBox.Label),
-		OuterBoxLabel:  ifNullString(sqlBox.OuterBoxLabel),
 		OuterBoxID:     ifNullUUID(sqlBox.OuterBoxID),
-		ShelfLabel:     "Shelf 1",
-		AreaLabel:      "Area 1",
-		PreviewPicture: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAFAgL/uXBuZwAAAABJRU5ErkJggg==",
+		OuterBoxLabel:  ifNullString(sqlBox.OuterBoxLabel),
+		ShelfID:        ifNullUUID(sqlBox.ShelfID),
+		ShelfLabel:     ifNullString(sqlBox.ShelfLabel),
+		AreaID:         ifNullUUID(sqlBox.AreaID),
+		AreaLabel:      ifNullString(sqlBox.AreaLabel),
+		PreviewPicture: ifNullString(sqlBox.PreviewPicture),
 	}, nil
 }
 
