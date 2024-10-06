@@ -62,6 +62,13 @@ func (box *Box) Map() map[string]any {
 	}
 }
 
+type ShelfCoordinates struct {
+	Id    uuid.UUID `json:"id"`
+	Label string    `json:"label"       validate:"required,lte=128"`
+	Rows  int
+	Cols  int
+}
+
 type Box2 struct {
 	Id          uuid.UUID         `json:"id"`
 	Label       string            `json:"label"       validate:"required,lte=128"`

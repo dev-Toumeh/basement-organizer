@@ -1,8 +1,8 @@
 package database
 
 import (
-	"basement/main/internal/items"
 	"basement/main/internal/logg"
+	"basement/main/internal/shelves"
 	"bytes"
 	"database/sql"
 	"encoding/base64"
@@ -104,14 +104,14 @@ func (db *DB) createNewShelf(nID uuid.UUID) error {
 }
 
 // type ShelfDB interface {
-// 	CreateShelf(shelf *items.Shelf) error
-// 	Shelf(id uuid.UUID) (*items.Shelf, error)
-// 	UpdateShelf(shelf *items.Shelf) error
+// 	CreateShelf(shelf *shelves.Shelf) error
+// 	Shelf(id uuid.UUID) (*shelves.Shelf, error)
+// 	UpdateShelf(shelf *shelves.Shelf) error
 // 	DeleteShelf(id uuid.UUID) error
 // }
 
 // CreateShelf creates a shelf entry in database from the provided shelf.
-func (db *DB) CreateShelf(shelf *items.Shelf) error {
+func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 	if shelf.Id == uuid.Nil {
 		id := uuid.Must(uuid.NewV4())
 		logg.Infof(`CreateShelf: Provided shelf "%s" had invalid uuid "%s". Creating a new one: "%s"`, shelf.Label, shelf.Id.String(), id.String())
@@ -193,7 +193,7 @@ func (db *DB) CreateShelf(shelf *items.Shelf) error {
 }
 
 // Shelf returns shelf with provided id.
-func (db *DB) Shelf(id uuid.UUID) (*items.Shelf, error) {
+func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 	var (
 		label          string
 		description    sql.NullString
@@ -244,7 +244,7 @@ func (db *DB) Shelf(id uuid.UUID) (*items.Shelf, error) {
 	// if len(previewPicture) > 0 {
 	// 	previewPictureBase64 = base64.StdEncoding.EncodeToString(previewPicture)
 	// }
-	shelf := &items.Shelf{
+	shelf := &shelves.Shelf{
 		Id:             id,
 		Label:          label,
 		Description:    description.String,
@@ -264,7 +264,7 @@ func (db *DB) Shelf(id uuid.UUID) (*items.Shelf, error) {
 	// if err != nil {
 	// 	panic(err)
 	// }
-	// shelf2 := &items.Shelf{
+	// shelf2 := &shelves.Shelf{
 	// Id:             uuid.FromStringOrNil("1cad0cb3-3307-43cc-b005-3f9f29eec8b4"),
 	// shelf.PreviewPicture = f
 	// base64.StdEncoding.Decode(shelf.PreviewPicture, shelf.PreviewPicture)
@@ -286,7 +286,7 @@ func ByteArrayToBase64ByteArray(src []byte) []byte {
 	return buf.Bytes()
 }
 
-func (db *DB) UpdateShelf(shelf *items.Shelf) error {
+func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
 	var (
 		picture64        string
 		previewPicture64 string
@@ -408,6 +408,6 @@ func (db *DB) MoveShelf(shelfID uuid.UUID, toAreaID uuid.UUID) error {
 	return logg.WrapErr(ErrNotImplemented)
 }
 
-func (db *DB) insertShelf(shelf *items.Shelf) error {
+func (db *DB) insertShelf(shelf *shelves.Shelf) error {
 	return logg.WrapErr(ErrNotImplemented)
 }
