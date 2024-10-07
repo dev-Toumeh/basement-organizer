@@ -11,16 +11,17 @@ import (
 )
 
 type SQLShelf struct {
-	BasicInfo SQLBasicInfo
-	Height    sql.NullFloat64
-	Width     sql.NullFloat64
-	Depth     sql.NullFloat64
-	Rows      sql.NullInt64
-	Cols      sql.NullInt64
+	SQLBasicInfo
+	Height sql.NullFloat64
+	Width  sql.NullFloat64
+	Depth  sql.NullFloat64
+	Rows   sql.NullInt64
+	Cols   sql.NullInt64
+	AreaID sql.NullString
 }
 
 func (s SQLShelf) ToShelf() (*shelves.Shelf, error) {
-	info, err := s.BasicInfo.ToBasicInfo()
+	info, err := s.SQLBasicInfo.ToBasicInfo()
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
@@ -39,6 +40,7 @@ func (s SQLShelf) ToShelf() (*shelves.Shelf, error) {
 		Cols:           int(s.Cols.Int64),
 		Items:          nil,
 		Boxes:          nil,
+		AreaID:         ifNullUUID(s.AreaID),
 	}, nil
 }
 
@@ -132,7 +134,7 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 
 	err := updatePicture(&shelf.Picture, &shelf.PreviewPicture)
 	if err != nil {
-		logg.Errf("Can't update picture %v", err.Error())
+		logg.Infof("Can't update picture %v", err.Error())
 	}
 
 	stmt := `
@@ -191,12 +193,12 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
         FROM shelf WHERE id = ?`
 
 	err := db.Sql.QueryRow(stmt, id.String()).Scan(
-		&sqlShelf.BasicInfo.ID,
-		&sqlShelf.BasicInfo.Label,
-		&sqlShelf.BasicInfo.Description,
-		&sqlShelf.BasicInfo.Picture,
-		&sqlShelf.BasicInfo.PreviewPicture,
-		&sqlShelf.BasicInfo.QRCode,
+		&sqlShelf.SQLBasicInfo.ID,
+		&sqlShelf.SQLBasicInfo.Label,
+		&sqlShelf.SQLBasicInfo.Description,
+		&sqlShelf.SQLBasicInfo.Picture,
+		&sqlShelf.SQLBasicInfo.PreviewPicture,
+		&sqlShelf.SQLBasicInfo.QRCode,
 		&sqlShelf.Height,
 		&sqlShelf.Width,
 		&sqlShelf.Depth,

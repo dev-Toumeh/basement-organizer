@@ -5,14 +5,14 @@
 {{ end }}
 
 {{ if $empty }}
-<tr id="box-list-row-{{.BoxID}}">
+<tr id="box-list-row-{{.ID}}">
     <td colspan="7" style="text-align:center">
         <span class="empty">empty<img class="preview" style="opacity:0"></span>
     </td>  
 </tr>
 {{ else }}
-<tr id="box-list-row-{{.BoxID}}">
-    <td hx-get="/boxes/{{.BoxID}}"
+<tr id="box-list-row-{{.ID}}">
+    <td hx-get="/boxes/{{.ID}}"
         hx-push-url="true"
         hx-target="body"
         class="clickable"
@@ -27,8 +27,8 @@
         >
     </td>
     {{ if not .Move}}
-    <td style="text-align: center;"><input type="checkbox" name="move:{{.BoxID}}"></td>
-    <td style="text-align: center;"><input type="checkbox" name="delete:{{.BoxID}}"></td>
+    <td style="text-align: center;"><input type="checkbox" name="move:{{.ID}}"></td>
+    <td style="text-align: center;"><input type="checkbox" name="delete:{{.ID}}"></td>
     {{ else }}
     <td style="text-align: center;">
         <button type="">move here</button>

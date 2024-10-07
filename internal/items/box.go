@@ -7,88 +7,31 @@ import (
 	"fmt"
 	"maps"
 	"net/http"
-	"time"
 
 	"github.com/gofrs/uuid/v5"
 )
 
-type ListRow struct {
-	ID             uuid.UUID
-	Label          string
-	BoxID          uuid.UUID
-	BoxLabel       string
-	ShelfID        uuid.UUID
-	ShelfLabel     string
-	AreaID         uuid.UUID
-	AreaLabel      string
-	PreviewPicture string
-}
-
-type BasicInfo struct {
-	ID             uuid.UUID
-	Label          string
-	Description    string
-	Picture        string
-	PreviewPicture string
-	QRcode         string
-}
-
-// type ListRow struct {
-// 	BoxID          uuid.UUID
-// 	Label          string
-// 	OuterBoxID     uuid.UUID
-// 	OuterBoxLabel  string
-// 	ShelfID        uuid.UUID
-// 	ShelfLabel     string
-// 	AreaID         uuid.UUID
-// 	AreaLabel      string
-// 	PreviewPicture string
-// }
-
-func (row *ListRow) Map() map[string]any {
-	return map[string]interface{}{
-		"ID":             row.ID,
-		"Label":          row.Label,
-		"BoxID":          row.BoxID,
-		"BoxLabel":       row.BoxLabel,
-		"ShelfID":        row.ShelfID,
-		"ShelfLabel":     row.ShelfLabel,
-		"AreaID":         row.AreaID,
-		"AreaLabel":      row.AreaLabel,
-		"PreviewPicture": row.PreviewPicture,
-	}
-}
-
 type Box struct {
-	ID             uuid.UUID  `json:"id"`
-	Label          string     `json:"label"       validate:"required,lte=128"`
-	Description    string     `json:"description" validate:"omitempty,lte=256"`
-	Picture        string     `json:"picture"     validate:"omitempty,base64"`
-	PreviewPicture string     `json:"previewpicture"     validate:"omitempty,base64"`
-	QRcode         string     `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	OuterBoxID     uuid.UUID  `json:"outerboxid"`
-	Items          []*ListRow `json:"items"`
-	InnerBoxes     []*ListRow `json:"innerboxes"`
-	OuterBox       *ListRow   `json:"outerbox"`
+	BasicInfo
+	OuterBoxID uuid.UUID  `json:"outerboxid"`
+	Items      []*ListRow `json:"items"`
+	InnerBoxes []*ListRow `json:"innerboxes"`
+	OuterBox   *ListRow   `json:"outerbox"`
+	ShelfID    uuid.UUID
+	AreaID     uuid.UUID
 	// @TODO: Fix import cycle with shelves package.
 	// ShelfCoordinates *shelf         `json:"shelfcoordinates"`
 }
 
 func (box *Box) Map() map[string]any {
-	return map[string]interface{}{
-		"ID":             box.ID,
-		"Label":          box.Label,
-		"Description":    box.Description,
-		"Picture":        box.Picture,
-		"PreviewPicture": box.PreviewPicture,
-		"QRcode":         box.QRcode,
-		"OuterBoxID":     box.OuterBoxID,
-		"Items":          box.Items,
-		"InnerBoxes":     box.InnerBoxes,
-		"OuterBox":       box.OuterBox,
-		// @TODO: Fix import cycle with shelves package.
-		// "ShelfCoordinates": box.ShelfCoordinates,
-	}
+	m := box.BasicInfo.Map()
+	m["OuterBoxID"] = box.OuterBoxID
+	m["Items"] = box.Items
+	m["InnerBoxes"] = box.InnerBoxes
+	m["OuterBox"] = box.OuterBox
+	m["ShelfID"] = box.ShelfID
+	m["AreaID"] = box.AreaID
+	return m
 }
 
 type BoxTemplateData struct {
@@ -166,12 +109,8 @@ type BoxC struct {
 
 // NewBox returns an empty box with a new uuid.
 func NewBox() Box {
-	label := time.Now().Format("2006-01-02_15_04_05")
-	return Box{
-		ID:          uuid.Must(uuid.NewV4()),
-		Label:       fmt.Sprintf("Box_%s", label),
-		Description: fmt.Sprintf("Box description %s", label),
-	}
+	b := NewBasicInfoWithLabel("Box")
+	return Box{BasicInfo: b}
 }
 
 func (b *Box) MarshalJSON() ([]byte, error) {

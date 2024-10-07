@@ -146,7 +146,7 @@ func (db *DB) BoxListRowByID(id uuid.UUID) (items.ListRow, error) {
 		return items.ListRow{}, fmt.Errorf("the Box Id does not exsist in the virtual table")
 	}
 
-	query := fmt.Sprintf("SELECT box_id, label, outerbox_id, outerbox_label FROM box_fts WHERE box_id = ?")
+	query := fmt.Sprintf("SELECT box_id, label, outerbox_id, outerbox_label, shelf_id, shelf_label, area_id, area_label FROM box_fts WHERE box_id = ?")
 	row, err := db.Sql.Query(query, id.String())
 	if err != nil {
 		return items.ListRow{}, fmt.Errorf("error while fetching the virtual box: %w", err)
@@ -159,6 +159,10 @@ func (db *DB) BoxListRowByID(id uuid.UUID) (items.ListRow, error) {
 			&sqlVertualBox.Label,
 			&sqlVertualBox.BoxID,
 			&sqlVertualBox.BoxLabel,
+			&sqlVertualBox.ShelfID,
+			&sqlVertualBox.ShelfLabel,
+			&sqlVertualBox.AreaID,
+			&sqlVertualBox.AreaLabel,
 		)
 		if err != nil {
 			return items.ListRow{}, fmt.Errorf("error while assigning the Data to the Virtualbox struct : %w", err)
@@ -171,42 +175,6 @@ func (db *DB) BoxListRowByID(id uuid.UUID) (items.ListRow, error) {
 	}
 	return *vBox, nil
 }
-
-// private function to map the sql virtual box into normal virtual box
-// func mapSqlVertualBoxToVertualBox(sqlBox SQLListRow) (items.ListRow, error) {
-// 	id, err := UUIDFromSqlString(sqlBox.BoxID)
-// 	if err != nil {
-// 		return items.ListRow{}, logg.WrapErr(err)
-// 	}
-//
-// 	return items.ListRow{
-// 		ID:             id,
-// 		Label:          ifNullString(sqlBox.Label),
-// 		BoxID:          ifNullUUID(sqlBox.BoxID),
-// 		OuterBoxLabel:  ifNullString(sqlBox.OuterBoxLabel),
-// 		ShelfID:        ifNullUUID(sqlBox.ShelfID),
-// 		ShelfLabel:     ifNullString(sqlBox.ShelfLabel),
-// 		AreaID:         ifNullUUID(sqlBox.AreaID),
-// 		AreaLabel:      ifNullString(sqlBox.AreaLabel),
-// 		PreviewPicture: ifNullString(sqlBox.PreviewPicture),
-// 	}, nil
-// }
-
-// func mapSqlVertualItemToVertualItem(sqlItem SQLListRow) (items.ListRow, error) {
-// 	id, err := UUIDFromSqlString(sqlItem.ItemID)
-// 	if err != nil {
-// 		return items.ListRow{}, err
-// 	}
-// 	return items.ListRow{
-// 		ItemID:         id,
-// 		Label:          ifNullString(sqlItem.Label),
-// 		BoxLabel:       "box 1",
-// 		BoxID:          uuid.Nil,
-// 		ShelfLabel:     "shelf 1",
-// 		AreaLabel:      "shelf 1",
-// 		PreviewPicture: "pic1",
-// 	}, nil
-// }
 
 func (db *DB) NumOfItemRecords(searchString string) (int, error) {
 	searchString = strings.TrimSpace(searchString)

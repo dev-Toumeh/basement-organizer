@@ -26,14 +26,31 @@ const (
     label, 
     description, 
     preview_picture UNINDEXED,
+    box_id UNINDEXED,
+    box_label,
+	shelf_id UNINDEXED,
+	shelf_label,
+	area_id UNINDEXED,
+	area_label,
     tokenize = 'porter'
 	);`
 
 	CREATE_ITEM_INSERT_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS item_ai BEFORE INSERT ON item 
     BEGIN
-        INSERT INTO item_fts(item_id, label, description, preview_picture) 
-        VALUES (new.id, new.label, new.description, new.preview_picture);
+        INSERT INTO item_fts(item_id, label, description, preview_picture, box_id, box_label, shelf_id, shelf_label, area_id, area_label) 
+        VALUES (
+			new.id,
+			new.label,
+			new.description,
+			new.preview_picture,
+			new.box_id,
+			(SELECT label FROM box WHERE box.id = new.box_id),
+			new.shelf_id,
+			(SELECT label FROM shelf WHERE shelf.id = new.shelf_id),
+			new.area_id,
+			(SELECT label FROM area WHERE area.id = new.area_id)
+		);
     END;`
 
 	CREATE_ITEM_UPDATE_TRIGGER = `
@@ -42,8 +59,14 @@ const (
         UPDATE item_fts SET 
             label = new.label,
             description = new.description,
-            preview_picture = new.preview_picture
-        WHERE item_id = old.id;
+            preview_picture = new.preview_picture,
+			box_id = new.box_id, 
+			box_label = (SELECT label FROM box WHERE box.id = new.box_id),
+			shelf_id = new.shelf_id, 
+			shelf_label = (SELECT label FROM shelf WHERE shelf.id = new.shelf_id),
+			area_id = new.area_id, 
+			area_label = (SELECT label FROM area WHERE area.id = new.area_id)
+        WHERE item_id = new.id;
     END; `
 
 	CREATE_ITEM_DELETE_TRIGGER = `
@@ -60,14 +83,18 @@ const (
     picture TEXT,
     preview_picture TEXT,
     qrcode TEXT,
-    outerbox_id TEXT REFERENCES box(id)
+    outerbox_id TEXT REFERENCES box(id),
+    shelf_id TEXT REFERENCES shelf(id),
+    area_id TEXT REFERENCES area(id)
 	); `
 
 	CREATE_BOX_TABLE_STMT_FTS = `CREATE VIRTUAL TABLE IF NOT EXISTS box_fts USING fts5(
     box_id UNINDEXED,
     label, 
-    outerbox_label,
     outerbox_id UNINDEXED,
+    outerbox_label,
+	shelf_id UNINDEXED,
+	shelf_label,
 	area_id UNINDEXED,
 	area_label,
 	preview_picture UNINDEXED,
@@ -77,7 +104,7 @@ const (
 	CREATE_BOX_INSERT_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS box_ai BEFORE INSERT ON box
     BEGIN
-        INSERT INTO box_fts(box_id, label, outerbox_label, outerbox_id, preview_picture) 
+        INSERT INTO box_fts(box_id, label, outerbox_label, outerbox_id, shelf_id, shelf_label, area_id, area_label, preview_picture) 
         VALUES (
             new.id, 
             new.label,
@@ -86,6 +113,16 @@ const (
                 ELSE NULL 
             END,
             new.outerbox_id,
+            new.shelf_id,
+            CASE 
+                WHEN new.shelf_id IS NOT NULL THEN (SELECT label FROM shelf WHERE id = new.shelf_id)
+                ELSE NULL 
+            END,
+            new.area_id,
+            CASE 
+                WHEN new.area_id IS NOT NULL THEN (SELECT label FROM area WHERE id = new.area_id)
+                ELSE NULL 
+            END,
             new.preview_picture
         );
     END; `
@@ -97,6 +134,10 @@ const (
         UPDATE box_fts 
         SET 
 			label = new.label, 
+			shelf_id = new.shelf_id, 
+			shelf_label = (SELECT label FROM shelf WHERE shelf.id = new.shelf_id),
+			area_id = new.area_id, 
+			area_label = (SELECT label FROM area WHERE area.id = new.area_id),
 			preview_picture = new.preview_picture
         WHERE box_id = old.id;
 
@@ -104,6 +145,7 @@ const (
         UPDATE box_fts
         SET outerbox_label = new.label
         WHERE outerbox_id = old.id;
+
     END; `
 
 	CREATE_BOX_DELETE_TRIGGER = `
