@@ -1,95 +1,42 @@
 package database
 
 import (
-	"basement/main/internal/items"
-	"testing"
-
 	"github.com/go-playground/assert/v2"
-	"github.com/gofrs/uuid/v5"
+	"testing"
 )
 
-var uuidValue1 uuid.UUID = uuid.Must(uuid.FromString("623e4567-e89b-12d3-a456-426614174000"))
-var boxId1 = &uuidValue1
+func TestVirtualBoxInsert(t *testing.T) {
+	EmptyTestDatabase()
+	resetTestBoxes()
 
-var uuidValue2 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174000"))
-var boxId2 = &uuidValue2
-
-var uuidValue3 uuid.UUID = uuid.Must(uuid.FromString("423e4567-e89b-12d3-a456-426614174000"))
-var boxId3 = &uuidValue3
-
-var uuidValue4 uuid.UUID = uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174111"))
-var boxId4 = &uuidValue4
-
-// Clone 4
-var box1 = &items.Box{
-	ID:          *boxId1,
-	Label:       "box 1",
-	Description: "This is the sixth box",
-	Picture:     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAFAgL/uXBuZwAAAABJRU5ErkJggg==",
-	QRcode:      "uvwxyzabcdefg",
-	OuterBoxID:  uuid.Nil,
-}
-
-var box3 = &items.Box{
-	ID:          *boxId2,
-	Label:       "box 3",
-	Description: "This is the third box",
-	Picture:     box1.Picture,
-	QRcode:      "abababababcd",
-	OuterBoxID:  *boxId1,
-}
-
-var box4 = &items.Box{
-	ID:          *boxId3,
-	Label:       "box 4",
-	Description: "This is the fourth box",
-	Picture:     box1.Picture,
-	QRcode:      "efghefghefgh",
-	OuterBoxID:  *boxId1,
-}
-
-var box5 = &items.Box{
-	ID:          *boxId4,
-	Label:       "box 5",
-	Description: "This is the fifth box",
-	Picture:     box1.Picture,
-	QRcode:      "ijklmnopqrst",
-	OuterBoxID:  *boxId1,
-}
-
-func TestVirtualBoxInsirt(t *testing.T) {
-	// Setup
-	boxList, _ := testData()
-	testBox := boxList[0]
+	testbox := BOX_1
 
 	// Create the outerbox
-	_, err := dbTest.CreateBox(testBox)
+	_, err := dbTest.CreateBox(testbox)
 	if err != nil {
 		t.Fatalf("Failed to create outer box: %v", err)
 	}
 
 	// Check if the outerbox exists in box_fts
-	exist := dbTest.VirtualBoxExist(testBox.ID)
+	exist := dbTest.VirtualBoxExist(testbox.ID)
 	assert.Equal(t, exist, true)
 
-	virtualBox, err := dbTest.BoxListRowByID(testBox.ID)
+	boxListRow, err := dbTest.BoxListRowByID(testbox.ID)
 	if err != nil {
 		t.Fatalf("Failed to create outer box: %v", err)
 	}
-	assert.Equal(t, testBox.ID, virtualBox.BoxID)
-	assert.Equal(t, testBox.Label, virtualBox.Label)
-	assert.Equal(t, testBox.OuterBoxID, virtualBox.OuterBoxID)
-
-	EmptyTestDatabase()
-
+	assert.Equal(t, testbox.ID, boxListRow.ID)
+	assert.Equal(t, testbox.Label, boxListRow.Label)
+	assert.Equal(t, testbox.OuterBoxID, boxListRow.BoxID)
 }
 
 func TestVirtualBoxUpdate(t *testing.T) {
-	defer EmptyTestDatabase()
+	EmptyTestDatabase()
+	resetTestBoxes()
 
-	boxList, _ := testData()
-	testbox := boxList[0]
-	outerBox := boxList[3]
+	testbox := BOX_1
+	outerBox := BOX_2
+	testbox.OuterBoxID = BOX_2.ID
 
 	// Create the outerbox
 	_, err := dbTest.CreateBox(outerBox)
@@ -103,15 +50,11 @@ func TestVirtualBoxUpdate(t *testing.T) {
 		t.Fatalf("Failed to create outer box while checking the BoxTriger: %v", err)
 	}
 
-	//change the testBoxLabel
-	testboxClone := *testbox
-	testbox.Label = "newTestBoxLable"
-	dbTest.UpdateBox(testboxClone)
+	testbox.Label = "new testbox label"
+	dbTest.UpdateBox(*testbox)
 
-	// change the Outerbox label
-	outerBoxClone := *outerBox
-	outerBoxClone.Label = "newLable"
-	dbTest.UpdateBox(outerBoxClone)
+	outerBox.Label = "new outerbox label"
+	dbTest.UpdateBox(*outerBox)
 
 	// Get the box_fts to check if the outerbox_label  was updated
 	afterUpdate, err := dbTest.BoxListRowByID(testbox.ID)
@@ -119,15 +62,15 @@ func TestVirtualBoxUpdate(t *testing.T) {
 		t.Fatalf("Failed to fetch the testbox while checking the BoxTriger: %v", err)
 	}
 
-	assert.Equal(t, afterUpdate.OuterBoxLabel, outerBoxClone.Label)
-	assert.Equal(t, afterUpdate.Label, testboxClone.Label)
+	assert.Equal(t, afterUpdate.BoxLabel, outerBox.Label)
+	assert.Equal(t, afterUpdate.Label, testbox.Label)
 }
 
 func TestVirtualBoxDelete(t *testing.T) {
-	defer EmptyTestDatabase()
+	EmptyTestDatabase()
+	resetTestBoxes()
 
-	boxList, _ := testData()
-	testbox := boxList[0]
+	testbox := BOX_1
 
 	// Create the testBox
 	_, err := dbTest.CreateBox(testbox)
@@ -146,12 +89,11 @@ func TestVirtualBoxDelete(t *testing.T) {
 }
 
 func TestBoxFuzzyFinder(t *testing.T) {
-
-	boxesToInsert := []items.Box{*box1, *box3, *box4, *box5}
-
+	EmptyTestDatabase()
+	resetTestBoxes()
 	// Insert the new boxes
-	for _, box := range boxesToInsert {
-		_, err := dbTest.insertNewBox(&box)
+	for _, box := range testBoxes() {
+		_, err := dbTest.insertNewBox(box)
 		if err != nil {
 			t.Fatalf("insertNewBox failed while testing the boxFuzzyFinder: %v", err)
 		}

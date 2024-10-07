@@ -104,20 +104,24 @@ func (db *DB) DatabasePatcher() error {
 
 	// Define the box structures
 	outerBox := &items.Box{
-		ID:          outerBoxId,
-		Label:       "OuterBox",
-		Description: "This is the outer box",
-		Picture:     "base64encodedouterbox",
-		QRcode:      "QRcodeOuterBox",
-		OuterBoxID:  uuid.Nil,
+		BasicInfo: items.BasicInfo{
+			ID:          outerBoxId,
+			Label:       "OuterBox",
+			Description: "This is the outer box",
+			Picture:     "base64encodedouterbox",
+			QRcode:      "QRcodeOuterBox",
+		},
+		OuterBoxID: uuid.Nil,
 	}
 	patchBox := &items.Box{
-		ID:          patchBoxId,
-		Label:       "PatchBox",
-		Description: "This box will allow you to add items again",
-		Picture:     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
-		QRcode:      "AB123CD",
-		OuterBoxID:  outerBoxId,
+		BasicInfo: items.BasicInfo{
+			ID:          patchBoxId,
+			Label:       "PatchBox",
+			Description: "This box will allow you to add items again",
+			Picture:     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
+			QRcode:      "AB123CD",
+		},
+		OuterBoxID: outerBoxId,
 	}
 
 	// Create the boxes using the CreateNewBox function
@@ -224,14 +228,16 @@ func (db *DB) InsertDummyItems() {
 
 	for i := 0; i < 10; i++ {
 		newItem := items.Item{
-			ID:          uuid.Must(uuid.NewV4()),
-			Label:       gofakeit.ProductName(),
-			Description: gofakeit.Sentence(5),
-			Picture:     generateRandomBase64Image(1024),
-			Quantity:    rand.Int63n(100) + 1,
-			Weight:      fmt.Sprintf("%.2f", rand.Float64()*100),
-			QRcode:      gofakeit.HipsterWord(),
-			BoxID:       uuid.Must(uuid.NewV4()),
+			BasicInfo: items.BasicInfo{
+				ID:          uuid.Must(uuid.NewV4()),
+				Label:       gofakeit.ProductName(),
+				Description: gofakeit.Sentence(5),
+				Picture:     generateRandomBase64Image(1024),
+			},
+			Quantity: rand.Int63n(100) + 1,
+			Weight:   fmt.Sprintf("%.2f", rand.Float64()*100),
+			QRcode:   gofakeit.HipsterWord(),
+			BoxID:    uuid.Must(uuid.NewV4()),
 		}
 
 		err := db.insertNewItem(newItem)

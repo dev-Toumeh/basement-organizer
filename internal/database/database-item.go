@@ -16,6 +16,109 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
+type SQLBasicInfo struct {
+	ID             sql.NullString
+	Label          sql.NullString
+	Description    sql.NullString
+	Picture        sql.NullString
+	PreviewPicture sql.NullString
+	QRCode         sql.NullString
+}
+
+func (s SQLBasicInfo) ToBasicInfo() (items.BasicInfo, error) {
+	id, err := uuid.FromString(s.ID.String)
+	if err != nil {
+		return items.BasicInfo{}, logg.WrapErr(err)
+	}
+
+	return items.BasicInfo{
+		ID:             id,
+		Label:          ifNullString(s.Label),
+		Description:    ifNullString(s.Description),
+		Picture:        ifNullString(s.Picture),
+		PreviewPicture: ifNullString(s.PreviewPicture),
+		QRcode:         ifNullString(s.QRCode),
+	}, nil
+}
+
+type SQLItem struct {
+	SQLBasicInfo
+	Quantity   sql.NullInt64
+	Weight     sql.NullString
+	BoxID      sql.NullString
+	BoxLabel   sql.NullString
+	ShelfID    sql.NullString
+	ShelfLabel sql.NullString
+	AreaID     sql.NullString
+	AreaLabel  sql.NullString
+}
+
+// this function used inside of BoxByField to convert the sql Item struct into normal struct
+func (s *SQLItem) ToItem() (*items.Item, error) {
+	// var err error
+	info, err := s.SQLBasicInfo.ToBasicInfo()
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	item := &items.Item{BasicInfo: info}
+
+	// Convert and assign the ID
+	if s.BoxID.Valid {
+		item.BoxID, err = uuid.FromString(s.BoxID.String)
+		if err != nil {
+			return nil, logg.Errorf("Error parsing UUID for box ID: '%v' %w", s.BoxID, err)
+		}
+	} else {
+		return nil, logg.NewError(fmt.Sprintf("box ID is required but was null in item %v", s.BoxID.String))
+	}
+
+	if s.Quantity.Valid {
+		item.Quantity = s.Quantity.Int64
+	} else {
+		item.Quantity = 1
+	}
+
+	if s.Weight.Valid {
+		item.Weight = s.Weight.String
+	} else {
+		item.Weight = ""
+	}
+
+	return item, nil
+}
+
+type SQLListRow struct {
+	ID             sql.NullString
+	Label          sql.NullString
+	BoxID          sql.NullString
+	BoxLabel       sql.NullString
+	ShelfID        sql.NullString
+	ShelfLabel     sql.NullString
+	AreaID         sql.NullString
+	AreaLabel      sql.NullString
+	PreviewPicture sql.NullString
+}
+
+func (s SQLListRow) ToListRow() (*items.ListRow, error) {
+	id, err := uuid.FromString(s.ID.String)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	return &items.ListRow{
+		ID:             id,
+		Label:          ifNullString(s.Label),
+		BoxID:          ifNullUUID(s.BoxID),
+		BoxLabel:       ifNullString(s.BoxLabel),
+		ShelfID:        ifNullUUID(s.ShelfID),
+		ShelfLabel:     ifNullString(s.ShelfLabel),
+		AreaID:         ifNullUUID(s.AreaID),
+		AreaLabel:      ifNullString(s.AreaLabel),
+		PreviewPicture: ifNullString(s.PreviewPicture),
+	}, nil
+
+}
+
 // Create New Item Record
 func (db *DB) CreateNewItem(newItem items.Item) error {
 	exist, err := db.Exists("item", newItem.ID)
@@ -44,13 +147,13 @@ func (db *DB) ItemByField(field string, value string) (items.Item, error) {
 	FROM item WHERE %s = ?;`, field)
 	row := db.Sql.QueryRow(query, value)
 
-	sqlItem := &SqlItem{}
-	err := row.Scan(&sqlItem.ItemID, &sqlItem.ItemLabel, &sqlItem.ItemDescription, &sqlItem.ItemPicture, &sqlItem.ItemPreviewPicture, &sqlItem.ItemQuantity, &sqlItem.ItemWeight, &sqlItem.ItemQRCode, &sqlItem.ItemBoxID, &sqlItem.ItemShelfID, &sqlItem.ItemAreaID)
+	sqlItem := &SQLItem{}
+	err := row.Scan(&sqlItem.ID, &sqlItem.Label, &sqlItem.Description, &sqlItem.Picture, &sqlItem.PreviewPicture, &sqlItem.Quantity, &sqlItem.Weight, &sqlItem.QRCode, &sqlItem.BoxID, &sqlItem.ShelfID, &sqlItem.AreaID)
 
 	if err != nil {
 		return items.Item{}, logg.Errorf("Error while checking if the Item is available: %w ", err)
 	}
-	item, err := convertSQLItemToItem(sqlItem)
+	item, err := sqlItem.ToItem()
 	if err != nil {
 		return items.Item{}, logg.WrapErr(err)
 	}
@@ -76,56 +179,8 @@ func (db *DB) Item(id string) (items.Item, error) {
 }
 
 // ListItemById returns a single item with less information suitable for a list row.
-func (db *DB) ListItemById(id uuid.UUID) (*items.ItemListRow, error) {
-	item := &items.ItemListRow{}
-	rows, err := db.Sql.Query(`
-		SELECT 
-            i.id, i.label, i.picture, i.box_id,
-            b.id, b.label 
-        FROM 
-            item AS i
-        LEFT JOIN 
-            box AS b ON b.id = i.box_id 
-        WHERE 
-            i.id = ?;`, id.String())
-
-	if err != nil {
-		return item, logg.WrapErr(err)
-	}
-	defer rows.Close()
-
-	var sqlItem SqlVirtualItem
-
-	for rows.Next() {
-		err = rows.Scan(&sqlItem.ItemID, &sqlItem.Label, &sqlItem.PreviewPicture, &sqlItem.OuterBoxID, &sqlItem.OuterBoxID, &sqlItem.OuterBoxLabel)
-		if err != nil {
-			return nil, logg.WrapErr(err)
-		}
-
-		if env.Development() {
-			b := bytes.Buffer{}
-			server.WriteJSON(&b, sqlItem)
-			logg.Debugf("virtual item: %v", b.String())
-		}
-
-		if sqlItem.ItemID.Valid {
-			item.ItemID = uuid.Must(uuid.FromString(sqlItem.ItemID.String))
-			item.Label = sqlItem.Label.String
-			item.PreviewPicture = sqlItem.PreviewPicture.String
-			item.BoxID = uuid.Must(uuid.FromString(sqlItem.OuterBoxID.String))
-			item.BoxLabel = sqlItem.OuterBoxLabel.String
-		} else {
-			return item, errors.New(fmt.Sprintf("Invalid UUID: \"%s\"", sqlItem.ItemID.String))
-		}
-	}
-
-	return item, nil
-}
-
-// ListItemById returns a single item with less information suitable for a list row.
-func (db *DB) ItemListRowByID(id uuid.UUID) (*items.ItemListRow, error) {
-	item := &items.ItemListRow{}
-	rows, err := db.Sql.Query(`
+func (db *DB) ItemListRowByID(id uuid.UUID) (*items.ListRow, error) {
+	queryRow := db.Sql.QueryRow(`
 		SELECT 
             i.id, i.label, i.preview_picture,
             b.id, b.label,
@@ -142,52 +197,25 @@ func (db *DB) ItemListRowByID(id uuid.UUID) (*items.ItemListRow, error) {
         WHERE 
             i.id = ?;`, id.String())
 
+	sqlListRow := SQLListRow{}
+
+	err := queryRow.Scan(&sqlListRow.ID, &sqlListRow.Label, &sqlListRow.PreviewPicture, &sqlListRow.BoxID, &sqlListRow.BoxLabel, &sqlListRow.ShelfID, &sqlListRow.ShelfLabel, &sqlListRow.AreaID, &sqlListRow.AreaLabel)
 	if err != nil {
-		return item, logg.WrapErr(err)
-	}
-	defer rows.Close()
-
-	var (
-		ItemID    sql.NullString
-		ItemLabel sql.NullString
-		// Picture        sql.NullString
-		PreviewPicture sql.NullString
-		BoxID          sql.NullString
-		BoxLabel       sql.NullString
-		ShelfID        sql.NullString
-		ShelfLabel     sql.NullString
-		AreaID         sql.NullString
-		AreaLabel      sql.NullString
-	)
-
-	for rows.Next() {
-		err = rows.Scan(&ItemID, &ItemLabel, &PreviewPicture, &BoxID, &BoxLabel, &ShelfID, &ShelfLabel, &AreaID, &AreaLabel)
-		if err != nil {
-			return nil, logg.WrapErr(err)
-		}
-		if ItemID.Valid {
-			item.ItemID = uuid.Must(uuid.FromString(ItemID.String))
-			item.Label = ItemLabel.String
-			item.PreviewPicture = PreviewPicture.String
-			item.BoxID = uuid.FromStringOrNil(BoxID.String)
-			item.BoxLabel = BoxLabel.String
-			item.ShelfID = uuid.FromStringOrNil(ShelfID.String)
-			item.BoxLabel = BoxLabel.String
-			item.AreaID = uuid.FromStringOrNil(AreaID.String)
-			item.AreaLabel = AreaLabel.String
-		} else {
-			return item, errors.New(fmt.Sprintf("Invalid UUID: \"%s\"", ItemID.String))
-		}
-
-		if env.Development() {
-			b := bytes.Buffer{}
-			server.WriteJSON(&b, item)
-			logg.Debugf("virtual item: %v", b.String())
-		}
-
+		return nil, logg.WrapErr(err)
 	}
 
-	return item, nil
+	itemRow, err := sqlListRow.ToListRow()
+	if err != nil {
+		return itemRow, logg.WrapErr(err)
+	}
+
+	if env.Development() {
+		b := bytes.Buffer{}
+		server.WriteJSON(&b, itemRow)
+		logg.Debugf("virtual item: %v", b.String())
+	}
+
+	return itemRow, nil
 }
 
 // return items id's in array from type string
@@ -283,7 +311,7 @@ func (db *DB) DeleteItem(itemId uuid.UUID) error {
 	sqlStatement := `DELETE FROM item WHERE id = ?;`
 	result, err := db.Sql.Exec(sqlStatement, itemId.String())
 	if err != nil {
-		return fmt.Errorf("deleting was not succeed %W", err)
+		return logg.Errorf("deleting was not succeed %W", err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
@@ -397,7 +425,7 @@ func (db *DB) DeleteItems(itemIds []uuid.UUID) error {
 		return err
 	}
 	if rowsAffected != int64(len(itemIds)) {
-		err := fmt.Errorf("unexpected number of rows affected while deleting. Expected: %d, Actual: %d", len(itemIds), rowsAffected)
+		err := logg.Errorf("unexpected number of rows affected while deleting. Expected: %d, Actual: %d", len(itemIds), rowsAffected)
 		logg.Err(err)
 		return err
 	}
@@ -406,11 +434,37 @@ func (db *DB) DeleteItems(itemIds []uuid.UUID) error {
 }
 
 func (db *DB) MoveItem(id1 uuid.UUID, id2 uuid.UUID) error {
-	// updateStmt := `UPDATE item SET outerbox_id = ? WHERE Id = ?;`
 	updateStmt := `UPDATE item SET box_id = ? WHERE id = ?;`
 	_, err := db.Sql.Exec(updateStmt, id2, id1)
 	if err != nil {
 		return logg.Errorf("Placeholder function %w", err)
 	}
 	return nil
+}
+
+// Helper function to check for null strings and return empty if null
+func ifNullString(sqlStr sql.NullString) string {
+	if sqlStr.Valid {
+		return sqlStr.String
+	}
+	return ""
+}
+
+// Helper function to check for null UUIDs and return uuid.Nil if null
+func ifNullUUID(sqlUUID sql.NullString) uuid.UUID {
+	if sqlUUID.Valid {
+		return uuid.FromStringOrNil(sqlUUID.String)
+	}
+	return uuid.Nil
+}
+
+func UUIDFromSqlString(boxID sql.NullString) (uuid.UUID, error) {
+	if boxID.Valid {
+		id, err := uuid.FromString(boxID.String)
+		if err != nil {
+			return uuid.Nil, logg.Errorf("error while converting the string id into uuid: %w", err)
+		}
+		return id, nil
+	}
+	return uuid.Nil, logg.Errorf("invalid Virtual Id string")
 }

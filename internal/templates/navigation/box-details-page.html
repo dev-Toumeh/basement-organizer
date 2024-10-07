@@ -45,10 +45,10 @@
             <input type="text" id="qrcode" name="qrcode" value="{{ .QRcode }}" {{ if not .Edit}}disabled{{end}}>
             <br>
 
-            {{ if eq .OuterboxID.String "00000000-0000-0000-0000-000000000000" }}
+            {{ if eq .OuterBoxID.String "00000000-0000-0000-0000-000000000000" }}
             {{ else }}
             <span>Is inside box:</span>
-            <a href="/boxes/{{.OuterboxID}}" 
+            <a href="/boxes/{{.OuterBoxID}}" 
                 hx-boost="true"
                 style=""
             >{{ .Outerbox.Label }}</a>
@@ -138,7 +138,7 @@
             </tr>
         </thead> 
         <tbody id="box-list-body">
-            <tr id="box-list-row-{{.BoxID}}">
+            <tr id="box-list-row-{{.ID}}">
                 <td colspan="7" style="text-align:center">No Entries</td>  
             </tr>
         </tbody>
@@ -188,7 +188,7 @@
             {{ template "box-list-row" . }}
             {{ end }}
         {{ else }}
-            <tr id="box-list-row-{{.BoxID}}">
+            <tr id="box-list-row-{{.ID}}">
                 <td colspan="7" style="text-align:center">No Entries</td>  
             </tr>
         {{ end }}
@@ -234,8 +234,8 @@
         </thead> 
         <!--boxes are created directly by backend with template-->
         <tbody id="box-list-body">
-        {{ if .ItemListRows }}
-            {{ range .ItemListRows }}
+        {{ if .ListRows }}
+            {{ range .ListRows }}
             {{ template "item-list-row" . }}
             {{ end }}
         {{ else }}
@@ -268,16 +268,16 @@
     {{ end }}
 
     {{ if $empty }}
-    <tr id="box-list-row-{{.BoxID}}">
+    <tr id="box-list-row-{{.ID}}">
         <td colspan="7" style="text-align:center">
             <span class="empty">empty<img class="preview" style="opacity:0"></span>
         </td>  
     </tr>
     {{ else }}
-    <tr id="item-list-row-{{.ItemID}}">
-         <!--hx-get="/items/{{.ItemID}}"-->
+    <tr id="item-list-row-{{.ID}}">
+         <!--hx-get="/items/{{.ID}}"-->
         <td
-            hx-get="/api/v1/read/item/{{.ItemID}}"
+            hx-get="/api/v1/read/item/{{.ID}}"
             hx-push-url="true"
             hx-target="#item-list"
             class="clickable"
@@ -294,8 +294,8 @@
             </div>
         </td>
         {{ if not .Move}}
-        <td style="text-align: center;"><input type="checkbox" name="move:{{.BoxID}}"></td>
-        <td style="text-align: center;"><input type="checkbox" name="delete:{{.BoxID}}"></td>
+        <td style="text-align: center;"><input type="checkbox" name="move:{{.ID}}"></td>
+        <td style="text-align: center;"><input type="checkbox" name="delete:{{.ID}}"></td>
         {{ else }}
         <td style="text-align: center;">
             <button type="">move here</button>

@@ -5,40 +5,12 @@ import (
 	"basement/main/internal/templates"
 	"net/http"
 	"strconv"
-
-	"github.com/gofrs/uuid/v5"
 )
-
-type ItemListRow struct {
-	ItemID         uuid.UUID
-	Label          string
-	BoxID          uuid.UUID
-	BoxLabel       string
-	ShelfID        uuid.UUID
-	ShelfLabel     string
-	AreaID         uuid.UUID
-	AreaLabel      string
-	PreviewPicture string
-}
-
-func (vi *ItemListRow) Map() map[string]any {
-	return map[string]any{
-		"ItemID":         vi.ItemID,
-		"Label":          vi.Label,
-		"BoxID":          vi.BoxID,
-		"BoxLabel":       vi.BoxLabel,
-		"ShelfID":        vi.ShelfID,
-		"ShelfLabel":     vi.ShelfLabel,
-		"AreaID":         vi.AreaID,
-		"AreaLabel":      vi.AreaLabel,
-		"PreviewPicture": vi.PreviewPicture,
-	}
-}
 
 type SearchItemData struct {
 	Query          string
 	TotalCount     int
-	Records        []ItemListRow
+	Records        []ListRow
 	PaginationData []PaginationData
 }
 

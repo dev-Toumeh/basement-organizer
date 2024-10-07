@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid/v5"
@@ -18,24 +19,82 @@ import (
 	"basement/main/internal/templates"
 )
 
+// BasicInfo is present in item, box, shelf and area
+type BasicInfo struct {
+	ID             uuid.UUID
+	Label          string
+	Description    string
+	Picture        string
+	PreviewPicture string
+	QRcode         string
+}
+
+func (b BasicInfo) Map() map[string]any {
+	return map[string]interface{}{
+		"ID":             b.ID,
+		"Label":          b.Label,
+		"Description":    b.Description,
+		"Picture":        b.Picture,
+		"PreviewPicture": b.PreviewPicture,
+		"QRcode":         b.QRcode,
+	}
+}
+
+func NewBasicInfo() BasicInfo {
+	return BasicInfo{ID: uuid.Must(uuid.NewV4())}.MakeLabelWithTime("thing")
+}
+
+func NewBasicInfoWithLabel(label string) BasicInfo {
+	return BasicInfo{ID: uuid.Must(uuid.NewV4())}.MakeLabelWithTime(label)
+}
+
+func (b BasicInfo) MakeLabelWithTime(label string) BasicInfo {
+	t := time.Now().Format("2006-01-02_15_04_05")
+	b.Label = fmt.Sprintf("%s_%s", label, t)
+	return b
+}
+
+// ListRow is a single row entry used for list templates.
+type ListRow struct {
+	ID             uuid.UUID // can be item, box, shelf or area
+	Label          string
+	BoxID          uuid.UUID // is inside this box
+	BoxLabel       string
+	ShelfID        uuid.UUID // is inside this shelf
+	ShelfLabel     string
+	AreaID         uuid.UUID // is inside this area
+	AreaLabel      string
+	PreviewPicture string
+}
+
+func (row *ListRow) Map() map[string]any {
+	return map[string]interface{}{
+		"ID":             row.ID,
+		"Label":          row.Label,
+		"BoxID":          row.BoxID,
+		"BoxLabel":       row.BoxLabel,
+		"ShelfID":        row.ShelfID,
+		"ShelfLabel":     row.ShelfLabel,
+		"AreaID":         row.AreaID,
+		"AreaLabel":      row.AreaLabel,
+		"PreviewPicture": row.PreviewPicture,
+	}
+}
+
 type Item struct {
-	ID             uuid.UUID `json:"id"`
-	Label          string    `json:"label"       validate:"required,lte=128"`
-	Description    string    `json:"description" validate:"omitempty,lte=256"`
-	Picture        string    `json:"picture"     validate:"omitempty,base64"`
-	PreviewPicture string    `json:"preview_picture"     validate:"omitempty,base64"`
-	Quantity       int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
-	Weight         string    `json:"weight"      validate:"omitempty,numeric"`
-	QRcode         string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	BoxID          uuid.UUID `json:"box_id"`
-	ShelfID        uuid.UUID `json:"shelf_id"`
-	AreaID         uuid.UUID `json:"area_id"`
+	BasicInfo
+	Quantity int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
+	Weight   string    `json:"weight"      validate:"omitempty,numeric"`
+	QRcode   string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	BoxID    uuid.UUID `json:"box_id"`
+	ShelfID  uuid.UUID `json:"shelf_id"`
+	AreaID   uuid.UUID `json:"area_id"`
 }
 
 type ItemDatabase interface {
 	CreateNewItem(newItem Item) error
 	ItemByField(field string, value string) (Item, error)
-	ItemListRowByID(id uuid.UUID) (*ItemListRow, error)
+	ItemListRowByID(id uuid.UUID) (*ListRow, error)
 	Item(id string) (Item, error)
 	ItemIDs() ([]string, error)
 	ItemExist(field string, value string) bool
@@ -48,8 +107,8 @@ type ItemDatabase interface {
 	MoveItem(id1 uuid.UUID, id2 uuid.UUID) error
 
 	// search functions
-	ItemFuzzyFinder(query string) ([]ItemListRow, error)
-	ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]ItemListRow, error)
+	ItemFuzzyFinder(query string) ([]ListRow, error)
+	ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]ListRow, error)
 	NumOfItemRecords(searchString string) (int, error)
 }
 
@@ -223,14 +282,16 @@ func item(r *http.Request) (Item, error) {
 	}
 
 	newItem := Item{
-		ID:          id,
-		Label:       r.PostFormValue(LABEL),
-		Description: r.PostFormValue(DESCRIPTIO),
-		Picture:     common.ParsePicture(r),
-		Quantity:    common.ParseQuantity(r.PostFormValue(QUANTITY)),
-		Weight:      r.PostFormValue(WEIGHT),
-		QRcode:      r.PostFormValue(QRCODE),
-		BoxID:       boxId,
+		BasicInfo: BasicInfo{
+			ID:          id,
+			Label:       r.PostFormValue(LABEL),
+			Description: r.PostFormValue(DESCRIPTIO),
+			Picture:     common.ParsePicture(r),
+		},
+		Quantity: common.ParseQuantity(r.PostFormValue(QUANTITY)),
+		Weight:   r.PostFormValue(WEIGHT),
+		QRcode:   r.PostFormValue(QRCODE),
+		BoxID:    boxId,
 	}
 	return newItem, nil
 }

@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/shelves"
 	"database/sql"
@@ -10,31 +11,28 @@ import (
 )
 
 type SQLShelf struct {
-	ID             sql.NullString
-	Label          sql.NullString
-	Description    sql.NullString
-	Picture        sql.NullString
-	PreviewPicture sql.NullString
-	QRcode         sql.NullString
-	Height         sql.NullFloat64
-	Width          sql.NullFloat64
-	Depth          sql.NullFloat64
-	Rows           sql.NullInt64
-	Cols           sql.NullInt64
+	SQLBasicInfo
+	Height sql.NullFloat64
+	Width  sql.NullFloat64
+	Depth  sql.NullFloat64
+	Rows   sql.NullInt64
+	Cols   sql.NullInt64
+	AreaID sql.NullString
 }
 
 func (s SQLShelf) ToShelf() (*shelves.Shelf, error) {
-	id, err := uuid.FromString(s.ID.String)
+	info, err := s.SQLBasicInfo.ToBasicInfo()
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
+
 	return &shelves.Shelf{
-		ID:             id,
-		Label:          s.Label.String,
-		Description:    s.Description.String,
-		Picture:        s.Picture.String,
-		PreviewPicture: s.PreviewPicture.String,
-		QRcode:         s.QRcode.String,
+		ID:             info.ID,
+		Label:          info.Label,
+		Description:    info.Description,
+		Picture:        info.Picture,
+		PreviewPicture: info.PreviewPicture,
+		QRcode:         info.QRcode,
 		Height:         float32(s.Height.Float64),
 		Width:          float32(s.Width.Float64),
 		Depth:          float32(s.Depth.Float64),
@@ -42,25 +40,8 @@ func (s SQLShelf) ToShelf() (*shelves.Shelf, error) {
 		Cols:           int(s.Cols.Int64),
 		Items:          nil,
 		Boxes:          nil,
-	}, nil
-}
-
-type SqlShelfListRow struct {
-	ID             sql.NullString
-	Label          sql.NullString
-	AreaID         sql.NullString
-	AreaLabel      sql.NullString
-	PreviewPicture sql.NullString
-}
-
-func (s SqlShelfListRow) ToShelfListRow() *shelves.ShelfListRow {
-	return &shelves.ShelfListRow{
-		ID:             ifNullUUID(s.ID),
-		Label:          ifNullString(s.Label),
 		AreaID:         ifNullUUID(s.AreaID),
-		AreaLabel:      ifNullString(s.AreaLabel),
-		PreviewPicture: ifNullString(s.PreviewPicture),
-	}
+	}, nil
 }
 
 // CreateNewShelf creates a new empty shelf in database.
@@ -153,7 +134,7 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 
 	err := updatePicture(&shelf.Picture, &shelf.PreviewPicture)
 	if err != nil {
-		logg.Errf("Can't update picture %v", err.Error())
+		logg.Infof("Can't update picture %v", err.Error())
 	}
 
 	stmt := `
@@ -212,12 +193,12 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
         FROM shelf WHERE id = ?`
 
 	err := db.Sql.QueryRow(stmt, id.String()).Scan(
-		&sqlShelf.ID,
-		&sqlShelf.Label,
-		&sqlShelf.Description,
-		&sqlShelf.Picture,
-		&sqlShelf.PreviewPicture,
-		&sqlShelf.QRcode,
+		&sqlShelf.SQLBasicInfo.ID,
+		&sqlShelf.SQLBasicInfo.Label,
+		&sqlShelf.SQLBasicInfo.Description,
+		&sqlShelf.SQLBasicInfo.Picture,
+		&sqlShelf.SQLBasicInfo.PreviewPicture,
+		&sqlShelf.SQLBasicInfo.QRCode,
 		&sqlShelf.Height,
 		&sqlShelf.Width,
 		&sqlShelf.Depth,
@@ -325,8 +306,8 @@ func (db *DB) MoveItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
 // ShelfListRowsPaginated returns always a slice with the number of rows specified.
 // If rows=5 with 3 results, the last 2 rows will be nil.
 // rows and page must be above 1.
-func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*shelves.ShelfListRow, error) {
-	shelfRows := make([]*shelves.ShelfListRow, rows)
+func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, error) {
+	shelfRows := make([]*items.ListRow, 0)
 
 	if page < 1 {
 		return shelfRows, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
@@ -336,7 +317,7 @@ func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*shelves.ShelfListRo
 		return shelfRows, logg.NewError(fmt.Sprintf("invalid rows '%d', needs at least 1 row", rows))
 	}
 
-	shelfRows = make([]*shelves.ShelfListRow, rows)
+	shelfRows = make([]*items.ListRow, rows)
 
 	limit := rows
 	offset := (page - 1) * rows
@@ -354,12 +335,15 @@ func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*shelves.ShelfListRo
 
 	i := 0
 	for results.Next() {
-		sqlShelf := SqlShelfListRow{}
-		err = results.Scan(&sqlShelf.ID, &sqlShelf.Label, &sqlShelf.AreaID, &sqlShelf.AreaLabel, &sqlShelf.PreviewPicture)
+		listRow := SQLListRow{}
+		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
 		if err != nil {
 			return shelfRows, logg.WrapErr(err)
 		}
-		shelfRows[i] = sqlShelf.ToShelfListRow()
+		shelfRows[i], err = listRow.ToListRow()
+		if err != nil {
+			return shelfRows, logg.WrapErr(err)
+		}
 		i += 1
 	}
 	if results.Err() != nil {

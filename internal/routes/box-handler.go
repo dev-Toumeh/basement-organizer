@@ -26,8 +26,8 @@ type BoxDatabase interface {
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (items.Box, error)
 	BoxIDs() ([]string, error) // @TODO: Change string to uuid.UUID
-	BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListRow, error)
-	BoxListRowByID(id uuid.UUID) (items.BoxListRow, error)
+	BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow, error)
+	BoxListRowByID(id uuid.UUID) (items.ListRow, error)
 }
 
 func registerBoxRoutes(db *database.DB) {
@@ -197,7 +197,7 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 
 		// box-list-row to fill box-list template
 		logg.Info("has query: ", urlQuery.Has("query"))
-		var boxes []items.BoxListRow
+		var boxes []items.ListRow
 		err = nil
 		usedSearch := false
 		if urlQuery.Has("query") && query != "" {
@@ -385,7 +385,7 @@ func boxDetailsPage(db *database.DB) http.HandlerFunc {
 		for i, v := range box.Items {
 			itemsMap[i] = v.Map()
 		}
-		nd["ItemListRows"] = itemsMap
+		nd["ListRows"] = itemsMap
 
 		server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, nd)
 	}
@@ -565,7 +565,7 @@ func renderBoxTemplate(box *items.Box, w http.ResponseWriter, r *http.Request) {
 	server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS, b.Map())
 }
 
-func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatabase, boxes []items.BoxListRow, query string) error {
+func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatabase, boxes []items.ListRow, query string) error {
 	searchInput := items.NewSearchInputTemplate()
 	searchInput.SearchInputLabel = "Search boxes"
 	searchInput.SearchInputHxTarget = "#box-list"
