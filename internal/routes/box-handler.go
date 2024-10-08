@@ -32,20 +32,31 @@ type BoxDatabase interface {
 
 func registerBoxRoutes(db *database.DB) {
 	// Box templates
-	http.HandleFunc("/box", boxHandler(db))
-	http.HandleFunc("/box/{id}/move", boxPageMove(db))
+	// http.HandleFunc("/box", boxHandler(db))
+	Handle("/box", boxHandler(db))
+	Handle("/box/{id}/move", boxPageMove(db))
 	// Box api
-	http.HandleFunc("/api/v1/box", boxHandler(db))
-	http.HandleFunc("/api/v1/box/{id}", boxHandler(db))
-	http.HandleFunc("/api/v1/box/{id}/move", moveBox(db))
+	Handle("/api/v1/box", boxHandler(db))
+	Handle("/api/v1/box/{id}", boxHandler(db))
+	Handle("/api/v1/box/{id}/move", moveBox(db))
 	// Boxes templates
-	http.HandleFunc("/boxes", boxesPage(db))
-	http.HandleFunc("/boxes/{id}", boxDetailsPage(db))
-	http.HandleFunc("/boxes/move", boxesPageMove(db))
-	http.HandleFunc("/boxes-list", boxesHandler(db))
+	Handle("/boxes", boxesPage(db))
+	Handle("/boxes/{id}", boxDetailsPage(db))
+	Handle("/boxes/move", boxesPageMove(db))
+	Handle("/boxes-list", boxesHandler(db))
 	// Boxes api
-	http.HandleFunc("/api/v1/boxes", boxesHandler(db))
-	http.HandleFunc("/api/v1/boxes/move", moveBoxes(db))
+	Handle("/api/v1/boxes", boxesHandler(db))
+	Handle("/api/v1/boxes/move", moveBoxes(db))
+}
+
+func Handle(route string, handler http.HandlerFunc) {
+	http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
+		msg := ""
+		msg = fmt.Sprintf(`handle "%s" http://%s%s%s`, route, r.URL.Scheme, r.Host, r.URL)
+		colorMsg := fmt.Sprintf("%s%s%s", logg.Yellow, msg, logg.Reset)
+		logg.Debug(colorMsg)
+		handler.ServeHTTP(w, r)
+	})
 }
 
 // boxHandler handles read, create, update and delete for single box.
@@ -196,7 +207,7 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 		}
 
 		// box-list-row to fill box-list template
-		logg.Info("has query: ", urlQuery.Has("query"))
+		logg.Infof("has query: %v", urlQuery.Has("query"))
 		var boxes []items.ListRow
 		err = nil
 		usedSearch := false

@@ -102,7 +102,7 @@ func (db *DB) UpdateBox(box items.Box) error {
 	var err error
 	box.PreviewPicture, err = ResizePNG(box.Picture, 50)
 	if err != nil {
-		logg.Errorf2(fmt.Sprintf("Error while resizing picture of box '%s' to create a preview picture", box.Label), err)
+		logg.Errorf("Error while resizing picture of box '%s' to create a preview picture %w", box.Label, err)
 	}
 
 	sqlStatement := "UPDATE box SET label = ?, description = ?, picture = ?, preview_picture = ?, qrcode = ?, shelf_id = ?, area_id = ? WHERE id = ?"

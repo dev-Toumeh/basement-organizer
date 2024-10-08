@@ -39,7 +39,7 @@ func WriteNotImplementedWarning(message string, w http.ResponseWriter, r *http.R
 func WriteInternalServerError(message string, err error, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusInternalServerError)
 	fmt.Fprint(w, message)
-	logg.Errfo(3, "%s\t%s", message, err)
+	logg.Alog(logg.ErrorLogger(), 3, "%s: %s", message, err)
 }
 
 func ImplementMeHandler(w http.ResponseWriter, r *http.Request) {
@@ -68,8 +68,7 @@ func MustRender(w http.ResponseWriter, r *http.Request, name string, data any) {
 	err := templates.SafeRender(w, name, data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		errLog := logg.Errorf("%w", err)
-		logg.Errfo(3, "%s: %s", http.StatusText(http.StatusInternalServerError), errLog)
+		logg.Alog(logg.ErrorLogger(), 3, "%s: %s", http.StatusText(http.StatusInternalServerError), logg.WrapErr(err))
 		return
 	}
 }

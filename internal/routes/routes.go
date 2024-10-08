@@ -23,52 +23,52 @@ func RegisterRoutes(db *database.DB) {
 }
 
 func authRoutes(db auth.AuthDatabase) {
-	http.HandleFunc("/login", auth.LoginHandler(db))
-	http.HandleFunc("/login-form", auth.LoginForm)
-	http.HandleFunc("/register", auth.RegisterHandler(db))
-	http.HandleFunc("/register-form", func(w http.ResponseWriter, r *http.Request) {
+	Handle("/login", auth.LoginHandler(db))
+	Handle("/login-form", auth.LoginForm)
+	Handle("/register", auth.RegisterHandler(db))
+	Handle("/register-form", func(w http.ResponseWriter, r *http.Request) {
 		server.MustRender(w, r, templates.TEMPLATE_REGISTER_FORM, nil)
 	})
-	http.HandleFunc("/update", auth.UpdateHandler(db))
-	http.HandleFunc("/logout", auth.LogoutHandler)
+	Handle("/update", auth.UpdateHandler(db))
+	Handle("/logout", auth.LogoutHandler)
 }
 
 func itemsRoutes(db items.ItemDatabase) {
-	http.HandleFunc("/api/v1/implement-me", server.ImplementMeHandler)
-	http.HandleFunc("/items", itemsPage)
-	http.HandleFunc("/template/item-form", itemTemp)
-	http.HandleFunc("/template/item-search", searchItemTemp)
-	http.HandleFunc("/template/item-dummy", func(w http.ResponseWriter, r *http.Request) {
+	Handle("/api/v1/implement-me", server.ImplementMeHandler)
+	Handle("/items", itemsPage)
+	Handle("/template/item-form", itemTemp)
+	Handle("/template/item-search", searchItemTemp)
+	Handle("/template/item-dummy", func(w http.ResponseWriter, r *http.Request) {
 		db.InsertDummyItems()
 		templates.RenderSuccessNotification(w, "dummy items has been added")
 	})
-	http.HandleFunc("/items-pagination", items.ItemPaginationHandler(db))
+	Handle("/items-pagination", items.ItemPaginationHandler(db))
 
-	http.HandleFunc("/delete-item", items.DeleteItemHandler(db))
-	http.HandleFunc("/move-item", moveItem)
-	http.HandleFunc("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
+	Handle("/delete-item", items.DeleteItemHandler(db))
+	Handle("/move-item", moveItem)
+	Handle("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
 	}))
-	http.HandleFunc("/items-ids", items.ReadItemsHandler(db, func(w io.Writer, data any) {
+	Handle("/items-ids", items.ReadItemsHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEMS_CONTAINER, data)
 	}))
 
-	http.HandleFunc("/api/v1/create/item", items.CreateItemHandler(db))
-	http.HandleFunc("/api/v1/read/item/{id}", items.ReadItemHandler(db, func(w io.Writer, data any) {
+	Handle("/api/v1/create/item", items.CreateItemHandler(db))
+	Handle("/api/v1/read/item/{id}", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
 	}))
-	http.HandleFunc("/api/v1/search/item", items.SearchItemHandler(db))
-	http.HandleFunc("/api/v1/update/item", items.UpdateItemHandler(db))
-	http.HandleFunc("/api/v1/move/item", items.MoveItemHandler(db))
-	http.HandleFunc("/api/v1/delete/item", items.DeleteItemHandler(db))
-	http.HandleFunc("/api/v1/read/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
+	Handle("/api/v1/search/item", items.SearchItemHandler(db))
+	Handle("/api/v1/update/item", items.UpdateItemHandler(db))
+	Handle("/api/v1/move/item", items.MoveItemHandler(db))
+	Handle("/api/v1/delete/item", items.DeleteItemHandler(db))
+	Handle("/api/v1/read/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
 		fmt.Fprint(w, data)
 	}))
 }
 
 func shelvesRoutes() {
 	// @TODO: Implement shelves page.
-	http.HandleFunc("/shelves", server.ImplementMeHandler)
+	Handle("/shelves", server.ImplementMeHandler)
 }
 
 var testStyle = templates.DEBUG_STYLE
@@ -88,22 +88,22 @@ func SwitchDebugStyle(w http.ResponseWriter, r *http.Request) {
 
 func staticRoutes() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
-	http.HandleFunc("/", AuthPage)
+	Handle("/", AuthPage)
 }
 
 func experimentalRoutes() {
-	http.HandleFunc("/switch-debug-style", SwitchDebugStyle)
-	http.HandleFunc("/notification-success", func(w http.ResponseWriter, r *http.Request) {
+	Handle("/switch-debug-style", SwitchDebugStyle)
+	Handle("/notification-success", func(w http.ResponseWriter, r *http.Request) {
 		templates.RenderSuccessNotification(w, "success")
 	})
-	http.HandleFunc("/notification-warning", func(w http.ResponseWriter, r *http.Request) {
+	Handle("/notification-warning", func(w http.ResponseWriter, r *http.Request) {
 		templates.RenderWarningNotification(w, "warning")
 	})
 }
 
 func navigationRoutes() {
 
-	http.HandleFunc("/settings", SettingsPage)
-	http.HandleFunc("/sample-page", SamplePage)
-	http.HandleFunc("/personal-page", PersonalPage)
+	Handle("/settings", SettingsPage)
+	Handle("/sample-page", SamplePage)
+	Handle("/personal-page", PersonalPage)
 }

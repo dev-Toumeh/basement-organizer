@@ -10,7 +10,7 @@ var isProduction = true
 var defaultTableSize = 15
 
 func Description() string {
-	return fmt.Sprintf("isProduction: %t, isDevelopment: %t, defaultTableSize: %d", isProduction, isDevelopment, defaultTableSize)
+	return fmt.Sprintf("Environment config: isProduction=%t, isDevelopment=%t, defaultTableSize=%d", isProduction, isDevelopment, defaultTableSize)
 }
 
 // SetDevelopment sets environment setting to development.
