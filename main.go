@@ -29,5 +29,8 @@ func main() {
 		logg.Fatal("Templates failed to initialize", err)
 	}
 
-	http.ListenAndServe("localhost:8000", nil)
+	err = http.ListenAndServe("localhost:8000", nil)
+	if err != nil {
+		panic(err)
+	}
 }

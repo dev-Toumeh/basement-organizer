@@ -21,13 +21,19 @@ func MoveItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Reques
 		if id.IsNil() {
 			return
 		}
-		id2, _ := uuid.FromString(r.PostFormValue("id2"))
-		err := db.MoveItem(id, id2)
+		id2, err := uuid.FromString(r.PostFormValue("id2"))
 		if err != nil {
 			err = logg.Errorf("%s %w", errMsgForUser, err)
 			server.WriteInternalServerError(errMsgForUser, err, w, r)
 			return
 		}
+		err = db.MoveItem(id, id2)
+		if err != nil {
+			err = logg.Errorf("%s %w", errMsgForUser, err)
+			server.WriteInternalServerError(errMsgForUser, err, w, r)
+			return
+		}
+		logg.Infof("move '%s' to '%s'", id, id2)
 		return
 	}
 }

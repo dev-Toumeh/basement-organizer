@@ -112,12 +112,6 @@ func (db *DB) createNewShelf(nID uuid.UUID) error {
 
 // CreateShelf creates a shelf entry in database from the provided shelf.
 func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
-	if shelf.Id == uuid.Nil {
-		id := uuid.Must(uuid.NewV4())
-		logg.Infof(`CreateShelf: Provided shelf "%s" had invalid uuid "%s". Creating a new one: "%s"`, shelf.Label, shelf.Id.String(), id.String())
-		shelf.Id = id
-	}
-
 	var (
 		picture64        string
 		previewPicture64 string
@@ -173,7 +167,7 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
     `
 
 	_, err = db.Sql.Exec(stmt,
-		shelf.Id.String(),
+		shelf.ID.String(),
 		shelf.Label,
 		shelf.Description,
 		picture64,
@@ -245,7 +239,7 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 	// 	previewPictureBase64 = base64.StdEncoding.EncodeToString(previewPicture)
 	// }
 	shelf := &shelves.Shelf{
-		Id:             id,
+		ID:             id,
 		Label:          label,
 		Description:    description.String,
 		Picture:        picture.String,
@@ -337,7 +331,7 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
 		shelf.Depth,
 		shelf.Rows,
 		shelf.Cols,
-		shelf.Id.String(),
+		shelf.ID.String(),
 	)
 	if err != nil {
 		return logg.Errorf("UpdateShelf: %w", err)

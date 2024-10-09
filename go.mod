@@ -8,6 +8,7 @@ require (
 	github.com/gorilla/sessions v1.2.2
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.23.0
+	golang.org/x/image v0.21.0
 )
 
 require (
@@ -35,11 +36,10 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gofrs/uuid/v5 v5.2.0
 	github.com/gorilla/securecookie v1.1.2 // indirect
-	github.com/jaswdr/faker v1.19.1
 	github.com/leodido/go-urn v1.4.0 // indirect
 	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/text v0.15.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 	modernc.org/sqlite v1.31.1
 )

@@ -33,11 +33,7 @@ func (db *boxDatabaseError) CreateBox(newBox *items.Box) (uuid.UUID, error) {
 }
 
 func (db *boxDatabaseError) BoxById(id uuid.UUID) (items.Box, error) {
-	return items.Box{Id: uuid.Nil}, errors.New("AAAAAAAA")
-}
-
-func (db *boxDatabaseError) Box2ById(id uuid.UUID) (*items.Box2, error) {
-	return &items.Box2{Id: uuid.Must(uuid.FromString(BOX_ID_VALID))}, errors.New("AAAAAAAA")
+	return items.Box{BasicInfo: items.BasicInfo{ID: uuid.Nil}}, errors.New("AAAAAAAA")
 }
 
 func (db *boxDatabaseError) BoxIDs() ([]string, error) {
@@ -68,12 +64,12 @@ func (db *boxDatabaseError) DeleteBox(boxId uuid.UUID) error {
 	return errors.New("AAAAA")
 }
 
-func (db *boxDatabaseError) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListItem, error) {
-	return make([]items.BoxListItem, 0), errors.New("AAAAAAAA")
+func (db *boxDatabaseError) BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow, error) {
+	return make([]items.ListRow, 0), errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) VirtualBoxById(id uuid.UUID) (items.BoxListItem, error) {
-	return items.BoxListItem{}, errors.New("AAAAAAAA")
+func (db *boxDatabaseError) BoxListRowByID(id uuid.UUID) (items.ListRow, error) {
+	return items.ListRow{}, errors.New("AAAAAAAA")
 }
 
 // boxDatabaseSuccess never returns errors.
@@ -84,11 +80,7 @@ func (db *boxDatabaseSuccess) CreateBox(newBox *items.Box) (uuid.UUID, error) {
 }
 
 func (db *boxDatabaseSuccess) BoxById(id uuid.UUID) (items.Box, error) {
-	return items.Box{Id: uuid.Must(uuid.FromString(BOX_ID_VALID))}, nil
-}
-
-func (db *boxDatabaseSuccess) Box2ById(id uuid.UUID) (*items.Box2, error) {
-	return &items.Box2{Id: uuid.Must(uuid.FromString(BOX_ID_VALID))}, nil
+	return items.Box{BasicInfo: items.BasicInfo{ID: uuid.Must(uuid.FromString(BOX_ID_VALID))}}, nil
 }
 
 func (db *boxDatabaseSuccess) BoxIDs() ([]string, error) {
@@ -115,12 +107,12 @@ func (db *boxDatabaseSuccess) DeleteBox(boxId uuid.UUID) error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) BoxFuzzyFinder(query string, limit int, page int) ([]items.BoxListItem, error) {
-	return make([]items.BoxListItem, 0), nil
+func (db *boxDatabaseSuccess) BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow, error) {
+	return make([]items.ListRow, 0), nil
 }
 
-func (db *boxDatabaseSuccess) VirtualBoxById(id uuid.UUID) (items.BoxListItem, error) {
-	return items.BoxListItem{}, nil
+func (db *boxDatabaseSuccess) BoxListRowByID(id uuid.UUID) (items.ListRow, error) {
+	return items.ListRow{}, nil
 }
 
 func TestBoxHandlerDBErrors(t *testing.T) {

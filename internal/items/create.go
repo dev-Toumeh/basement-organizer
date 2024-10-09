@@ -2,15 +2,13 @@ package items
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid/v5"
@@ -21,20 +19,82 @@ import (
 	"basement/main/internal/templates"
 )
 
+// BasicInfo is present in item, box, shelf and area
+type BasicInfo struct {
+	ID             uuid.UUID
+	Label          string
+	Description    string
+	Picture        string
+	PreviewPicture string
+	QRcode         string
+}
+
+func (b BasicInfo) Map() map[string]any {
+	return map[string]interface{}{
+		"ID":             b.ID,
+		"Label":          b.Label,
+		"Description":    b.Description,
+		"Picture":        b.Picture,
+		"PreviewPicture": b.PreviewPicture,
+		"QRcode":         b.QRcode,
+	}
+}
+
+func NewBasicInfo() BasicInfo {
+	return BasicInfo{ID: uuid.Must(uuid.NewV4())}.MakeLabelWithTime("thing")
+}
+
+func NewBasicInfoWithLabel(label string) BasicInfo {
+	return BasicInfo{ID: uuid.Must(uuid.NewV4())}.MakeLabelWithTime(label)
+}
+
+func (b BasicInfo) MakeLabelWithTime(label string) BasicInfo {
+	t := time.Now().Format("2006-01-02_15_04_05")
+	b.Label = fmt.Sprintf("%s_%s", label, t)
+	return b
+}
+
+// ListRow is a single row entry used for list templates.
+type ListRow struct {
+	ID             uuid.UUID // can be item, box, shelf or area
+	Label          string
+	BoxID          uuid.UUID // is inside this box
+	BoxLabel       string
+	ShelfID        uuid.UUID // is inside this shelf
+	ShelfLabel     string
+	AreaID         uuid.UUID // is inside this area
+	AreaLabel      string
+	PreviewPicture string
+}
+
+func (row *ListRow) Map() map[string]any {
+	return map[string]interface{}{
+		"ID":             row.ID,
+		"Label":          row.Label,
+		"BoxID":          row.BoxID,
+		"BoxLabel":       row.BoxLabel,
+		"ShelfID":        row.ShelfID,
+		"ShelfLabel":     row.ShelfLabel,
+		"AreaID":         row.AreaID,
+		"AreaLabel":      row.AreaLabel,
+		"PreviewPicture": row.PreviewPicture,
+	}
+}
+
 type Item struct {
-	Id          uuid.UUID `json:"id"`
-	Label       string    `json:"label"       validate:"required,lte=128"`
-	Description string    `json:"description" validate:"omitempty,lte=256"`
-	Picture     string    `json:"picture"     validate:"omitempty,base64"`
-	Quantity    int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
-	Weight      string    `json:"weight"      validate:"omitempty,numeric"`
-	QRcode      string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	BoxId       uuid.UUID `json:"box_id"`
+	BasicInfo
+	Quantity int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
+	Weight   string    `json:"weight"      validate:"omitempty,numeric"`
+	QRcode   string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	BoxID    uuid.UUID `json:"box_id"`
+	ShelfID  uuid.UUID `json:"shelf_id"`
+	AreaID   uuid.UUID `json:"area_id"`
 }
 
 type ItemDatabase interface {
 	CreateNewItem(newItem Item) error
 	ItemByField(field string, value string) (Item, error)
+	ItemListRowByID(id uuid.UUID) (*ListRow, error)
 	Item(id string) (Item, error)
 	ItemIDs() ([]string, error)
 	ItemExist(field string, value string) bool
@@ -47,8 +107,8 @@ type ItemDatabase interface {
 	MoveItem(id1 uuid.UUID, id2 uuid.UUID) error
 
 	// search functions
-	ItemFuzzyFinder(query string) ([]VirtualItem, error)
-	ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]VirtualItem, error)
+	ItemFuzzyFinder(query string) ([]ListRow, error)
+	ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]ListRow, error)
 	NumOfItemRecords(searchString string) (int, error)
 }
 
@@ -220,56 +280,18 @@ func item(r *http.Request) (Item, error) {
 	if err != nil {
 		return Item{}, err
 	}
-	// b64encodedPictureString := parsePicture(r)
 
 	newItem := Item{
-		Id:          id,
-		Label:       r.PostFormValue(LABEL),
-		Description: r.PostFormValue(DESCRIPTIO),
-		Picture:     "", //b64encodedPictureString, // @TODO: Fix picture is not added while creating or updating item.
-		Quantity:    parseQuantity(r.PostFormValue(QUANTITY)),
-		Weight:      r.PostFormValue(WEIGHT),
-		QRcode:      r.PostFormValue(QRCODE),
-		BoxId:       boxId,
+		BasicInfo: BasicInfo{
+			ID:          id,
+			Label:       r.PostFormValue(LABEL),
+			Description: r.PostFormValue(DESCRIPTIO),
+			Picture:     common.ParsePicture(r),
+		},
+		Quantity: common.ParseQuantity(r.PostFormValue(QUANTITY)),
+		Weight:   r.PostFormValue(WEIGHT),
+		QRcode:   r.PostFormValue(QRCODE),
+		BoxID:    boxId,
 	}
 	return newItem, nil
-}
-
-// ParsePicture returns base64 encoded string of picture uploaded if there is any
-func ParsePicture(r *http.Request) string {
-	logg.Info("Parsing multipart/form-data for picture")
-	// 8 MB
-	var maxSize int64 = 1000 * 1000 * 8
-	err := r.ParseMultipartForm(maxSize)
-	if err != nil {
-		logg.Err(err)
-		return ""
-	}
-
-	file, header, err := r.FormFile(PICTURE)
-	if header != nil {
-		logg.Debug("picture filename:", header.Filename)
-	}
-	if err != nil {
-		logg.Err(err)
-		return ""
-	}
-
-	readbytes, err := io.ReadAll(file)
-	logg.Debug("picture size:", len(readbytes)/1000, "KB")
-	if err != nil {
-		logg.Err(err)
-		return ""
-	}
-
-	return base64.StdEncoding.EncodeToString(readbytes)
-}
-
-// parseQuantity returns by default at least 1
-func parseQuantity(value string) int64 {
-	intValue, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		return 1
-	}
-	return intValue
 }

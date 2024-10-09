@@ -24,20 +24,16 @@ func TestMain(m *testing.M) {
 }
 
 func setup() {
-
-	// 1. Create the sqlite database File it it wasn't exist
-	if _, err := os.Stat("./sqlite-database-test.db"); err != nil {
-		fmt.Print("Creating sqlite-database-test.db... \n")
-		file, err := os.Create("./sqlite-database-test.db")
-		if err != nil {
-			logg.Fatalf("Failed to create database: %v", err)
-		}
-		defer file.Close()
-		logg.Debug("sqlite-database-test.db was created")
+	// 1. Recreate the sqlite database File
+	fmt.Print("Creating sqlite-database-test.db... \n")
+	file, err := os.Create("./sqlite-database-test.db")
+	if err != nil {
+		logg.Fatalf("Failed to create database: %v", err)
 	}
+	defer file.Close()
+	logg.Debug("sqlite-database-test.db was created")
 
 	//  2. Open the connection
-	var err error
 	if dbTest.Sql, err = sql.Open("sqlite", "./sqlite-database-test.db"); err != nil {
 		logg.Fatalf("Failed to open database: %v", err)
 	}

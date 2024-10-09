@@ -1,8 +1,7 @@
 package items
 
 import (
-	"basement/main/internal/logg"
-	"basement/main/internal/templates"
+	"basement/main/internal/server"
 	"fmt"
 	"io"
 	"net/http"
@@ -34,13 +33,10 @@ func ReadItemHandler(db ItemDatabase, responseWriter DataWriteFunc) http.Handler
 
 			data, err := db.ItemByField("id", id)
 			if err != nil && err != db.ErrorExist() {
-				w.WriteHeader(http.StatusInternalServerError)
-				templates.RenderErrorNotification(w, err.Error())
+				server.WriteInternalServerError("", err, w, r)
 			}
-			if data.Id.IsNil() {
-				logg.Debug("item not found: ", id)
-				w.WriteHeader(http.StatusNotFound)
-				fmt.Fprintf(w, `Item with id "%s" not found`, id)
+			if data.ID.IsNil() {
+				server.WriteNotFoundError("", err, w, r)
 				return
 			}
 			responseWriter(w, data)

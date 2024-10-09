@@ -105,7 +105,7 @@ func InitTemplates(directory string) error {
 		return logg.Errorf("Init Templates failed %w", err)
 	}
 
-	log.Println("Templates initialized")
+	logg.Info("Templates initialized")
 	return nil
 }
 

@@ -5,36 +5,12 @@ import (
 	"basement/main/internal/templates"
 	"net/http"
 	"strconv"
-
-	"github.com/gofrs/uuid/v5"
 )
-
-type VirtualItem struct {
-	Item_Id        uuid.UUID
-	Label          string
-	Box_label      string
-	Box_Id         uuid.UUID
-	Shelf_label    string
-	Area_label     string
-	PreviewPicture string
-}
-
-func (vi *VirtualItem) Map() map[string]any {
-	return map[string]any{
-		"Item_Id":        vi.Item_Id,
-		"Label":          vi.Label,
-		"Box_label":      vi.Box_label,
-		"Box_Id":         vi.Box_Id,
-		"Shelf_label":    vi.Shelf_label,
-		"Area_label":     vi.Area_label,
-		"PreviewPicture": vi.PreviewPicture,
-	}
-}
 
 type SearchItemData struct {
 	Query          string
 	TotalCount     int
-	Records        []VirtualItem
+	Records        []ListRow
 	PaginationData []PaginationData
 }
 

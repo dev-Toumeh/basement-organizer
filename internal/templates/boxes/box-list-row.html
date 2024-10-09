@@ -1,0 +1,40 @@
+{{ define "box-list-row" }}
+{{ $empty := false }}
+{{ if not . }}
+    {{ $empty = true }}
+{{ end }}
+
+{{ if $empty }}
+<tr id="box-list-row-{{.ID}}">
+    <td colspan="7" style="text-align:center">
+        <span class="empty">empty<img class="preview" style="opacity:0"></span>
+    </td>  
+</tr>
+{{ else }}
+<tr id="box-list-row-{{.ID}}">
+    <td hx-get="/boxes/{{.ID}}"
+        hx-push-url="true"
+        hx-target="body"
+        class="clickable"
+    >{{.Label}}</td>
+    <td>{{.BoxLabel}}</td> 
+    <td>{{.ShelfLabel}}</td>
+    <td>{{.AreaLabel}}</td>
+    <td style="text-align: center;">
+        <img class="preview" 
+            src="data:image/png;base64,{{.PreviewPicture}}" 
+            {{if .PreviewPicture}}alt="{{.Label}}"{{end}}
+        >
+    </td>
+    {{ if not .Move}}
+    <td style="text-align: center;"><input type="checkbox" name="move:{{.ID}}"></td>
+    <td style="text-align: center;"><input type="checkbox" name="delete:{{.ID}}"></td>
+    {{ else }}
+    <td style="text-align: center;">
+        <button type="">move here</button>
+    </td>
+    {{ end }}
+</tr>
+{{ end }}
+
+{{ end }}
