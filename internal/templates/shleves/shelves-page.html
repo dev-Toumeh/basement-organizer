@@ -11,44 +11,10 @@
 {{ end }}
 
 {{ define "shelves-page-content" }}
-
-<div id="main-container">
-    <div class="section-up">
-        <div class="quarter"> </div>
-        <div class="three-quarters">
-          {{ template "notification-container" . }}
-        </div>
-    </div>
-    <div class="section-down">
-        <div class="quarter">
-        <ul>
-            <li>
-                <button
-                    class="menu-button"
-                    hx-get="/template/item-search"
-                    type="button"
-                    hx-swap="innerHTML"
-                    hx-push-url="false"
-                    hx-target=".target">
-                    Search Shelves
-                </button>
-                <button 
-                    class="menu-button"
-                    hx-get="/template/item-form" 
-                    type="button"
-                    hx-swap="innerHTML"
-                    hx-target=".target"
-                    hx-push-url="false">
-                    Add new Shelve
-                </button>
-            </li>
-        </ul>
-        </div>
-        <div class="three-quarters target">
-        </div>
-    </div>
-</div>
-{{end}}
+<h1>Shelf list</h1>
+<button hx-post="/shelf" hx-target="#Shelf-list-body" hx-swap="beforeend">Create Shelf</button>
+{{ template "shelf-list" . }}
+{{ end }}
 
 {{ define "shelves-js" }}
     <script>
