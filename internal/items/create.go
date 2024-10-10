@@ -91,6 +91,11 @@ type Item struct {
 	AreaID   uuid.UUID `json:"area_id"`
 }
 
+func (i Item) String() string {
+	return fmt.Sprintf("Item[ID=%s, Label=%s, Quantity=%d, Weight=%s, QRcode=%s, BoxID=%s, ShelfID=%s, AreaID=%s]",
+		i.BasicInfo.ID, i.BasicInfo.Label, i.Quantity, i.Weight, i.QRCode, i.BoxID, i.ShelfID, i.AreaID)
+}
+
 type ItemDatabase interface {
 	CreateNewItem(newItem Item) error
 	ItemByField(field string, value string) (Item, error)
