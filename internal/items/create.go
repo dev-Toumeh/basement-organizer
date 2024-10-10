@@ -113,14 +113,14 @@ type ItemDatabase interface {
 }
 
 const (
-	ID         string = "id"
-	LABEL      string = "label"
-	DESCRIPTIO string = "description"
-	PICTURE    string = "picture"
-	QUANTITY   string = "quantity"
-	WEIGHT     string = "weight"
-	QRCODE     string = "qrcode"
-	BOX_ID     string = "Box_id"
+	ID          string = "id"
+	LABEL       string = "label"
+	DESCRIPTION string = "description"
+	PICTURE     string = "picture"
+	QUANTITY    string = "quantity"
+	WEIGHT      string = "weight"
+	QRCODE      string = "qrcode"
+	BOX_ID      string = "Box_id"
 )
 
 var validate *validator.Validate
@@ -285,7 +285,7 @@ func item(r *http.Request) (Item, error) {
 		BasicInfo: BasicInfo{
 			ID:          id,
 			Label:       r.PostFormValue(LABEL),
-			Description: r.PostFormValue(DESCRIPTIO),
+			Description: r.PostFormValue(DESCRIPTION),
 			Picture:     common.ParsePicture(r),
 		},
 		Quantity: common.ParseQuantity(r.PostFormValue(QUANTITY)),
