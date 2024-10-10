@@ -69,7 +69,7 @@ func (s *SQLItem) ToItem() (*items.Item, error) {
 			return nil, logg.Errorf("Error parsing UUID for box ID: '%v' %w", s.BoxID, err)
 		}
 	} else {
-		return nil, logg.NewError(fmt.Sprintf("box ID is required but was null in item %v", s.BoxID.String))
+		return nil, logg.NewError(fmt.Sprintf("box ID is required but was null in item '%v'", s))
 	}
 
 	if s.Quantity.Valid {

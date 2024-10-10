@@ -31,7 +31,7 @@ func (db *DB) PrintUserRecords() {
 			log.Printf("Error scanning user record: %v", err)
 			continue
 		}
-		fmt.Printf("id: %s, username: %s, passwordhash: %s\n", id, username, passwordhash)
+		logg.Debugf("id: %s, username: %s, passwordhash: %s\n", id, username, passwordhash)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -62,9 +62,9 @@ func (db *DB) PrintItemRecords() {
 		}
 		logg.Debugf("id: %s, label: %s, description: %s, quantity: %d, weight: %s, qrcode: %s \n", idStr, item.Label, item.Description, item.Quantity, item.Weight, item.QRCode)
 		if boxId.Valid {
-			fmt.Printf("Box ID: %s\n", boxId.String)
+			logg.Debugf("Box ID: %s\n", boxId.String)
 		} else {
-			fmt.Printf("Box ID is null\n")
+			logg.Debugf("Box ID is null\n")
 		}
 	}
 
@@ -164,7 +164,7 @@ func (db *DB) CheckItemFTSData() error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Rowid: %s, Label: %s, Description: %s\n", rowid, label, description)
+		logg.Debugf("Rowid: %s, Label: %s, Description: %s\n", rowid, label, description)
 	}
 	return nil
 }

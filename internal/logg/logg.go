@@ -128,8 +128,8 @@ func logPrefix(stackframes int) string {
 // Used in other error wrapper functions to capture outside information.
 func WrapErrWithSkip(err error, stackframes int) error {
 	pre := logPrefix(stackframes + 1)
-	err2 := fmt.Errorf(pre+"%w", err)
-	return err2
+	errReturn := fmt.Errorf("%s%s%w%s", pre, Red, err, Reset)
+	return errReturn
 }
 
 // NewError creates new error with added logg details.
