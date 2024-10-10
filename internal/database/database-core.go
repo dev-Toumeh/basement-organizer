@@ -19,7 +19,7 @@ var ErrNotExist = errors.New("does not exist")
 var ErrNotImplemented = errors.New("is not implemented")
 
 // add statement to create new table
-var statementsMainTables = &map[string]string{
+var mainTables = &map[string]string{
 	"user":  CREATE_USER_TABLE_STMT,
 	"item":  CREATE_ITEM_TABLE_STMT,
 	"box":   CREATE_BOX_TABLE_STMT,
@@ -27,7 +27,7 @@ var statementsMainTables = &map[string]string{
 	"area":  CREATE_AREA_TABLE_STMT,
 }
 
-var statementVertualTabels = &map[string]string{
+var virtualTables = &map[string]string{
 	"item_fts":                 CREATE_ITEM_TABLE_STMT_FTS,
 	"box_fts":                  CREATE_BOX_TABLE_STMT_FTS,
 	"shelf_fts":                CREATE_SHELF_TABLE_STMT_FTS,

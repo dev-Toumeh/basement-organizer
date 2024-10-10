@@ -39,8 +39,8 @@ func setup() {
 	}
 
 	// 3. Run our DDL statements to create the required tables if they do not exist
-	createTestTables(*statementsMainTables)
-	createTestTables(*statementVertualTabels)
+	createTestTables(*mainTables)
+	createTestTables(*virtualTables)
 
 	//dbTest.PrintTables()
 }
