@@ -90,6 +90,10 @@ func (s *SQLItem) ToItem() (*items.Item, error) {
 		item.Weight = ""
 	}
 
+	item.QRCode = ifNullString(s.QRCode)
+	item.ShelfID = ifNullUUID(s.ShelfID)
+	item.AreaID = ifNullUUID(s.AreaID)
+
 	return item, nil
 }
 
@@ -443,7 +447,7 @@ func (db *DB) MoveItemToBox(id1 uuid.UUID, id2 uuid.UUID) error {
 	updateStmt := `UPDATE item SET box_id = ? WHERE id = ?;`
 	_, err := db.Sql.Exec(updateStmt, id2, id1)
 	if err != nil {
-		return logg.Errorf("Placeholder function %w", err)
+		return logg.WrapErr(err)
 	}
 	return nil
 }
