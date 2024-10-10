@@ -27,7 +27,7 @@ func MoveItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Reques
 			server.WriteInternalServerError(errMsgForUser, err, w, r)
 			return
 		}
-		err = db.MoveItem(id, id2)
+		err = db.MoveItemToBox(id, id2)
 		if err != nil {
 			err = logg.Errorf("%s %w", errMsgForUser, err)
 			server.WriteInternalServerError(errMsgForUser, err, w, r)

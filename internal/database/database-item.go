@@ -433,7 +433,7 @@ func (db *DB) DeleteItems(itemIds []uuid.UUID) error {
 	return nil
 }
 
-func (db *DB) MoveItem(id1 uuid.UUID, id2 uuid.UUID) error {
+func (db *DB) MoveItemToBox(id1 uuid.UUID, id2 uuid.UUID) error {
 	updateStmt := `UPDATE item SET box_id = ? WHERE id = ?;`
 	_, err := db.Sql.Exec(updateStmt, id2, id1)
 	if err != nil {
