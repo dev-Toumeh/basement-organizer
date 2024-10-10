@@ -53,7 +53,7 @@ func teardown() {
 }
 
 func EmptyTestDatabase() {
-	statments := []string{"user", "item", "box", "shelf", "area", "item_fts", "box_fts"}
+	statments := []string{"user", "item", "box", "shelf", "area", "item_fts", "box_fts", "shelf_fts"}
 	for _, tableName := range statments {
 		sqlStatement := fmt.Sprintf("DELETE FROM %s;", tableName)
 		_, err := dbTest.Sql.Exec(sqlStatement)

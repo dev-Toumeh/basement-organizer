@@ -176,7 +176,7 @@ const (
     area_id UNINDEXED,
     area_label,
     preview_picture UNINDEXED,
-    tokenize = 'porter'
+    tokenize = 'unicode61'
 	);`
 
 	CREATE_SHELF_INSERT_TRIGGER = `

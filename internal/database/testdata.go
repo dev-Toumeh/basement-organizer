@@ -14,6 +14,7 @@ var VALID_UUID_4 uuid.UUID = uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-
 
 var SHELF_VALID_UUID_1 uuid.UUID = uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000"))
 var SHELF_VALID_UUID_2 uuid.UUID = uuid.Must(uuid.FromString("223e4567-e89b-12d3-a456-426614174000"))
+var SHELF_VALID_UUID_3 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174000"))
 var ITEM_VALID_UUID uuid.UUID = uuid.Must(uuid.FromString("133e4567-e89b-12d3-a456-426614174000"))
 var VALID_UUID_NOT_EXISTING uuid.UUID = uuid.Must(uuid.FromString("033e4567-e89b-12d3-a456-426614174000"))
 
@@ -210,6 +211,39 @@ var SHELF_2 = &shelves.Shelf{
 	Cols:           4,
 }
 
+var SHELF_3 = &shelves.Shelf{
+	ID:             SHELF_VALID_UUID_3,
+	Label:          "Test Shelf 3",
+	Description:    "A shelf for testing",
+	Picture:        VALID_BASE64_PNG,
+	PreviewPicture: "",
+	QRcode:         "",
+	Height:         3.0,
+	Width:          1.5,
+	Depth:          0.5,
+	Rows:           10,
+	Cols:           10,
+}
+
+var SHELF_4 = &shelves.Shelf{
+	ID:    uuid.Must(uuid.NewV4()),
+	Label: "A Shelf",
+}
+
+var SHELF_5 = &shelves.Shelf{
+	ID:    uuid.Must(uuid.NewV4()),
+	Label: "AA Shelf",
+}
+
+var SHELF_6 = &shelves.Shelf{
+	ID:    uuid.Must(uuid.NewV4()),
+	Label: "BBB",
+}
+
+func testShelves() []shelves.Shelf {
+	return []shelves.Shelf{*SHELF_1, *SHELF_2, *SHELF_3, *SHELF_4, *SHELF_5, *SHELF_6}
+}
+
 func resetShelves() {
 	SHELF_1 = &shelves.Shelf{
 		ID:             SHELF_VALID_UUID_1,
@@ -237,5 +271,33 @@ func resetShelves() {
 		Depth:          0.5,
 		Rows:           3,
 		Cols:           4,
+	}
+	SHELF_3 = &shelves.Shelf{
+		ID:             SHELF_VALID_UUID_3,
+		Label:          "Test   Shelf 3",
+		Description:    "A shelf for testing",
+		Picture:        VALID_BASE64_PNG,
+		PreviewPicture: "",
+		QRcode:         "",
+		Height:         3.0,
+		Width:          1.5,
+		Depth:          0.5,
+		Rows:           10,
+		Cols:           10,
+	}
+
+	SHELF_4 = &shelves.Shelf{
+		ID:    uuid.Must(uuid.NewV4()),
+		Label: "keyword A",
+	}
+
+	SHELF_5 = &shelves.Shelf{
+		ID:    uuid.Must(uuid.NewV4()),
+		Label: "keyword Shelf AA",
+	}
+
+	SHELF_6 = &shelves.Shelf{
+		ID:    uuid.Must(uuid.NewV4()),
+		Label: "BBB",
 	}
 }

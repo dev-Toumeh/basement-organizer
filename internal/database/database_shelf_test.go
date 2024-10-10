@@ -177,3 +177,53 @@ func TestShelfListRowsPaginated(t *testing.T) {
 	assert.Equal(t, len(shelves), 2)
 	assert.Equal(t, nil, shelves[1])
 }
+
+func TestShelfSearchListRowsPaginated(t *testing.T) {
+	EmptyTestDatabase()
+	resetShelves()
+
+	for _, shelf := range testShelves() {
+		err := dbTest.CreateShelf(&shelf)
+		if err != nil {
+			t.Fatalf("create shelf setup failed: %v", err)
+		}
+	}
+
+	// full word
+	shelves, found, err := dbTest.ShelfSearchListRowsPaginated(1, 10, "shelf")
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 10)
+	assert.Equal(t, found, 4)
+
+	// part of a word
+	shelves, found, err = dbTest.ShelfSearchListRowsPaginated(1, 10, "key")
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 10)
+	assert.Equal(t, found, 2)
+
+	// whitespace and single letter
+	shelves, found, err = dbTest.ShelfSearchListRowsPaginated(1, 10, "            a")
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 10)
+	assert.Equal(t, found, 2)
+
+	// 2 parts of 2 different words
+	shelves, found, err = dbTest.ShelfSearchListRowsPaginated(1, 10, "sh           3")
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 10)
+	assert.Equal(t, found, 1)
+
+	// 2 parts of 2 different words
+	shelves, found, err = dbTest.ShelfSearchListRowsPaginated(1, 10, "Tes Sh ")
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 10)
+	assert.Equal(t, found, 3)
+
+	// 2 parts of 2 different words with pagination
+	// page 1: SHELF_1, SHELF_2, page 2: SHELF_3
+	shelves, found, err = dbTest.ShelfSearchListRowsPaginated(2, 2, "Tes Sh ")
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 2)
+	assert.Equal(t, found, 1)
+	assert.Equal(t, shelves[0].ID, SHELF_3.ID)
+}
