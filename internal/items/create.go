@@ -85,7 +85,7 @@ type Item struct {
 	BasicInfo
 	Quantity int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
 	Weight   string    `json:"weight"      validate:"omitempty,numeric"`
-	QRcode   string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	QRCode   string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
 	BoxID    uuid.UUID `json:"box_id"`
 	ShelfID  uuid.UUID `json:"shelf_id"`
 	AreaID   uuid.UUID `json:"area_id"`
@@ -290,7 +290,7 @@ func item(r *http.Request) (Item, error) {
 		},
 		Quantity: common.ParseQuantity(r.PostFormValue(QUANTITY)),
 		Weight:   r.PostFormValue(WEIGHT),
-		QRcode:   r.PostFormValue(QRCODE),
+		QRCode:   r.PostFormValue(QRCODE),
 		BoxID:    boxId,
 	}
 	return newItem, nil

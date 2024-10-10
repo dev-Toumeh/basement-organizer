@@ -178,11 +178,11 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
         FROM 
             box AS b
         LEFT JOIN 
-            box As ib ON b.id = ib.outerbox_id
+            box AS ib ON b.id = ib.outerbox_id
         LEFT JOIN 
-            box As ob ON b.outerbox_id = ob.id
+            box AS ob ON b.outerbox_id = ob.id
         LEFT JOIN 
-            item As i ON b.id = i.box_id 
+            item AS i ON b.id = i.box_id 
         WHERE 
             b.%s = ?;`, field)
 	rows, err := db.Sql.Query(query, value)

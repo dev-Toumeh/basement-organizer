@@ -118,8 +118,7 @@ var ITEM_1 = &items.Item{
 	},
 	Quantity: 10,
 	Weight:   "5.5",
-	QRcode:   "QRcode1",
-	// BoxID:       testBoxId,
+	QRCode:   "QRcode1",
 }
 
 var ITEM_2 = &items.Item{
@@ -131,8 +130,7 @@ var ITEM_2 = &items.Item{
 	},
 	Quantity: 20,
 	Weight:   "10.0",
-	QRcode:   "QRcode2",
-	// BoxID:       testBoxId,
+	QRCode:   "QRcode2",
 }
 
 var ITEM_3 = &items.Item{
@@ -144,8 +142,7 @@ var ITEM_3 = &items.Item{
 	},
 	Quantity: 15,
 	Weight:   "7.25",
-	QRcode:   "QRcode3",
-	// BoxID:       testBoxId,
+	QRCode:   "QRcode3",
 }
 
 func resetTestItems() {
@@ -158,8 +155,7 @@ func resetTestItems() {
 		},
 		Quantity: 10,
 		Weight:   "5.5",
-		QRcode:   "QRcode1",
-		// BoxID:       testBoxId,
+		QRCode:   "QRcode1",
 	}
 
 	ITEM_2 = &items.Item{
@@ -171,8 +167,7 @@ func resetTestItems() {
 		},
 		Quantity: 20,
 		Weight:   "10.0",
-		QRcode:   "QRcode2",
-		// BoxID:       testBoxId,
+		QRCode:   "QRcode2",
 	}
 
 	ITEM_3 = &items.Item{
@@ -184,8 +179,7 @@ func resetTestItems() {
 		},
 		Quantity: 15,
 		Weight:   "7.25",
-		QRcode:   "QRcode3",
-		// BoxID:       testBoxId,
+		QRCode:   "QRcode3",
 	}
 }
 

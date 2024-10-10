@@ -263,7 +263,7 @@ func (db *DB) insertNewItem(item items.Item) error {
 	updatePicture(&item.Picture, &item.PreviewPicture)
 
 	sqlStatement := `INSERT INTO item (id, label, description, picture, preview_picture, quantity, weight, qrcode, box_id, shelf_id, area_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-	result, err := db.Sql.Exec(sqlStatement, item.ID.String(), item.Label, item.Description, item.Picture, item.PreviewPicture, item.Quantity, item.Weight, item.QRcode, item.BoxID.String(), item.ShelfID.String(), item.AreaID.String())
+	result, err := db.Sql.Exec(sqlStatement, item.ID.String(), item.Label, item.Description, item.Picture, item.PreviewPicture, item.Quantity, item.Weight, item.QRCode, item.BoxID.String(), item.ShelfID.String(), item.AreaID.String())
 	if err != nil {
 		return logg.Errorf("Error while executing create new item statement: %w", err)
 	}
@@ -283,7 +283,7 @@ func (db *DB) UpdateItem(ctx context.Context, item items.Item) error {
 	updatePicture(&item.Picture, &item.PreviewPicture)
 
 	sqlStatement := `UPDATE item Set label = ?, description = ?, picture = ?, preview_picture = ?, quantity = ?, weight = ?, qrcode = ? WHERE id = ?`
-	result, err := db.Sql.ExecContext(ctx, sqlStatement, item.Label, item.Description, item.Picture, item.PreviewPicture, item.Quantity, item.Weight, item.QRcode, item.ID.String())
+	result, err := db.Sql.ExecContext(ctx, sqlStatement, item.Label, item.Description, item.Picture, item.PreviewPicture, item.Quantity, item.Weight, item.QRCode, item.ID.String())
 	if err != nil {
 		logg.Err(err)
 		return err
@@ -345,14 +345,14 @@ func (db *DB) Items() ([][]string, error) {
 	var item items.Item
 	for rows.Next() {
 		var idStr string
-		err := rows.Scan(&idStr, &item.Label, &item.Description, &item.Picture, &item.Quantity, &item.Weight, &item.QRcode)
+		err := rows.Scan(&idStr, &item.Label, &item.Description, &item.Picture, &item.Quantity, &item.Weight, &item.QRCode)
 		if err != nil {
 			log.Printf("Error scanning item record: %v", err)
 			return [][]string{}, err
 		}
 
 		formatted := fmt.Sprintf("id: %s, label: %s, description: %s, picture: %s, quantity: %d, weight: %s, qrcode: %s \n",
-			idStr, item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRcode)
+			idStr, item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRCode)
 		itemsArray = append(itemsArray, []string{formatted})
 	}
 

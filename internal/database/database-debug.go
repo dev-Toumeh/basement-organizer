@@ -55,12 +55,12 @@ func (db *DB) PrintItemRecords() {
 		var item items.Item
 		var idStr string
 		var boxId sql.NullString
-		err := rows.Scan(&idStr, &item.Label, &item.Description, &item.Quantity, &item.Weight, &item.QRcode, &boxId)
+		err := rows.Scan(&idStr, &item.Label, &item.Description, &item.Quantity, &item.Weight, &item.QRCode, &boxId)
 		if err != nil {
 			log.Printf("Error scanning item record: %v", err)
 			continue
 		}
-		fmt.Printf("id: %s, label: %s, description: %s, quantity: %d, weight: %s, qrcode: %s \n", idStr, item.Label, item.Description, item.Quantity, item.Weight, item.QRcode)
+		logg.Debugf("id: %s, label: %s, description: %s, quantity: %d, weight: %s, qrcode: %s \n", idStr, item.Label, item.Description, item.Quantity, item.Weight, item.QRCode)
 		if boxId.Valid {
 			fmt.Printf("Box ID: %s\n", boxId.String)
 		} else {
@@ -236,7 +236,7 @@ func (db *DB) InsertDummyItems() {
 			},
 			Quantity: rand.Int63n(100) + 1,
 			Weight:   fmt.Sprintf("%.2f", rand.Float64()*100),
-			QRcode:   gofakeit.HipsterWord(),
+			QRCode:   gofakeit.HipsterWord(),
 			BoxID:    uuid.Must(uuid.NewV4()),
 		}
 
