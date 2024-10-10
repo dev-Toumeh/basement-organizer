@@ -167,7 +167,7 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 	boxInitialized := false
 	outerBoxInitialized := false
 	addedInBoxes := make(map[string]bool)
-	addedItems := make(map[string]*items.Item)
+	addedItems := make(map[string]*items.ListRow)
 
 	query := fmt.Sprintf(
 		`SELECT 
@@ -245,16 +245,13 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 		// Add the item to the itemsList if itemId is valid
 		if sqlItem.ID.Valid {
 			if _, exists := addedItems[sqlItem.ID.String]; !exists {
-				item, err := sqlItem.ToItem()
-				if err != nil {
-					return nil, logg.Errorf("error converting SQLItem to Item: %w", err)
-				}
-				itemListRow, err := db.ItemListRowByID(item.ID)
+				id := uuid.FromStringOrNil(sqlItem.ID.String)
+				itemListRow, err := db.ItemListRowByID(id)
 				if err != nil {
 					return nil, logg.WrapErr(err)
 				}
 				itemListRows = append(itemListRows, itemListRow)
-				addedItems[sqlItem.ID.String] = item
+				addedItems[sqlItem.ID.String] = itemListRow
 			}
 		}
 	}
