@@ -64,7 +64,6 @@ func testBoxes() []*items.Box {
 	return []*items.Box{BOX_1, BOX_2, BOX_3, BOX_4}
 }
 
-// Clone 4
 var BOX_1 = &items.Box{
 	BasicInfo: items.BasicInfo{
 		ID:          VALID_UUID_1,
@@ -73,7 +72,6 @@ var BOX_1 = &items.Box{
 		Picture:     VALID_BASE64_PNG,
 		QRcode:      "uvwxyzabcdefg",
 	},
-	// OuterBoxID: uuid.Nil,
 }
 
 var BOX_2 = &items.Box{
@@ -84,7 +82,6 @@ var BOX_2 = &items.Box{
 		Picture:     VALID_BASE64_PNG,
 		QRcode:      "abababababcd",
 	},
-	// OuterBoxID: VALID_UUID_1,
 }
 
 var BOX_3 = &items.Box{
@@ -95,7 +92,6 @@ var BOX_3 = &items.Box{
 		Picture:     VALID_BASE64_PNG,
 		QRcode:      "efghefghefgh",
 	},
-	// OuterBoxID: VALID_UUID_1,
 }
 
 var BOX_4 = &items.Box{
@@ -106,7 +102,6 @@ var BOX_4 = &items.Box{
 		Picture:     VALID_BASE64_PNG,
 		QRcode:      "ijklmnopqrst",
 	},
-	// OuterBoxID: VALID_UUID_1,
 }
 
 var ITEM_1 = &items.Item{
