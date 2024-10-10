@@ -53,6 +53,12 @@ type SQLItem struct {
 	AreaLabel  sql.NullString
 }
 
+func (i SQLItem) String() string {
+	return fmt.Sprintf("SQLItem[ID=%s, Label=%s, Quantity=%d, Weight=%s, QRCode=%s, BoxID=%s, BoxLabel=%s, ShelfID=%s, ShelfLabel=%s, AreaID=%s, AreaLabel=%s]",
+		i.SQLBasicInfo.ID.String, i.SQLBasicInfo.Label.String, i.Quantity.Int64, i.Weight.String, i.SQLBasicInfo.QRCode.String,
+		i.BoxID.String, i.BoxLabel.String, i.ShelfID.String, i.ShelfLabel.String, i.AreaID.String, i.AreaLabel.String)
+}
+
 // this function used inside of BoxByField to convert the sql Item struct into normal struct
 func (s *SQLItem) ToItem() (*items.Item, error) {
 	// var err error
