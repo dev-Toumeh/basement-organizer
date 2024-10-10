@@ -26,6 +26,7 @@ const (
 
 var logger = log.New(os.Stdout, "", log.Ltime|log.Lshortfile)
 var errorLogger = log.New(os.Stderr, Red+"ERROR:\t"+blue, log.Ltime|log.Lshortfile)
+var fatalLogger = log.New(os.Stderr, Red+"FATAL:\t"+blue, log.Ltime|log.Lshortfile)
 var debugLogger = log.New(os.Stdout, Green+"DEBUG:\t"+blue, log.Ltime|log.Lshortfile)
 var infoLogger = log.New(os.Stderr, Yellow+"INFO:\t"+blue, log.Ltime|log.Lshortfile)
 
@@ -139,14 +140,16 @@ func NewError(text string) error {
 
 // Fatal is equivalent to log.Fatal().
 func Fatal(v ...any) {
-	logger.Output(2, fmt.Sprint(v...))
+	pre := logPrefix(3)
+	Alog(fatalLogger, 3, Red+"Fatal error"+pre+Red+"%s"+Reset, v...)
 	os.Exit(1)
 }
 
 // Fatalf is equivalent to log.Fatalf().
 func Fatalf(format string, v ...any) {
-	errorLogger.Output(2, "Fatal error")
-	logger.Fatalf(format, v...)
+	pre := logPrefix(3)
+	Alog(fatalLogger, 3, Red+"Fatal error"+pre+Red+format+Reset, v...)
+	os.Exit(1)
 }
 
 // Debug logging
