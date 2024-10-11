@@ -55,6 +55,33 @@ func (db *DB) Connect() {
 	if env.Development() {
 		logg.Info("using in-memory database")
 		db.open(":memory:")
+		db.InsertSampleItems()
+		db.InsertSampleBoxes()
+		db.InsertSampleShelves()
+		itemIDs, err := db.ItemIDs()
+		if err != nil {
+			logg.WrapErr(err)
+		}
+		boxIDs, err := db.BoxIDs()
+		if err != nil {
+			logg.WrapErr(err)
+		}
+		shelfRows, err := db.ShelfListRowsPaginated(1, 3)
+		if err != nil {
+			logg.WrapErr(err)
+		}
+		db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[0]), uuid.FromStringOrNil(boxIDs[0]))
+		db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[1]), uuid.FromStringOrNil(boxIDs[0]))
+		db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[2]), uuid.FromStringOrNil(boxIDs[0]))
+		db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[3]), uuid.FromStringOrNil(boxIDs[1]))
+		db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[4]), uuid.FromStringOrNil(boxIDs[1]))
+		db.MoveItemToShelf(uuid.FromStringOrNil(itemIDs[5]), shelfRows[0].ID)
+		db.MoveItemToShelf(uuid.FromStringOrNil(itemIDs[6]), shelfRows[0].ID)
+		db.MoveBoxToShelf(uuid.FromStringOrNil(boxIDs[0]), shelfRows[1].ID)
+		db.MoveBoxToShelf(uuid.FromStringOrNil(boxIDs[2]), shelfRows[1].ID)
+		db.MoveBox(uuid.FromStringOrNil(boxIDs[3]), uuid.FromStringOrNil(boxIDs[5]))
+		db.MoveBox(uuid.FromStringOrNil(boxIDs[3]), uuid.FromStringOrNil(boxIDs[5]))
+		db.MoveBox(uuid.FromStringOrNil(boxIDs[5]), uuid.FromStringOrNil(boxIDs[6]))
 	}
 
 	if env.Production() {

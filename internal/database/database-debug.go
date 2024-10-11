@@ -3,8 +3,8 @@ package database
 import (
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
+	"basement/main/internal/shelves"
 	"database/sql"
-	"encoding/base64"
 	"fmt"
 	"log"
 
@@ -223,21 +223,22 @@ func (db *DB) RepopulateItemFTS() error {
 // 	return nil
 // }
 
-func (db *DB) InsertDummyItems() {
-	gofakeit.Seed(0)
+const SEED = 1234
+
+func (db *DB) InsertSampleItems() {
+	gofakeit.Seed(SEED)
 
 	for i := 0; i < 10; i++ {
 		newItem := items.Item{
 			BasicInfo: items.BasicInfo{
-				ID:          uuid.Must(uuid.NewV4()),
+				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
 				Label:       gofakeit.ProductName(),
 				Description: gofakeit.Sentence(5),
-				Picture:     generateRandomBase64Image(1024),
+				Picture:     ByteToBase64String(gofakeit.ImagePng(100, 100)),
 			},
 			Quantity: rand.Int63n(100) + 1,
 			Weight:   fmt.Sprintf("%.2f", rand.Float64()*100),
 			QRCode:   gofakeit.HipsterWord(),
-			BoxID:    uuid.Must(uuid.NewV4()),
 		}
 
 		err := db.insertNewItem(newItem)
@@ -249,12 +250,44 @@ func (db *DB) InsertDummyItems() {
 	return
 }
 
-func generateRandomBase64Image(size int) string {
-	// Generate random bytes
-	imageData := make([]byte, size)
-	rand.Read(imageData)
+func (db *DB) InsertSampleBoxes() {
+	gofakeit.Seed(SEED)
 
-	// Encode to base64
-	base64Image := base64.StdEncoding.EncodeToString(imageData)
-	return base64Image
+	for i := 0; i < 10; i++ {
+		newBox := items.Box{
+			BasicInfo: items.BasicInfo{
+				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
+				Label:       gofakeit.ProductName(),
+				Description: gofakeit.Sentence(5),
+				Picture:     ByteToBase64String(gofakeit.ImagePng(100, 100)),
+			},
+		}
+
+		_, err := db.CreateBox(&newBox)
+		if err != nil {
+			logg.Errf("error while adding dummyData %v", err)
+			return
+		}
+	}
+	return
+}
+
+func (db *DB) InsertSampleShelves() {
+	gofakeit.Seed(SEED)
+
+	for i := 0; i < 10; i++ {
+		newShelf := shelves.Shelf{
+			ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
+			Label:       gofakeit.ProductName(),
+			Description: gofakeit.Sentence(5),
+			Picture:     ByteToBase64String(gofakeit.ImagePng(100, 100)),
+		}
+
+		err := db.CreateShelf(&newShelf)
+		if err != nil {
+			logg.Errf("error while adding dummyData %v", err)
+			return
+		}
+	}
+	return
 }
