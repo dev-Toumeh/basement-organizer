@@ -387,7 +387,7 @@ func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (s
 		FROM shelf_fts
 		WHERE label MATCH '%s*'
 		LIMIT ? OFFSET ?;`, searchModified)
-	fmt.Println(querySearch)
+
 	// ORDER BY label ASC
 	// results, err := db.Sql.Query(querySearch, fmt.Sprintf("'%s'", search), limit, offset)
 	results, err := db.Sql.Query(querySearch, limit, offset)

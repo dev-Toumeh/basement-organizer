@@ -174,7 +174,7 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
             b.id, b.label, b.description, b.picture, b.preview_picture, b.qrcode, b.outerbox_id, b.shelf_id, b.area_id,
             ob.id, ob.label, ob.preview_picture,
             ib.id,
-            i.id
+            i.item_id, i.label, i.box_id, i.box_label,i.shelf_id, i.shelf_label,i.area_id, i.area_label
         FROM 
             box AS b
         LEFT JOIN 
@@ -182,7 +182,7 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
         LEFT JOIN 
             box AS ob ON b.outerbox_id = ob.id
         LEFT JOIN 
-            item AS i ON b.id = i.box_id 
+            item_fts AS i ON b.id = i.box_id 
         WHERE 
             b.%s = ?;`, field)
 	rows, err := db.Sql.Query(query, value)
@@ -193,18 +193,18 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 
 	for rows.Next() {
 		var (
-			sqlBox      SQLBox
-			sqlOuterBox SQLBox
-			sqlInnerBox SQLBox
-			sqlItem     SQLItem
-			innerBox    *items.Box
+			sqlBox         SQLBox
+			sqlOuterBox    SQLBox
+			sqlInnerBox    SQLBox
+			sqlItemListRow SQLListRow
+			innerBox       *items.Box
 		)
 
 		err := rows.Scan(
 			&sqlBox.ID, &sqlBox.Label, &sqlBox.Description, &sqlBox.Picture, &sqlBox.PreviewPicture, &sqlBox.QRCode, &sqlBox.OuterBoxID, &sqlBox.ShelfID, &sqlBox.AreaID,
 			&sqlOuterBox.ID, &sqlOuterBox.Label, &sqlOuterBox.PreviewPicture,
 			&sqlInnerBox.ID,
-			&sqlItem.ID,
+			&sqlItemListRow.ID, &sqlItemListRow.Label, &sqlItemListRow.BoxID, &sqlItemListRow.BoxLabel, &sqlItemListRow.ShelfID, &sqlItemListRow.ShelfLabel, &sqlItemListRow.AreaID, &sqlItemListRow.AreaLabel,
 		)
 		if err != nil {
 			return nil, logg.Errorf("error scanning row: %w", err)
@@ -243,15 +243,14 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 		}
 
 		// Add the item to the itemsList if itemId is valid
-		if sqlItem.ID.Valid {
-			if _, exists := addedItems[sqlItem.ID.String]; !exists {
-				id := uuid.FromStringOrNil(sqlItem.ID.String)
-				itemListRow, err := db.ItemListRowByID(id)
+		if sqlItemListRow.ID.Valid {
+			if _, exists := addedItems[sqlItemListRow.ID.String]; !exists {
+				itemListRow, err := sqlItemListRow.ToListRow()
 				if err != nil {
-					return nil, logg.WrapErr(err)
+					return nil, logg.Errorf("error converting SQLListRow to ListRow %w", err)
 				}
 				itemListRows = append(itemListRows, itemListRow)
-				addedItems[sqlItem.ID.String] = itemListRow
+				addedItems[sqlItemListRow.ID.String] = itemListRow
 			}
 		}
 	}

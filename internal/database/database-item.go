@@ -190,7 +190,7 @@ func (db *DB) Item(id string) (items.Item, error) {
 
 // ListItemById returns a single item with less information suitable for a list row.
 func (db *DB) ItemListRowByID(id uuid.UUID) (*items.ListRow, error) {
-	queryRow := db.Sql.QueryRow(`
+	query := `
 		SELECT 
             i.id, i.label, i.preview_picture,
             b.id, b.label,
@@ -205,13 +205,14 @@ func (db *DB) ItemListRowByID(id uuid.UUID) (*items.ListRow, error) {
         LEFT JOIN 
             area AS a ON a.id = i.area_id 
         WHERE 
-            i.id = ?;`, id.String())
+            i.id = ?;`
+	queryRow := db.Sql.QueryRow(query, id.String())
 
 	sqlListRow := SQLListRow{}
 
 	err := queryRow.Scan(&sqlListRow.ID, &sqlListRow.Label, &sqlListRow.PreviewPicture, &sqlListRow.BoxID, &sqlListRow.BoxLabel, &sqlListRow.ShelfID, &sqlListRow.ShelfLabel, &sqlListRow.AreaID, &sqlListRow.AreaLabel)
 	if err != nil {
-		return nil, logg.WrapErr(err)
+		return nil, logg.Errorf("%s %w", query, err)
 	}
 
 	itemRow, err := sqlListRow.ToListRow()

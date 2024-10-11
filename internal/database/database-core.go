@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"database/sql"
 	"errors"
@@ -12,7 +13,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const DATABASE_FILE_PATH = "./internal/database/sqlite-database2.db"
+const DATABASE_PROD_V1_FILE_PATH = "./internal/database/sqlite-database-prod-v1.db"
 
 var ErrExist = errors.New("already exists")
 var ErrNotExist = errors.New("does not exist")
@@ -28,10 +29,13 @@ var mainTables = &map[string]string{
 }
 
 var virtualTables = &map[string]string{
-	"item_fts":                 CREATE_ITEM_TABLE_STMT_FTS,
-	"box_fts":                  CREATE_BOX_TABLE_STMT_FTS,
-	"shelf_fts":                CREATE_SHELF_TABLE_STMT_FTS,
-	"Item_fts_trigger_insert":  CREATE_ITEM_INSERT_TRIGGER,
+	"item_fts":  CREATE_ITEM_TABLE_STMT_FTS,
+	"box_fts":   CREATE_BOX_TABLE_STMT_FTS,
+	"shelf_fts": CREATE_SHELF_TABLE_STMT_FTS,
+}
+
+var triggers = &map[string]string{
+	"item_fts_trigger_insert":  CREATE_ITEM_INSERT_TRIGGER,
 	"item_fts_trigger_update":  CREATE_ITEM_UPDATE_TRIGGER,
 	"item_fts_trigger_delete":  CREATE_ITEM_DELETE_TRIGGER,
 	"box_fts_trigger_insert":   CREATE_BOX_INSERT_TRIGGER,
@@ -46,30 +50,52 @@ type DB struct {
 	Sql *sql.DB
 }
 
-// create the Database file if it was not exist and establish the connection with it
+// Connect creates the database file if it doesn't exist and opens it.
 func (db *DB) Connect() {
-
-	// create the sqlite database File it it wasn't exist
-	if _, err := os.Stat(DATABASE_FILE_PATH); err != nil {
-		logg.Info("Creating sqlite-database.db...")
-		file, internErr := os.Create(DATABASE_FILE_PATH)
-		defer file.Close()
-		if internErr != nil {
-			logg.Fatal(internErr)
-		}
-		logg.Info("sqlite-database.db created")
+	if env.Development() {
+		logg.Info("using in-memory database")
+		db.open(":memory:")
 	}
-	// open the connection
+
+	if env.Production() {
+		logg.Infof(`using "%s" database`, DATABASE_PROD_V1_FILE_PATH)
+		db.createFile(DATABASE_PROD_V1_FILE_PATH)
+		db.open(DATABASE_PROD_V1_FILE_PATH)
+	}
+}
+
+// createFile creates only db file if it doesn't exist, no tables.
+// If error occurs porgram will shut down with os.Exit(1).
+func (db *DB) createFile(dbFile string) {
+	_, err := os.Stat(dbFile)
+	if err == nil {
+		logg.Debugf(`"%s" exists`, dbFile)
+		return
+	}
+
+	logg.Debugf(`creating "%s"`, dbFile)
+	file, err := os.Create("./sqlite-database-test.db")
+	if err != nil {
+		logg.Fatalf("Failed to create database: %v", err)
+	}
+	defer file.Close()
+	logg.Infof(`"%s" created`, dbFile)
+}
+
+// open the connection and create tables if they don't exist.
+// If error occurs porgram will shut down with os.Exit(1).
+func (db *DB) open(dbFile string) {
 	var err error
-	db.Sql, err = sql.Open("sqlite", DATABASE_FILE_PATH)
+	db.Sql, err = sql.Open("sqlite", dbFile)
 	if err != nil {
 		logg.Fatalf("Failed to open database: %v", err)
 	}
+	logg.Debugf("opened '%s'", dbFile)
 	logg.Info("Database Connection established")
 
-	// create the Tables if were not exist
-	db.createTable(*statementsMainTables)
-	db.createTable(*statementVertualTabels)
+	db.createTable(*mainTables)
+	db.createTable(*virtualTables)
+	db.createTable(*triggers)
 }
 
 func (db *DB) createTable(statements map[string]string) {
