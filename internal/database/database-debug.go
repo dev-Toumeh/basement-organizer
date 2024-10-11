@@ -10,7 +10,6 @@ import (
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gofrs/uuid/v5"
-	"golang.org/x/exp/rand"
 )
 
 func (db *DB) PrintUserRecords() {
@@ -236,8 +235,8 @@ func (db *DB) InsertSampleItems() {
 				Description: gofakeit.Sentence(5),
 				Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
 			},
-			Quantity: rand.Int63n(100) + 1,
-			Weight:   fmt.Sprintf("%.2f", rand.Float64()*100),
+			Quantity: int64(gofakeit.IntRange(0, 100)),
+			Weight:   fmt.Sprintf("%.2f", gofakeit.Float32Range(0, 100)),
 			QRCode:   gofakeit.HipsterWord(),
 		}
 
