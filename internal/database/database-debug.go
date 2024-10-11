@@ -234,7 +234,7 @@ func (db *DB) InsertSampleItems() {
 				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
 				Label:       gofakeit.ProductName(),
 				Description: gofakeit.Sentence(5),
-				Picture:     ByteToBase64String(gofakeit.ImagePng(100, 100)),
+				Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
 			},
 			Quantity: rand.Int63n(100) + 1,
 			Weight:   fmt.Sprintf("%.2f", rand.Float64()*100),
@@ -259,7 +259,7 @@ func (db *DB) InsertSampleBoxes() {
 				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
 				Label:       gofakeit.ProductName(),
 				Description: gofakeit.Sentence(5),
-				Picture:     ByteToBase64String(gofakeit.ImagePng(100, 100)),
+				Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
 			},
 		}
 
@@ -280,7 +280,7 @@ func (db *DB) InsertSampleShelves() {
 			ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
 			Label:       gofakeit.ProductName(),
 			Description: gofakeit.Sentence(5),
-			Picture:     ByteToBase64String(gofakeit.ImagePng(100, 100)),
+			Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
 		}
 
 		err := db.CreateShelf(&newShelf)
