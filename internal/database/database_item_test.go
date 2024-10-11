@@ -27,6 +27,7 @@ func TestInsertNewItem(t *testing.T) {
 	assert.Equal(t, item.Description, retrievedItem.Description)
 	assert.Equal(t, item.Quantity, retrievedItem.Quantity)
 	assert.Equal(t, item.QRCode, retrievedItem.QRCode)
+	assert.NotEqual(t, "", retrievedItem.PreviewPicture)
 
 	// ListRow
 	var retrievedItemRow *items.ListRow

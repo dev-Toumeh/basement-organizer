@@ -48,6 +48,7 @@ func TestInsertNewBox(t *testing.T) {
 	//Compare the fetched box with the original test box
 	assert.Equal(t, testBox.Label, fetchedBox.Label)
 	assert.Equal(t, testBox.Description, fetchedBox.Description)
+	assert.NotEqual(t, "", fetchedBox.PreviewPicture)
 	assert.Equal(t, testBox.OuterBox, nil)
 	assert.Equal(t, testBox.OuterBoxID, uuid.Nil)
 	assert.Equal(t, testBox.InnerBoxes, nil)
