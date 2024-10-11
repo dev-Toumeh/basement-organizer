@@ -134,7 +134,7 @@ func (db *DB) VirtualBoxExist(id uuid.UUID) bool {
 	err := db.Sql.QueryRow(query, id.String()).Scan(&count)
 	if err != nil {
 		logg.Errf("Error checking item existence %v:", err)
-		return false
+		panic(err)
 	}
 	return count > 0
 }

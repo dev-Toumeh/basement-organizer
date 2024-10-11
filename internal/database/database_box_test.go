@@ -48,6 +48,11 @@ func TestInsertNewBox(t *testing.T) {
 	//Compare the fetched box with the original test box
 	assert.Equal(t, testBox.Label, fetchedBox.Label)
 	assert.Equal(t, testBox.Description, fetchedBox.Description)
+	assert.Equal(t, testBox.OuterBox, nil)
+	assert.Equal(t, testBox.OuterBoxID, uuid.Nil)
+	assert.Equal(t, testBox.InnerBoxes, nil)
+	assert.Equal(t, testBox.ShelfID, uuid.Nil)
+	assert.Equal(t, testBox.AreaID, uuid.Nil)
 
 	duplicateBox := *BOX_1
 
@@ -55,6 +60,26 @@ func TestInsertNewBox(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected an error when inserting a box with an existing ID, got none")
 	}
+}
+
+func TestInsertNewBoxWithOuterBox(t *testing.T) {
+	EmptyTestDatabase()
+	resetTestBoxes()
+	var err error
+	outerBox := BOX_1
+	innerBox := BOX_2
+	innerBox.OuterBoxID = outerBox.ID
+	_, err = dbTest.insertNewBox(innerBox)
+	assert.Equal(t, err, nil)
+	_, err = dbTest.insertNewBox(outerBox)
+	assert.Equal(t, err, nil)
+
+	fetchedOuterBox, err := dbTest.BoxById(outerBox.ID)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(fetchedOuterBox.InnerBoxes), 1)
+	fetchedInnerBox, err := dbTest.BoxById(innerBox.ID)
+	assert.Equal(t, err, nil)
+	assert.NotEqual(t, fetchedInnerBox.OuterBox, nil)
 }
 
 func TestBoxByField(t *testing.T) {

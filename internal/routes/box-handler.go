@@ -375,6 +375,7 @@ func boxDetailsPage(db *database.DB) http.HandlerFunc {
 		notFound := false
 		box, err := db.BoxById(id)
 		if err != nil {
+			logg.Errf("%s", err)
 			notFound = true
 		}
 		box.ID = id

@@ -173,12 +173,12 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 		`SELECT 
             b.id, b.label, b.description, b.picture, b.preview_picture, b.qrcode, b.outerbox_id, b.shelf_id, b.area_id,
             ob.id, ob.label, ob.preview_picture,
-            ib.id,
-            i.item_id, i.label, i.box_id, i.box_label,i.shelf_id, i.shelf_label,i.area_id, i.area_label
+            ib.box_id, ib.label, ib.outerbox_id, ib.outerbox_label, ib.shelf_id, ib.shelf_label, ib.area_id, ib.area_label,
+            i.item_id, i.label, i.box_id, i.box_label, i.shelf_id, i.shelf_label, i.area_id, i.area_label
         FROM 
             box AS b
         LEFT JOIN 
-            box AS ib ON b.id = ib.outerbox_id
+            box_fts AS ib ON b.id = ib.outerbox_id
         LEFT JOIN 
             box AS ob ON b.outerbox_id = ob.id
         LEFT JOIN 
@@ -193,17 +193,17 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 
 	for rows.Next() {
 		var (
-			sqlBox         SQLBox
-			sqlOuterBox    SQLBox
-			sqlInnerBox    SQLBox
-			sqlItemListRow SQLListRow
-			innerBox       *items.Box
+			sqlBox             SQLBox
+			sqlOuterBox        SQLBox
+			sqlInnerBoxListRow SQLListRow
+			sqlItemListRow     SQLListRow
+			innerBoxListRow    *items.ListRow
 		)
 
 		err := rows.Scan(
 			&sqlBox.ID, &sqlBox.Label, &sqlBox.Description, &sqlBox.Picture, &sqlBox.PreviewPicture, &sqlBox.QRCode, &sqlBox.OuterBoxID, &sqlBox.ShelfID, &sqlBox.AreaID,
 			&sqlOuterBox.ID, &sqlOuterBox.Label, &sqlOuterBox.PreviewPicture,
-			&sqlInnerBox.ID,
+			&sqlInnerBoxListRow.ID, &sqlInnerBoxListRow.Label, &sqlInnerBoxListRow.BoxID, &sqlInnerBoxListRow.BoxLabel, &sqlInnerBoxListRow.ShelfID, &sqlInnerBoxListRow.ShelfLabel, &sqlInnerBoxListRow.AreaID, &sqlInnerBoxListRow.AreaLabel,
 			&sqlItemListRow.ID, &sqlItemListRow.Label, &sqlItemListRow.BoxID, &sqlItemListRow.BoxLabel, &sqlItemListRow.ShelfID, &sqlItemListRow.ShelfLabel, &sqlItemListRow.AreaID, &sqlItemListRow.AreaLabel,
 		)
 		if err != nil {
@@ -229,17 +229,13 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 		}
 
 		// Add the inboxes if its ID is valid and not added before
-		if sqlInnerBox.ID.Valid && !addedInBoxes[sqlInnerBox.ID.String] {
-			innerBox, err = sqlInnerBox.ToBox()
+		if sqlInnerBoxListRow.ID.Valid && !addedInBoxes[sqlInnerBoxListRow.ID.String] {
+			innerBoxListRow, err = sqlInnerBoxListRow.ToListRow()
 			if err != nil {
 				return nil, logg.Errorf("error converting SQLBox to Box: %w", err)
 			}
-			innerBoxListRow, err := db.BoxListRowByID(innerBox.ID)
-			if err != nil {
-				return nil, logg.WrapErr(err)
-			}
-			innerBoxListRows = append(innerBoxListRows, &innerBoxListRow)
-			addedInBoxes[sqlInnerBox.ID.String] = true
+			innerBoxListRows = append(innerBoxListRows, innerBoxListRow)
+			addedInBoxes[sqlInnerBoxListRow.ID.String] = true
 		}
 
 		// Add the item to the itemsList if itemId is valid
