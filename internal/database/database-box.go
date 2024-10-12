@@ -227,3 +227,9 @@ func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
 
 	return box.ID, nil
 }
+
+// MoveBoxToShelf moves box to a shelf.
+// To move box out of a shelf set "toShelfID = uuid.Nil".
+func (db *DB) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
+	return logg.WrapErr(ErrNotImplemented)
+}

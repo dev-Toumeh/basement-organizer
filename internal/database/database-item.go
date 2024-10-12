@@ -437,6 +437,47 @@ func (db *DB) MoveItemToBox(id1 uuid.UUID, id2 uuid.UUID) error {
 	return nil
 }
 
+// MoveItemToShelf moves item to a shelf.
+// To move item out of a shelf set "toShelfID = uuid.Nil".
+func (db *DB) MoveItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
+	errMsg := fmt.Sprintf(`moving item "%s" to shelf "%s"`, itemID.String(), toShelfID.String())
+
+	exists, err := db.Exists("item", itemID)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+
+	if exists == false {
+		return logg.Errorf(errMsg+" item: %w", ErrNotExist)
+	}
+
+	// If moving to a shelf, check if the shelf exists
+	if toShelfID != uuid.Nil {
+		exists, err := db.Exists("shelf", toShelfID)
+		if err != nil {
+			return logg.WrapErr(err)
+		}
+		if !exists {
+			return logg.Errorf(errMsg+" shelf %w", ErrNotExist)
+		}
+	}
+
+	// Update the item's shelf_id
+	stmt := `UPDATE item SET shelf_id = ? WHERE id = ?`
+	result, err := db.Sql.Exec(stmt, toShelfID.String(), itemID.String())
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	if rows != 1 {
+		return logg.NewError("wrong")
+	}
+	return nil
+}
+
 // Helper function to check for null strings and return empty if null
 func ifNullString(sqlStr sql.NullString) string {
 	if sqlStr.Valid {

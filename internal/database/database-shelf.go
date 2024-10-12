@@ -332,53 +332,6 @@ func (db *DB) DeleteShelf(id uuid.UUID) error {
 	return nil
 }
 
-// MoveItemToShelf moves item to a shelf.
-// To move item out of a shelf set "toShelfID = uuid.Nil".
-func (db *DB) MoveItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
-	errMsg := fmt.Sprintf(`moving item "%s" to shelf "%s"`, itemID.String(), toShelfID.String())
-
-	exists, err := db.Exists("item", itemID)
-	if err != nil {
-		return logg.WrapErr(err)
-	}
-
-	if exists == false {
-		return logg.Errorf(errMsg+" item: %w", ErrNotExist)
-	}
-
-	// If moving to a shelf, check if the shelf exists
-	if toShelfID != uuid.Nil {
-		exists, err := db.Exists("shelf", toShelfID)
-		if err != nil {
-			return logg.WrapErr(err)
-		}
-		if !exists {
-			return logg.Errorf(errMsg+" shelf %w", ErrNotExist)
-		}
-	}
-
-	// Update the item's shelf_id
-	stmt := `UPDATE item SET shelf_id = ? WHERE id = ?`
-	// var shelfIDValue interface{}
-	// if toShelfID == uuid.Nil {
-	// 	shelfIDValue = nil
-	// } else {
-	// 	shelfIDValue = toShelfID.String()
-	// }
-	result, err := db.Sql.Exec(stmt, toShelfID.String(), itemID.String())
-	if err != nil {
-		return logg.WrapErr(err)
-	}
-	rows, err := result.RowsAffected()
-	if err != nil {
-		return logg.WrapErr(err)
-	}
-	if rows != 1 {
-		return logg.NewError("wrong")
-	}
-	return nil
-}
-
 // ShelfListRowsPaginated returns always a slice with the number of rows specified.
 // If rows=5 with 3 results, the last 2 rows will be nil.
 // rows and page must be above 1.
@@ -490,18 +443,8 @@ func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (s
 	return shelfRows, found, nil
 }
 
-// MoveBoxToShelf moves box to a shelf.
-// To move box out of a shelf set "toShelfID = uuid.Nil".
-func (db *DB) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
-	return logg.WrapErr(ErrNotImplemented)
-}
-
-// MoveShelf moves shelf to an area.
+// MoveShelfToArea moves shelf to an area.
 // To move out of an area set "toAreaID = uuid.Nil".
-func (db *DB) MoveShelf(shelfID uuid.UUID, toAreaID uuid.UUID) error {
-	return logg.WrapErr(ErrNotImplemented)
-}
-
-func (db *DB) insertShelf(shelf *shelves.Shelf) error {
+func (db *DB) MoveShelfToArea(shelfID uuid.UUID, toAreaID uuid.UUID) error {
 	return logg.WrapErr(ErrNotImplemented)
 }
