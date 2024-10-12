@@ -1,25 +1,26 @@
 package database
 
 import (
+	"basement/main/internal/env"
+	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"database/sql"
 	"errors"
 	"fmt"
 	"os"
-	"slices"
 
 	"github.com/gofrs/uuid/v5"
 	_ "modernc.org/sqlite"
 )
 
-const DATABASE_FILE_PATH = "./internal/database/sqlite-database2.db"
+const DATABASE_PROD_V1_FILE_PATH = "./internal/database/sqlite-database-prod-v1.db"
 
 var ErrExist = errors.New("already exists")
 var ErrNotExist = errors.New("does not exist")
 var ErrNotImplemented = errors.New("is not implemented")
 
 // add statement to create new table
-var statementsMainTables = &map[string]string{
+var mainTables = &map[string]string{
 	"user":  CREATE_USER_TABLE_STMT,
 	"item":  CREATE_ITEM_TABLE_STMT,
 	"box":   CREATE_BOX_TABLE_STMT,
@@ -27,11 +28,14 @@ var statementsMainTables = &map[string]string{
 	"area":  CREATE_AREA_TABLE_STMT,
 }
 
-var statementVertualTabels = &map[string]string{
-	"item_fts":                 CREATE_ITEM_TABLE_STMT_FTS,
-	"box_fts":                  CREATE_BOX_TABLE_STMT_FTS,
-	"shelf_fts":                CREATE_SHELF_TABLE_STMT_FTS,
-	"Item_fts_trigger_insert":  CREATE_ITEM_INSERT_TRIGGER,
+var virtualTables = &map[string]string{
+	"item_fts":  CREATE_ITEM_TABLE_STMT_FTS,
+	"box_fts":   CREATE_BOX_TABLE_STMT_FTS,
+	"shelf_fts": CREATE_SHELF_TABLE_STMT_FTS,
+}
+
+var triggers = &map[string]string{
+	"item_fts_trigger_insert":  CREATE_ITEM_INSERT_TRIGGER,
 	"item_fts_trigger_update":  CREATE_ITEM_UPDATE_TRIGGER,
 	"item_fts_trigger_delete":  CREATE_ITEM_DELETE_TRIGGER,
 	"box_fts_trigger_insert":   CREATE_BOX_INSERT_TRIGGER,
@@ -46,30 +50,79 @@ type DB struct {
 	Sql *sql.DB
 }
 
-// create the Database file if it was not exist and establish the connection with it
+// Connect creates the database file if it doesn't exist and opens it.
 func (db *DB) Connect() {
-
-	// create the sqlite database File it it wasn't exist
-	if _, err := os.Stat(DATABASE_FILE_PATH); err != nil {
-		logg.Info("Creating sqlite-database.db...")
-		file, internErr := os.Create(DATABASE_FILE_PATH)
-		defer file.Close()
-		if internErr != nil {
-			logg.Fatal(internErr)
+	if env.Development() {
+		logg.Info("using in-memory database")
+		db.open(":memory:")
+		db.InsertSampleItems()
+		db.InsertSampleBoxes()
+		db.InsertSampleShelves()
+		itemIDs, err := db.ItemIDs()
+		if err != nil {
+			logg.WrapErr(err)
 		}
-		logg.Info("sqlite-database.db created")
+		boxIDs, err := db.BoxIDs()
+		if err != nil {
+			logg.WrapErr(err)
+		}
+		shelfRows, err := db.ShelfListRowsPaginated(1, 3)
+		if err != nil {
+			logg.WrapErr(err)
+		}
+		db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[0]), uuid.FromStringOrNil(boxIDs[0]))
+		db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[1]), uuid.FromStringOrNil(boxIDs[0]))
+		db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[2]), uuid.FromStringOrNil(boxIDs[0]))
+		db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[3]), uuid.FromStringOrNil(boxIDs[1]))
+		db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[4]), uuid.FromStringOrNil(boxIDs[1]))
+		db.MoveItemToShelf(uuid.FromStringOrNil(itemIDs[5]), shelfRows[0].ID)
+		db.MoveItemToShelf(uuid.FromStringOrNil(itemIDs[6]), shelfRows[0].ID)
+		db.MoveBoxToShelf(uuid.FromStringOrNil(boxIDs[0]), shelfRows[1].ID)
+		db.MoveBoxToShelf(uuid.FromStringOrNil(boxIDs[2]), shelfRows[1].ID)
+		db.MoveBoxToBox(uuid.FromStringOrNil(boxIDs[3]), uuid.FromStringOrNil(boxIDs[5]))
+		db.MoveBoxToBox(uuid.FromStringOrNil(boxIDs[3]), uuid.FromStringOrNil(boxIDs[5]))
+		db.MoveBoxToBox(uuid.FromStringOrNil(boxIDs[5]), uuid.FromStringOrNil(boxIDs[6]))
 	}
-	// open the connection
+
+	if env.Production() {
+		logg.Infof(`using "%s" database`, DATABASE_PROD_V1_FILE_PATH)
+		db.createFile(DATABASE_PROD_V1_FILE_PATH)
+		db.open(DATABASE_PROD_V1_FILE_PATH)
+	}
+}
+
+// createFile creates only db file if it doesn't exist, no tables.
+// If error occurs porgram will shut down with os.Exit(1).
+func (db *DB) createFile(dbFile string) {
+	_, err := os.Stat(dbFile)
+	if err == nil {
+		logg.Debugf(`"%s" exists`, dbFile)
+		return
+	}
+
+	logg.Debugf(`creating "%s"`, dbFile)
+	file, err := os.Create("./sqlite-database-test.db")
+	if err != nil {
+		logg.Fatalf("Failed to create database: %v", err)
+	}
+	defer file.Close()
+	logg.Infof(`"%s" created`, dbFile)
+}
+
+// open the connection and create tables if they don't exist.
+// If error occurs porgram will shut down with os.Exit(1).
+func (db *DB) open(dbFile string) {
 	var err error
-	db.Sql, err = sql.Open("sqlite", DATABASE_FILE_PATH)
+	db.Sql, err = sql.Open("sqlite", dbFile)
 	if err != nil {
 		logg.Fatalf("Failed to open database: %v", err)
 	}
+	logg.Debugf("opened '%s'", dbFile)
 	logg.Info("Database Connection established")
 
-	// create the Tables if were not exist
-	db.createTable(*statementsMainTables)
-	db.createTable(*statementVertualTabels)
+	db.createTable(*mainTables)
+	db.createTable(*virtualTables)
+	db.createTable(*triggers)
 }
 
 func (db *DB) createTable(statements map[string]string) {
@@ -96,8 +149,10 @@ func (db *DB) ErrorExist() error {
 // Exists checks existence of entity (item, box, shelf, area).
 // Returns error if other internal errors happen.
 func (db *DB) Exists(entityType string, id uuid.UUID) (bool, error) {
-	validEntities := []string{"item", "box", "shelf", "area"}
-	if !slices.Contains(validEntities, entityType) {
+	err1 := ValidTable(entityType)
+	err2 := ValidVirtualTable(entityType)
+	// not a vaid table and not valid virtual table
+	if err1 != nil && err2 != nil {
 		return false, logg.NewError(fmt.Sprintf("no entity with type: \"%s\"", entityType))
 	}
 
@@ -117,4 +172,190 @@ func (db *DB) Exists(entityType string, id uuid.UUID) (bool, error) {
 	} else {
 		return false, nil
 	}
+}
+
+func (db *DB) deleteFrom(table string, id uuid.UUID) error {
+	err := ValidTable(table)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+
+	stmt := fmt.Sprintf(`DELETE FROM %s WHERE id = ?;`, table)
+	result, err := db.Sql.Exec(stmt, id.String())
+	if err != nil {
+		return logg.Errorf(`can't delete "%s" from "%s" %w`, id, table, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	if rowsAffected == 0 {
+		return logg.NewError(fmt.Sprintf(`id "%s" not found in "%s"`, id, table))
+	} else if rowsAffected != 1 {
+		return logg.NewError(fmt.Sprintf(`unexpected number of rows affected (%d) while deleting "%s" from "%s"`, rowsAffected, id, table))
+	}
+	return nil
+}
+
+func ValidTable(table string) error {
+	_, ok := (*mainTables)[table]
+	if !ok {
+		return logg.NewError(fmt.Sprintf(`"%s" is not a valid table`, table))
+	}
+	return nil
+}
+
+func ValidVirtualTable(table string) error {
+	_, ok := (*virtualTables)[table]
+	if !ok {
+		return logg.NewError(fmt.Sprintf(`"%s" is not a valid virtual table`, table))
+	}
+	return nil
+}
+
+// MoveTo moves item/box/shelf to a box/shelf/area.
+//
+// Example move item to a box:
+//
+//	MoveTo("item", itemID, "box", boxID)
+//
+// To move things out set
+//
+//	toTableID = uuid.Nil
+func (db *DB) MoveTo(table string, id uuid.UUID, toTable string, toTableID uuid.UUID) error {
+	err := ValidTable(table)
+	if err != nil {
+		return logg.Errorf(`table: "%s" %w`, table, err)
+	}
+	err = ValidTable(toTable)
+	if err != nil {
+		return logg.Errorf(`toTable: "%s" %w`, toTable, err)
+	}
+
+	errMsg := fmt.Sprintf(`moving "%s" "%s" to "%s" "%s"`, table, id.String(), toTable, toTableID.String())
+
+	exists, err := db.Exists(table, id)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	if exists == false {
+		return logg.Errorf("%s %w", errMsg, ErrNotExist)
+	}
+
+	// check if the table where the item is being moved to exists
+	if toTableID != uuid.Nil {
+		exists, err := db.Exists(toTable, toTableID)
+		if err != nil {
+			return logg.WrapErr(err)
+		}
+		if !exists {
+			return logg.Errorf("%s %w", errMsg, ErrNotExist)
+		}
+	}
+
+	// Update the item's shelf_id
+	stmt := fmt.Sprintf(`UPDATE %s SET %s_id = ? WHERE id = ?`, table, toTable)
+	result, err := db.Sql.Exec(stmt, toTableID.String(), id.String())
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	if rows != 1 {
+		return logg.NewError(fmt.Sprintf("rows should be != 1 but is %d", rows))
+	}
+	return nil
+}
+
+// innerListRowsFrom returns all items/boxes/shelves/etc belonging to another box, shelf or area.
+//
+// Example:
+//
+//	// get all items that belongs to a shelf.
+//	innerListRowsFrom("shelf", shelf.ID, "item_fts")
+//
+// listRowsTable:
+//
+//	FROM "item_fts"
+//	FROM "box_ftx"
+//	...
+//
+// belongsToTable:
+//
+//	"item", "box", "shelf", ...
+//
+// belongsToTableID:
+//
+//	WHERE "item"_id = ID
+//	WHERE "box"_id = ID
+//	...
+func (db *DB) innerListRowsFrom(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string) ([]*items.ListRow, error) {
+	err := ValidVirtualTable(listRowsTable)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	err = ValidTable(belongsToTable)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	var listRows []*items.ListRow
+
+	stmt := fmt.Sprintf(`
+	SELECT id, label, box_id, box_label, shelf_id, shelf_label, area_id, area_label
+	FROM %s	
+	WHERE %s_id = ?;`, listRowsTable, belongsToTable)
+
+	rows, err := db.Sql.Query(stmt, belongsToTableID.String())
+	if err != nil {
+		return nil, logg.Errorf("%s %w", stmt, err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var sqlrow SQLListRow
+
+		err = rows.Scan(
+			&sqlrow.ID, &sqlrow.Label, &sqlrow.BoxID, &sqlrow.BoxLabel, &sqlrow.ShelfID, &sqlrow.ShelfLabel, &sqlrow.AreaID, &sqlrow.AreaLabel,
+		)
+		if err != nil {
+			return nil, logg.WrapErr(err)
+		}
+		lrow, err := sqlrow.ToListRow()
+		if err != nil {
+			return nil, logg.WrapErr(err)
+		}
+		listRows = append(listRows, lrow)
+	}
+	return listRows, nil
+}
+
+// Helper function to check for null strings and return empty if null
+func ifNullString(sqlStr sql.NullString) string {
+	if sqlStr.Valid {
+		return sqlStr.String
+	}
+	return ""
+}
+
+// Helper function to check for null UUIDs and return uuid.Nil if null
+func ifNullUUID(sqlUUID sql.NullString) uuid.UUID {
+	if sqlUUID.Valid {
+		return uuid.FromStringOrNil(sqlUUID.String)
+	}
+	return uuid.Nil
+}
+
+func UUIDFromSqlString(boxID sql.NullString) (uuid.UUID, error) {
+	if boxID.Valid {
+		id, err := uuid.FromString(boxID.String)
+		if err != nil {
+			return uuid.Nil, logg.Errorf("error while converting the string id into uuid: %w", err)
+		}
+		return id, nil
+	}
+	return uuid.Nil, logg.Errorf("invalid Virtual Id string")
 }

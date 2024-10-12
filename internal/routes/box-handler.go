@@ -21,7 +21,7 @@ import (
 
 type BoxDatabase interface {
 	CreateBox(newBox *items.Box) (uuid.UUID, error)
-	MoveBox(id1 uuid.UUID, id2 uuid.UUID) error
+	MoveBoxToBox(id1 uuid.UUID, id2 uuid.UUID) error
 	UpdateBox(box items.Box) error
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (items.Box, error)
@@ -375,6 +375,7 @@ func boxDetailsPage(db *database.DB) http.HandlerFunc {
 		notFound := false
 		box, err := db.BoxById(id)
 		if err != nil {
+			logg.Errf("%s", err)
 			notFound = true
 		}
 		box.ID = id

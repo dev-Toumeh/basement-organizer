@@ -134,6 +134,10 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 		shelf.ID = id
 	}
 
+	if shelf.Items != nil || shelf.Boxes != nil {
+		return logg.NewError(fmt.Sprintf(`shelf "%s" has %d items and %d boxes, they must be empty while creating a new shelf`, shelf.ID, len(shelf.Items), len(shelf.Boxes)))
+	}
+
 	err := updatePicture(&shelf.Picture, &shelf.PreviewPicture)
 	if err != nil {
 		logg.Infof("Can't update picture %v", err.Error())
@@ -178,41 +182,36 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 // Shelf returns shelf with provided id.
 func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 	var sqlShelf SQLShelf
-
 	stmt := `
-        SELECT
-			id,
-            label,
-            description,
-            picture,
-            preview_picture,
-            qrcode,
-            height,
-            width,
-            depth,
-            rows,
-            cols
-        FROM shelf WHERE id = ?`
+	SELECT
+		id, label, description, picture, preview_picture, qrcode, height, width, depth, rows, cols
+	FROM 
+		shelf
+	WHERE 
+		id = ?;`
 
 	err := db.Sql.QueryRow(stmt, id.String()).Scan(
-		&sqlShelf.SQLBasicInfo.ID,
-		&sqlShelf.SQLBasicInfo.Label,
-		&sqlShelf.SQLBasicInfo.Description,
-		&sqlShelf.SQLBasicInfo.Picture,
-		&sqlShelf.SQLBasicInfo.PreviewPicture,
-		&sqlShelf.SQLBasicInfo.QRCode,
-		&sqlShelf.Height,
-		&sqlShelf.Width,
-		&sqlShelf.Depth,
-		&sqlShelf.Rows,
-		&sqlShelf.Cols,
+		&sqlShelf.SQLBasicInfo.ID, &sqlShelf.SQLBasicInfo.Label, &sqlShelf.SQLBasicInfo.Description, &sqlShelf.SQLBasicInfo.Picture, &sqlShelf.SQLBasicInfo.PreviewPicture, &sqlShelf.SQLBasicInfo.QRCode, &sqlShelf.Height, &sqlShelf.Width, &sqlShelf.Depth, &sqlShelf.Rows, &sqlShelf.Cols,
 	)
-
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
 
-	return sqlShelf.ToShelf()
+	shelf, err := sqlShelf.ToShelf()
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	items, err := db.innerListRowsFrom("shelf", shelf.ID, "item_fts")
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	shelf.Items = items
+	boxes, err := db.innerListRowsFrom("shelf", shelf.ID, "box_fts")
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	shelf.Boxes = boxes
+	return shelf, nil
 }
 
 func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
@@ -254,51 +253,16 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
 	return nil
 }
 
-// DeleteShelf deletes shelf.
+// DeleteShelf deletes a single shelf.
 func (db *DB) DeleteShelf(id uuid.UUID) error {
-	stmt := `DELETE FROM shelf WHERE id = ?`
-	_, err := db.Sql.Exec(stmt, id.String())
+	shelf, err := db.Shelf(id)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
-	return nil
-}
-
-// MoveItemToShelf moves item to a shelf.
-// To move item out of a shelf set "toShelfID = uuid.Nil".
-func (db *DB) MoveItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
-	errMsg := fmt.Sprintf(`moving item "%s" to shelf "%s"`, itemID.String(), toShelfID.String())
-
-	exists, err := db.Exists("item", itemID)
-	if err != nil {
-		return logg.WrapErr(err)
+	if shelf.Items != nil || shelf.Boxes != nil {
+		return logg.NewError(fmt.Sprintf(`can't delete shelf "%s": has %d items and %d boxes`, shelf.ID, len(shelf.Items), len(shelf.Boxes)))
 	}
-
-	if exists == false {
-		return logg.Errorf(errMsg+" item: %w", ErrNotExist)
-	}
-
-	// If moving to a shelf, check if the shelf exists
-	if toShelfID != uuid.Nil {
-		var shelfExists int
-		err = db.Sql.QueryRow(`SELECT EXISTS(SELECT 1 FROM shelf WHERE id = ?)`, toShelfID.String()).Scan(&shelfExists)
-		if err != nil {
-			return logg.WrapErr(err)
-		}
-		if shelfExists == 0 {
-			return logg.Errorf(errMsg+" shelf: %w", ErrNotExist)
-		}
-	}
-
-	// Update the item's shelf_id
-	stmt := `UPDATE item SET shelf_id = ? WHERE id = ?`
-	var shelfIDValue interface{}
-	if toShelfID == uuid.Nil {
-		shelfIDValue = nil
-	} else {
-		shelfIDValue = toShelfID.String()
-	}
-	_, err = db.Sql.Exec(stmt, shelfIDValue, itemID.String())
+	err = db.deleteFrom("shelf", id)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
@@ -387,7 +351,7 @@ func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (s
 		FROM shelf_fts
 		WHERE label MATCH '%s*'
 		LIMIT ? OFFSET ?;`, searchModified)
-	fmt.Println(querySearch)
+
 	// ORDER BY label ASC
 	// results, err := db.Sql.Query(querySearch, fmt.Sprintf("'%s'", search), limit, offset)
 	results, err := db.Sql.Query(querySearch, limit, offset)
@@ -416,18 +380,8 @@ func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (s
 	return shelfRows, found, nil
 }
 
-// MoveBoxToShelf moves box to a shelf.
-// To move box out of a shelf set "toShelfID = uuid.Nil".
-func (db *DB) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
-	return logg.WrapErr(ErrNotImplemented)
-}
-
-// MoveShelf moves shelf to an area.
+// MoveShelfToArea moves shelf to an area.
 // To move out of an area set "toAreaID = uuid.Nil".
-func (db *DB) MoveShelf(shelfID uuid.UUID, toAreaID uuid.UUID) error {
-	return logg.WrapErr(ErrNotImplemented)
-}
-
-func (db *DB) insertShelf(shelf *shelves.Shelf) error {
+func (db *DB) MoveShelfToArea(shelfID uuid.UUID, toAreaID uuid.UUID) error {
 	return logg.WrapErr(ErrNotImplemented)
 }

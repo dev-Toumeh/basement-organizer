@@ -190,7 +190,7 @@ func (db *DB) Item(id string) (items.Item, error) {
 
 // ListItemById returns a single item with less information suitable for a list row.
 func (db *DB) ItemListRowByID(id uuid.UUID) (*items.ListRow, error) {
-	queryRow := db.Sql.QueryRow(`
+	query := `
 		SELECT 
             i.id, i.label, i.preview_picture,
             b.id, b.label,
@@ -205,13 +205,14 @@ func (db *DB) ItemListRowByID(id uuid.UUID) (*items.ListRow, error) {
         LEFT JOIN 
             area AS a ON a.id = i.area_id 
         WHERE 
-            i.id = ?;`, id.String())
+            i.id = ?;`
+	queryRow := db.Sql.QueryRow(query, id.String())
 
 	sqlListRow := SQLListRow{}
 
 	err := queryRow.Scan(&sqlListRow.ID, &sqlListRow.Label, &sqlListRow.PreviewPicture, &sqlListRow.BoxID, &sqlListRow.BoxLabel, &sqlListRow.ShelfID, &sqlListRow.ShelfLabel, &sqlListRow.AreaID, &sqlListRow.AreaLabel)
 	if err != nil {
-		return nil, logg.WrapErr(err)
+		return nil, logg.Errorf("%s %w", query, err)
 	}
 
 	itemRow, err := sqlListRow.ToListRow()
@@ -318,25 +319,9 @@ func (db *DB) UpdateItem(ctx context.Context, item items.Item) error {
 
 // Delete Item by Id
 func (db *DB) DeleteItem(itemId uuid.UUID) error {
-	sqlStatement := `DELETE FROM item WHERE id = ?;`
-	result, err := db.Sql.Exec(sqlStatement, itemId.String())
+	err := db.deleteFrom("item", itemId)
 	if err != nil {
-		return logg.Errorf("deleting was not succeed %W", err)
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		logg.Err(err)
-		return err
-	}
-	if rowsAffected == 0 {
-		err := errors.New(fmt.Sprintf("the Record with the id: %s was not found that should not happened while deleting", itemId.String()))
-		logg.Debug(err)
-		return err
-	} else if rowsAffected != 1 {
-		err := errors.New(fmt.Sprintf("the id: %s has unexpected effected number of rows (more than one or less than 0)", itemId.String()))
-		logg.Err(err)
-		return err
+		return logg.WrapErr(err)
 	}
 	return nil
 }
@@ -443,38 +428,26 @@ func (db *DB) DeleteItems(itemIds []uuid.UUID) error {
 	return nil
 }
 
+// MoveItemToBox moves item to a box.
+// To move item out of a box set
+//
+//	id2 = uuid.Nil
 func (db *DB) MoveItemToBox(id1 uuid.UUID, id2 uuid.UUID) error {
-	updateStmt := `UPDATE item SET box_id = ? WHERE id = ?;`
-	_, err := db.Sql.Exec(updateStmt, id2, id1)
+	err := db.MoveTo("item", id1, "box", id2)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
 	return nil
 }
 
-// Helper function to check for null strings and return empty if null
-func ifNullString(sqlStr sql.NullString) string {
-	if sqlStr.Valid {
-		return sqlStr.String
+// MoveItemToShelf moves item to a shelf.
+// To move item out of a shelf set
+//
+//	toShelfID = uuid.Nil
+func (db *DB) MoveItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
+	err := db.MoveTo("item", itemID, "shelf", toShelfID)
+	if err != nil {
+		return logg.WrapErr(err)
 	}
-	return ""
-}
-
-// Helper function to check for null UUIDs and return uuid.Nil if null
-func ifNullUUID(sqlUUID sql.NullString) uuid.UUID {
-	if sqlUUID.Valid {
-		return uuid.FromStringOrNil(sqlUUID.String)
-	}
-	return uuid.Nil
-}
-
-func UUIDFromSqlString(boxID sql.NullString) (uuid.UUID, error) {
-	if boxID.Valid {
-		id, err := uuid.FromString(boxID.String)
-		if err != nil {
-			return uuid.Nil, logg.Errorf("error while converting the string id into uuid: %w", err)
-		}
-		return id, nil
-	}
-	return uuid.Nil, logg.Errorf("invalid Virtual Id string")
+	return nil
 }

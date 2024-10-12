@@ -3,14 +3,13 @@ package database
 import (
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
+	"basement/main/internal/shelves"
 	"database/sql"
-	"encoding/base64"
 	"fmt"
 	"log"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gofrs/uuid/v5"
-	"golang.org/x/exp/rand"
 )
 
 func (db *DB) PrintUserRecords() {
@@ -151,7 +150,7 @@ func (db *DB) DatabasePatcher() error {
 
 // this function will print all the records inside of  item_fts table
 func (db *DB) CheckItemFTSData() error {
-	rows, err := db.Sql.Query("SELECT item_id, label, description FROM item_fts;")
+	rows, err := db.Sql.Query("SELECT id, label, description FROM item_fts;")
 	if err != nil {
 		return err
 	}
@@ -183,7 +182,7 @@ func (db *DB) RepopulateItemFTS() error {
 	}
 
 	_, err = db.Sql.Exec(`
-        INSERT INTO item_fts(item_id, label, description)
+        INSERT INTO item_fts(id, label, description)
         SELECT id, label, description FROM item;
     `)
 	if err != nil {
@@ -223,21 +222,22 @@ func (db *DB) RepopulateItemFTS() error {
 // 	return nil
 // }
 
-func (db *DB) InsertDummyItems() {
-	gofakeit.Seed(0)
+const SEED = 1234
+
+func (db *DB) InsertSampleItems() {
+	gofakeit.Seed(SEED)
 
 	for i := 0; i < 10; i++ {
 		newItem := items.Item{
 			BasicInfo: items.BasicInfo{
-				ID:          uuid.Must(uuid.NewV4()),
+				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
 				Label:       gofakeit.ProductName(),
 				Description: gofakeit.Sentence(5),
-				Picture:     generateRandomBase64Image(1024),
+				Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
 			},
-			Quantity: rand.Int63n(100) + 1,
-			Weight:   fmt.Sprintf("%.2f", rand.Float64()*100),
+			Quantity: int64(gofakeit.IntRange(0, 100)),
+			Weight:   fmt.Sprintf("%.2f", gofakeit.Float32Range(0, 100)),
 			QRCode:   gofakeit.HipsterWord(),
-			BoxID:    uuid.Must(uuid.NewV4()),
 		}
 
 		err := db.insertNewItem(newItem)
@@ -249,12 +249,44 @@ func (db *DB) InsertDummyItems() {
 	return
 }
 
-func generateRandomBase64Image(size int) string {
-	// Generate random bytes
-	imageData := make([]byte, size)
-	rand.Read(imageData)
+func (db *DB) InsertSampleBoxes() {
+	gofakeit.Seed(SEED)
 
-	// Encode to base64
-	base64Image := base64.StdEncoding.EncodeToString(imageData)
-	return base64Image
+	for i := 0; i < 10; i++ {
+		newBox := items.Box{
+			BasicInfo: items.BasicInfo{
+				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
+				Label:       gofakeit.ProductName(),
+				Description: gofakeit.Sentence(5),
+				Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
+			},
+		}
+
+		_, err := db.CreateBox(&newBox)
+		if err != nil {
+			logg.Errf("error while adding dummyData %v", err)
+			return
+		}
+	}
+	return
+}
+
+func (db *DB) InsertSampleShelves() {
+	gofakeit.Seed(SEED)
+
+	for i := 0; i < 10; i++ {
+		newShelf := shelves.Shelf{
+			ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
+			Label:       gofakeit.ProductName(),
+			Description: gofakeit.Sentence(5),
+			Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
+		}
+
+		err := db.CreateShelf(&newShelf)
+		if err != nil {
+			logg.Errf("error while adding dummyData %v", err)
+			return
+		}
+	}
+	return
 }

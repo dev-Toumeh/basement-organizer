@@ -107,7 +107,7 @@ type ItemDatabase interface {
 	UpdateItem(ctx context.Context, item Item) error
 	DeleteItem(itemId uuid.UUID) error
 	DeleteItems(itemId []uuid.UUID) error
-	InsertDummyItems()
+	InsertSampleItems()
 	ErrorExist() error
 	MoveItemToBox(itemID uuid.UUID, boxID uuid.UUID) error
 
