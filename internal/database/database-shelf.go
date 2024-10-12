@@ -134,6 +134,10 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 		shelf.ID = id
 	}
 
+	if shelf.Items != nil || shelf.Boxes != nil {
+		return logg.NewError(fmt.Sprintf(`shelf "%s" has %d items and %d boxes, they must be empty while creating a new shelf`, shelf.ID, len(shelf.Items), len(shelf.Boxes)))
+	}
+
 	err := updatePicture(&shelf.Picture, &shelf.PreviewPicture)
 	if err != nil {
 		logg.Infof("Can't update picture %v", err.Error())
@@ -175,44 +179,95 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 	return nil
 }
 
-// Shelf returns shelf with provided id.
-func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
-	var sqlShelf SQLShelf
-
-	stmt := `
-        SELECT
-			id,
-            label,
-            description,
-            picture,
-            preview_picture,
-            qrcode,
-            height,
-            width,
-            depth,
-            rows,
-            cols
-        FROM shelf WHERE id = ?`
-
-	err := db.Sql.QueryRow(stmt, id.String()).Scan(
-		&sqlShelf.SQLBasicInfo.ID,
-		&sqlShelf.SQLBasicInfo.Label,
-		&sqlShelf.SQLBasicInfo.Description,
-		&sqlShelf.SQLBasicInfo.Picture,
-		&sqlShelf.SQLBasicInfo.PreviewPicture,
-		&sqlShelf.SQLBasicInfo.QRCode,
-		&sqlShelf.Height,
-		&sqlShelf.Width,
-		&sqlShelf.Depth,
-		&sqlShelf.Rows,
-		&sqlShelf.Cols,
-	)
-
+// listRowsTable:
+//
+//	FROM "item_fts"
+//	FROM "box_ftx"
+//	...
+//
+// belongsToTable:
+//
+//	"item", "box", "shelf", ...
+//
+// belongsToTableID:
+//
+//	WHERE "item"_id = ID
+//	WHERE "box"_id = ID
+//	...
+func (db *DB) innerListRowsFrom(listRowsTable string, belongsToTable string, belongsToTableID uuid.UUID) ([]*items.ListRow, error) {
+	err := ValidVirtualTable(listRowsTable)
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
 
-	return sqlShelf.ToShelf()
+	err = ValidTable(belongsToTable)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	var listRows []*items.ListRow
+
+	stmt := fmt.Sprintf(`
+	SELECT id, label, box_id, box_label, shelf_id, shelf_label, area_id, area_label
+	FROM %s	
+	WHERE %s_id = ?;`, listRowsTable, belongsToTable)
+
+	rows, err := db.Sql.Query(stmt, belongsToTableID.String())
+	if err != nil {
+		return nil, logg.Errorf("%s %w", stmt, err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var sqlrow SQLListRow
+
+		err = rows.Scan(
+			&sqlrow.ID, &sqlrow.Label, &sqlrow.BoxID, &sqlrow.BoxLabel, &sqlrow.ShelfID, &sqlrow.ShelfLabel, &sqlrow.AreaID, &sqlrow.AreaLabel,
+		)
+		if err != nil {
+			return nil, logg.WrapErr(err)
+		}
+		lrow, err := sqlrow.ToListRow()
+		if err != nil {
+			return nil, logg.WrapErr(err)
+		}
+		listRows = append(listRows, lrow)
+	}
+	return listRows, nil
+}
+
+// Shelf returns shelf with provided id.
+func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
+	var sqlShelf SQLShelf
+	stmt := `
+	SELECT
+		id, label, description, picture, preview_picture, qrcode, height, width, depth, rows, cols
+	FROM 
+		shelf
+	WHERE 
+		id = ?;`
+
+	err := db.Sql.QueryRow(stmt, id.String()).Scan(
+		&sqlShelf.SQLBasicInfo.ID, &sqlShelf.SQLBasicInfo.Label, &sqlShelf.SQLBasicInfo.Description, &sqlShelf.SQLBasicInfo.Picture, &sqlShelf.SQLBasicInfo.PreviewPicture, &sqlShelf.SQLBasicInfo.QRCode, &sqlShelf.Height, &sqlShelf.Width, &sqlShelf.Depth, &sqlShelf.Rows, &sqlShelf.Cols,
+	)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	shelf, err := sqlShelf.ToShelf()
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	items, err := db.innerListRowsFrom("item_fts", "shelf", shelf.ID)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	shelf.Items = items
+	boxes, err := db.innerListRowsFrom("box_fts", "shelf", shelf.ID)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	shelf.Boxes = boxes
+	return shelf, nil
 }
 
 func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
@@ -254,10 +309,16 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
 	return nil
 }
 
-// DeleteShelf deletes shelf.
+// DeleteShelf deletes a single shelf.
 func (db *DB) DeleteShelf(id uuid.UUID) error {
-	stmt := `DELETE FROM shelf WHERE id = ?`
-	_, err := db.Sql.Exec(stmt, id.String())
+	shelf, err := db.Shelf(id)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	if shelf.Items != nil || shelf.Boxes != nil {
+		return logg.NewError(fmt.Sprintf(`can't delete shelf "%s": has %d items and %d boxes`, shelf.ID, len(shelf.Items), len(shelf.Boxes)))
+	}
+	err = db.deleteFrom("shelf", id)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
@@ -280,27 +341,33 @@ func (db *DB) MoveItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
 
 	// If moving to a shelf, check if the shelf exists
 	if toShelfID != uuid.Nil {
-		var shelfExists int
-		err = db.Sql.QueryRow(`SELECT EXISTS(SELECT 1 FROM shelf WHERE id = ?)`, toShelfID.String()).Scan(&shelfExists)
+		exists, err := db.Exists("shelf", toShelfID)
 		if err != nil {
 			return logg.WrapErr(err)
 		}
-		if shelfExists == 0 {
-			return logg.Errorf(errMsg+" shelf: %w", ErrNotExist)
+		if !exists {
+			return logg.Errorf(errMsg+" shelf %w", ErrNotExist)
 		}
 	}
 
 	// Update the item's shelf_id
 	stmt := `UPDATE item SET shelf_id = ? WHERE id = ?`
-	var shelfIDValue interface{}
-	if toShelfID == uuid.Nil {
-		shelfIDValue = nil
-	} else {
-		shelfIDValue = toShelfID.String()
-	}
-	_, err = db.Sql.Exec(stmt, shelfIDValue, itemID.String())
+	// var shelfIDValue interface{}
+	// if toShelfID == uuid.Nil {
+	// 	shelfIDValue = nil
+	// } else {
+	// 	shelfIDValue = toShelfID.String()
+	// }
+	result, err := db.Sql.Exec(stmt, toShelfID.String(), itemID.String())
 	if err != nil {
 		return logg.WrapErr(err)
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	if rows != 1 {
+		return logg.NewError("wrong")
 	}
 	return nil
 }

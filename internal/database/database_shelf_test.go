@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/items"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -36,13 +37,52 @@ func TestCreateShelf(t *testing.T) {
 	EmptyTestDatabase()
 	resetShelves()
 
+	var err error
+	// should create new ID
 	shelf := SHELF_1
-
-	err := dbTest.CreateShelf(shelf)
+	shelf.ID = uuid.Nil
+	err = dbTest.CreateShelf(shelf)
+	createdShelf, err := dbTest.Shelf(shelf.ID)
 	assert.Equal(t, err, nil)
-	assert.NotEqual(t, uuid.Nil, SHELF_VALID_UUID_1)
+	assert.NotEqual(t, uuid.Nil, createdShelf.ID)
 
-	createdShelf, err := dbTest.Shelf(SHELF_VALID_UUID_1)
+	// should keep same ID
+	EmptyTestDatabase()
+	resetShelves()
+	shelf = SHELF_1
+	err = dbTest.CreateShelf(shelf)
+	createdShelf, err = dbTest.Shelf(shelf.ID)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, shelf.ID, createdShelf.ID)
+
+	// item does not exist and should not be created
+	shelf.Items = append(shelf.Items, &items.ListRow{ID: ITEM_1.ID})
+	assert.Equal(t, len(shelf.Items), 1)
+	err = dbTest.CreateShelf(shelf)
+	assert.NotEqual(t, err, nil)
+	shelf.Items = nil
+
+	// box does not exist and should not be created
+	shelf.Boxes = append(shelf.Boxes, &items.ListRow{ID: BOX_1.ID})
+	assert.Equal(t, len(shelf.Boxes), 1)
+	err = dbTest.CreateShelf(shelf)
+	assert.NotEqual(t, err, nil)
+	shelf.Items = nil
+
+	err = dbTest.CreateNewItem(*ITEM_1)
+	assert.Equal(t, err, nil)
+	_, err = dbTest.CreateBox(BOX_1)
+	assert.Equal(t, err, nil)
+	shelf.Items = append(shelf.Items, &items.ListRow{ID: ITEM_1.ID})
+	shelf.Boxes = append(shelf.Boxes, &items.ListRow{ID: BOX_1.ID})
+	err = dbTest.CreateShelf(shelf)
+	assert.NotEqual(t, err, nil)
+
+	shelf.Items = nil
+	shelf.Boxes = nil
+	shelf.ID = uuid.Nil // should create new id
+	err = dbTest.CreateShelf(shelf)
+	createdShelf, err = dbTest.Shelf(shelf.ID)
 	assert.Equal(t, err, nil)
 
 	assert.Equal(t, shelf.Label, createdShelf.Label)
@@ -57,27 +97,36 @@ func TestCreateShelf(t *testing.T) {
 	assert.Equal(t, shelf.Cols, createdShelf.Cols)
 
 	EmptyTestDatabase()
+	resetShelves()
 	shelf.Picture = INVALID_BASE64_PNG
 
 	// Expected error log converting picture
 	// but NO error returned!
 	err = dbTest.CreateShelf(shelf)
 	assert.Equal(t, err, nil)
-	assert.NotEqual(t, uuid.Nil, SHELF_VALID_UUID_1)
+	assert.NotEqual(t, uuid.Nil, shelf.ID)
 
-	createdShelf, err = dbTest.Shelf(SHELF_VALID_UUID_1)
+	createdShelf, err = dbTest.Shelf(shelf.ID)
 	assert.Equal(t, "", createdShelf.Picture)
 }
 
 func TestDeleteShelf(t *testing.T) {
 	EmptyTestDatabase()
-	dbTest.createNewShelf(SHELF_VALID_UUID_1)
-	id, err := dbTest.CreateNewShelf()
+	resetShelves()
+	resetTestItems()
+	var err error
+	err = dbTest.CreateShelf(SHELF_1)
 	assert.Equal(t, err, nil)
-	assert.NotEqual(t, id, uuid.Nil)
+	err = dbTest.DeleteShelf(SHELF_1.ID)
+	assert.Equal(t, err, nil)
 
-	err = dbTest.DeleteShelf(SHELF_VALID_UUID_1)
-	assert.Equal(t, err, nil)
+	// should not delete shelf with an item
+	dbTest.CreateShelf(SHELF_1)
+	dbTest.CreateNewItem(*ITEM_1)
+	dbTest.MoveItemToShelf(ITEM_1.ID, SHELF_1.ID)
+
+	err = dbTest.DeleteShelf(SHELF_1.ID)
+	assert.NotEqual(t, err, nil)
 }
 
 func TestUpdateShelf(t *testing.T) {
@@ -140,6 +189,12 @@ func TestMoveItemToShelf(t *testing.T) {
 	updatedItem, err := dbTest.ItemListRowByID(item.ID)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, shelf.ID, updatedItem.ShelfID)
+	createdShelf, err := dbTest.Shelf(shelf.ID)
+	assert.Equal(t, err, nil)
+	assert.NotEqual(t, createdShelf.Items, nil)
+	assert.Equal(t, len(createdShelf.Items), 1)
+	assert.Equal(t, item.ID, createdShelf.Items[0].ID)
+	assert.Equal(t, item.Label, createdShelf.Items[0].Label)
 
 	// Move the item out of the shelf
 	err = dbTest.MoveItemToShelf(item.ID, uuid.Nil)
@@ -150,12 +205,10 @@ func TestMoveItemToShelf(t *testing.T) {
 
 	// Attempt to move a non-existent item
 	err = dbTest.MoveItemToShelf(VALID_UUID_NOT_EXISTING, shelf.ID)
-	// logg.Err(err)
 	assert.NotEqual(t, err, nil)
 
 	// Attempt to move the item to a non-existent shelf
 	err = dbTest.MoveItemToShelf(item.ID, VALID_UUID_NOT_EXISTING)
-	// logg.Err(err)
 	assert.NotEqual(t, err, nil)
 }
 

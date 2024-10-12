@@ -18,7 +18,8 @@ func TestVirtualBoxInsert(t *testing.T) {
 	}
 
 	// Check if the outerbox exists in box_fts
-	exist := dbTest.VirtualBoxExist(testbox.ID)
+	exist, err := dbTest.VirtualBoxExist(testbox.ID)
+	assert.Equal(t, err, nil)
 	assert.Equal(t, exist, true)
 
 	boxListRow, err := dbTest.BoxListRowByID(testbox.ID)
@@ -84,7 +85,8 @@ func TestVirtualBoxDelete(t *testing.T) {
 	}
 
 	// Check if the outerbox exists in box_fts
-	exist := dbTest.VirtualBoxExist(testbox.ID)
+	exist, err := dbTest.VirtualBoxExist(testbox.ID)
+	assert.Equal(t, err, nil)
 	assert.NotEqual(t, exist, true)
 }
 
