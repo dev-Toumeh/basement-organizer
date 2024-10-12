@@ -159,105 +159,46 @@ func (db *DB) BoxById(id uuid.UUID) (items.Box, error) {
 
 // Get Box  based on given Field
 func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
-	var box *items.Box
-	var outerBox = &items.Box{}
-	var itemListRows = []*items.ListRow{}
-	var innerBoxListRows = []*items.ListRow{}
-	boxInitialized := false
-	outerBoxInitialized := false
-	addedInBoxes := make(map[string]bool)
-	addedItems := make(map[string]*items.ListRow)
+	var sqlBox SQLBox
+	stmt := fmt.Sprintf(`
+	SELECT
+		id, label, description, picture, preview_picture, qrcode, box_id, shelf_id, area_id
+	FROM 
+		box
+	WHERE 
+		%s = ?;`, field)
 
-	query := fmt.Sprintf(
-		`SELECT 
-            b.id, b.label, b.description, b.picture, b.preview_picture, b.qrcode, b.box_id, b.shelf_id, b.area_id,
-            ob.id, ob.label, ob.preview_picture,
-            ib.id, ib.label, ib.box_id, ib.box_label, ib.shelf_id, ib.shelf_label, ib.area_id, ib.area_label,
-            i.id, i.label, i.box_id, i.box_label, i.shelf_id, i.shelf_label, i.area_id, i.area_label
-        FROM 
-            box AS b
-        LEFT JOIN 
-            box_fts AS ib ON b.id = ib.box_id
-        LEFT JOIN 
-            box AS ob ON b.box_id = ob.id
-        LEFT JOIN 
-            item_fts AS i ON b.id = i.box_id 
-        WHERE 
-            b.%s = ?;`, field)
-	rows, err := db.Sql.Query(query, value)
+	err := db.Sql.QueryRow(stmt, value).Scan(
+		&sqlBox.SQLBasicInfo.ID, &sqlBox.SQLBasicInfo.Label, &sqlBox.SQLBasicInfo.Description, &sqlBox.SQLBasicInfo.Picture, &sqlBox.SQLBasicInfo.PreviewPicture, &sqlBox.SQLBasicInfo.QRCode, &sqlBox.OuterBoxID, &sqlBox.ShelfID, &sqlBox.AreaID,
+	)
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
-	defer rows.Close()
 
-	for rows.Next() {
-		var (
-			sqlBox             SQLBox
-			sqlOuterBox        SQLBox
-			sqlInnerBoxListRow SQLListRow
-			sqlItemListRow     SQLListRow
-			innerBoxListRow    *items.ListRow
-		)
+	box, err := sqlBox.ToBox()
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
 
-		err := rows.Scan(
-			&sqlBox.ID, &sqlBox.Label, &sqlBox.Description, &sqlBox.Picture, &sqlBox.PreviewPicture, &sqlBox.QRCode, &sqlBox.OuterBoxID, &sqlBox.ShelfID, &sqlBox.AreaID,
-			&sqlOuterBox.ID, &sqlOuterBox.Label, &sqlOuterBox.PreviewPicture,
-			&sqlInnerBoxListRow.ID, &sqlInnerBoxListRow.Label, &sqlInnerBoxListRow.BoxID, &sqlInnerBoxListRow.BoxLabel, &sqlInnerBoxListRow.ShelfID, &sqlInnerBoxListRow.ShelfLabel, &sqlInnerBoxListRow.AreaID, &sqlInnerBoxListRow.AreaLabel,
-			&sqlItemListRow.ID, &sqlItemListRow.Label, &sqlItemListRow.BoxID, &sqlItemListRow.BoxLabel, &sqlItemListRow.ShelfID, &sqlItemListRow.ShelfLabel, &sqlItemListRow.AreaID, &sqlItemListRow.AreaLabel,
-		)
+	items, err := db.innerListRowsFrom("item_fts", "box", box.ID)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	box.Items = items
+
+	boxes, err := db.innerListRowsFrom("box_fts", "box", box.ID)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	box.InnerBoxes = boxes
+
+	if box.OuterBoxID != uuid.Nil {
+		outerbox, err := db.BoxListRowByID(box.OuterBoxID)
 		if err != nil {
-			return nil, logg.Errorf("error scanning row: %w", err)
+			return nil, logg.WrapErr(err)
 		}
-
-		// Initialize the main Box only once
-		if !boxInitialized {
-			box, err = sqlBox.ToBox()
-			if err != nil {
-				return nil, logg.Errorf("error assigning the box data: %w", err)
-			}
-			boxInitialized = true
-		}
-
-		// Initialize outer box only once
-		if !outerBoxInitialized && sqlOuterBox.ID.Valid {
-			outerBox, err = sqlOuterBox.ToBox()
-			if err != nil {
-				return &items.Box{}, logg.Errorf("something wrong happened while assigning the outboxSQLBox data %w", err)
-			}
-			outerBoxInitialized = true
-		}
-
-		// Add the inboxes if its ID is valid and not added before
-		if sqlInnerBoxListRow.ID.Valid && !addedInBoxes[sqlInnerBoxListRow.ID.String] {
-			innerBoxListRow, err = sqlInnerBoxListRow.ToListRow()
-			if err != nil {
-				return nil, logg.Errorf("error converting SQLBox to Box: %w", err)
-			}
-			innerBoxListRows = append(innerBoxListRows, innerBoxListRow)
-			addedInBoxes[sqlInnerBoxListRow.ID.String] = true
-		}
-
-		// Add the item to the itemsList if itemId is valid
-		if sqlItemListRow.ID.Valid {
-			if _, exists := addedItems[sqlItemListRow.ID.String]; !exists {
-				itemListRow, err := sqlItemListRow.ToListRow()
-				if err != nil {
-					return nil, logg.Errorf("error converting SQLListRow to ListRow %w", err)
-				}
-				itemListRows = append(itemListRows, itemListRow)
-				addedItems[sqlItemListRow.ID.String] = itemListRow
-			}
-		}
+		box.OuterBox = &outerbox
 	}
-
-	if err := rows.Err(); err != nil {
-		return nil, logg.Errorf("error iterating through rows: %w", err)
-	}
-
-	// Assign the items list to the box
-	box.OuterBox = &items.ListRow{BoxID: outerBox.ID, Label: outerBox.Label}
-	box.Items = itemListRows
-	box.InnerBoxes = innerBoxListRows
 
 	return box, nil
 }
