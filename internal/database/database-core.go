@@ -212,3 +212,59 @@ func ValidVirtualTable(table string) error {
 	}
 	return nil
 }
+
+// MoveTo moves item/box/shelf to a box/shelf/area.
+//
+// Example move item to a box:
+//
+//	MoveTo("item", itemID, "box", boxID)
+//
+// To move things out set
+//
+//	toTableID = uuid.Nil
+func (db *DB) MoveTo(table string, id uuid.UUID, toTable string, toTableID uuid.UUID) error {
+	err := ValidTable(table)
+	if err != nil {
+		return logg.Errorf(`table: "%s" %w`, table, err)
+	}
+	err = ValidTable(toTable)
+	if err != nil {
+		return logg.Errorf(`toTable: "%s" %w`, toTable, err)
+	}
+
+	errMsg := fmt.Sprintf(`moving "%s" "%s" to "%s" "%s"`, table, id.String(), toTable, toTableID.String())
+
+	exists, err := db.Exists(table, id)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	if exists == false {
+		return logg.Errorf("%s %w", errMsg, ErrNotExist)
+	}
+
+	// check if the table where the item is being moved to exists
+	if toTableID != uuid.Nil {
+		exists, err := db.Exists(toTable, toTableID)
+		if err != nil {
+			return logg.WrapErr(err)
+		}
+		if !exists {
+			return logg.Errorf("%s %w", errMsg, ErrNotExist)
+		}
+	}
+
+	// Update the item's shelf_id
+	stmt := fmt.Sprintf(`UPDATE %s SET %s_id = ? WHERE id = ?`, table, toTable)
+	result, err := db.Sql.Exec(stmt, toTableID.String(), id.String())
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	if rows != 1 {
+		return logg.NewError(fmt.Sprintf("rows should be != 1 but is %d", rows))
+	}
+	return nil
+}

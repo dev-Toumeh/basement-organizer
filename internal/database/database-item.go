@@ -428,9 +428,12 @@ func (db *DB) DeleteItems(itemIds []uuid.UUID) error {
 	return nil
 }
 
+// MoveItemToBox moves item to a box.
+// To move item out of a box set
+//
+//	id2 = uuid.Nil
 func (db *DB) MoveItemToBox(id1 uuid.UUID, id2 uuid.UUID) error {
-	updateStmt := `UPDATE item SET box_id = ? WHERE id = ?;`
-	_, err := db.Sql.Exec(updateStmt, id2, id1)
+	err := db.MoveTo("item", id1, "box", id2)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
@@ -438,42 +441,13 @@ func (db *DB) MoveItemToBox(id1 uuid.UUID, id2 uuid.UUID) error {
 }
 
 // MoveItemToShelf moves item to a shelf.
-// To move item out of a shelf set "toShelfID = uuid.Nil".
+// To move item out of a shelf set
+//
+//	toShelfID = uuid.Nil
 func (db *DB) MoveItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
-	errMsg := fmt.Sprintf(`moving item "%s" to shelf "%s"`, itemID.String(), toShelfID.String())
-
-	exists, err := db.Exists("item", itemID)
+	err := db.MoveTo("item", itemID, "shelf", toShelfID)
 	if err != nil {
 		return logg.WrapErr(err)
-	}
-
-	if exists == false {
-		return logg.Errorf(errMsg+" item: %w", ErrNotExist)
-	}
-
-	// If moving to a shelf, check if the shelf exists
-	if toShelfID != uuid.Nil {
-		exists, err := db.Exists("shelf", toShelfID)
-		if err != nil {
-			return logg.WrapErr(err)
-		}
-		if !exists {
-			return logg.Errorf(errMsg+" shelf %w", ErrNotExist)
-		}
-	}
-
-	// Update the item's shelf_id
-	stmt := `UPDATE item SET shelf_id = ? WHERE id = ?`
-	result, err := db.Sql.Exec(stmt, toShelfID.String(), itemID.String())
-	if err != nil {
-		return logg.WrapErr(err)
-	}
-	rows, err := result.RowsAffected()
-	if err != nil {
-		return logg.WrapErr(err)
-	}
-	if rows != 1 {
-		return logg.NewError("wrong")
 	}
 	return nil
 }

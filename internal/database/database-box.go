@@ -82,16 +82,6 @@ func (db *DB) BoxIDs() ([]string, error) {
 	return ids, nil
 }
 
-// Moves box with id1 into box with id2.
-func (db *DB) MoveBoxToBox(id1 uuid.UUID, id2 uuid.UUID) error {
-	updateStmt := `UPDATE box SET box_id = ? WHERE Id = ?;`
-	_, err := db.Sql.Exec(updateStmt, id2, id1)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // update box data
 func (db *DB) UpdateBox(box items.Box) error {
 	exist := db.BoxExistById(box.ID)
@@ -228,8 +218,26 @@ func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
 	return box.ID, nil
 }
 
+// MoveBoxToBox moves box to another box.
+// To move box out of a shelf set
+//
+//	toBoxID = uuid.Nil
+func (db *DB) MoveBoxToBox(boxID uuid.UUID, toBoxID uuid.UUID) error {
+	err := db.MoveTo("box", boxID, "box", toBoxID)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	return nil
+}
+
 // MoveBoxToShelf moves box to a shelf.
-// To move box out of a shelf set "toShelfID = uuid.Nil".
+// To move box out of a shelf set
+//
+//	toShelfID = uuid.Nil
 func (db *DB) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
-	return logg.WrapErr(ErrNotImplemented)
+	err := db.MoveTo("box", boxID, "shelf", toShelfID)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	return nil
 }

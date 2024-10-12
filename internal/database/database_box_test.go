@@ -299,3 +299,36 @@ func TestMoveBoxToBox(t *testing.T) {
 	assert.Equal(t, updatedInnerBox.OuterBoxID, uuid.Nil)
 	assert.Equal(t, updatedInnerBox.OuterBox, nil)
 }
+
+func TestMoveBoxToShelf(t *testing.T) {
+	EmptyTestDatabase()
+	resetTestBoxes()
+	resetShelves()
+	dbTest.CreateBox(BOX_1)
+	dbTest.CreateShelf(SHELF_1)
+	fetchedBox, _ := dbTest.BoxById(BOX_1.ID)
+	fetchedShelf, _ := dbTest.Shelf(SHELF_1.ID)
+	assert.Equal(t, fetchedBox.ShelfID, uuid.Nil)
+	assert.Equal(t, fetchedShelf.Boxes, nil)
+
+	// Move in
+	err := dbTest.MoveBoxToShelf(BOX_1.ID, SHELF_1.ID)
+	assert.Equal(t, err, nil)
+	fetchedBox, _ = dbTest.BoxById(BOX_1.ID)
+	fetchedShelf, _ = dbTest.Shelf(SHELF_1.ID)
+	assert.Equal(t, fetchedBox.ShelfID, SHELF_1.ID)
+	assert.NotEqual(t, fetchedShelf.Boxes, nil)
+	assert.Equal(t, fetchedShelf.Boxes[0].ID, BOX_1.ID)
+
+	// Move out
+	err = dbTest.MoveBoxToShelf(BOX_1.ID, uuid.Nil)
+	assert.Equal(t, err, nil)
+	fetchedBox, _ = dbTest.BoxById(BOX_1.ID)
+	fetchedShelf, _ = dbTest.Shelf(SHELF_1.ID)
+	assert.Equal(t, fetchedBox.ShelfID, uuid.Nil)
+	assert.Equal(t, fetchedShelf.Boxes, nil)
+
+	// Move non existent ID
+	err = dbTest.MoveBoxToShelf(BOX_1.ID, VALID_UUID_NOT_EXISTING)
+	assert.NotEqual(t, err, nil)
+}
