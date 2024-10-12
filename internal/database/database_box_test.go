@@ -2,7 +2,6 @@ package database
 
 import (
 	"slices"
-	"strings"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -243,23 +242,20 @@ func TestDeleteBox(t *testing.T) {
 	}
 
 	err = dbTest.DeleteBox(BOX_1.ID)
-	if err != nil && !strings.Contains(err.Error(), "the box is not empty") {
-		t.Fatalf("the should not be deleted as the box is not empty: %s", err)
+	assert.NotEqual(t, err, nil) // err: can't delete, box not empty
 
-		err = dbTest.DeleteItem(ITEM_1.ID)
-		if err != nil {
-			t.Fatalf("the item was not deleted: %v", err)
-		}
-		err = dbTest.DeleteBox(BOX_2.ID)
-		if err != nil {
-			t.Fatalf("deleting the innerbox was not succeed: %v", err)
-		}
+	err = dbTest.DeleteItem(ITEM_1.ID)
+	if err != nil {
+		t.Fatalf("the item was not deleted: %v", err)
+	}
+	err = dbTest.DeleteBox(BOX_2.ID)
+	if err != nil {
+		t.Fatalf("deleting the innerbox was not succeed: %v", err)
+	}
 
-		err = dbTest.DeleteBox(BOX_1.ID)
-		if err != nil {
-			t.Fatalf("delete the box after deleting the data inside of it was not succeed")
-		}
-
+	err = dbTest.DeleteBox(BOX_1.ID)
+	if err != nil {
+		t.Fatalf("delete the box after deleting the data inside of it was not succeed")
 	}
 }
 

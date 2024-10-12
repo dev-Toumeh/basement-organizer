@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"slices"
 
 	"github.com/gofrs/uuid/v5"
 	_ "modernc.org/sqlite"
@@ -149,8 +148,10 @@ func (db *DB) ErrorExist() error {
 // Exists checks existence of entity (item, box, shelf, area).
 // Returns error if other internal errors happen.
 func (db *DB) Exists(entityType string, id uuid.UUID) (bool, error) {
-	validEntities := []string{"item", "box", "shelf", "area"}
-	if !slices.Contains(validEntities, entityType) {
+	err1 := ValidTable(entityType)
+	err2 := ValidVirtualTable(entityType)
+	// not a vaid table and not valid virtual table
+	if err1 != nil && err2 != nil {
 		return false, logg.NewError(fmt.Sprintf("no entity with type: \"%s\"", entityType))
 	}
 
@@ -170,4 +171,44 @@ func (db *DB) Exists(entityType string, id uuid.UUID) (bool, error) {
 	} else {
 		return false, nil
 	}
+}
+
+func (db *DB) deleteFrom(table string, id uuid.UUID) error {
+	err := ValidTable(table)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+
+	stmt := fmt.Sprintf(`DELETE FROM %s WHERE id = ?;`, table)
+	result, err := db.Sql.Exec(stmt, id.String())
+	if err != nil {
+		return logg.Errorf(`can't delete "%s" from "%s" %w`, id, table, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	if rowsAffected == 0 {
+		return logg.NewError(fmt.Sprintf(`id "%s" not found in "%s"`, id, table))
+	} else if rowsAffected != 1 {
+		return logg.NewError(fmt.Sprintf(`unexpected number of rows affected (%d) while deleting "%s" from "%s"`, rowsAffected, id, table))
+	}
+	return nil
+}
+
+func ValidTable(table string) error {
+	_, ok := (*mainTables)[table]
+	if !ok {
+		return logg.NewError(fmt.Sprintf(`"%s" is not a valid table`, table))
+	}
+	return nil
+}
+
+func ValidVirtualTable(table string) error {
+	_, ok := (*virtualTables)[table]
+	if !ok {
+		return logg.NewError(fmt.Sprintf(`"%s" is not a valid virtual table`, table))
+	}
+	return nil
 }

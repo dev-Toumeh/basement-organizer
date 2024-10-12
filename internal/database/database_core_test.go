@@ -47,7 +47,7 @@ func EmptyTestDatabase() {
 		sqlStatement := fmt.Sprintf("DELETE FROM %s;", tableName)
 		_, err := dbTest.Sql.Exec(sqlStatement)
 		if err != nil {
-			logg.Fatalf("Failed to delete from table %s: %s", tableName, err)
+			logg.Fatalf("Failed to delete from table \"%s\"\n\tquery: \"%s\"\n\t%s", tableName, sqlStatement, err)
 			return
 		}
 	}

@@ -319,25 +319,9 @@ func (db *DB) UpdateItem(ctx context.Context, item items.Item) error {
 
 // Delete Item by Id
 func (db *DB) DeleteItem(itemId uuid.UUID) error {
-	sqlStatement := `DELETE FROM item WHERE id = ?;`
-	result, err := db.Sql.Exec(sqlStatement, itemId.String())
+	err := db.deleteFrom("item", itemId)
 	if err != nil {
-		return logg.Errorf("deleting was not succeed %W", err)
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		logg.Err(err)
-		return err
-	}
-	if rowsAffected == 0 {
-		err := errors.New(fmt.Sprintf("the Record with the id: %s was not found that should not happened while deleting", itemId.String()))
-		logg.Debug(err)
-		return err
-	} else if rowsAffected != 1 {
-		err := errors.New(fmt.Sprintf("the id: %s has unexpected effected number of rows (more than one or less than 0)", itemId.String()))
-		logg.Err(err)
-		return err
+		return logg.WrapErr(err)
 	}
 	return nil
 }
