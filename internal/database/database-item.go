@@ -451,30 +451,3 @@ func (db *DB) MoveItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
 	}
 	return nil
 }
-
-// Helper function to check for null strings and return empty if null
-func ifNullString(sqlStr sql.NullString) string {
-	if sqlStr.Valid {
-		return sqlStr.String
-	}
-	return ""
-}
-
-// Helper function to check for null UUIDs and return uuid.Nil if null
-func ifNullUUID(sqlUUID sql.NullString) uuid.UUID {
-	if sqlUUID.Valid {
-		return uuid.FromStringOrNil(sqlUUID.String)
-	}
-	return uuid.Nil
-}
-
-func UUIDFromSqlString(boxID sql.NullString) (uuid.UUID, error) {
-	if boxID.Valid {
-		id, err := uuid.FromString(boxID.String)
-		if err != nil {
-			return uuid.Nil, logg.Errorf("error while converting the string id into uuid: %w", err)
-		}
-		return id, nil
-	}
-	return uuid.Nil, logg.Errorf("invalid Virtual Id string")
-}

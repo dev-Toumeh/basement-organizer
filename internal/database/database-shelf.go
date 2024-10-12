@@ -179,69 +179,6 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 	return nil
 }
 
-// innerListRowsFrom returns all items/boxes/shelves/etc belonging to another box, shelf or area.
-//
-// Example:
-//
-//	// get all items that belongs to a shelf.
-//	innerListRowsFrom("shelf", shelf.ID, "item_fts")
-//
-// listRowsTable:
-//
-//	FROM "item_fts"
-//	FROM "box_ftx"
-//	...
-//
-// belongsToTable:
-//
-//	"item", "box", "shelf", ...
-//
-// belongsToTableID:
-//
-//	WHERE "item"_id = ID
-//	WHERE "box"_id = ID
-//	...
-func (db *DB) innerListRowsFrom(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string) ([]*items.ListRow, error) {
-	err := ValidVirtualTable(listRowsTable)
-	if err != nil {
-		return nil, logg.WrapErr(err)
-	}
-
-	err = ValidTable(belongsToTable)
-	if err != nil {
-		return nil, logg.WrapErr(err)
-	}
-
-	var listRows []*items.ListRow
-
-	stmt := fmt.Sprintf(`
-	SELECT id, label, box_id, box_label, shelf_id, shelf_label, area_id, area_label
-	FROM %s	
-	WHERE %s_id = ?;`, listRowsTable, belongsToTable)
-
-	rows, err := db.Sql.Query(stmt, belongsToTableID.String())
-	if err != nil {
-		return nil, logg.Errorf("%s %w", stmt, err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var sqlrow SQLListRow
-
-		err = rows.Scan(
-			&sqlrow.ID, &sqlrow.Label, &sqlrow.BoxID, &sqlrow.BoxLabel, &sqlrow.ShelfID, &sqlrow.ShelfLabel, &sqlrow.AreaID, &sqlrow.AreaLabel,
-		)
-		if err != nil {
-			return nil, logg.WrapErr(err)
-		}
-		lrow, err := sqlrow.ToListRow()
-		if err != nil {
-			return nil, logg.WrapErr(err)
-		}
-		listRows = append(listRows, lrow)
-	}
-	return listRows, nil
-}
-
 // Shelf returns shelf with provided id.
 func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 	var sqlShelf SQLShelf

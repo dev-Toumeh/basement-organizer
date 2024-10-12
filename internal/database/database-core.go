@@ -2,6 +2,7 @@ package database
 
 import (
 	"basement/main/internal/env"
+	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"database/sql"
 	"errors"
@@ -267,4 +268,94 @@ func (db *DB) MoveTo(table string, id uuid.UUID, toTable string, toTableID uuid.
 		return logg.NewError(fmt.Sprintf("rows should be != 1 but is %d", rows))
 	}
 	return nil
+}
+
+// innerListRowsFrom returns all items/boxes/shelves/etc belonging to another box, shelf or area.
+//
+// Example:
+//
+//	// get all items that belongs to a shelf.
+//	innerListRowsFrom("shelf", shelf.ID, "item_fts")
+//
+// listRowsTable:
+//
+//	FROM "item_fts"
+//	FROM "box_ftx"
+//	...
+//
+// belongsToTable:
+//
+//	"item", "box", "shelf", ...
+//
+// belongsToTableID:
+//
+//	WHERE "item"_id = ID
+//	WHERE "box"_id = ID
+//	...
+func (db *DB) innerListRowsFrom(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string) ([]*items.ListRow, error) {
+	err := ValidVirtualTable(listRowsTable)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	err = ValidTable(belongsToTable)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	var listRows []*items.ListRow
+
+	stmt := fmt.Sprintf(`
+	SELECT id, label, box_id, box_label, shelf_id, shelf_label, area_id, area_label
+	FROM %s	
+	WHERE %s_id = ?;`, listRowsTable, belongsToTable)
+
+	rows, err := db.Sql.Query(stmt, belongsToTableID.String())
+	if err != nil {
+		return nil, logg.Errorf("%s %w", stmt, err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var sqlrow SQLListRow
+
+		err = rows.Scan(
+			&sqlrow.ID, &sqlrow.Label, &sqlrow.BoxID, &sqlrow.BoxLabel, &sqlrow.ShelfID, &sqlrow.ShelfLabel, &sqlrow.AreaID, &sqlrow.AreaLabel,
+		)
+		if err != nil {
+			return nil, logg.WrapErr(err)
+		}
+		lrow, err := sqlrow.ToListRow()
+		if err != nil {
+			return nil, logg.WrapErr(err)
+		}
+		listRows = append(listRows, lrow)
+	}
+	return listRows, nil
+}
+
+// Helper function to check for null strings and return empty if null
+func ifNullString(sqlStr sql.NullString) string {
+	if sqlStr.Valid {
+		return sqlStr.String
+	}
+	return ""
+}
+
+// Helper function to check for null UUIDs and return uuid.Nil if null
+func ifNullUUID(sqlUUID sql.NullString) uuid.UUID {
+	if sqlUUID.Valid {
+		return uuid.FromStringOrNil(sqlUUID.String)
+	}
+	return uuid.Nil
+}
+
+func UUIDFromSqlString(boxID sql.NullString) (uuid.UUID, error) {
+	if boxID.Valid {
+		id, err := uuid.FromString(boxID.String)
+		if err != nil {
+			return uuid.Nil, logg.Errorf("error while converting the string id into uuid: %w", err)
+		}
+		return id, nil
+	}
+	return uuid.Nil, logg.Errorf("invalid Virtual Id string")
 }
