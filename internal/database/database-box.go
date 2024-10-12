@@ -84,7 +84,7 @@ func (db *DB) BoxIDs() ([]string, error) {
 
 // Moves box with id1 into box with id2.
 func (db *DB) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
-	updateStmt := `UPDATE box SET outerbox_id = ? WHERE Id = ?;`
+	updateStmt := `UPDATE box SET box_id = ? WHERE Id = ?;`
 	_, err := db.Sql.Exec(updateStmt, id2, id1)
 	if err != nil {
 		return err
@@ -130,15 +130,14 @@ func (db *DB) DeleteBox(boxId uuid.UUID) error {
 
 	// check if box is not Empty
 	itemExist := db.ItemExist("box_id", id)
-	boxExist := db.BoxExist("outerbox_id", boxId.String())
+	boxExist := db.BoxExist("box_id", boxId.String())
 	if itemExist || boxExist {
-		return logg.Errorf("the box is not empty")
+		return logg.Errorf(`the box with id="%s" is not empty`, id)
 	}
 
-	sqlStatement := `DELETE FROM box WHERE id = ?;`
-	_, err := db.Sql.Exec(sqlStatement, id)
+	err := db.deleteFrom("box", boxId)
 	if err != nil {
-		return logg.Errorf("error whiel deleting the box: %W", err)
+		return logg.WrapErr(err)
 	}
 	return nil
 }
@@ -171,16 +170,16 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 
 	query := fmt.Sprintf(
 		`SELECT 
-            b.id, b.label, b.description, b.picture, b.preview_picture, b.qrcode, b.outerbox_id, b.shelf_id, b.area_id,
+            b.id, b.label, b.description, b.picture, b.preview_picture, b.qrcode, b.box_id, b.shelf_id, b.area_id,
             ob.id, ob.label, ob.preview_picture,
-            ib.box_id, ib.label, ib.outerbox_id, ib.outerbox_label, ib.shelf_id, ib.shelf_label, ib.area_id, ib.area_label,
-            i.item_id, i.label, i.box_id, i.box_label, i.shelf_id, i.shelf_label, i.area_id, i.area_label
+            ib.id, ib.label, ib.box_id, ib.box_label, ib.shelf_id, ib.shelf_label, ib.area_id, ib.area_label,
+            i.id, i.label, i.box_id, i.box_label, i.shelf_id, i.shelf_label, i.area_id, i.area_label
         FROM 
             box AS b
         LEFT JOIN 
-            box_fts AS ib ON b.id = ib.outerbox_id
+            box_fts AS ib ON b.id = ib.box_id
         LEFT JOIN 
-            box AS ob ON b.outerbox_id = ob.id
+            box AS ob ON b.box_id = ob.id
         LEFT JOIN 
             item_fts AS i ON b.id = i.box_id 
         WHERE 
@@ -269,7 +268,7 @@ func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
 		return uuid.Nil, db.ErrorExist()
 	}
 
-	sqlStatement := `INSERT INTO box (id, label, description, picture, preview_picture, qrcode, outerbox_id, shelf_id, area_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	sqlStatement := `INSERT INTO box (id, label, description, picture, preview_picture, qrcode, box_id, shelf_id, area_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	updatePicture(&box.Picture, &box.PreviewPicture)
 

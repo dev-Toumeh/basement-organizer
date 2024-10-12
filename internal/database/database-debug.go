@@ -150,7 +150,7 @@ func (db *DB) DatabasePatcher() error {
 
 // this function will print all the records inside of  item_fts table
 func (db *DB) CheckItemFTSData() error {
-	rows, err := db.Sql.Query("SELECT item_id, label, description FROM item_fts;")
+	rows, err := db.Sql.Query("SELECT id, label, description FROM item_fts;")
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func (db *DB) RepopulateItemFTS() error {
 	}
 
 	_, err = db.Sql.Exec(`
-        INSERT INTO item_fts(item_id, label, description)
+        INSERT INTO item_fts(id, label, description)
         SELECT id, label, description FROM item;
     `)
 	if err != nil {
