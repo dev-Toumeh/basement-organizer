@@ -291,4 +291,11 @@ func TestMoveBoxToBox(t *testing.T) {
 	nonExistentBoxId := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174003"))
 	err = dbTest.MoveBoxToBox(innerBox.ID, nonExistentBoxId)
 	assert.Equal(t, err, err)
+
+	// Move innerbox out of outerbox
+	err = dbTest.MoveBoxToBox(innerBox.ID, uuid.Nil)
+	assert.Equal(t, err, nil)
+	updatedInnerBox, err = dbTest.BoxById(innerBox.ID)
+	assert.Equal(t, updatedInnerBox.OuterBoxID, uuid.Nil)
+	assert.Equal(t, updatedInnerBox.OuterBox, nil)
 }
