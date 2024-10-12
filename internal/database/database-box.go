@@ -180,13 +180,13 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 		return nil, logg.WrapErr(err)
 	}
 
-	items, err := db.innerListRowsFrom("item_fts", "box", box.ID)
+	items, err := db.innerListRowsFrom("box", box.ID, "item_fts")
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
 	box.Items = items
 
-	boxes, err := db.innerListRowsFrom("box_fts", "box", box.ID)
+	boxes, err := db.innerListRowsFrom("box", box.ID, "box_fts")
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}

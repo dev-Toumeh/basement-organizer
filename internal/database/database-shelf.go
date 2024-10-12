@@ -179,6 +179,13 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 	return nil
 }
 
+// innerListRowsFrom returns all items/boxes/shelves/etc belonging to another box, shelf or area.
+//
+// Example:
+//
+//	// get all items that belongs to a shelf.
+//	innerListRowsFrom("shelf", shelf.ID, "item_fts")
+//
 // listRowsTable:
 //
 //	FROM "item_fts"
@@ -194,7 +201,7 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 //	WHERE "item"_id = ID
 //	WHERE "box"_id = ID
 //	...
-func (db *DB) innerListRowsFrom(listRowsTable string, belongsToTable string, belongsToTableID uuid.UUID) ([]*items.ListRow, error) {
+func (db *DB) innerListRowsFrom(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string) ([]*items.ListRow, error) {
 	err := ValidVirtualTable(listRowsTable)
 	if err != nil {
 		return nil, logg.WrapErr(err)
@@ -257,12 +264,12 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
-	items, err := db.innerListRowsFrom("item_fts", "shelf", shelf.ID)
+	items, err := db.innerListRowsFrom("shelf", shelf.ID, "item_fts")
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
 	shelf.Items = items
-	boxes, err := db.innerListRowsFrom("box_fts", "shelf", shelf.ID)
+	boxes, err := db.innerListRowsFrom("shelf", shelf.ID, "box_fts")
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
