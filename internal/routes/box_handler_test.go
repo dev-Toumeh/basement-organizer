@@ -40,7 +40,7 @@ func (db *boxDatabaseError) BoxIDs() ([]string, error) {
 	return nil, errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
+func (db *boxDatabaseError) MoveBoxToBox(id1 uuid.UUID, id2 uuid.UUID) error {
 	return errors.New("AAAAAAAA")
 }
 
@@ -87,7 +87,7 @@ func (db *boxDatabaseSuccess) BoxIDs() ([]string, error) {
 	return []string{"id1", "id2", "id3"}, nil
 }
 
-func (db *boxDatabaseSuccess) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
+func (db *boxDatabaseSuccess) MoveBoxToBox(id1 uuid.UUID, id2 uuid.UUID) error {
 	return nil
 }
 

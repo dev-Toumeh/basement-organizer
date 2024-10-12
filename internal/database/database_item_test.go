@@ -149,7 +149,7 @@ func TestDeleteItems(t *testing.T) {
 	}
 }
 
-func TestMoveItem(t *testing.T) {
+func TestMoveItemToBox(t *testing.T) {
 	EmptyTestDatabase()
 	resetTestItems()
 	resetTestBoxes()
@@ -198,8 +198,6 @@ func TestMoveItemToShelf(t *testing.T) {
 
 	err := dbTest.CreateNewItem(*item)
 	assert.Equal(t, err, nil)
-
-	// Create a test shelf
 	shelf := SHELF_1
 	err = dbTest.CreateShelf(shelf)
 	assert.Equal(t, err, nil)

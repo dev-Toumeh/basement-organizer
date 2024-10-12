@@ -259,7 +259,7 @@ func TestDeleteBox(t *testing.T) {
 	}
 }
 
-func TestMoveBox(t *testing.T) {
+func TestMoveBoxToBox(t *testing.T) {
 	EmptyTestDatabase()
 	resetTestBoxes()
 	resetTestItems()
@@ -276,7 +276,7 @@ func TestMoveBox(t *testing.T) {
 	}
 
 	// 1. Test successful move
-	err := dbTest.MoveBox(innerBox.ID, outerBox.ID)
+	err := dbTest.MoveBoxToBox(innerBox.ID, outerBox.ID)
 	if err != nil {
 		t.Fatalf("MoveBox function returned an error: %v", err)
 	}
@@ -289,6 +289,6 @@ func TestMoveBox(t *testing.T) {
 
 	// 2. Test move to non-existent box (should return an error)
 	nonExistentBoxId := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174003"))
-	err = dbTest.MoveBox(innerBox.ID, nonExistentBoxId)
+	err = dbTest.MoveBoxToBox(innerBox.ID, nonExistentBoxId)
 	assert.Equal(t, err, err)
 }

@@ -83,7 +83,7 @@ func (db *DB) BoxIDs() ([]string, error) {
 }
 
 // Moves box with id1 into box with id2.
-func (db *DB) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
+func (db *DB) MoveBoxToBox(id1 uuid.UUID, id2 uuid.UUID) error {
 	updateStmt := `UPDATE box SET box_id = ? WHERE Id = ?;`
 	_, err := db.Sql.Exec(updateStmt, id2, id1)
 	if err != nil {
