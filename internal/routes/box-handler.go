@@ -78,7 +78,7 @@ func boxHandler(db BoxDatabase) http.HandlerFunc {
 			}
 
 			// Use API data writer
-			if !wantsTemplateData(r) {
+			if !server.WantsTemplateData(r) {
 				server.WriteJSON(w, box)
 				return
 			}
@@ -114,7 +114,7 @@ func boxesHandler(db BoxDatabase) http.HandlerFunc {
 		switch r.Method {
 
 		case http.MethodGet:
-			if !wantsTemplateData(r) {
+			if !server.WantsTemplateData(r) {
 				boxes, err := db.BoxFuzzyFinder("", 5, 1)
 				if err != nil {
 					server.WriteInternalServerError("cant query boxes", logg.Errorf("%w", err), w, r)
@@ -129,7 +129,7 @@ func boxesHandler(db BoxDatabase) http.HandlerFunc {
 				server.WriteNotFoundError("Can't find boxes", err, w, r)
 				return
 			}
-			if wantsTemplateData(r) {
+			if server.WantsTemplateData(r) {
 				err = renderBoxesListTemplate(w, r, db, boxes, "")
 				if err != nil {
 					server.WriteInternalServerError("Can't render box list", err, w, r)
@@ -410,7 +410,7 @@ func createBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		server.WriteNotFoundError("error while creating the box", err, w, r)
 		return
 	}
-	if wantsTemplateData(r) {
+	if server.WantsTemplateData(r) {
 		box, err := db.BoxListRowByID(id)
 		logg.Debug(box)
 		if err != nil {
@@ -436,7 +436,7 @@ func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		server.WriteNotFoundError(errMsgForUser, err, w, r)
 		return
 	}
-	if wantsTemplateData(r) {
+	if server.WantsTemplateData(r) {
 		boxTemplate := items.BoxTemplateData{Box: &box, Edit: false}
 		err := server.RenderWithSuccessNotification(w, r, templates.TEMPLATE_BOX_DETAILS, boxTemplate.Map(), fmt.Sprintf("Updated box: %v", boxTemplate.Label))
 		if err != nil {
@@ -494,7 +494,7 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		return
 	}
 
-	if wantsTemplateData(r) {
+	if server.WantsTemplateData(r) {
 		boxesPage(db).ServeHTTP(w, r)
 		for _, id := range toDelete {
 			templates.RenderSuccessNotification(w, "Box deleted: "+id.String())

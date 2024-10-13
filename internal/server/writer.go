@@ -110,3 +110,9 @@ func ValidID(w http.ResponseWriter, r *http.Request, errorMessage string) uuid.U
 	}
 	return newId
 }
+
+// wantsTemplateData checks if current request requires template data.
+// Helps deciding how to write the data.
+func WantsTemplateData(r *http.Request) bool {
+	return !strings.Contains(r.URL.Path, "/api/")
+}
