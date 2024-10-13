@@ -13,14 +13,13 @@ import (
 
 type Box struct {
 	BasicInfo
-	OuterBoxID uuid.UUID  `json:"outerboxid"`
-	Items      []*ListRow `json:"items"`
-	InnerBoxes []*ListRow `json:"innerboxes"`
-	OuterBox   *ListRow   `json:"outerbox"`
-	ShelfID    uuid.UUID
-	AreaID     uuid.UUID
-	// @TODO: Fix import cycle with shelves package.
-	// ShelfCoordinates *shelf         `json:"shelfcoordinates"`
+	OuterBoxID       uuid.UUID  `json:"outerboxid"`
+	Items            []*ListRow `json:"items"`
+	InnerBoxes       []*ListRow `json:"innerboxes"`
+	OuterBox         *ListRow   `json:"outerbox"`
+	ShelfID          uuid.UUID
+	AreaID           uuid.UUID
+	ShelfCoordinates *ShelfCoordinates `json:"shelfcoordinates"`
 }
 
 func (box *Box) Map() map[string]any {
@@ -32,6 +31,14 @@ func (box *Box) Map() map[string]any {
 	m["ShelfID"] = box.ShelfID
 	m["AreaID"] = box.AreaID
 	return m
+}
+
+type ShelfCoordinates struct {
+	ID      uuid.UUID `json:"id"`
+	ShelfID uuid.UUID `json:"shelfid"`
+	Label   string    `json:"label"       validate:"required,lte=128"`
+	Row     int       `json:"row"`
+	Col     int       `json:"col"`
 }
 
 type BoxTemplateData struct {
