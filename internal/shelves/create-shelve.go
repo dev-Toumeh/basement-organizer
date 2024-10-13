@@ -12,14 +12,14 @@ import (
 )
 
 type Shelf struct {
-	Id             uuid.UUID            `json:"id"`
-	Label          string               `json:"label"       validate:"required,lte=128"`
-	Description    string               `json:"description" validate:"omitempty,lte=256"`
-	Picture        string               `json:"picture"     validate:"omitempty,base64"`
-	PreviewPicture string               `json:"previewpicture"     validate:"omitempty,base64"`
-	QRcode         string               `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	Items          []*items.VirtualItem `json:"items"`
-	Boxes          []*items.BoxListItem `json:"boxes"`
+	Id             uuid.UUID        `json:"id"`
+	Label          string           `json:"label"       validate:"required,lte=128"`
+	Description    string           `json:"description" validate:"omitempty,lte=256"`
+	Picture        string           `json:"picture"     validate:"omitempty,base64"`
+	PreviewPicture string           `json:"previewpicture"     validate:"omitempty,base64"`
+	QRcode         string           `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	Items          []*items.ListRow `json:"items"`
+	Boxes          []*items.ListRow `json:"boxes"`
 	Height         float32
 	Width          float32
 	Depth          float32

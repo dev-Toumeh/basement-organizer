@@ -10,12 +10,17 @@ import (
 )
 
 func main() {
-	// Move this only if necessary
 	env.SetDevelopment()
+	// env.SetProduction()
+
 	if env.Development() {
 		logg.EnableDebugLogger()
 		logg.EnableInfoLogger()
 	}
+	if env.Production() {
+		logg.EnableInfoLogger()
+	}
+
 	logg.Info(env.Description())
 
 	db := &database.DB{}

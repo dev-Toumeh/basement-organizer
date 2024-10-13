@@ -39,7 +39,7 @@ func itemsRoutes(db items.ItemDatabase) {
 	Handle("/template/item-form", itemTemp)
 	Handle("/template/item-search", searchItemTemp)
 	Handle("/template/item-dummy", func(w http.ResponseWriter, r *http.Request) {
-		db.InsertDummyItems()
+		db.InsertSampleItems()
 		templates.RenderSuccessNotification(w, "dummy items has been added")
 	})
 	Handle("/items-pagination", items.ItemPaginationHandler(db))

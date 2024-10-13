@@ -2,7 +2,6 @@ package database
 
 import (
 	"slices"
-	"strings"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -48,6 +47,12 @@ func TestInsertNewBox(t *testing.T) {
 	//Compare the fetched box with the original test box
 	assert.Equal(t, testBox.Label, fetchedBox.Label)
 	assert.Equal(t, testBox.Description, fetchedBox.Description)
+	assert.NotEqual(t, "", fetchedBox.PreviewPicture)
+	assert.Equal(t, testBox.OuterBox, nil)
+	assert.Equal(t, testBox.OuterBoxID, uuid.Nil)
+	assert.Equal(t, testBox.InnerBoxes, nil)
+	assert.Equal(t, testBox.ShelfID, uuid.Nil)
+	assert.Equal(t, testBox.AreaID, uuid.Nil)
 
 	duplicateBox := *BOX_1
 
@@ -55,6 +60,26 @@ func TestInsertNewBox(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected an error when inserting a box with an existing ID, got none")
 	}
+}
+
+func TestInsertNewBoxWithOuterBox(t *testing.T) {
+	EmptyTestDatabase()
+	resetTestBoxes()
+	var err error
+	outerBox := BOX_1
+	innerBox := BOX_2
+	innerBox.OuterBoxID = outerBox.ID
+	_, err = dbTest.insertNewBox(innerBox)
+	assert.Equal(t, err, nil)
+	_, err = dbTest.insertNewBox(outerBox)
+	assert.Equal(t, err, nil)
+
+	fetchedOuterBox, err := dbTest.BoxById(outerBox.ID)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(fetchedOuterBox.InnerBoxes), 1)
+	fetchedInnerBox, err := dbTest.BoxById(innerBox.ID)
+	assert.Equal(t, err, nil)
+	assert.NotEqual(t, fetchedInnerBox.OuterBox, nil)
 }
 
 func TestBoxByField(t *testing.T) {
@@ -217,27 +242,24 @@ func TestDeleteBox(t *testing.T) {
 	}
 
 	err = dbTest.DeleteBox(BOX_1.ID)
-	if err != nil && !strings.Contains(err.Error(), "the box is not empty") {
-		t.Fatalf("the should not be deleted as the box is not empty: %s", err)
+	assert.NotEqual(t, err, nil) // err: can't delete, box not empty
 
-		err = dbTest.DeleteItem(ITEM_1.ID)
-		if err != nil {
-			t.Fatalf("the item was not deleted: %v", err)
-		}
-		err = dbTest.DeleteBox(BOX_2.ID)
-		if err != nil {
-			t.Fatalf("deleting the innerbox was not succeed: %v", err)
-		}
+	err = dbTest.DeleteItem(ITEM_1.ID)
+	if err != nil {
+		t.Fatalf("the item was not deleted: %v", err)
+	}
+	err = dbTest.DeleteBox(BOX_2.ID)
+	if err != nil {
+		t.Fatalf("deleting the innerbox was not succeed: %v", err)
+	}
 
-		err = dbTest.DeleteBox(BOX_1.ID)
-		if err != nil {
-			t.Fatalf("delete the box after deleting the data inside of it was not succeed")
-		}
-
+	err = dbTest.DeleteBox(BOX_1.ID)
+	if err != nil {
+		t.Fatalf("delete the box after deleting the data inside of it was not succeed")
 	}
 }
 
-func TestMoveBox(t *testing.T) {
+func TestMoveBoxToBox(t *testing.T) {
 	EmptyTestDatabase()
 	resetTestBoxes()
 	resetTestItems()
@@ -254,7 +276,7 @@ func TestMoveBox(t *testing.T) {
 	}
 
 	// 1. Test successful move
-	err := dbTest.MoveBox(innerBox.ID, outerBox.ID)
+	err := dbTest.MoveBoxToBox(innerBox.ID, outerBox.ID)
 	if err != nil {
 		t.Fatalf("MoveBox function returned an error: %v", err)
 	}
@@ -267,6 +289,46 @@ func TestMoveBox(t *testing.T) {
 
 	// 2. Test move to non-existent box (should return an error)
 	nonExistentBoxId := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174003"))
-	err = dbTest.MoveBox(innerBox.ID, nonExistentBoxId)
+	err = dbTest.MoveBoxToBox(innerBox.ID, nonExistentBoxId)
 	assert.Equal(t, err, err)
+
+	// Move innerbox out of outerbox
+	err = dbTest.MoveBoxToBox(innerBox.ID, uuid.Nil)
+	assert.Equal(t, err, nil)
+	updatedInnerBox, err = dbTest.BoxById(innerBox.ID)
+	assert.Equal(t, updatedInnerBox.OuterBoxID, uuid.Nil)
+	assert.Equal(t, updatedInnerBox.OuterBox, nil)
+}
+
+func TestMoveBoxToShelf(t *testing.T) {
+	EmptyTestDatabase()
+	resetTestBoxes()
+	resetShelves()
+	dbTest.CreateBox(BOX_1)
+	dbTest.CreateShelf(SHELF_1)
+	fetchedBox, _ := dbTest.BoxById(BOX_1.ID)
+	fetchedShelf, _ := dbTest.Shelf(SHELF_1.ID)
+	assert.Equal(t, fetchedBox.ShelfID, uuid.Nil)
+	assert.Equal(t, fetchedShelf.Boxes, nil)
+
+	// Move in
+	err := dbTest.MoveBoxToShelf(BOX_1.ID, SHELF_1.ID)
+	assert.Equal(t, err, nil)
+	fetchedBox, _ = dbTest.BoxById(BOX_1.ID)
+	fetchedShelf, _ = dbTest.Shelf(SHELF_1.ID)
+	assert.Equal(t, fetchedBox.ShelfID, SHELF_1.ID)
+	assert.NotEqual(t, fetchedShelf.Boxes, nil)
+	assert.Equal(t, fetchedShelf.Boxes[0].ID, BOX_1.ID)
+
+	// Move out
+	err = dbTest.MoveBoxToShelf(BOX_1.ID, uuid.Nil)
+	assert.Equal(t, err, nil)
+	fetchedBox, _ = dbTest.BoxById(BOX_1.ID)
+	fetchedShelf, _ = dbTest.Shelf(SHELF_1.ID)
+	assert.Equal(t, fetchedBox.ShelfID, uuid.Nil)
+	assert.Equal(t, fetchedShelf.Boxes, nil)
+
+	// Move non existent ID
+	err = dbTest.MoveBoxToShelf(BOX_1.ID, VALID_UUID_NOT_EXISTING)
+	assert.NotEqual(t, err, nil)
 }

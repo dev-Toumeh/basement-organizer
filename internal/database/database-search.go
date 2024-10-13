@@ -12,7 +12,7 @@ import (
 
 // Search items based on search query, return array of virtualItems
 func (db *DB) ItemFuzzyFinder(query string) ([]items.ListRow, error) {
-	rows, err := db.Sql.Query(` SELECT item_id, label FROM item_fts WHERE label LIKE ? ORDER BY item_id; `, query+"%")
+	rows, err := db.Sql.Query(` SELECT id, label FROM item_fts WHERE label LIKE ? ORDER BY id; `, query+"%")
 	if err != nil {
 		return nil, fmt.Errorf("error while fetching virtual items: %w", err)
 	}
@@ -39,10 +39,10 @@ func (db *DB) ItemFuzzyFinder(query string) ([]items.ListRow, error) {
 // Search items based on search query, return limited number of results used to generate pagination
 func (db *DB) ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]items.ListRow, error) {
 	rows, err := db.Sql.Query(`
-        SELECT item_id, label 
+        SELECT id, label 
         FROM item_fts 
         WHERE label LIKE ? 
-        ORDER BY item_id 
+        ORDER BY id 
         LIMIT ? OFFSET ?; 
     `, query+"%", limit, offset)
 
@@ -79,14 +79,14 @@ func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow
 	}
 	queryNoSearch := `
 		SELECT
-			box_id, label, outerbox_id, outerbox_label, preview_picture
+			id, label, box_id, box_label, preview_picture
 		FROM box_fts AS b_fts
 		ORDER BY label ASC
 		LIMIT ? OFFSET ?;`
 
 	queryWithSearch := `
 		SELECT 
-			box_id, label, outerbox_id, outerbox_label, preview_picture
+			id, label, box_id, box_label, preview_picture
 		FROM box_fts
 		WHERE label LIKE ?
 		ORDER BY label ASC
@@ -128,25 +128,21 @@ func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow
 }
 
 // check if the virtual box is empty
-func (db *DB) VirtualBoxExist(id uuid.UUID) bool {
-	query := fmt.Sprint("SELECT COUNT(*) FROM box_fts WHERE box_id = ?; ")
-	var count int
-	err := db.Sql.QueryRow(query, id.String()).Scan(&count)
-	if err != nil {
-		logg.Errf("Error checking item existence %v:", err)
-		return false
-	}
-	return count > 0
+func (db *DB) VirtualBoxExist(id uuid.UUID) (bool, error) {
+	return db.Exists("box_fts", id)
 }
 
 // Get the virtual Box based on his ID
 func (db *DB) BoxListRowByID(id uuid.UUID) (items.ListRow, error) {
-
-	if !db.VirtualBoxExist(id) {
+	exists, err := db.VirtualBoxExist(id)
+	if err != nil {
+		return items.ListRow{}, logg.WrapErr(err)
+	}
+	if !exists {
 		return items.ListRow{}, fmt.Errorf("the Box Id does not exsist in the virtual table")
 	}
 
-	query := fmt.Sprintf("SELECT box_id, label, outerbox_id, outerbox_label, shelf_id, shelf_label, area_id, area_label FROM box_fts WHERE box_id = ?")
+	query := fmt.Sprintf("SELECT id, label, box_id, box_label, shelf_id, shelf_label, area_id, area_label FROM box_fts WHERE id = ?")
 	row, err := db.Sql.Query(query, id.String())
 	if err != nil {
 		return items.ListRow{}, fmt.Errorf("error while fetching the virtual box: %w", err)
