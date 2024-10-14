@@ -167,7 +167,7 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
     `
 
 	_, err = db.Sql.Exec(stmt,
-		shelf.ID.String(),
+		shelf.Id.String(),
 		shelf.Label,
 		shelf.Description,
 		picture64,
@@ -239,7 +239,7 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 	// 	previewPictureBase64 = base64.StdEncoding.EncodeToString(previewPicture)
 	// }
 	shelf := &shelves.Shelf{
-		ID:             id,
+		Id:             id,
 		Label:          label,
 		Description:    description.String,
 		Picture:        picture.String,
@@ -331,7 +331,7 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
 		shelf.Depth,
 		shelf.Rows,
 		shelf.Cols,
-		shelf.ID.String(),
+		shelf.Id.String(),
 	)
 	if err != nil {
 		return logg.Errorf("UpdateShelf: %w", err)

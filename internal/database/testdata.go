@@ -194,7 +194,7 @@ func testItems() []items.Item {
 }
 
 var SHELF_1 = &shelves.Shelf{
-	ID:             SHELF_VALID_UUID_1,
+	Id:             SHELF_VALID_UUID_1,
 	Label:          "Test Shelf",
 	Description:    "A shelf for testing",
 	Picture:        VALID_BASE64_PNG,
@@ -208,7 +208,7 @@ var SHELF_1 = &shelves.Shelf{
 }
 
 var SHELF_2 = &shelves.Shelf{
-	ID:             SHELF_VALID_UUID_2,
+	Id:             SHELF_VALID_UUID_2,
 	Label:          "Test Shelf 2",
 	Description:    "A shelf for testing",
 	Picture:        VALID_BASE64_PNG,
@@ -223,7 +223,7 @@ var SHELF_2 = &shelves.Shelf{
 
 func resetShelves() {
 	SHELF_1 = &shelves.Shelf{
-		ID:             SHELF_VALID_UUID_1,
+		Id:             SHELF_VALID_UUID_1,
 		Label:          "Test Shelf",
 		Description:    "A shelf for testing",
 		Picture:        VALID_BASE64_PNG,
@@ -237,7 +237,7 @@ func resetShelves() {
 	}
 
 	SHELF_2 = &shelves.Shelf{
-		ID:             SHELF_VALID_UUID_2,
+		Id:             SHELF_VALID_UUID_2,
 		Label:          "Test Shelf 2",
 		Description:    "A shelf for testing",
 		Picture:        VALID_BASE64_PNG,

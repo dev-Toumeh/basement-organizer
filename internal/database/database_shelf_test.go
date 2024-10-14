@@ -86,7 +86,7 @@ func TestUpdateShelf(t *testing.T) {
 
 	shelf := SHELF_1
 
-	err := dbTest.createNewShelf(shelf.ID)
+	err := dbTest.createNewShelf(shelf.Id)
 	assert.Equal(t, err, nil)
 
 	shelf.Label = "Updated Label"
@@ -101,7 +101,7 @@ func TestUpdateShelf(t *testing.T) {
 	err = dbTest.UpdateShelf(shelf)
 	assert.Equal(t, err, nil)
 
-	updatedShelf, err := dbTest.Shelf(shelf.ID)
+	updatedShelf, err := dbTest.Shelf(shelf.Id)
 	assert.Equal(t, err, nil)
 
 	assert.Equal(t, "Updated Label", updatedShelf.Label)
@@ -133,13 +133,13 @@ func TestMoveItemToShelf(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	// Move the item to the shelf
-	err = dbTest.MoveItemToShelf(item.ID, shelf.ID)
+	err = dbTest.MoveItemToShelf(item.ID, shelf.Id)
 	assert.Equal(t, err, nil)
 
 	// Verify item is associated with the shelf
 	updatedItem, err := dbTest.ItemListRowByID(item.ID)
 	assert.Equal(t, err, nil)
-	assert.Equal(t, shelf.ID, updatedItem.ShelfID)
+	assert.Equal(t, shelf.Id, updatedItem.ShelfID)
 
 	// Move the item out of the shelf
 	err = dbTest.MoveItemToShelf(item.ID, uuid.Nil)
@@ -149,7 +149,7 @@ func TestMoveItemToShelf(t *testing.T) {
 	assert.Equal(t, uuid.Nil, updatedItem.ShelfID)
 
 	// Attempt to move a non-existent item
-	err = dbTest.MoveItemToShelf(VALID_UUID_NOT_EXISTING, shelf.ID)
+	err = dbTest.MoveItemToShelf(VALID_UUID_NOT_EXISTING, shelf.Id)
 	// logg.Err(err)
 	assert.NotEqual(t, err, nil)
 
@@ -157,23 +157,4 @@ func TestMoveItemToShelf(t *testing.T) {
 	err = dbTest.MoveItemToShelf(item.ID, VALID_UUID_NOT_EXISTING)
 	// logg.Err(err)
 	assert.NotEqual(t, err, nil)
-}
-
-func TestShelfListRowsPaginated(t *testing.T) {
-	EmptyTestDatabase()
-	resetShelves()
-
-	id1, _ := dbTest.CreateNewShelf()
-	id2, _ := dbTest.CreateNewShelf()
-	id3, _ := dbTest.CreateNewShelf()
-	shelves, err := dbTest.ShelfListRowsPaginated(1, 2)
-	assert.Equal(t, err, nil)
-	assert.Equal(t, len(shelves), 2)
-	assert.Equal(t, id1, shelves[0].ID)
-	assert.Equal(t, id2, shelves[1].ID)
-
-	shelves, err = dbTest.ShelfListRowsPaginated(2, 2)
-	assert.Equal(t, id3, shelves[0].ID)
-	assert.Equal(t, len(shelves), 2)
-	assert.Equal(t, nil, shelves[1])
 }

@@ -27,7 +27,7 @@ var statementsMainTables = &map[string]string{
 	"area":  CREATE_AREA_TABLE_STMT,
 }
 
-var statementVertualTabels = &map[string]string{
+var statementVirtualTabels = &map[string]string{
 	"item_fts":                 CREATE_ITEM_TABLE_STMT_FTS,
 	"box_fts":                  CREATE_BOX_TABLE_STMT_FTS,
 	"shelf_fts":                CREATE_SHELF_TABLE_STMT_FTS,
@@ -69,7 +69,7 @@ func (db *DB) Connect() {
 
 	// create the Tables if were not exist
 	db.createTable(*statementsMainTables)
-	db.createTable(*statementVertualTabels)
+	db.createTable(*statementVirtualTabels)
 }
 
 func (db *DB) createTable(statements map[string]string) {
