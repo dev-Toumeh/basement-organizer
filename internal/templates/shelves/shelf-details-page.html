@@ -1,17 +1,17 @@
-{{ define "shelves-page" }}
+{{ define "shelf-details-page" }}
 {{ template "open-html-tag" .}}
 {{ template "head" . }}
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
-    {{ template "new-shelve" . }}
+    {{ template "new-shelf" . }}
 </body>
 {{ template "close-html-tag" .}}
 {{ end }}
 
-{{ define "new-shelve" }}
+{{ define "new-shelf" }}
         <form id="form-style" name="form"
-            hx-post="/api/v1/create/shelve" 
+            hx-post="/api/v1/create/shelf" 
             hx-target=".target"
             hx-encoding="multipart/form-data">
 
@@ -35,4 +35,3 @@
             <button type="submit">add new item</button>
         </form>
 {{ end }}
-

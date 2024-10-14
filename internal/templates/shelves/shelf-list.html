@@ -1,0 +1,73 @@
+{{ define "shelf-list" }}
+<form id="box-list"
+    hx-get="/shelves"
+    hx-push-url="true"
+    hx-target="body"
+    hx-swap="outerHTML"
+    hx-trigger="keyup changed delay:500ms from:#search-bar, keyup changed delay:500ms from:#item-limit"
+>
+    {{ if .SearchInputLabel }}
+        <label for="search">{{ with .SearchInputLabel }}{{ . }}{{end}}</label>
+        <input id="search-bar"
+            type="text"
+            value="{{ .SearchInputValue }}"
+            name="query"
+        >
+        <!--this input must have type submit and be after search-bar input-->
+        <!--or else search wont work if the next input is disabled-->
+        <input type="submit" name="page" value="{{.PageNumber}}" hidden>
+
+        <button type="button" hx-get="/api/v1/implement-me">Alternative View</button>
+
+        <div id="pagination">
+
+            <label for="limit"></label>
+            <input id="item-limit" type="number" name="limit" value="{{ if .Limit}}{{.Limit}}{{else}}5{{end}}" >
+            {{  range .Pages }}
+            <input type="submit" name="page" value="{{.PageNumber}}"
+                {{ if .Selected }}
+                    class="selected"
+                {{end}}
+                {{ if .Disabled}}disabled{{end}}
+                style="width:2.5rem"
+            >
+            {{ end }}
+        </div> 
+    {{ end }}
+
+    <table class="box-list">
+        <thead>
+            <tr>
+                <th>Label</th>
+                <th>Area</th>
+                <th style="width: 10%">Image</th>
+                <th style="width: 10%">Move</th>
+                {{ if not .Move }}
+                <th style="width: 10%">Delete</th>
+                {{ end }}
+            </tr>
+        </thead> 
+        <!--boxes are created directly by backend with template-->
+        <tbody id="box-list-body">
+        {{ if .Shelves }}
+            {{ range .Shelves }}
+            {{ template "shelf-list-row" . }}
+            {{ end }}
+        {{ end }}
+        </tbody>
+    </table>
+    <div >
+        <button hx-delete="/boxes-list"
+            hx-target="#box-list"
+            hx-select="#box-list"
+            hx-push-url="true"
+        >delete</button>
+        <button type="button" 
+            hx-get="/boxes/move"
+        >move</button>
+    </div>
+</form>
+
+<div id="data-container" style="display: none;"></div> 
+{{ end }}
+

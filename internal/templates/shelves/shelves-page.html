@@ -11,14 +11,12 @@
 {{ end }}
 
 {{ define "shelves-page-content" }}
-<h1>Shelf list</h1>
-<button hx-post="/shelf" hx-target="#Shelf-list-body" hx-swap="beforeend">Create Shelf</button>
-{{ template "shelf-list" . }}
+  <h1>Shelf list</h1>
+  <button hx-post="/shelf/create" hx-target="#Shelf-list-body" hx-swap="beforeend">Create Shelf</button>
 {{ end }}
 
 {{ define "shelves-js" }}
     <script>
-
     </script>
 {{end}}
 

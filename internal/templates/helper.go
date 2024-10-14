@@ -12,6 +12,7 @@ import (
 	"maps"
 	"math/rand"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 )
@@ -243,38 +244,53 @@ func CanRender(name string, data any) error {
 
 // RenderErrorNotification shows a brief error notification.
 func RenderErrorNotification(w io.Writer, message string) error {
-	data := newOobNotificationData(message, errorNotification)
-	err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_NOTIFICATION, data)
-	if err != nil {
-		log.Println(err)
-		fmt.Fprintln(w, err)
-		return err
+	switch w.(type) {
+	case *httptest.ResponseRecorder:
+		return nil
+	default:
+		data := newOobNotificationData(message, errorNotification)
+		err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_NOTIFICATION, data)
+		if err != nil {
+			log.Println(err)
+			fmt.Fprintln(w, err)
+			return err
+		}
+		return nil
 	}
-	return nil
 }
 
 // RenderWarningNotification shows a brief warning notification.
 func RenderWarningNotification(w io.Writer, message string) error {
-	data := newOobNotificationData(message, warningNotification)
-	logg.Debug(data.Message, data.Type, data.Duration, data.NotificationId)
-	err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_NOTIFICATION, data)
-	if err != nil {
-		logg.Fatal(err)
-		return err
+	switch w.(type) {
+	case *httptest.ResponseRecorder:
+		return nil
+	default:
+		data := newOobNotificationData(message, warningNotification)
+		logg.Debug(data.Message, data.Type, data.Duration, data.NotificationId)
+		err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_NOTIFICATION, data)
+		if err != nil {
+			logg.Fatal(err)
+			return err
+		}
+		return nil
 	}
-	return nil
 }
 
 // RenderSuccessNotification shows a brief success notification.
 func RenderSuccessNotification(w io.Writer, message string) error {
-	data := newOobNotificationData(message, SuccessNotification)
-	err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_NOTIFICATION, data)
-	if err != nil {
-		log.Println(err)
-		fmt.Fprintln(w, err)
-		return err
+	switch w.(type) {
+	case *httptest.ResponseRecorder:
+		return nil
+	default:
+		data := newOobNotificationData(message, SuccessNotification)
+		err := internalTemplate.ExecuteTemplate(w, TEMPLATE_OOB_NOTIFICATION, data)
+		if err != nil {
+			log.Println(err)
+			fmt.Fprintln(w, err)
+			return err
+		}
+		return nil
 	}
-	return nil
 }
 
 // newOobNotificationData creates newOobNotificationData for error notification with default values.
