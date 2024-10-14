@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/shelves"
 	"bytes"
@@ -167,7 +168,7 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
     `
 
 	_, err = db.Sql.Exec(stmt,
-		shelf.Id.String(),
+		shelf.ID.String(),
 		shelf.Label,
 		shelf.Description,
 		picture64,
@@ -238,20 +239,23 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 	// if len(previewPicture) > 0 {
 	// 	previewPictureBase64 = base64.StdEncoding.EncodeToString(previewPicture)
 	// }
+
 	shelf := &shelves.Shelf{
-		Id:             id,
-		Label:          label,
-		Description:    description.String,
-		Picture:        picture.String,
-		PreviewPicture: previewPicture.String,
-		QRcode:         qrcode.String,
-		Height:         float32(height.Float64),
-		Width:          float32(width.Float64),
-		Depth:          float32(depth.Float64),
-		Rows:           int(rows.Int64),
-		Cols:           int(cols.Int64),
-		Items:          nil,
-		Boxes:          nil,
+		BasicInfo: items.BasicInfo{
+			ID:             id,
+			Label:          label,
+			Description:    description.String,
+			Picture:        picture.String,
+			PreviewPicture: previewPicture.String,
+			QRcode:         qrcode.String,
+		},
+		Height: float32(height.Float64),
+		Width:  float32(width.Float64),
+		Depth:  float32(depth.Float64),
+		Rows:   int(rows.Int64),
+		Cols:   int(cols.Int64),
+		Items:  nil,
+		Boxes:  nil,
 	}
 
 	// f, err := os.ReadFile("./internal/static/pen.png")
@@ -331,7 +335,7 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
 		shelf.Depth,
 		shelf.Rows,
 		shelf.Cols,
-		shelf.Id.String(),
+		shelf.ID.String(),
 	)
 	if err != nil {
 		return logg.Errorf("UpdateShelf: %w", err)

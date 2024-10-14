@@ -12,20 +12,15 @@ import (
 )
 
 type Shelf struct {
-	Id             uuid.UUID        `json:"id"`
-	Label          string           `json:"label"       validate:"required,lte=128"`
-	Description    string           `json:"description" validate:"omitempty,lte=256"`
-	Picture        string           `json:"picture"     validate:"omitempty,base64"`
-	PreviewPicture string           `json:"previewpicture"     validate:"omitempty,base64"`
-	QRcode         string           `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	Items          []*items.ListRow `json:"items"`
-	Boxes          []*items.ListRow `json:"boxes"`
-	Height         float32
-	Width          float32
-	Depth          float32
-	Rows           int
-	Cols           int
-	AreaId         uuid.UUID
+	items.BasicInfo
+	Items  []*items.ListRow `json:"items"`
+	Boxes  []*items.ListRow `json:"boxes"`
+	Height float32
+	Width  float32
+	Depth  float32
+	Rows   int
+	Cols   int
+	AreaId uuid.UUID
 }
 
 type ShelfListRow struct {
@@ -120,18 +115,19 @@ func shelf(r *http.Request) (*Shelf, error) {
 	}
 
 	newShelf := &Shelf{
-		Id:             id,
-		Label:          r.PostFormValue(LABEL),
-		Description:    r.PostFormValue(DESCRIPTION),
-		Picture:        "",
-		PreviewPicture: "",
-		QRcode:         r.PostFormValue(QRCODE),
-		Height:         common.StringToFloat32(r.PostFormValue(HEIGHT)),
-		Width:          common.StringToFloat32(r.PostFormValue(WIDTH)),
-		Depth:          common.StringToFloat32(r.PostFormValue(DEPTH)),
-		Rows:           common.StringToInt(r.PostFormValue(ROWS)),
-		Cols:           common.StringToInt(r.PostFormValue(COLS)),
-		AreaId:         areaId,
+		BasicInfo: items.BasicInfo{
+			ID:             id,
+			Label:          r.PostFormValue(LABEL),
+			Description:    r.PostFormValue(DESCRIPTION),
+			Picture:        common.ParsePicture(r),
+			PreviewPicture: "",
+		},
+		Height: common.StringToFloat32(r.PostFormValue(HEIGHT)),
+		Width:  common.StringToFloat32(r.PostFormValue(WIDTH)),
+		Depth:  common.StringToFloat32(r.PostFormValue(DEPTH)),
+		Rows:   common.StringToInt(r.PostFormValue(ROWS)),
+		Cols:   common.StringToInt(r.PostFormValue(COLS)),
+		AreaId: areaId,
 	}
 	return newShelf, nil
 }

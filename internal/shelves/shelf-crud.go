@@ -3,6 +3,7 @@ package shelves
 import (
 	"net/http"
 
+	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 
@@ -10,21 +11,9 @@ import (
 )
 
 func createShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
-	shelf, err := shelf(r)
-	if err != nil {
-		logg.Errf("error while parsing the shelf request data: %v", err)
-		templates.RenderErrorNotification(w, "Invalid shelf data")
-		return
-	}
-	// Generate a new UUID for the shelf
-	shelf.Id, err = uuid.NewV4()
-	if err != nil {
-		logg.Errf("error generating UUID for the shelf: %v", err)
-		templates.RenderErrorNotification(w, "Error generating shelf ID")
-		return
-	}
-	// @Todo validate shelf request data
-	err = db.CreateShelf(shelf)
+
+	shelf := newShelf()
+	err := db.CreateShelf(shelf)
 	if err != nil {
 		templates.RenderErrorNotification(w, "Error while creating a new shelf, please try again later")
 		return
@@ -92,4 +81,17 @@ func deleteShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
 		return
 	}
 	templates.RenderSuccessNotification(w, "Shelf deleted successfully")
+}
+
+// this function will return new Shelf with default Values
+func newShelf() *Shelf {
+	s := items.NewBasicInfoWithLabel("Shelf")
+	return &Shelf{
+		BasicInfo: s,
+		Height:    2.0,
+		Width:     1.0,
+		Depth:     0.5,
+		Rows:      5,
+		Cols:      10,
+	}
 }
