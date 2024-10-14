@@ -45,7 +45,7 @@ func CheckIDs(mainId string, wrapperId string) (uuid.UUID, uuid.UUID, error) {
 func StringToInt(value string) int {
 	i, err := strconv.Atoi(value)
 	if err != nil {
-		log.Printf("Error converting string to int64: %v", err)
+		log.Printf("Error converting string to int: %v", err)
 		return 0
 	}
 	return i
@@ -54,7 +54,7 @@ func StringToInt(value string) int {
 func StringToFloat32(value string) float32 {
 	floatValue, err := strconv.ParseFloat(value, 32)
 	if err != nil {
-		log.Printf("Error converting string to int64: %v", err)
+		log.Printf("Error converting string to Float32: %v", err)
 		return 0
 	}
 	return float32(floatValue)
