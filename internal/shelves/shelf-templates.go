@@ -2,9 +2,11 @@ package shelves
 
 import (
 	"basement/main/internal/auth"
+	"basement/main/internal/common"
 	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/server"
+	"maps"
 	"math"
 
 	"basement/main/internal/templates"
@@ -27,7 +29,6 @@ func ShelvesPage(db ShelfDB) http.HandlerFunc {
 
 		server.MustRender(w, r, "shelves-page", data)
 
-		//
 		// // search-input template
 		// query := r.FormValue("query")
 		// searchInput := items.NewSearchInputTemplate()
@@ -58,6 +59,60 @@ func ShelvesPage(db ShelfDB) http.HandlerFunc {
 		// }
 		//
 		// pagination(pageNr, count, limit, usedSearch, shelves)
+	}
+}
+
+// generate create new Shelf Template with defaults Values
+func CreateTemplate() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authenticated, _ := auth.Authenticated(r)
+		user, _ := auth.UserSessionData(r)
+
+		page := templates.NewPageTemplate()
+		page.Title = "Add new Shelf"
+		page.Authenticated = authenticated
+		page.User = user
+
+		shelf := newShelf()
+		data := page.Map()
+		maps.Copy(data, shelf.Map())
+
+		templates.Render(w, "shelf-create-page", data)
+	}
+}
+
+// Generate Shelf Details Page where you can preview the shelf and update the relevant Data
+func DetailsTemplate(db ShelfDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		errMsgForUser := "the requested Shelf doesn't exist"
+
+		authenticated, _ := auth.Authenticated(r)
+		user, _ := auth.UserSessionData(r)
+
+		id := server.ValidID(w, r, errMsgForUser)
+		if id.IsNil() {
+			return
+		}
+
+		shelf, err := db.Shelf(id)
+		if err != nil {
+			server.TriggerErrorNotification(w, errMsgForUser)
+		}
+
+		page := templates.NewPageTemplate()
+		page.Title = "Shelf Details"
+		page.Authenticated = authenticated
+		page.User = user
+
+		maps := []map[string]any{
+			page.Map(),
+			shelf.Map(),
+			map[string]any{"Edit": common.CheckEditMode(r)},
+		}
+
+		data := common.MergeMaps(maps)
+
+		templates.Render(w, "shelf-details-page", data)
 	}
 }
 

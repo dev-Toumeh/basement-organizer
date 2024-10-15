@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
 	"net/http"
 	"strconv"
 
@@ -97,4 +98,32 @@ func ParseQuantity(value string) int64 {
 		return 1
 	}
 	return intValue
+}
+
+// MergeMaps takes a slice of maps with string keys and any value types, returning a single merged map
+func MergeMaps[V any](mapsList []map[string]V) map[string]V {
+	merged := make(map[string]V)
+
+	for _, m := range mapsList {
+		maps.Copy(merged, m)
+	}
+
+	return merged
+}
+
+// CheckEditMode checks the "edit" parameter in the request URL
+// and returns true if "edit" equals "1" or "true", otherwise false
+func CheckEditMode(r *http.Request) bool {
+	editValue := r.URL.Query().Get("edit")
+
+	if editValue == "1" {
+		return true
+	}
+
+	isEdit, err := strconv.ParseBool(editValue)
+	if err == nil && isEdit {
+		return true
+	}
+
+	return false
 }
