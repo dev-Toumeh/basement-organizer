@@ -184,60 +184,75 @@ func testItems() []items.Item {
 }
 
 var SHELF_1 = &shelves.Shelf{
-	Id:             SHELF_VALID_UUID_1,
-	Label:          "Test Shelf",
-	Description:    "A shelf for testing",
-	Picture:        VALID_BASE64_PNG,
-	PreviewPicture: "",
-	QRcode:         "testqrcode",
-	Height:         2.0,
-	Width:          1.5,
-	Depth:          0.5,
-	Rows:           3,
-	Cols:           4,
+
+	BasicInfo: items.BasicInfo{
+		ID:             SHELF_VALID_UUID_1,
+		Label:          "Test Shelf",
+		Description:    "A shelf for testing",
+		Picture:        VALID_BASE64_PNG,
+		PreviewPicture: "",
+		QRcode:         "testqrcode",
+	},
+	Height: 2.0,
+	Width:  1.5,
+	Depth:  0.5,
+	Rows:   3,
+	Cols:   4,
 }
 
 var SHELF_2 = &shelves.Shelf{
-	Id:             SHELF_VALID_UUID_2,
-	Label:          "Test Shelf 2",
-	Description:    "A shelf for testing",
-	Picture:        VALID_BASE64_PNG,
-	PreviewPicture: "",
-	QRcode:         "testqrcode",
-	Height:         2.0,
-	Width:          1.5,
-	Depth:          0.5,
-	Rows:           3,
-	Cols:           4,
+	BasicInfo: items.BasicInfo{
+		ID:             SHELF_VALID_UUID_2,
+		Label:          "Test Shelf 2",
+		Description:    "A shelf for testing",
+		Picture:        VALID_BASE64_PNG,
+		PreviewPicture: "",
+		QRcode:         "testqrcode",
+	},
+	Height: 2.0,
+	Width:  1.5,
+	Depth:  0.5,
+	Rows:   3,
+	Cols:   4,
 }
 
 var SHELF_3 = &shelves.Shelf{
-	Id:             SHELF_VALID_UUID_3,
-	Label:          "Test Shelf 3",
-	Description:    "A shelf for testing",
-	Picture:        VALID_BASE64_PNG,
-	PreviewPicture: "",
-	QRcode:         "",
-	Height:         3.0,
-	Width:          1.5,
-	Depth:          0.5,
-	Rows:           10,
-	Cols:           10,
+	BasicInfo: items.BasicInfo{
+		ID:             SHELF_VALID_UUID_3,
+		Label:          "Test Shelf 3",
+		Description:    "A shelf for testing",
+		Picture:        VALID_BASE64_PNG,
+		PreviewPicture: "",
+		QRcode:         "",
+	},
+	Height: 3.0,
+	Width:  1.5,
+	Depth:  0.5,
+	Rows:   10,
+	Cols:   10,
 }
 
 var SHELF_4 = &shelves.Shelf{
-	Id:    uuid.Must(uuid.NewV4()),
-	Label: "A Shelf",
+
+	BasicInfo: items.BasicInfo{
+		ID:    uuid.Must(uuid.NewV4()),
+		Label: "A Shelf",
+	},
 }
 
 var SHELF_5 = &shelves.Shelf{
-	Id:    uuid.Must(uuid.NewV4()),
-	Label: "AA Shelf",
+
+	BasicInfo: items.BasicInfo{
+		ID:    uuid.Must(uuid.NewV4()),
+		Label: "AA Shelf",
+	},
 }
 
 var SHELF_6 = &shelves.Shelf{
-	Id:    uuid.Must(uuid.NewV4()),
-	Label: "BBB",
+	BasicInfo: items.BasicInfo{
+		ID:    uuid.Must(uuid.NewV4()),
+		Label: "BBB",
+	},
 }
 
 func testShelves() []shelves.Shelf {
@@ -246,58 +261,73 @@ func testShelves() []shelves.Shelf {
 
 func resetShelves() {
 	SHELF_1 = &shelves.Shelf{
-		Id:             SHELF_VALID_UUID_1,
-		Label:          "Test Shelf",
-		Description:    "A shelf for testing",
-		Picture:        VALID_BASE64_PNG,
-		PreviewPicture: "",
-		QRcode:         "",
-		Height:         2.0,
-		Width:          1.5,
-		Depth:          0.5,
-		Rows:           3,
-		Cols:           4,
+		BasicInfo: items.BasicInfo{
+			ID:             SHELF_VALID_UUID_1,
+			Label:          "Test Shelf",
+			Description:    "A shelf for testing",
+			Picture:        VALID_BASE64_PNG,
+			PreviewPicture: "",
+			QRcode:         "",
+		},
+		Height: 2.0,
+		Width:  1.5,
+		Depth:  0.5,
+		Rows:   3,
+		Cols:   4,
 	}
 
 	SHELF_2 = &shelves.Shelf{
-		Id:             SHELF_VALID_UUID_2,
-		Label:          "Test Shelf 2",
-		Description:    "A shelf for testing",
-		Picture:        VALID_BASE64_PNG,
-		PreviewPicture: "",
-		QRcode:         "testqrcode",
-		Height:         2.0,
-		Width:          1.5,
-		Depth:          0.5,
-		Rows:           3,
-		Cols:           4,
+		BasicInfo: items.BasicInfo{
+			ID:             SHELF_VALID_UUID_2,
+			Label:          "Test Shelf 2",
+			Description:    "A shelf for testing",
+			Picture:        VALID_BASE64_PNG,
+			PreviewPicture: "",
+			QRcode:         "testqrcode",
+		},
+		Height: 2.0,
+		Width:  1.5,
+		Depth:  0.5,
+		Rows:   3,
+		Cols:   4,
 	}
+
 	SHELF_3 = &shelves.Shelf{
-		Id:             SHELF_VALID_UUID_3,
-		Label:          "Test   Shelf 3",
-		Description:    "A shelf for testing",
-		Picture:        VALID_BASE64_PNG,
-		PreviewPicture: "",
-		QRcode:         "",
-		Height:         3.0,
-		Width:          1.5,
-		Depth:          0.5,
-		Rows:           10,
-		Cols:           10,
+		BasicInfo: items.BasicInfo{
+			ID:             SHELF_VALID_UUID_3,
+			Label:          "Test   Shelf 3",
+			Description:    "A shelf for testing",
+			Picture:        VALID_BASE64_PNG,
+			PreviewPicture: "",
+			QRcode:         "",
+		},
+		Height: 3.0,
+		Width:  1.5,
+		Depth:  0.5,
+		Rows:   10,
+		Cols:   10,
 	}
 
 	SHELF_4 = &shelves.Shelf{
-		Id:    uuid.Must(uuid.NewV4()),
-		Label: "keyword A",
+
+		BasicInfo: items.BasicInfo{
+			ID:    uuid.Must(uuid.NewV4()),
+			Label: "keyword A",
+		},
 	}
 
 	SHELF_5 = &shelves.Shelf{
-		Id:    uuid.Must(uuid.NewV4()),
-		Label: "keyword Shelf AA",
+		BasicInfo: items.BasicInfo{
+			ID:    uuid.Must(uuid.NewV4()),
+			Label: "keyword Shelf AA",
+		},
 	}
 
 	SHELF_6 = &shelves.Shelf{
-		Id:    uuid.Must(uuid.NewV4()),
-		Label: "BBB",
+
+		BasicInfo: items.BasicInfo{
+			ID:    uuid.Must(uuid.NewV4()),
+			Label: "BBB",
+		},
 	}
 }

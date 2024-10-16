@@ -9,6 +9,7 @@ import (
 	"basement/main/internal/database"
 	"basement/main/internal/items"
 	"basement/main/internal/server"
+	"basement/main/internal/shelves"
 	"basement/main/internal/templates"
 )
 
@@ -16,7 +17,7 @@ func RegisterRoutes(db *database.DB) {
 	staticRoutes()
 	authRoutes(db)
 	itemsRoutes(db)
-	shelvesRoutes()
+	shelvesRoutes(db)
 	registerBoxRoutes(db)
 	navigationRoutes()
 	experimentalRoutes()
@@ -66,9 +67,15 @@ func itemsRoutes(db items.ItemDatabase) {
 	}))
 }
 
-func shelvesRoutes() {
-	// @TODO: Implement shelves page.
-	Handle("/shelves", server.ImplementMeHandler)
+func shelvesRoutes(db shelves.ShelfDB) {
+	//Template
+	Handle("/shelves", shelves.ShelvesPage(db))
+	Handle("/shelves/create", shelves.CreateTemplate())
+	Handle("/shelves/update", shelves.DetailsTemplate(db)) // example /shelves/update?id=91903531-85c4-4d57-b61f-543e81197268&edit=true
+
+	// Api
+	Handle("/api/v1/create/shelf", shelves.ShelfHandler(db))
+	Handle("/api/v1/update/shelf", shelves.ShelfHandler(db))
 }
 
 var testStyle = templates.DEBUG_STYLE

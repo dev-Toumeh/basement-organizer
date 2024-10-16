@@ -34,6 +34,7 @@ func setup() {
 	dbTest.createTable(*mainTables)
 	dbTest.createTable(*virtualTables)
 	dbTest.createTable(*triggers)
+
 }
 
 func teardown() {

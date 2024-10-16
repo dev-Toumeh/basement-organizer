@@ -95,59 +95,6 @@ func (db *DB) PrintTables() {
 	}
 }
 
-// need to be deleted, use it to fix the database after update
-func (db *DB) DatabasePatcher() error {
-	// Define the UUIDs for the boxes
-	patchBoxId := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174111"))
-	outerBoxId := uuid.Must(uuid.FromString("18c60ba9-ffac-48f1-8c7c-473bd35acbea"))
-
-	// Define the box structures
-	outerBox := &items.Box{
-		BasicInfo: items.BasicInfo{
-			ID:          outerBoxId,
-			Label:       "OuterBox",
-			Description: "This is the outer box",
-			Picture:     "base64encodedouterbox",
-			QRcode:      "QRcodeOuterBox",
-		},
-		OuterBoxID: uuid.Nil,
-	}
-	patchBox := &items.Box{
-		BasicInfo: items.BasicInfo{
-			ID:          patchBoxId,
-			Label:       "PatchBox",
-			Description: "This box will allow you to add items again",
-			Picture:     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
-			QRcode:      "AB123CD",
-		},
-		OuterBoxID: outerBoxId,
-	}
-
-	// Create the boxes using the CreateNewBox function
-	if _, err := db.CreateBox(outerBox); err != nil {
-		return err
-	}
-	if _, err := db.CreateBox(patchBox); err != nil {
-		return err
-	}
-
-	// Adds the box_id column
-	alterStmt := `ALTER TABLE item ADD COLUMN box_id TEXT REFERENCES box(id);`
-	_, err := db.Sql.Exec(alterStmt)
-	if err != nil {
-		return err
-	}
-
-	// Update the box_id for all rows in the item table with the patchBoxId
-	updateStmt := `UPDATE item SET box_id = ?;`
-	_, err = db.Sql.Exec(updateStmt, patchBoxId.String())
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // this function will print all the records inside of  item_fts table
 func (db *DB) CheckItemFTSData() error {
 	rows, err := db.Sql.Query("SELECT id, label, description FROM item_fts;")
@@ -191,6 +138,107 @@ func (db *DB) RepopulateItemFTS() error {
 
 	fmt.Print("Item search data has been successfully repopulated from the item table to the item_fts table. \n")
 	return nil
+}
+
+// print the shelves Records in the console
+func (db *DB) PrintShelvesRecords() {
+	query := "SELECT id, label, description, picture, preview_picture, qrcode, height, width, depth, rows, cols FROM shelf"
+	rows, err := db.Sql.Query(query)
+	if err != nil {
+		log.Printf("Error querying shelf records: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	fmt.Println("Shelf records:")
+
+	for rows.Next() {
+		var (
+			id             sql.NullString
+			label          sql.NullString
+			description    sql.NullString
+			picture        sql.NullString
+			previewPicture sql.NullString
+			qrcode         sql.NullString
+			height         sql.NullFloat64
+			width          sql.NullFloat64
+			depth          sql.NullFloat64
+			rowsField      sql.NullInt64 // Renamed to avoid conflict
+			cols           sql.NullInt64
+		)
+		err := rows.Scan(
+			&id,
+			&label,
+			&description,
+			&picture,
+			&previewPicture,
+			&qrcode,
+			&height,
+			&width,
+			&depth,
+			&rowsField,
+			&cols,
+		)
+		if err != nil {
+			log.Printf("Error scanning shelf record: %v", err)
+			continue
+		}
+
+		// Extract values, handling NULLs
+		idValue := "NULL"
+		if id.Valid {
+			idValue = id.String
+		}
+		labelValue := "NULL"
+		if label.Valid {
+			labelValue = label.String
+		}
+		descriptionValue := "NULL"
+		if description.Valid {
+			descriptionValue = description.String
+		}
+		pictureValue := "NULL"
+		if picture.Valid {
+			pictureValue = picture.String
+		}
+		previewPictureValue := "NULL"
+		if previewPicture.Valid {
+			previewPictureValue = previewPicture.String
+		}
+		qrcodeValue := "NULL"
+		if qrcode.Valid {
+			qrcodeValue = qrcode.String
+		}
+		heightValue := "NULL"
+		if height.Valid {
+			heightValue = fmt.Sprintf("%f", height.Float64)
+		}
+		widthValue := "NULL"
+		if width.Valid {
+			widthValue = fmt.Sprintf("%f", width.Float64)
+		}
+		depthValue := "NULL"
+		if depth.Valid {
+			depthValue = fmt.Sprintf("%f", depth.Float64)
+		}
+		rowsValue := "NULL"
+		if rowsField.Valid {
+			rowsValue = fmt.Sprintf("%d", rowsField.Int64)
+		}
+		colsValue := "NULL"
+		if cols.Valid {
+			colsValue = fmt.Sprintf("%d", cols.Int64)
+		}
+
+		// Corrected fmt.Printf with matching format specifiers and arguments
+		fmt.Printf("id: %s, label: %s, description: %s, picture: %s, preview_picture: %s, qrcode: %s, height: %s, width: %s, depth: %s, rows: %s, cols: %s\n",
+			idValue, labelValue, descriptionValue, pictureValue, previewPictureValue, qrcodeValue,
+			heightValue, widthValue, depthValue, rowsValue, colsValue)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("Error during rows iteration: %v", err)
+	}
 }
 
 // 💀💀 this function will delete all the search relevant tables
@@ -275,14 +323,16 @@ func (db *DB) InsertSampleShelves() {
 	gofakeit.Seed(SEED)
 
 	for i := 0; i < 10; i++ {
-		newShelf := shelves.Shelf{
-			Id:          uuid.Must(uuid.FromString(gofakeit.UUID())),
-			Label:       gofakeit.ProductName(),
-			Description: gofakeit.Sentence(5),
-			Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
+		newShelf := &shelves.Shelf{
+			BasicInfo: items.BasicInfo{
+				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
+				Label:       gofakeit.ProductName(),
+				Description: gofakeit.Sentence(5),
+				Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
+			},
 		}
 
-		err := db.CreateShelf(&newShelf)
+		err := db.CreateShelf(newShelf)
 		if err != nil {
 			logg.Errf("error while adding dummyData %v", err)
 			return

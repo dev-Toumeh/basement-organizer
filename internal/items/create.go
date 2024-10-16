@@ -56,13 +56,13 @@ func (b BasicInfo) MakeLabelWithTime(label string) BasicInfo {
 
 // ListRow is a single row entry used for list templates.
 type ListRow struct {
-	ID             uuid.UUID // can be item, box, shelf or area
+	ID             uuid.UUID
 	Label          string
-	BoxID          uuid.UUID // is inside this box
+	BoxID          uuid.UUID
 	BoxLabel       string
-	ShelfID        uuid.UUID // is inside this shelf
+	ShelfID        uuid.UUID
 	ShelfLabel     string
-	AreaID         uuid.UUID // is inside this area
+	AreaID         uuid.UUID
 	AreaLabel      string
 	PreviewPicture string
 }

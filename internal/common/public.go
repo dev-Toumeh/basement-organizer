@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
 	"net/http"
 	"strconv"
 
@@ -45,7 +46,7 @@ func CheckIDs(mainId string, wrapperId string) (uuid.UUID, uuid.UUID, error) {
 func StringToInt(value string) int {
 	i, err := strconv.Atoi(value)
 	if err != nil {
-		log.Printf("Error converting string to int64: %v", err)
+		log.Printf("Error converting string to int: %v", err)
 		return 0
 	}
 	return i
@@ -54,7 +55,7 @@ func StringToInt(value string) int {
 func StringToFloat32(value string) float32 {
 	floatValue, err := strconv.ParseFloat(value, 32)
 	if err != nil {
-		log.Printf("Error converting string to int64: %v", err)
+		log.Printf("Error converting string to Float32: %v", err)
 		return 0
 	}
 	return float32(floatValue)
@@ -97,4 +98,32 @@ func ParseQuantity(value string) int64 {
 		return 1
 	}
 	return intValue
+}
+
+// MergeMaps takes a slice of maps with string keys and any value types, returning a single merged map
+func MergeMaps[V any](mapsList []map[string]V) map[string]V {
+	merged := make(map[string]V)
+
+	for _, m := range mapsList {
+		maps.Copy(merged, m)
+	}
+
+	return merged
+}
+
+// CheckEditMode checks the "edit" parameter in the request URL
+// and returns true if "edit" equals "1" or "true", otherwise false
+func CheckEditMode(r *http.Request) bool {
+	editValue := r.URL.Query().Get("edit")
+
+	if editValue == "1" {
+		return true
+	}
+
+	isEdit, err := strconv.ParseBool(editValue)
+	if err == nil && isEdit {
+		return true
+	}
+
+	return false
 }

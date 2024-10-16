@@ -89,16 +89,22 @@ func RenderWithSuccessNotification(w http.ResponseWriter, r *http.Request, name 
 // Check for uuid.Nil! If error occurs return will be uuid.Nil.
 func ValidID(w http.ResponseWriter, r *http.Request, errorMessage string) uuid.UUID {
 	id := r.FormValue("id")
-	logg.Debugf("Query param id: '%v'.", id)
+	logg.Debugf("Form param id: '%v'.", id)
+
 	if id == "" {
 		id = r.PathValue("id")
+		logg.Debugf("Path value id: '%v'.", id)
+
 		if id == "" {
-			w.WriteHeader(http.StatusNotFound)
-			logg.Debug("Empty id")
-			fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
-			return uuid.Nil
+			id = r.URL.Query().Get("id")
+			if id == "" {
+				w.WriteHeader(http.StatusNotFound)
+				logg.Debug("Empty id")
+				fmt.Fprintf(w, `%s ID="%v"`, errorMessage, id)
+				return uuid.Nil
+			}
+			logg.Debugf("Query param id: '%v'.", id)
 		}
-		logg.Debugf("path value id: '%v'.", id)
 	}
 
 	newId, err := uuid.FromString(id)

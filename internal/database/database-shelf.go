@@ -8,8 +8,6 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
-	"regexp"
-	"strings"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -31,19 +29,21 @@ func (s SQLShelf) toShelf() (shelves.Shelf, error) {
 	}
 
 	return shelves.Shelf{
-		Id:             id,
-		Label:          ifNullString(s.Label),
-		Description:    ifNullString(s.Description),
-		Picture:        ifNullString(s.Picture),
-		PreviewPicture: ifNullString(s.PreviewPicture),
-		QRcode:         ifNullString(s.QRCode),
-		Height:         float32(ifNullFloat64(s.Height)),
-		Width:          float32(ifNullFloat64(s.Width)),
-		Depth:          float32(ifNullFloat64(s.Depth)),
-		Rows:           int(ifNullInt(s.Rows)),
-		Cols:           int(ifNullInt(s.Cols)),
-		Items:          nil,
-		Boxes:          nil,
+		BasicInfo: items.BasicInfo{
+			ID:             id,
+			Label:          ifNullString(s.Label),
+			Description:    ifNullString(s.Description),
+			Picture:        ifNullString(s.Picture),
+			PreviewPicture: ifNullString(s.PreviewPicture),
+			QRcode:         ifNullString(s.QRCode),
+		},
+		Height: float32(ifNullFloat64(s.Height)),
+		Width:  float32(ifNullFloat64(s.Width)),
+		Depth:  float32(ifNullFloat64(s.Depth)),
+		Rows:   int(ifNullInt(s.Rows)),
+		Cols:   int(ifNullInt(s.Cols)),
+		Items:  nil,
+		Boxes:  nil,
 	}, nil
 }
 
@@ -174,7 +174,7 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 	}
 	if shelf.Items != nil || shelf.Boxes != nil {
 		return logg.NewError(fmt.Sprintf(`shelf "%s" has %d items and %d boxes, they must be empty while creating a new shelf`,
-			shelf.Id, len(shelf.Items), len(shelf.Boxes)))
+			shelf.ID, len(shelf.Items), len(shelf.Boxes)))
 	}
 
 	err = updatePicture(&shelf.Picture, &shelf.PreviewPicture)
@@ -199,7 +199,7 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
     `
 
 	_, err = db.Sql.Exec(stmt,
-		shelf.Id.String(),
+		shelf.ID.String(),
 		shelf.Label,
 		shelf.Description,
 		picture64,
@@ -247,6 +247,24 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 	// 	previewPictureBase64 = base64.StdEncoding.EncodeToString(previewPicture)
 	// }
 
+	// shelf := &shelves.Shelf{
+	// 	BasicInfo: items.BasicInfo{
+	// 		ID:             id,
+	// 		Label:          label,
+	// 		Description:    description.String,
+	// 		Picture:        picture.String,
+	// 		PreviewPicture: previewPicture.String,
+	// 		QRcode:         qrcode.String,
+	// 	},
+	// 	Height: float32(height.Float64),
+	// 	Width:  float32(width.Float64),
+	// 	Depth:  float32(depth.Float64),
+	// 	Rows:   int(rows.Int64),
+	// 	Cols:   int(cols.Int64),
+	// 	Items:  nil,
+	// 	Boxes:  nil,
+	// }
+
 	// f, err := os.ReadFile("./internal/static/pen.png")
 	// if err != nil {
 	// 	panic(err)
@@ -267,12 +285,12 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
-	items, err := db.innerListRowsFrom("shelf", shelf.Id, "item_fts")
+	items, err := db.innerListRowsFrom("shelf", shelf.ID, "item_fts")
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
 	shelf.Items = items
-	boxes, err := db.innerListRowsFrom("shelf", shelf.Id, "box_fts")
+	boxes, err := db.innerListRowsFrom("shelf", shelf.ID, "box_fts")
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
@@ -339,7 +357,7 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
 		shelf.Depth,
 		shelf.Rows,
 		shelf.Cols,
-		shelf.Id.String(),
+		shelf.ID.String(),
 	)
 	if err != nil {
 		return logg.Errorf("UpdateShelf: %w", err)
@@ -354,7 +372,7 @@ func (db *DB) DeleteShelf(id uuid.UUID) error {
 		return logg.WrapErr(err)
 	}
 	if shelf.Items != nil || shelf.Boxes != nil {
-		return logg.NewError(fmt.Sprintf(`can't delete shelf "%s": has %d items and %d boxes`, shelf.Id, len(shelf.Items), len(shelf.Boxes)))
+		return logg.NewError(fmt.Sprintf(`can't delete shelf "%s": has %d items and %d boxes`, shelf.ID, len(shelf.Items), len(shelf.Boxes)))
 	}
 	err = db.deleteFrom("shelf", id)
 	if err != nil {
@@ -411,67 +429,6 @@ func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, erro
 	}
 
 	return shelfRows, nil
-}
-
-func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (shelfRows []*items.ListRow, found int, err error) {
-	// shelfRows = make([]*items.ListRow, 0)
-	// found = 0
-	// err = nil
-	if page < 1 {
-		return shelfRows, found, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
-	}
-
-	if rows < 1 {
-		return shelfRows, found, logg.NewError(fmt.Sprintf("invalid rows '%d', needs at least 1 row", rows))
-	}
-
-	shelfRows = make([]*items.ListRow, rows)
-
-	limit := rows
-	offset := (page - 1) * rows
-
-	// queryNoSearch := `
-	// 	SELECT
-	// 		id, label, area_id, area_label, preview_picture
-	// 	FROM shelf_fts
-	// 		ORDER BY label ASC
-	// 	LIMIT ? OFFSET ?;`
-	searchTrimmed := strings.TrimSpace(search)
-	re := regexp.MustCompile(`\s+`)
-	searchModified := re.ReplaceAllString(searchTrimmed, "*")
-	querySearch := fmt.Sprintf(`
-		SELECT
-			id, label, area_id, area_label, preview_picture
-		FROM shelf_fts
-		WHERE label MATCH '%s*'
-		LIMIT ? OFFSET ?;`, searchModified)
-
-	// ORDER BY label ASC
-	// results, err := db.Sql.Query(querySearch, fmt.Sprintf("'%s'", search), limit, offset)
-	results, err := db.Sql.Query(querySearch, limit, offset)
-	if err != nil {
-		return shelfRows, found, logg.WrapErr(err)
-	}
-
-	i := 0
-	for results.Next() {
-		listRow := SQLListRow{}
-		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
-		if err != nil {
-			return shelfRows, found, logg.WrapErr(err)
-		}
-		shelfRows[i], err = listRow.ToListRow()
-		if err != nil {
-			return shelfRows, found, logg.WrapErr(err)
-		}
-		i += 1
-		found += 1
-	}
-	if results.Err() != nil {
-		return shelfRows, found, logg.WrapErr(err)
-	}
-
-	return shelfRows, found, nil
 }
 
 // MoveShelfToArea moves shelf to an area.
