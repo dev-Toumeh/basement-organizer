@@ -13,17 +13,38 @@ import (
 )
 
 type SQLShelf struct {
-	Id             sql.NullString
-	Label          sql.NullString
-	Description    sql.NullString
-	Picture        sql.NullString
-	PreviewPicture sql.NullString
-	QRcode         sql.NullString
-	Height         sql.NullFloat64
-	Width          sql.NullFloat64
-	Depth          sql.NullFloat64
-	Rows           sql.NullInt64
-	Cols           sql.NullInt64
+	SQLBasicInfo
+	Height sql.NullFloat64
+	Width  sql.NullFloat64
+	Depth  sql.NullFloat64
+	Rows   sql.NullInt64
+	Cols   sql.NullInt64
+}
+
+// convert struct from type SQLShelf to normal shelf struct
+func (s SQLShelf) toShelf() (shelves.Shelf, error) {
+	id, err := uuid.FromString(s.SQLBasicInfo.ID.String)
+	if err != nil {
+		return shelves.Shelf{}, logg.WrapErr(err)
+	}
+
+	return shelves.Shelf{
+		BasicInfo: items.BasicInfo{
+			ID:             id,
+			Label:          ifNullString(s.Label),
+			Description:    ifNullString(s.Description),
+			Picture:        ifNullString(s.Picture),
+			PreviewPicture: ifNullString(s.PreviewPicture),
+			QRcode:         ifNullString(s.QRCode),
+		},
+		Height: float32(ifNullFloat64(s.Height)),
+		Width:  float32(ifNullFloat64(s.Width)),
+		Depth:  float32(ifNullFloat64(s.Depth)),
+		Rows:   int(ifNullInt(s.Rows)),
+		Cols:   int(ifNullInt(s.Cols)),
+		Items:  nil,
+		Boxes:  nil,
+	}, nil
 }
 
 // CreateNewShelf creates a new empty shelf in database.
@@ -149,6 +170,16 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 			return logg.Errorf("CreateShelf: invalid base64 in PreviewPicture %w", err)
 		}
 		previewPicture64 = shelf.PreviewPicture
+
+	}
+	if shelf.Items != nil || shelf.Boxes != nil {
+		return logg.NewError(fmt.Sprintf(`shelf "%s" has %d items and %d boxes, they must be empty while creating a new shelf`,
+			shelf.ID, len(shelf.Items), len(shelf.Boxes)))
+	}
+
+	err = updatePicture(&shelf.Picture, &shelf.PreviewPicture)
+	if err != nil {
+		logg.Infof("Can't update picture %v", err.Error())
 	}
 
 	stmt := `
@@ -189,44 +220,20 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 
 // Shelf returns shelf with provided id.
 func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
-	var (
-		label          string
-		description    sql.NullString
-		picture        sql.NullString
-		previewPicture sql.NullString
-		qrcode         sql.NullString
-		height         sql.NullFloat64
-		width          sql.NullFloat64
-		depth          sql.NullFloat64
-		rows           sql.NullInt64
-		cols           sql.NullInt64
-	)
 
+	var sqlShelf SQLShelf
 	stmt := `
-        SELECT
-            label,
-            description,
-            picture,
-            preview_picture,
-            qrcode,
-            height,
-            width,
-            depth,
-            rows,
-            cols
-        FROM shelf WHERE id = ?`
+	SELECT
+		id, label, description, picture, preview_picture, qrcode, height, width, depth, rows, cols
+	FROM 
+		shelf
+	WHERE 
+		id = ?;`
 
 	err := db.Sql.QueryRow(stmt, id.String()).Scan(
-		&label,
-		&description,
-		&picture,
-		&previewPicture,
-		&qrcode,
-		&height,
-		&width,
-		&depth,
-		&rows,
-		&cols,
+		&sqlShelf.SQLBasicInfo.ID, &sqlShelf.SQLBasicInfo.Label, &sqlShelf.SQLBasicInfo.Description,
+		&sqlShelf.SQLBasicInfo.Picture, &sqlShelf.SQLBasicInfo.PreviewPicture, &sqlShelf.SQLBasicInfo.QRCode,
+		&sqlShelf.Height, &sqlShelf.Width, &sqlShelf.Depth, &sqlShelf.Rows, &sqlShelf.Cols,
 	)
 	if err != nil {
 		return nil, logg.WrapErr(err)
@@ -240,23 +247,23 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 	// 	previewPictureBase64 = base64.StdEncoding.EncodeToString(previewPicture)
 	// }
 
-	shelf := &shelves.Shelf{
-		BasicInfo: items.BasicInfo{
-			ID:             id,
-			Label:          label,
-			Description:    description.String,
-			Picture:        picture.String,
-			PreviewPicture: previewPicture.String,
-			QRcode:         qrcode.String,
-		},
-		Height: float32(height.Float64),
-		Width:  float32(width.Float64),
-		Depth:  float32(depth.Float64),
-		Rows:   int(rows.Int64),
-		Cols:   int(cols.Int64),
-		Items:  nil,
-		Boxes:  nil,
-	}
+	// shelf := &shelves.Shelf{
+	// 	BasicInfo: items.BasicInfo{
+	// 		ID:             id,
+	// 		Label:          label,
+	// 		Description:    description.String,
+	// 		Picture:        picture.String,
+	// 		PreviewPicture: previewPicture.String,
+	// 		QRcode:         qrcode.String,
+	// 	},
+	// 	Height: float32(height.Float64),
+	// 	Width:  float32(width.Float64),
+	// 	Depth:  float32(depth.Float64),
+	// 	Rows:   int(rows.Int64),
+	// 	Cols:   int(cols.Int64),
+	// 	Items:  nil,
+	// 	Boxes:  nil,
+	// }
 
 	// f, err := os.ReadFile("./internal/static/pen.png")
 	// if err != nil {
@@ -273,7 +280,22 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 	// if err != nil {
 	// 	panic(err)
 	// }
-	return shelf, nil
+
+	shelf, err := sqlShelf.toShelf()
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	items, err := db.innerListRowsFrom("shelf", shelf.ID, "item_fts")
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	shelf.Items = items
+	boxes, err := db.innerListRowsFrom("shelf", shelf.ID, "box_fts")
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	shelf.Boxes = boxes
+	return &shelf, nil
 }
 
 func ByteArrayToBase64ByteArray(src []byte) []byte {
@@ -343,69 +365,74 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
 	return nil
 }
 
-// DeleteShelf deletes shelf.
+// DeleteShelf deletes a single shelf.
 func (db *DB) DeleteShelf(id uuid.UUID) error {
-	stmt := `DELETE FROM shelf WHERE id = ?`
-	_, err := db.Sql.Exec(stmt, id.String())
+	shelf, err := db.Shelf(id)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	if shelf.Items != nil || shelf.Boxes != nil {
+		return logg.NewError(fmt.Sprintf(`can't delete shelf "%s": has %d items and %d boxes`, shelf.ID, len(shelf.Items), len(shelf.Boxes)))
+	}
+	err = db.deleteFrom("shelf", id)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
 	return nil
 }
 
-// MoveItemToShelf moves item to a shelf.
-// To move item out of a shelf set "toShelfID = uuid.Nil".
-func (db *DB) MoveItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
-	errMsg := fmt.Sprintf(`moving item "%s" to shelf "%s"`, itemID.String(), toShelfID.String())
+// ShelfListRowsPaginated returns always a slice with the number of rows specified.
+// If rows=5 with 3 results, the last 2 rows will be nil.
+// rows and page must be above 1.
+func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, error) {
+	shelfRows := make([]*items.ListRow, 0)
 
-	exists, err := db.Exists("item", itemID)
+	if page < 1 {
+		return shelfRows, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
+	}
+
+	if rows < 1 {
+		return shelfRows, logg.NewError(fmt.Sprintf("invalid rows '%d', needs at least 1 row", rows))
+	}
+
+	shelfRows = make([]*items.ListRow, rows)
+
+	limit := rows
+	offset := (page - 1) * rows
+
+	queryNoSearch := `
+		SELECT
+			id, label, area_id, area_label, preview_picture
+		FROM shelf_fts
+			ORDER BY label ASC
+		LIMIT ? OFFSET ?;`
+	results, err := db.Sql.Query(queryNoSearch, limit, offset)
 	if err != nil {
-		return logg.WrapErr(err)
+		return shelfRows, logg.WrapErr(err)
 	}
 
-	if exists == false {
-		return logg.Errorf(errMsg+" item: %w", ErrNotExist)
-	}
-
-	// If moving to a shelf, check if the shelf exists
-	if toShelfID != uuid.Nil {
-		var shelfExists int
-		err = db.Sql.QueryRow(`SELECT EXISTS(SELECT 1 FROM shelf WHERE id = ?)`, toShelfID.String()).Scan(&shelfExists)
+	i := 0
+	for results.Next() {
+		listRow := SQLListRow{}
+		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
 		if err != nil {
-			return logg.WrapErr(err)
+			return shelfRows, logg.WrapErr(err)
 		}
-		if shelfExists == 0 {
-			return logg.Errorf(errMsg+" shelf: %w", ErrNotExist)
+		shelfRows[i], err = listRow.ToListRow()
+		if err != nil {
+			return shelfRows, logg.WrapErr(err)
 		}
+		i += 1
+	}
+	if results.Err() != nil {
+		return shelfRows, logg.WrapErr(err)
 	}
 
-	// Update the item's shelf_id
-	stmt := `UPDATE item SET shelf_id = ? WHERE id = ?`
-	var shelfIDValue interface{}
-	if toShelfID == uuid.Nil {
-		shelfIDValue = nil
-	} else {
-		shelfIDValue = toShelfID.String()
-	}
-	_, err = db.Sql.Exec(stmt, shelfIDValue, itemID.String())
-	if err != nil {
-		return logg.WrapErr(err)
-	}
-	return nil
+	return shelfRows, nil
 }
 
-// MoveBoxToShelf moves box to a shelf.
-// To move box out of a shelf set "toShelfID = uuid.Nil".
-func (db *DB) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
-	return logg.WrapErr(ErrNotImplemented)
-}
-
-// MoveShelf moves shelf to an area.
+// MoveShelfToArea moves shelf to an area.
 // To move out of an area set "toAreaID = uuid.Nil".
-func (db *DB) MoveShelf(shelfID uuid.UUID, toAreaID uuid.UUID) error {
-	return logg.WrapErr(ErrNotImplemented)
-}
-
-func (db *DB) insertShelf(shelf *shelves.Shelf) error {
+func (db *DB) MoveShelfToArea(shelfID uuid.UUID, toAreaID uuid.UUID) error {
 	return logg.WrapErr(ErrNotImplemented)
 }

@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/items"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -36,13 +37,52 @@ func TestCreateShelf(t *testing.T) {
 	EmptyTestDatabase()
 	resetShelves()
 
+	var err error
+	// should create new ID
 	shelf := SHELF_1
-
-	err := dbTest.CreateShelf(shelf)
+	shelf.ID = uuid.Nil
+	err = dbTest.CreateShelf(shelf)
+	createdShelf, err := dbTest.Shelf(shelf.ID)
 	assert.Equal(t, err, nil)
-	assert.NotEqual(t, uuid.Nil, SHELF_VALID_UUID_1)
+	assert.NotEqual(t, uuid.Nil, createdShelf.ID)
 
-	createdShelf, err := dbTest.Shelf(SHELF_VALID_UUID_1)
+	// should keep same ID
+	EmptyTestDatabase()
+	resetShelves()
+	shelf = SHELF_1
+	err = dbTest.CreateShelf(shelf)
+	createdShelf, err = dbTest.Shelf(shelf.ID)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, shelf.ID, createdShelf.ID)
+
+	// item does not exist and should not be created
+	shelf.Items = append(shelf.Items, &items.ListRow{ID: ITEM_1.ID})
+	assert.Equal(t, len(shelf.Items), 1)
+	err = dbTest.CreateShelf(shelf)
+	assert.NotEqual(t, err, nil)
+	shelf.Items = nil
+
+	// box does not exist and should not be created
+	shelf.Boxes = append(shelf.Boxes, &items.ListRow{ID: BOX_1.ID})
+	assert.Equal(t, len(shelf.Boxes), 1)
+	err = dbTest.CreateShelf(shelf)
+	assert.NotEqual(t, err, nil)
+	shelf.Items = nil
+
+	err = dbTest.CreateNewItem(*ITEM_1)
+	assert.Equal(t, err, nil)
+	_, err = dbTest.CreateBox(BOX_1)
+	assert.Equal(t, err, nil)
+	shelf.Items = append(shelf.Items, &items.ListRow{ID: ITEM_1.ID})
+	shelf.Boxes = append(shelf.Boxes, &items.ListRow{ID: BOX_1.ID})
+	err = dbTest.CreateShelf(shelf)
+	assert.NotEqual(t, err, nil)
+
+	shelf.Items = nil
+	shelf.Boxes = nil
+	shelf.ID = uuid.Nil // should create new id
+	err = dbTest.CreateShelf(shelf)
+	createdShelf, err = dbTest.Shelf(shelf.ID)
 	assert.Equal(t, err, nil)
 
 	assert.Equal(t, shelf.Label, createdShelf.Label)
@@ -57,27 +97,36 @@ func TestCreateShelf(t *testing.T) {
 	assert.Equal(t, shelf.Cols, createdShelf.Cols)
 
 	EmptyTestDatabase()
+	resetShelves()
 	shelf.Picture = INVALID_BASE64_PNG
 
 	// Expected error log converting picture
 	// but NO error returned!
 	err = dbTest.CreateShelf(shelf)
 	assert.Equal(t, err, nil)
-	assert.NotEqual(t, uuid.Nil, SHELF_VALID_UUID_1)
+	assert.NotEqual(t, uuid.Nil, shelf.ID)
 
-	createdShelf, err = dbTest.Shelf(SHELF_VALID_UUID_1)
+	createdShelf, err = dbTest.Shelf(shelf.ID)
 	assert.Equal(t, "", createdShelf.Picture)
 }
 
 func TestDeleteShelf(t *testing.T) {
 	EmptyTestDatabase()
-	dbTest.createNewShelf(SHELF_VALID_UUID_1)
-	id, err := dbTest.CreateNewShelf()
+	resetShelves()
+	resetTestItems()
+	var err error
+	err = dbTest.CreateShelf(SHELF_1)
 	assert.Equal(t, err, nil)
-	assert.NotEqual(t, id, uuid.Nil)
+	err = dbTest.DeleteShelf(SHELF_1.ID)
+	assert.Equal(t, err, nil)
 
-	err = dbTest.DeleteShelf(SHELF_VALID_UUID_1)
-	assert.Equal(t, err, nil)
+	// should not delete shelf with an item
+	dbTest.CreateShelf(SHELF_1)
+	dbTest.CreateNewItem(*ITEM_1)
+	dbTest.MoveItemToShelf(ITEM_1.ID, SHELF_1.ID)
+
+	err = dbTest.DeleteShelf(SHELF_1.ID)
+	assert.NotEqual(t, err, nil)
 }
 
 func TestUpdateShelf(t *testing.T) {
@@ -115,6 +164,76 @@ func TestUpdateShelf(t *testing.T) {
 	expectedPicture := VALID_BASE64_PNG
 	assert.Equal(t, expectedPicture, updatedShelf.Picture)
 	assert.NotEqual(t, "", updatedShelf.PreviewPicture)
+}
+
+func TestShelfListRowsPaginated(t *testing.T) {
+	EmptyTestDatabase()
+	resetShelves()
+
+	id1, _ := dbTest.CreateNewShelf()
+	id2, _ := dbTest.CreateNewShelf()
+	id3, _ := dbTest.CreateNewShelf()
+	shelves, err := dbTest.ShelfListRowsPaginated(1, 2)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 2)
+	assert.Equal(t, id1, shelves[0].ID)
+	assert.Equal(t, id2, shelves[1].ID)
+
+	shelves, err = dbTest.ShelfListRowsPaginated(2, 2)
+	assert.Equal(t, id3, shelves[0].ID)
+	assert.Equal(t, len(shelves), 2)
+	assert.Equal(t, nil, shelves[1])
+}
+
+func TestShelfSearchListRowsPaginated(t *testing.T) {
+	EmptyTestDatabase()
+	resetShelves()
+
+	for _, shelf := range testShelves() {
+		err := dbTest.CreateShelf(&shelf)
+		if err != nil {
+			t.Fatalf("create shelf setup failed: %v", err)
+		}
+	}
+
+	// full word
+	shelves, found, err := dbTest.ShelfSearchListRowsPaginated(1, 10, "shelf")
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 10)
+	assert.Equal(t, found, 4)
+
+	// part of a word
+	shelves, found, err = dbTest.ShelfSearchListRowsPaginated(1, 10, "key")
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 10)
+	assert.Equal(t, found, 2)
+
+	// whitespace and single letter
+	shelves, found, err = dbTest.ShelfSearchListRowsPaginated(1, 10, "            a")
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 10)
+	assert.Equal(t, found, 2)
+
+	// 2 parts of 2 different words
+	shelves, found, err = dbTest.ShelfSearchListRowsPaginated(1, 10, "sh           3")
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 10)
+	assert.Equal(t, found, 1)
+
+	// 2 parts of 2 different words
+	shelves, found, err = dbTest.ShelfSearchListRowsPaginated(1, 10, "Tes Sh ")
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 10)
+	assert.Equal(t, found, 3)
+
+	// 2 parts of 2 different words with pagination
+	// page 1: SHELF_1, SHELF_2, page 2: SHELF_3
+	shelves, found, err = dbTest.ShelfSearchListRowsPaginated(2, 2, "Tes Sh ")
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 2)
+	assert.Equal(t, found, 1)
+	assert.Equal(t, shelves[0].ID, SHELF_3.ID)
+
 }
 
 func TestMoveItemToShelf(t *testing.T) {

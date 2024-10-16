@@ -107,7 +107,7 @@ func DetailsTemplate(db ShelfDB) http.HandlerFunc {
 		maps := []map[string]any{
 			page.Map(),
 			shelf.Map(),
-			map[string]any{"Edit": common.CheckEditMode(r)},
+			{"Edit": common.CheckEditMode(r)},
 		}
 
 		data := common.MergeMaps(maps)

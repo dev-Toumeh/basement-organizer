@@ -85,10 +85,15 @@ type Item struct {
 	BasicInfo
 	Quantity int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
 	Weight   string    `json:"weight"      validate:"omitempty,numeric"`
-	QRcode   string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	QRCode   string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
 	BoxID    uuid.UUID `json:"box_id"`
 	ShelfID  uuid.UUID `json:"shelf_id"`
 	AreaID   uuid.UUID `json:"area_id"`
+}
+
+func (i Item) String() string {
+	return fmt.Sprintf("Item[ID=%s, Label=%s, Quantity=%d, Weight=%s, QRcode=%s, BoxID=%s, ShelfID=%s, AreaID=%s]",
+		i.BasicInfo.ID, i.BasicInfo.Label, i.Quantity, i.Weight, i.QRCode, i.BoxID, i.ShelfID, i.AreaID)
 }
 
 type ItemDatabase interface {
@@ -102,9 +107,9 @@ type ItemDatabase interface {
 	UpdateItem(ctx context.Context, item Item) error
 	DeleteItem(itemId uuid.UUID) error
 	DeleteItems(itemId []uuid.UUID) error
-	InsertDummyItems()
+	InsertSampleItems()
 	ErrorExist() error
-	MoveItem(id1 uuid.UUID, id2 uuid.UUID) error
+	MoveItemToBox(itemID uuid.UUID, boxID uuid.UUID) error
 
 	// search functions
 	ItemFuzzyFinder(query string) ([]ListRow, error)
@@ -113,14 +118,14 @@ type ItemDatabase interface {
 }
 
 const (
-	ID         string = "id"
-	LABEL      string = "label"
-	DESCRIPTIO string = "description"
-	PICTURE    string = "picture"
-	QUANTITY   string = "quantity"
-	WEIGHT     string = "weight"
-	QRCODE     string = "qrcode"
-	BOX_ID     string = "Box_id"
+	ID          string = "id"
+	LABEL       string = "label"
+	DESCRIPTION string = "description"
+	PICTURE     string = "picture"
+	QUANTITY    string = "quantity"
+	WEIGHT      string = "weight"
+	QRCODE      string = "qrcode"
+	BOX_ID      string = "Box_id"
 )
 
 var validate *validator.Validate
@@ -285,12 +290,12 @@ func item(r *http.Request) (Item, error) {
 		BasicInfo: BasicInfo{
 			ID:          id,
 			Label:       r.PostFormValue(LABEL),
-			Description: r.PostFormValue(DESCRIPTIO),
+			Description: r.PostFormValue(DESCRIPTION),
 			Picture:     common.ParsePicture(r),
 		},
 		Quantity: common.ParseQuantity(r.PostFormValue(QUANTITY)),
 		Weight:   r.PostFormValue(WEIGHT),
-		QRcode:   r.PostFormValue(QRCODE),
+		QRCode:   r.PostFormValue(QRCODE),
 		BoxID:    boxId,
 	}
 	return newItem, nil

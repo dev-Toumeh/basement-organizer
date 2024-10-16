@@ -1,25 +1,24 @@
 package database
 
 import (
+	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"database/sql"
 	"errors"
-	"fmt"
 	"os"
-	"slices"
 
 	"github.com/gofrs/uuid/v5"
 	_ "modernc.org/sqlite"
 )
 
-const DATABASE_FILE_PATH = "./internal/database/sqlite-database2.db"
+const DATABASE_FILE_PATH = "./internal/database/sqlite-database.db"
 
 var ErrExist = errors.New("already exists")
 var ErrNotExist = errors.New("does not exist")
 var ErrNotImplemented = errors.New("is not implemented")
 
 // add statement to create new table
-var statementsMainTables = &map[string]string{
+var mainTables = &map[string]string{
 	"user":  CREATE_USER_TABLE_STMT,
 	"item":  CREATE_ITEM_TABLE_STMT,
 	"box":   CREATE_BOX_TABLE_STMT,
@@ -27,11 +26,14 @@ var statementsMainTables = &map[string]string{
 	"area":  CREATE_AREA_TABLE_STMT,
 }
 
-var statementVirtualTabels = &map[string]string{
-	"item_fts":                 CREATE_ITEM_TABLE_STMT_FTS,
-	"box_fts":                  CREATE_BOX_TABLE_STMT_FTS,
-	"shelf_fts":                CREATE_SHELF_TABLE_STMT_FTS,
-	"Item_fts_trigger_insert":  CREATE_ITEM_INSERT_TRIGGER,
+var virtualTables = &map[string]string{
+	"item_fts":  CREATE_ITEM_TABLE_STMT_FTS,
+	"box_fts":   CREATE_BOX_TABLE_STMT_FTS,
+	"shelf_fts": CREATE_SHELF_TABLE_STMT_FTS,
+}
+
+var triggers = &map[string]string{
+	"item_fts_trigger_insert":  CREATE_ITEM_INSERT_TRIGGER,
 	"item_fts_trigger_update":  CREATE_ITEM_UPDATE_TRIGGER,
 	"item_fts_trigger_delete":  CREATE_ITEM_DELETE_TRIGGER,
 	"box_fts_trigger_insert":   CREATE_BOX_INSERT_TRIGGER,
@@ -43,33 +45,56 @@ var statementVirtualTabels = &map[string]string{
 }
 
 type DB struct {
-	Sql *sql.DB
+	Sql       *sql.DB
+	fileExist bool
 }
 
-// create the Database file if it was not exist and establish the connection with it
+// Connect creates the database file if it doesn't exist and opens it.
 func (db *DB) Connect() {
+	// create the database File and open it
+	db.createFile(DATABASE_FILE_PATH)
+	db.open(DATABASE_FILE_PATH)
 
-	// create the sqlite database File it it wasn't exist
-	if _, err := os.Stat(DATABASE_FILE_PATH); err != nil {
-		logg.Info("Creating sqlite-database.db...")
-		file, internErr := os.Create(DATABASE_FILE_PATH)
-		defer file.Close()
-		if internErr != nil {
-			logg.Fatal(internErr)
-		}
-		logg.Info("sqlite-database.db created")
+	// create the necessary Tables
+	db.createTable(*mainTables)
+	db.createTable(*virtualTables)
+	db.createTable(*triggers)
+
+	// add dummy data
+	if !db.fileExist && env.Development() {
+		db.insirtDummyData()
 	}
-	// open the connection
+}
+
+// createFile creates only db file if it doesn't exist, no tables.
+// If error occurs program will shut down with os.Exit(1).
+func (db *DB) createFile(dbFile string) {
+	_, err := os.Stat(dbFile)
+	if err == nil {
+		db.fileExist = true
+		return
+	}
+
+	logg.Debugf(`creating "%s"`, dbFile)
+	file, err := os.Create(dbFile)
+	if err != nil {
+		logg.Fatalf("Failed to create database: %v", err)
+	}
+	defer file.Close()
+	logg.Infof(`"%s" created`, dbFile)
+
+}
+
+// open the connection and create tables if they don't exist.
+// If error occurs program will shut down with os.Exit(1).
+func (db *DB) open(dbFile string) {
 	var err error
-	db.Sql, err = sql.Open("sqlite", DATABASE_FILE_PATH)
+	db.Sql, err = sql.Open("sqlite", dbFile)
 	if err != nil {
 		logg.Fatalf("Failed to open database: %v", err)
 	}
+	logg.Debugf("opened '%s'", dbFile)
 	logg.Info("Database Connection established")
-
-	// create the Tables if were not exist
-	db.createTable(*statementsMainTables)
-	db.createTable(*statementVirtualTabels)
 }
 
 func (db *DB) createTable(statements map[string]string) {
@@ -93,28 +118,32 @@ func (db *DB) ErrorExist() error {
 	return logg.WrapErrWithSkip(ErrExist, 2)
 }
 
-// Exists checks existence of entity (item, box, shelf, area).
-// Returns error if other internal errors happen.
-func (db *DB) Exists(entityType string, id uuid.UUID) (bool, error) {
-	validEntities := []string{"item", "box", "shelf", "area"}
-	if !slices.Contains(validEntities, entityType) {
-		return false, logg.NewError(fmt.Sprintf("no entity with type: \"%s\"", entityType))
-	}
-
-	var itemExists int
-	query := fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE id = ?)`, entityType)
-	logg.Debug(query)
-	err := db.Sql.QueryRow(query, id.String()).Scan(&itemExists)
+func (db *DB) insirtDummyData() {
+	db.InsertSampleItems()
+	db.InsertSampleBoxes()
+	db.InsertSampleShelves()
+	itemIDs, err := db.ItemIDs()
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, nil
-		} else {
-			return false, logg.WrapErr(err)
-		}
+		logg.WrapErr(err)
 	}
-	if itemExists != 0 {
-		return true, nil
-	} else {
-		return false, nil
+	boxIDs, err := db.BoxIDs()
+	if err != nil {
+		logg.WrapErr(err)
 	}
+	shelfRows, err := db.ShelfListRowsPaginated(1, 3)
+	if err != nil {
+		logg.WrapErr(err)
+	}
+	db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[0]), uuid.FromStringOrNil(boxIDs[0]))
+	db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[1]), uuid.FromStringOrNil(boxIDs[0]))
+	db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[2]), uuid.FromStringOrNil(boxIDs[0]))
+	db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[3]), uuid.FromStringOrNil(boxIDs[1]))
+	db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[4]), uuid.FromStringOrNil(boxIDs[1]))
+	db.MoveItemToShelf(uuid.FromStringOrNil(itemIDs[5]), shelfRows[0].ID)
+	db.MoveItemToShelf(uuid.FromStringOrNil(itemIDs[6]), shelfRows[0].ID)
+	db.MoveBoxToShelf(uuid.FromStringOrNil(boxIDs[0]), shelfRows[1].ID)
+	db.MoveBoxToShelf(uuid.FromStringOrNil(boxIDs[2]), shelfRows[1].ID)
+	db.MoveBoxToBox(uuid.FromStringOrNil(boxIDs[3]), uuid.FromStringOrNil(boxIDs[5]))
+	db.MoveBoxToBox(uuid.FromStringOrNil(boxIDs[3]), uuid.FromStringOrNil(boxIDs[5]))
+	db.MoveBoxToBox(uuid.FromStringOrNil(boxIDs[5]), uuid.FromStringOrNil(boxIDs[6]))
 }

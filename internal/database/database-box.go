@@ -82,16 +82,6 @@ func (db *DB) BoxIDs() ([]string, error) {
 	return ids, nil
 }
 
-// Moves box with id1 into box with id2.
-func (db *DB) MoveBox(id1 uuid.UUID, id2 uuid.UUID) error {
-	updateStmt := `UPDATE box SET outerbox_id = ? WHERE Id = ?;`
-	_, err := db.Sql.Exec(updateStmt, id2, id1)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // update box data
 func (db *DB) UpdateBox(box items.Box) error {
 	exist := db.BoxExistById(box.ID)
@@ -130,15 +120,14 @@ func (db *DB) DeleteBox(boxId uuid.UUID) error {
 
 	// check if box is not Empty
 	itemExist := db.ItemExist("box_id", id)
-	boxExist := db.BoxExist("outerbox_id", boxId.String())
+	boxExist := db.BoxExist("box_id", boxId.String())
 	if itemExist || boxExist {
-		return logg.Errorf("the box is not empty")
+		return logg.Errorf(`the box with id="%s" is not empty`, id)
 	}
 
-	sqlStatement := `DELETE FROM box WHERE id = ?;`
-	_, err := db.Sql.Exec(sqlStatement, id)
+	err := db.deleteFrom("box", boxId)
 	if err != nil {
-		return logg.Errorf("error whiel deleting the box: %W", err)
+		return logg.WrapErr(err)
 	}
 	return nil
 }
@@ -160,113 +149,46 @@ func (db *DB) BoxById(id uuid.UUID) (items.Box, error) {
 
 // Get Box  based on given Field
 func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
-	var box *items.Box
-	var outerBox = &items.Box{}
-	var itemListRows = []*items.ListRow{}
-	var innerBoxListRows = []*items.ListRow{}
-	boxInitialized := false
-	outerBoxInitialized := false
-	addedInBoxes := make(map[string]bool)
-	addedItems := make(map[string]*items.Item)
+	var sqlBox SQLBox
+	stmt := fmt.Sprintf(`
+	SELECT
+		id, label, description, picture, preview_picture, qrcode, box_id, shelf_id, area_id
+	FROM 
+		box
+	WHERE 
+		%s = ?;`, field)
 
-	query := fmt.Sprintf(
-		`SELECT 
-            b.id, b.label, b.description, b.picture, b.preview_picture, b.qrcode, b.outerbox_id, b.shelf_id, b.area_id,
-            ob.id, ob.label, ob.preview_picture,
-            ib.id,
-            i.id
-        FROM 
-            box AS b
-        LEFT JOIN 
-            box As ib ON b.id = ib.outerbox_id
-        LEFT JOIN 
-            box As ob ON b.outerbox_id = ob.id
-        LEFT JOIN 
-            item As i ON b.id = i.box_id 
-        WHERE 
-            b.%s = ?;`, field)
-	rows, err := db.Sql.Query(query, value)
+	err := db.Sql.QueryRow(stmt, value).Scan(
+		&sqlBox.SQLBasicInfo.ID, &sqlBox.SQLBasicInfo.Label, &sqlBox.SQLBasicInfo.Description, &sqlBox.SQLBasicInfo.Picture, &sqlBox.SQLBasicInfo.PreviewPicture, &sqlBox.SQLBasicInfo.QRCode, &sqlBox.OuterBoxID, &sqlBox.ShelfID, &sqlBox.AreaID,
+	)
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
-	defer rows.Close()
 
-	for rows.Next() {
-		var (
-			sqlBox      SQLBox
-			sqlOuterBox SQLBox
-			sqlInnerBox SQLBox
-			sqlItem     SQLItem
-			innerBox    *items.Box
-		)
+	box, err := sqlBox.ToBox()
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
 
-		err := rows.Scan(
-			&sqlBox.ID, &sqlBox.Label, &sqlBox.Description, &sqlBox.Picture, &sqlBox.PreviewPicture, &sqlBox.QRCode, &sqlBox.OuterBoxID, &sqlBox.ShelfID, &sqlBox.AreaID,
-			&sqlOuterBox.ID, &sqlOuterBox.Label, &sqlOuterBox.PreviewPicture,
-			&sqlInnerBox.ID,
-			&sqlItem.ID,
-		)
+	items, err := db.innerListRowsFrom("box", box.ID, "item_fts")
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	box.Items = items
+
+	boxes, err := db.innerListRowsFrom("box", box.ID, "box_fts")
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+	box.InnerBoxes = boxes
+
+	if box.OuterBoxID != uuid.Nil {
+		outerbox, err := db.BoxListRowByID(box.OuterBoxID)
 		if err != nil {
-			return nil, logg.Errorf("error scanning row: %w", err)
+			return nil, logg.WrapErr(err)
 		}
-
-		// Initialize the main Box only once
-		if !boxInitialized {
-			box, err = sqlBox.ToBox()
-			if err != nil {
-				return nil, logg.Errorf("error assigning the box data: %w", err)
-			}
-			boxInitialized = true
-		}
-
-		// Initialize outer box only once
-		if !outerBoxInitialized && sqlOuterBox.ID.Valid {
-			outerBox, err = sqlOuterBox.ToBox()
-			if err != nil {
-				return &items.Box{}, logg.Errorf("something wrong happened while assigning the outboxSQLBox data %w", err)
-			}
-			outerBoxInitialized = true
-		}
-
-		// Add the inboxes if its ID is valid and not added before
-		if sqlInnerBox.ID.Valid && !addedInBoxes[sqlInnerBox.ID.String] {
-			innerBox, err = sqlInnerBox.ToBox()
-			if err != nil {
-				return nil, logg.Errorf("error converting SQLBox to Box: %w", err)
-			}
-			innerBoxListRow, err := db.BoxListRowByID(innerBox.ID)
-			if err != nil {
-				return nil, logg.WrapErr(err)
-			}
-			innerBoxListRows = append(innerBoxListRows, &innerBoxListRow)
-			addedInBoxes[sqlInnerBox.ID.String] = true
-		}
-
-		// Add the item to the itemsList if itemId is valid
-		if sqlItem.ID.Valid {
-			if _, exists := addedItems[sqlItem.ID.String]; !exists {
-				item, err := sqlItem.ToItem()
-				if err != nil {
-					return nil, logg.Errorf("error converting SQLItem to Item: %w", err)
-				}
-				itemListRow, err := db.ItemListRowByID(item.ID)
-				if err != nil {
-					return nil, logg.WrapErr(err)
-				}
-				itemListRows = append(itemListRows, itemListRow)
-				addedItems[sqlItem.ID.String] = item
-			}
-		}
+		box.OuterBox = &outerbox
 	}
-
-	if err := rows.Err(); err != nil {
-		return nil, logg.Errorf("error iterating through rows: %w", err)
-	}
-
-	// Assign the items list to the box
-	box.OuterBox = &items.ListRow{BoxID: outerBox.ID, Label: outerBox.Label}
-	box.Items = itemListRows
-	box.InnerBoxes = innerBoxListRows
 
 	return box, nil
 }
@@ -277,8 +199,10 @@ func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
 		return uuid.Nil, db.ErrorExist()
 	}
 
-	sqlStatement := `INSERT INTO box (id, label, description, picture, preview_picture, qrcode, outerbox_id, shelf_id, area_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-	logg.Debugf("SQL: %s", sqlStatement)
+	sqlStatement := `INSERT INTO box (id, label, description, picture, preview_picture, qrcode, box_id, shelf_id, area_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+	updatePicture(&box.Picture, &box.PreviewPicture)
+
 	result, err := db.Sql.Exec(sqlStatement, box.ID.String(), box.Label, box.Description, box.Picture, box.PreviewPicture, box.QRcode, box.OuterBoxID.String(), box.ShelfID.String(), box.AreaID.String())
 	if err != nil {
 		return uuid.Nil, logg.Errorf("Error while executing create new box statement: %w", err)
@@ -292,4 +216,28 @@ func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
 	}
 
 	return box.ID, nil
+}
+
+// MoveBoxToBox moves box to another box.
+// To move box out of a shelf set
+//
+//	toBoxID = uuid.Nil
+func (db *DB) MoveBoxToBox(boxID uuid.UUID, toBoxID uuid.UUID) error {
+	err := db.MoveTo("box", boxID, "box", toBoxID)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	return nil
+}
+
+// MoveBoxToShelf moves box to a shelf.
+// To move box out of a shelf set
+//
+//	toShelfID = uuid.Nil
+func (db *DB) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
+	err := db.MoveTo("box", boxID, "shelf", toShelfID)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	return nil
 }
