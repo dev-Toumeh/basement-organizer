@@ -31,8 +31,9 @@ func setup() {
 
 	// setup in-memory db
 	dbTest.open(":memory:")
-
-	// dbTest.PrintTables()
+	dbTest.createTable(*mainTables)
+	dbTest.createTable(*virtualTables)
+	dbTest.createTable(*triggers)
 }
 
 func teardown() {

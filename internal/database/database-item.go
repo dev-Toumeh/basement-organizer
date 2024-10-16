@@ -261,20 +261,13 @@ func (db *DB) ItemIDs() ([]string, error) {
 // here we run the insert new Item query separate from the public function
 // it make the code more readable
 func (db *DB) insertNewItem(item items.Item) error {
-	var err error = nil
-	uuid.Must(item.ID, err)
-	if err != nil {
-		return logg.NewError("not valid")
-	}
-	uuid.Must(item.BoxID, err)
-	if err != nil {
-		return logg.NewError("not valid")
-	}
-
 	updatePicture(&item.Picture, &item.PreviewPicture)
 
 	sqlStatement := `INSERT INTO item (id, label, description, picture, preview_picture, quantity, weight, qrcode, box_id, shelf_id, area_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-	result, err := db.Sql.Exec(sqlStatement, item.ID.String(), item.Label, item.Description, item.Picture, item.PreviewPicture, item.Quantity, item.Weight, item.QRCode, item.BoxID.String(), item.ShelfID.String(), item.AreaID.String())
+	result, err := db.Sql.Exec(sqlStatement, item.BasicInfo.ID.String(),
+		item.BasicInfo.Label, item.BasicInfo.Description, item.BasicInfo.Picture,
+		item.BasicInfo.PreviewPicture, item.Quantity, item.Weight, item.BasicInfo.QRcode,
+		item.BoxID.String(), item.ShelfID.String(), item.AreaID.String())
 	if err != nil {
 		return logg.Errorf("Error while executing create new item statement: %w", err)
 	}
