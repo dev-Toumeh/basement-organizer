@@ -14,8 +14,9 @@
 }
 
 .header {
+  text-wrap: nowrap;
   background-color: #0c0c0c;
-  position: sticky;
+  position: fixed;
   width: 100%;
   top: 0;
 }

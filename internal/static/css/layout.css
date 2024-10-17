@@ -19,7 +19,7 @@ body {
   /*font-size: 2.8rem;*/
   background-color: #faf0e6;
   /*height: 5000px;*/
-  /*padding-top: 90px;*/
+  padding-top: 90px;  /* room for fixed navbar */
   display: flex;
   flex-direction: column;
   height: -webkit-fill-available;
