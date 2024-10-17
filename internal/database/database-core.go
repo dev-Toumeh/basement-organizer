@@ -51,9 +51,11 @@ type DB struct {
 
 // Connect creates the database file if it doesn't exist and opens it.
 func (db *DB) Connect() {
-	// create the database File and open it
-	db.createFile(DATABASE_FILE_PATH)
-	db.open(DATABASE_FILE_PATH)
+	if !env.Config().UseMemoryDB() {
+		// create the database File and open it
+		db.createFile(env.Config().DBPath())
+	}
+	db.open(env.Config().DBPath())
 
 	// create the necessary Tables
 	db.createTable(*mainTables)

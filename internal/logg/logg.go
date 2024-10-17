@@ -167,8 +167,10 @@ func EnableDebugLoggerS() {
 
 // Debug logger is disabled by default.
 func DisableDebugLogger() {
+	if debugLoggerEnabled {
+		Alog(debugLogger, 3, fmt.Sprint("Disabled Debug Logger"))
+	}
 	debugLoggerEnabled = false
-	Alog(debugLogger, 3, fmt.Sprint("Disabled Debug Logger"))
 }
 
 // Silent version of DisableDebugLogger Will not show that it is disabled in the logs.
@@ -186,7 +188,9 @@ func DebugLoggerEnabled() bool {
 // Info logger is disabled by default.
 func EnableInfoLogger() {
 	infoLoggerEnabled = true
-	Alog(debugLogger, 3, fmt.Sprint("Enabled Info Logger"))
+	if debugLoggerEnabled {
+		Alog(debugLogger, 3, fmt.Sprint("Enabled Info Logger"))
+	}
 }
 
 // Silent version of EnableInfoLogger. Will not show that it is enabled in the logs.
@@ -197,7 +201,9 @@ func EnableInfoLoggerS() {
 // Info logger is disabled by default.
 func DisableInfoLogger() {
 	infoLoggerEnabled = false
-	Alog(debugLogger, 3, fmt.Sprint("Disabled Info Logger"))
+	if debugLoggerEnabled {
+		Alog(debugLogger, 3, fmt.Sprint("Disabled Info Logger"))
+	}
 }
 
 // Silent version of DisableInfoLogger. Will not show that it is disabled in the logs.
@@ -220,7 +226,9 @@ func InfoForceOutput(outputLevel int, v ...any) {
 // Error logger is enabled by default.
 func EnableErrorLogger() {
 	errorLoggerEnabled = true
-	Alog(debugLogger, 3, fmt.Sprint("Enabled Error Logger"))
+	if debugLoggerEnabled {
+		Alog(debugLogger, 3, fmt.Sprint("Enabled Error Logger"))
+	}
 }
 
 // Silent version of EnableErrorLogger. Will not show that it is enabled in the logs.
@@ -231,7 +239,9 @@ func EnableErrorLoggerS() {
 // Error logger is enabled by default.
 func DisableErrorLogger() {
 	errorLoggerEnabled = false
-	Alog(debugLogger, 3, fmt.Sprint("Disabled Error Logger"))
+	if debugLoggerEnabled {
+		Alog(debugLogger, 3, fmt.Sprint("Disabled Error Logger"))
+	}
 }
 
 // Silent version of DisableErrorLogger. Will not show that it is disabled in the logs.

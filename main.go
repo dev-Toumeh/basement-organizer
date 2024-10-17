@@ -2,7 +2,6 @@ package main
 
 import (
 	"basement/main/internal/database"
-	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"basement/main/internal/routes"
 	"basement/main/internal/templates"
@@ -10,18 +9,12 @@ import (
 )
 
 func main() {
-	env.SetDevelopment()
-	// env.SetProduction()
-
-	if env.Development() {
-		logg.EnableDebugLogger()
-		logg.EnableInfoLogger()
-	}
-	if env.Production() {
-		logg.EnableInfoLogger()
-	}
-
-	logg.Info(env.Description())
+	// Execute before the first run:
+	//
+	//	go run ./tools/setup/setup.go
+	//
+	// This will create config.go where LoadConfig() is defined.
+	LoadConfig()
 
 	db := &database.DB{}
 
