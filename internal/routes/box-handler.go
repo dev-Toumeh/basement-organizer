@@ -547,7 +547,7 @@ func boxFromPostFormValue(id uuid.UUID, r *http.Request) items.Box {
 	box.Label = r.PostFormValue("label")
 	box.Description = r.PostFormValue("description")
 	box.Picture = common.ParsePicture(r)
-	box.QRcode = r.PostFormValue("qrcode")
+	box.QRCode = r.PostFormValue("qrcode")
 	return box
 }
 

@@ -282,10 +282,10 @@ func (db *DB) InsertSampleItems() {
 				Label:       gofakeit.ProductName(),
 				Description: gofakeit.Sentence(5),
 				Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
+				QRCode:      gofakeit.HipsterWord(),
 			},
 			Quantity: int64(gofakeit.IntRange(0, 100)),
 			Weight:   fmt.Sprintf("%.2f", gofakeit.Float32Range(0, 100)),
-			QRCode:   gofakeit.HipsterWord(),
 		}
 
 		err := db.insertNewItem(newItem)

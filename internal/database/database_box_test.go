@@ -185,7 +185,7 @@ func TestBoxUpdate(t *testing.T) {
 	assert.Equal(t, testBox.Label, updatedBox.Label)
 	assert.Equal(t, testBox.Description, updatedBox.Description)
 	assert.Equal(t, testBox.Picture, updatedBox.Picture)
-	assert.Equal(t, testBox.QRcode, updatedBox.QRcode)
+	assert.Equal(t, testBox.QRCode, updatedBox.QRCode)
 	assert.Equal(t, testBox.OuterBoxID, updatedBox.OuterBoxID)
 
 	assert.NotEqual(t, oldLabel, updatedBox.Label)

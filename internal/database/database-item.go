@@ -37,7 +37,7 @@ func (s SQLBasicInfo) ToBasicInfo() (items.BasicInfo, error) {
 		Description:    ifNullString(s.Description),
 		Picture:        ifNullString(s.Picture),
 		PreviewPicture: ifNullString(s.PreviewPicture),
-		QRcode:         ifNullString(s.QRCode),
+		QRCode:         ifNullString(s.QRCode),
 	}, nil
 }
 
@@ -54,8 +54,8 @@ type SQLItem struct {
 }
 
 func (i SQLItem) String() string {
-	return fmt.Sprintf("SQLItem[ID=%s, Label=%s, Quantity=%d, Weight=%s, QRCode=%s, BoxID=%s, BoxLabel=%s, ShelfID=%s, ShelfLabel=%s, AreaID=%s, AreaLabel=%s]",
-		i.SQLBasicInfo.ID.String, i.SQLBasicInfo.Label.String, i.Quantity.Int64, i.Weight.String, i.SQLBasicInfo.QRCode.String,
+	return fmt.Sprintf("SQLItem[ID=%s, Label=%s, QRCode=%s, Quantity=%d, Weight=%s, BoxID=%s, BoxLabel=%s, ShelfID=%s, ShelfLabel=%s, AreaID=%s, AreaLabel=%s]",
+		i.SQLBasicInfo.ID.String, i.SQLBasicInfo.Label.String, i.SQLBasicInfo.QRCode.String, i.Quantity.Int64, i.Weight.String,
 		i.BoxID.String, i.BoxLabel.String, i.ShelfID.String, i.ShelfLabel.String, i.AreaID.String, i.AreaLabel.String)
 }
 
@@ -90,7 +90,6 @@ func (s *SQLItem) ToItem() (*items.Item, error) {
 		item.Weight = ""
 	}
 
-	item.QRCode = ifNullString(s.QRCode)
 	item.ShelfID = ifNullUUID(s.ShelfID)
 	item.AreaID = ifNullUUID(s.AreaID)
 
@@ -266,7 +265,7 @@ func (db *DB) insertNewItem(item items.Item) error {
 	sqlStatement := `INSERT INTO item (id, label, description, picture, preview_picture, quantity, weight, qrcode, box_id, shelf_id, area_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	result, err := db.Sql.Exec(sqlStatement, item.BasicInfo.ID.String(),
 		item.BasicInfo.Label, item.BasicInfo.Description, item.BasicInfo.Picture,
-		item.BasicInfo.PreviewPicture, item.Quantity, item.Weight, item.BasicInfo.QRcode,
+		item.BasicInfo.PreviewPicture, item.Quantity, item.Weight, item.BasicInfo.QRCode,
 		item.BoxID.String(), item.ShelfID.String(), item.AreaID.String())
 	if err != nil {
 		return logg.Errorf("Error while executing create new item statement: %w", err)

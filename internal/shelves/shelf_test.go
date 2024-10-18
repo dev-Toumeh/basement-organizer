@@ -21,7 +21,7 @@ var shelf1 *Shelf = &Shelf{
 		Description:    "This is the first dummy shelf",
 		Picture:        "base64PictureData1",
 		PreviewPicture: "base64PreviewPictureData1",
-		QRcode:         "QR1234ABC",
+		QRCode:         "QR1234ABC",
 	},
 	Height: 250.0,
 	Width:  120.0,
@@ -38,7 +38,7 @@ var shelf2 *Shelf = &Shelf{
 		Description:    "This is the second dummy shelf",
 		Picture:        "base64PictureData2",
 		PreviewPicture: "base64PreviewPictureData2",
-		QRcode:         "QR5678XYZ",
+		QRCode:         "QR5678XYZ",
 	},
 	Height: 300.0,
 	Width:  150.0,
@@ -124,7 +124,7 @@ func (db *ShelfDatabaseSuccess) ShelfSearchListRowsPaginated(page int, rows int,
 // 				formData.Set("area_id", shelf1.AreaId.String())
 // 				formData.Set("label", shelf1.Label)
 // 				formData.Set("description", shelf1.Description)
-// 				formData.Set("qrcode", shelf1.QRcode)
+// 				formData.Set("qrcode", shelf1.QRCode)
 // 				formData.Set("height", strconv.FormatFloat(float64(shelf1.Height), 'f', 2, 32))
 // 				formData.Set("width", strconv.FormatFloat(float64(shelf1.Width), 'f', 2, 32))
 // 				formData.Set("depth", strconv.FormatFloat(float64(shelf1.Depth), 'f', 2, 32))

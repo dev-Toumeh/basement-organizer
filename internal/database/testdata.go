@@ -29,7 +29,7 @@ func resetTestBoxes() {
 			Label:       "box 1",
 			Description: "This is the sixth box",
 			Picture:     VALID_BASE64_PNG,
-			QRcode:      "uvwxyzabcdefg",
+			QRCode:      "uvwxyzabcdefg",
 		},
 	}
 	BOX_2 = &items.Box{
@@ -38,7 +38,7 @@ func resetTestBoxes() {
 			Label:       "box 3",
 			Description: "This is the third box",
 			Picture:     VALID_BASE64_PNG,
-			QRcode:      "abababababcd",
+			QRCode:      "abababababcd",
 		},
 	}
 	BOX_3 = &items.Box{
@@ -47,7 +47,7 @@ func resetTestBoxes() {
 			Label:       "box 4",
 			Description: "This is the fourth box",
 			Picture:     VALID_BASE64_PNG,
-			QRcode:      "efghefghefgh",
+			QRCode:      "efghefghefgh",
 		},
 	}
 	BOX_4 = &items.Box{
@@ -56,7 +56,7 @@ func resetTestBoxes() {
 			Label:       "box 5",
 			Description: "This is the fifth box",
 			Picture:     VALID_BASE64_PNG,
-			QRcode:      "ijklmnopqrst",
+			QRCode:      "ijklmnopqrst",
 		},
 	}
 }
@@ -71,7 +71,7 @@ var BOX_1 = &items.Box{
 		Label:       "box 1",
 		Description: "This is the sixth box",
 		Picture:     VALID_BASE64_PNG,
-		QRcode:      "uvwxyzabcdefg",
+		QRCode:      "uvwxyzabcdefg",
 	},
 }
 
@@ -81,7 +81,7 @@ var BOX_2 = &items.Box{
 		Label:       "box 3",
 		Description: "This is the third box",
 		Picture:     VALID_BASE64_PNG,
-		QRcode:      "abababababcd",
+		QRCode:      "abababababcd",
 	},
 }
 
@@ -91,7 +91,7 @@ var BOX_3 = &items.Box{
 		Label:       "box 4",
 		Description: "This is the fourth box",
 		Picture:     VALID_BASE64_PNG,
-		QRcode:      "efghefghefgh",
+		QRCode:      "efghefghefgh",
 	},
 }
 
@@ -101,7 +101,7 @@ var BOX_4 = &items.Box{
 		Label:       "box 5",
 		Description: "This is the fifth box",
 		Picture:     VALID_BASE64_PNG,
-		QRcode:      "ijklmnopqrst",
+		QRCode:      "ijklmnopqrst",
 	},
 }
 
@@ -111,10 +111,10 @@ var ITEM_1 = &items.Item{
 		Label:       "Item 1",
 		Description: "Description for item 1",
 		Picture:     VALID_BASE64_PNG,
+		QRCode:      "QRCode1",
 	},
 	Quantity: 10,
 	Weight:   "5.5",
-	QRCode:   "QRcode1",
 }
 
 var ITEM_2 = &items.Item{
@@ -123,10 +123,10 @@ var ITEM_2 = &items.Item{
 		Label:       "Item 2",
 		Description: "Description for item 2",
 		Picture:     VALID_BASE64_PNG,
+		QRCode:      "QRCode2",
 	},
 	Quantity: 20,
 	Weight:   "10.0",
-	QRCode:   "QRcode2",
 }
 
 var ITEM_3 = &items.Item{
@@ -135,10 +135,10 @@ var ITEM_3 = &items.Item{
 		Label:       "Item 3",
 		Description: "Description for item 3",
 		Picture:     VALID_BASE64_PNG,
+		QRCode:      "QRCode3",
 	},
 	Quantity: 15,
 	Weight:   "7.25",
-	QRCode:   "QRcode3",
 }
 
 func resetTestItems() {
@@ -148,10 +148,10 @@ func resetTestItems() {
 			Label:       "Item 1",
 			Description: "Description for item 1",
 			Picture:     VALID_BASE64_PNG,
+			QRCode:      "QRCode1",
 		},
 		Quantity: 10,
 		Weight:   "5.5",
-		QRCode:   "QRcode1",
 	}
 
 	ITEM_2 = &items.Item{
@@ -160,10 +160,10 @@ func resetTestItems() {
 			Label:       "Item 2",
 			Description: "Description for item 2",
 			Picture:     VALID_BASE64_PNG,
+			QRCode:      "QRCode2",
 		},
 		Quantity: 20,
 		Weight:   "10.0",
-		QRCode:   "QRcode2",
 	}
 
 	ITEM_3 = &items.Item{
@@ -172,10 +172,10 @@ func resetTestItems() {
 			Label:       "Item 3",
 			Description: "Description for item 3",
 			Picture:     VALID_BASE64_PNG,
+			QRCode:      "QRCode3",
 		},
 		Quantity: 15,
 		Weight:   "7.25",
-		QRCode:   "QRcode3",
 	}
 }
 
@@ -191,7 +191,7 @@ var SHELF_1 = &shelves.Shelf{
 		Description:    "A shelf for testing",
 		Picture:        VALID_BASE64_PNG,
 		PreviewPicture: "",
-		QRcode:         "testqrcode",
+		QRCode:         "testqrcode",
 	},
 	Height: 2.0,
 	Width:  1.5,
@@ -207,7 +207,7 @@ var SHELF_2 = &shelves.Shelf{
 		Description:    "A shelf for testing",
 		Picture:        VALID_BASE64_PNG,
 		PreviewPicture: "",
-		QRcode:         "testqrcode",
+		QRCode:         "testqrcode",
 	},
 	Height: 2.0,
 	Width:  1.5,
@@ -223,7 +223,7 @@ var SHELF_3 = &shelves.Shelf{
 		Description:    "A shelf for testing",
 		Picture:        VALID_BASE64_PNG,
 		PreviewPicture: "",
-		QRcode:         "",
+		QRCode:         "",
 	},
 	Height: 3.0,
 	Width:  1.5,
@@ -267,7 +267,7 @@ func resetShelves() {
 			Description:    "A shelf for testing",
 			Picture:        VALID_BASE64_PNG,
 			PreviewPicture: "",
-			QRcode:         "",
+			QRCode:         "",
 		},
 		Height: 2.0,
 		Width:  1.5,
@@ -283,7 +283,7 @@ func resetShelves() {
 			Description:    "A shelf for testing",
 			Picture:        VALID_BASE64_PNG,
 			PreviewPicture: "",
-			QRcode:         "testqrcode",
+			QRCode:         "testqrcode",
 		},
 		Height: 2.0,
 		Width:  1.5,
@@ -299,7 +299,7 @@ func resetShelves() {
 			Description:    "A shelf for testing",
 			Picture:        VALID_BASE64_PNG,
 			PreviewPicture: "",
-			QRcode:         "",
+			QRCode:         "",
 		},
 		Height: 3.0,
 		Width:  1.5,

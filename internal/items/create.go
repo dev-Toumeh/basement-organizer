@@ -26,7 +26,7 @@ type BasicInfo struct {
 	Description    string
 	Picture        string
 	PreviewPicture string
-	QRcode         string
+	QRCode         string
 }
 
 func (b BasicInfo) Map() map[string]any {
@@ -36,7 +36,7 @@ func (b BasicInfo) Map() map[string]any {
 		"Description":    b.Description,
 		"Picture":        b.Picture,
 		"PreviewPicture": b.PreviewPicture,
-		"QRcode":         b.QRcode,
+		"QRCode":         b.QRCode,
 	}
 }
 
@@ -85,15 +85,14 @@ type Item struct {
 	BasicInfo
 	Quantity int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
 	Weight   string    `json:"weight"      validate:"omitempty,numeric"`
-	QRCode   string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
 	BoxID    uuid.UUID `json:"box_id"`
 	ShelfID  uuid.UUID `json:"shelf_id"`
 	AreaID   uuid.UUID `json:"area_id"`
 }
 
 func (i Item) String() string {
-	return fmt.Sprintf("Item[ID=%s, Label=%s, Quantity=%d, Weight=%s, QRcode=%s, BoxID=%s, ShelfID=%s, AreaID=%s]",
-		i.BasicInfo.ID, i.BasicInfo.Label, i.Quantity, i.Weight, i.QRCode, i.BoxID, i.ShelfID, i.AreaID)
+	return fmt.Sprintf("Item[ID=%s, Label=%s, QRCode=%s, Quantity=%d, Weight=%s, BoxID=%s, ShelfID=%s, AreaID=%s]",
+		i.BasicInfo.ID, i.BasicInfo.Label, i.BasicInfo.QRCode, i.Quantity, i.Weight, i.BoxID, i.ShelfID, i.AreaID)
 }
 
 type ItemDatabase interface {
@@ -125,7 +124,9 @@ const (
 	QUANTITY    string = "quantity"
 	WEIGHT      string = "weight"
 	QRCODE      string = "qrcode"
-	BOX_ID      string = "Box_id"
+	BOX_ID      string = "box_id"
+	SHELF_ID    string = "shelf_id"
+	AREA_ID     string = "area_id"
 )
 
 var validate *validator.Validate
@@ -223,11 +224,11 @@ func validateItem(newItem Item, errorMessages *[]string) (Item, error) {
 								"<div>The Weight must be a number.</div>",
 							)
 						}
-					case "QRcode":
+					case "QRCode":
 						if validationErr.Tag() == "alphanumunicode" {
 							*errorMessages = append(
 								*errorMessages,
-								"<div>The QRcode must contain only alphanumeric characters and unicode.</div>",
+								"<div>The QRCode must contain only alphanumeric characters and unicode.</div>",
 							)
 						}
 					default:
@@ -292,11 +293,13 @@ func item(r *http.Request) (Item, error) {
 			Label:       r.PostFormValue(LABEL),
 			Description: r.PostFormValue(DESCRIPTION),
 			Picture:     common.ParsePicture(r),
+			QRCode:      r.PostFormValue(QRCODE),
 		},
 		Quantity: common.ParseQuantity(r.PostFormValue(QUANTITY)),
 		Weight:   r.PostFormValue(WEIGHT),
-		QRCode:   r.PostFormValue(QRCODE),
 		BoxID:    boxId,
+		ShelfID:  uuid.FromStringOrNil(r.PostFormValue(SHELF_ID)),
+		AreaID:   uuid.FromStringOrNil(r.PostFormValue(AREA_ID)),
 	}
 	return newItem, nil
 }

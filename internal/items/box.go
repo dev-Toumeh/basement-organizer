@@ -108,7 +108,7 @@ type BoxC struct {
 	Label       string    `json:"label"       validate:"required,lte=128"`
 	Description string    `json:"description" validate:"omitempty,lte=256"`
 	Picture     string    `json:"picture"     validate:"omitempty,base64"`
-	QRcode      string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	QRCode      string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
 	Items       []Item    `json:"items"`
 	InnerBoxes  []Box     `json:"innerboxes"`
 	OuterBox    Box       `json:"outerbox" `

@@ -89,7 +89,7 @@ func TestCreateShelf(t *testing.T) {
 	assert.Equal(t, shelf.Description, createdShelf.Description)
 	assert.Equal(t, VALID_BASE64_PNG, createdShelf.Picture)
 	assert.NotEqual(t, "", createdShelf.PreviewPicture)
-	assert.Equal(t, shelf.QRcode, createdShelf.QRcode)
+	assert.Equal(t, shelf.QRCode, createdShelf.QRCode)
 	assert.Equal(t, shelf.Height, createdShelf.Height)
 	assert.Equal(t, shelf.Width, createdShelf.Width)
 	assert.Equal(t, shelf.Depth, createdShelf.Depth)
