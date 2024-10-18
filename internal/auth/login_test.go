@@ -12,10 +12,6 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-func init() {
-	// logg.EnableInfoLogger()
-}
-
 // TestAuthDatabase mock implementation
 type TestAuthDatabase struct{}
 

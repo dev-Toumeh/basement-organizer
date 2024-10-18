@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
@@ -8,11 +9,20 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	env.Config().SetTest()
+
+	code := m.Run()
+
+	os.Exit(code)
+}
 
 type handlerInput struct {
 	R *http.Request

@@ -1,11 +1,22 @@
 package items
 
 import (
+	"os"
 	"testing"
 
 	"basement/main/internal/common"
+	"basement/main/internal/env"
+
 	"github.com/gofrs/uuid/v5"
 )
+
+func TestMain(m *testing.M) {
+	env.Config().SetTest()
+
+	code := m.Run()
+
+	os.Exit(code)
+}
 
 func TestCheckIDs(t *testing.T) {
 	t.Run("Valid IDs provided", func(t *testing.T) {

@@ -1,13 +1,22 @@
 package auth
 
 import (
+	"basement/main/internal/env"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateRegisterInput(t *testing.T) {
+func TestMain(m *testing.M) {
+	env.Config().SetTest()
 
+	code := m.Run()
+
+	os.Exit(code)
+}
+
+func TestValidateRegisterInput(t *testing.T) {
 	testCases := []struct {
 		name          string
 		input         InputUser
