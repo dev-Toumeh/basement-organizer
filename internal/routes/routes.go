@@ -17,7 +17,7 @@ import (
 func Handle(route string, handler http.HandlerFunc) {
 	http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
 		msg := ""
-		msg = fmt.Sprintf(`handle "%s" http://%s%s%s`, route, r.URL.Scheme, r.Host, r.URL)
+		msg = fmt.Sprintf(`%s "%s" http://%s%s%s`, r.Method, route, r.URL.Scheme, r.Host, r.URL)
 		colorMsg := fmt.Sprintf("%s%s%s", logg.Yellow, msg, logg.Reset)
 		logg.Debug(colorMsg)
 		handler.ServeHTTP(w, r)
