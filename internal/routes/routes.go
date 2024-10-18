@@ -8,10 +8,21 @@ import (
 	"basement/main/internal/auth"
 	"basement/main/internal/database"
 	"basement/main/internal/items"
+	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/shelves"
 	"basement/main/internal/templates"
 )
+
+func Handle(route string, handler http.HandlerFunc) {
+	http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
+		msg := ""
+		msg = fmt.Sprintf(`handle "%s" http://%s%s%s`, route, r.URL.Scheme, r.Host, r.URL)
+		colorMsg := fmt.Sprintf("%s%s%s", logg.Yellow, msg, logg.Reset)
+		logg.Debug(colorMsg)
+		handler.ServeHTTP(w, r)
+	})
+}
 
 func RegisterRoutes(db *database.DB) {
 	staticRoutes()

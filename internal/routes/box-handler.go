@@ -49,16 +49,6 @@ func registerBoxRoutes(db *database.DB) {
 	Handle("/api/v1/boxes/move", moveBoxes(db))
 }
 
-func Handle(route string, handler http.HandlerFunc) {
-	http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-		msg := ""
-		msg = fmt.Sprintf(`handle "%s" http://%s%s%s`, route, r.URL.Scheme, r.Host, r.URL)
-		colorMsg := fmt.Sprintf("%s%s%s", logg.Yellow, msg, logg.Reset)
-		logg.Debug(colorMsg)
-		handler.ServeHTTP(w, r)
-	})
-}
-
 // boxHandler handles read, create, update and delete for single box.
 func boxHandler(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
