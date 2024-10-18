@@ -4,9 +4,7 @@ import (
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/shelves"
-	"bytes"
 	"database/sql"
-	"encoding/base64"
 	"fmt"
 
 	"github.com/gofrs/uuid/v5"
@@ -19,31 +17,24 @@ type SQLShelf struct {
 	Depth  sql.NullFloat64
 	Rows   sql.NullInt64
 	Cols   sql.NullInt64
+	AreaID sql.NullString
 }
 
-// convert struct from type SQLShelf to normal shelf struct
-func (s SQLShelf) toShelf() (shelves.Shelf, error) {
-	id, err := uuid.FromString(s.SQLBasicInfo.ID.String)
+func (s SQLShelf) ToShelf() (*shelves.Shelf, error) {
+	info, err := s.SQLBasicInfo.ToBasicInfo()
 	if err != nil {
-		return shelves.Shelf{}, logg.WrapErr(err)
+		return nil, logg.WrapErr(err)
 	}
 
-	return shelves.Shelf{
-		BasicInfo: items.BasicInfo{
-			ID:             id,
-			Label:          ifNullString(s.Label),
-			Description:    ifNullString(s.Description),
-			Picture:        ifNullString(s.Picture),
-			PreviewPicture: ifNullString(s.PreviewPicture),
-			QRCode:         ifNullString(s.QRCode),
-		},
-		Height: float32(ifNullFloat64(s.Height)),
-		Width:  float32(ifNullFloat64(s.Width)),
-		Depth:  float32(ifNullFloat64(s.Depth)),
-		Rows:   int(ifNullInt(s.Rows)),
-		Cols:   int(ifNullInt(s.Cols)),
-		Items:  nil,
-		Boxes:  nil,
+	return &shelves.Shelf{
+		BasicInfo: info,
+		Height:    float32(ifNullFloat64(s.Height)),
+		Width:     float32(ifNullFloat64(s.Width)),
+		Depth:     float32(ifNullFloat64(s.Depth)),
+		Rows:      int(ifNullInt(s.Rows)),
+		Cols:      int(ifNullInt(s.Cols)),
+		Items:     nil,
+		Boxes:     nil,
 	}, nil
 }
 
@@ -96,7 +87,7 @@ func (db *DB) createNewShelf(nID uuid.UUID) error {
 		depth,
 		rows,
 		cols) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-	logg.Debugf("SQL: %s", stmt)
+	// logg.Debugf("SQL: %s", stmt)
 	result, err := db.Sql.Exec(stmt,
 		&id,
 		&label,
@@ -125,59 +116,19 @@ func (db *DB) createNewShelf(nID uuid.UUID) error {
 	return nil
 }
 
-// type ShelfDB interface {
-// 	CreateShelf(shelf *shelves.Shelf) error
-// 	Shelf(id uuid.UUID) (*shelves.Shelf, error)
-// 	UpdateShelf(shelf *shelves.Shelf) error
-// 	DeleteShelf(id uuid.UUID) error
-// }
-
 // CreateShelf creates a shelf entry in database from the provided shelf.
 func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
-	var (
-		picture64        string
-		previewPicture64 string
-		err              error
-	)
-	// picture := bytes.Buffer{}
-	// previewPicture := bytes.Buffer{}
-
-	// fmt.Println(shelf.Picture)
-	if shelf.Picture != "" {
-		// picture64 = ByteArrayToBase64ByteArray(shelf.Picture)
-		// picture, err = base64.StdEncoding.DecodeString(shelf.Picture)
-		// enc := base64.NewEncoder(base64.StdEncoding, &picture64)
-		// enc.Write(shelf.Picture)
-		// enc.Close()
-		// base64.StdEncoding.Encode(picture.Bytes(), shelf.Picture)
-		// picture64 = shelf.Picture
-		_, err = base64.StdEncoding.DecodeString(shelf.Picture)
-		if err != nil {
-			return logg.Errorf("CreateShelf: invalid base64 in Picture %w", err)
-		}
-		picture64 = shelf.Picture
+	if shelf.ID == uuid.Nil {
+		id := uuid.Must(uuid.NewV4())
+		logg.Infof(`CreateShelf: Provided shelf "%s" had invalid uuid "%s". Creating a new one: "%s"`, shelf.Label, shelf.ID.String(), id.String())
+		shelf.ID = id
 	}
 
-	if shelf.PreviewPicture != "" {
-		// previewPicture64 = ByteArrayToBase64ByteArray(shelf.PreviewPicture)
-		// previewPicture = shelf.PreviewPicture
-		// enc := base64.NewEncoder(base64.StdEncoding, &previewPicture64)
-		// enc.Write(shelf.PreviewPicture)
-		// enc.Close()
-		// base64.StdEncoding.Encode(previewPicture, shelf.PreviewPicture)
-		_, err = base64.StdEncoding.DecodeString(shelf.PreviewPicture)
-		if err != nil {
-			return logg.Errorf("CreateShelf: invalid base64 in PreviewPicture %w", err)
-		}
-		previewPicture64 = shelf.PreviewPicture
-
-	}
 	if shelf.Items != nil || shelf.Boxes != nil {
-		return logg.NewError(fmt.Sprintf(`shelf "%s" has %d items and %d boxes, they must be empty while creating a new shelf`,
-			shelf.ID, len(shelf.Items), len(shelf.Boxes)))
+		return logg.NewError(fmt.Sprintf(`shelf "%s" has %d items and %d boxes, they must be empty while creating a new shelf`, shelf.ID, len(shelf.Items), len(shelf.Boxes)))
 	}
 
-	err = updatePicture(&shelf.Picture, &shelf.PreviewPicture)
+	err := updatePicture(&shelf.Picture, &shelf.PreviewPicture)
 	if err != nil {
 		logg.Infof("Can't update picture %v", err.Error())
 	}
@@ -202,8 +153,8 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 		shelf.ID.String(),
 		shelf.Label,
 		shelf.Description,
-		picture64,
-		previewPicture64,
+		shelf.Picture,
+		shelf.PreviewPicture,
 		shelf.QRCode,
 		shelf.Height,
 		shelf.Width,
@@ -239,49 +190,7 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 		return nil, logg.WrapErr(err)
 	}
 
-	// var pictureBase64, previewPictureBase64 string
-	// if len(picture) > 0 {
-	// 	pictureBase64 = base64.StdEncoding.EncodeToString(picture)
-	// }
-	// if len(previewPicture) > 0 {
-	// 	previewPictureBase64 = base64.StdEncoding.EncodeToString(previewPicture)
-	// }
-
-	// shelf := &shelves.Shelf{
-	// 	BasicInfo: items.BasicInfo{
-	// 		ID:             id,
-	// 		Label:          label,
-	// 		Description:    description.String,
-	// 		Picture:        picture.String,
-	// 		PreviewPicture: previewPicture.String,
-	// 		QRCode:         qrcode.String,
-	// 	},
-	// 	Height: float32(height.Float64),
-	// 	Width:  float32(width.Float64),
-	// 	Depth:  float32(depth.Float64),
-	// 	Rows:   int(rows.Int64),
-	// 	Cols:   int(cols.Int64),
-	// 	Items:  nil,
-	// 	Boxes:  nil,
-	// }
-
-	// f, err := os.ReadFile("./internal/static/pen.png")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// shelf2 := &shelves.Shelf{
-	// Id:             uuid.FromStringOrNil("1cad0cb3-3307-43cc-b005-3f9f29eec8b4"),
-	// shelf.PreviewPicture = f
-	// base64.StdEncoding.Decode(shelf.PreviewPicture, shelf.PreviewPicture)
-	// shelf.PreviewPicture = base64.StdEncoding.EncodeToString(f)
-	// PreviewPicture: f,
-	// }
-	// _, err = base64.StdEncoding.Decode(shelf.PreviewPicture, previewPicture)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	shelf, err := sqlShelf.toShelf()
+	shelf, err := sqlShelf.ToShelf()
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
@@ -295,41 +204,13 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 		return nil, logg.WrapErr(err)
 	}
 	shelf.Boxes = boxes
-	return &shelf, nil
-}
-
-func ByteArrayToBase64ByteArray(src []byte) []byte {
-	buf := bytes.Buffer{}
-	enc := base64.NewEncoder(base64.StdEncoding, &buf)
-	enc.Write(src)
-	enc.Close()
-	return buf.Bytes()
+	return shelf, nil
 }
 
 func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
-	var (
-		picture64        string
-		previewPicture64 string
-		err              error
-	)
-
-	if shelf.Picture != "" {
-		// picture64 = ByteArrayToBase64ByteArray(shelf.Picture)
-		// picture = shelf.Picture
-		_, err = base64.StdEncoding.DecodeString(shelf.Picture)
-		if err != nil {
-			return logg.Errorf("UpdateShelf: invalid base64 in Picture %w", err)
-		}
-		picture64 = shelf.Picture
-	}
-
-	if shelf.PreviewPicture != "" {
-		// previewPicture64 = ByteArrayToBase64ByteArray(shelf.PreviewPicture)
-		_, err = base64.StdEncoding.DecodeString(shelf.PreviewPicture)
-		if err != nil {
-			return logg.Errorf("UpdateShelf: invalid base64 in PreviewPicture %w", err)
-		}
-		previewPicture64 = shelf.PreviewPicture
+	err := updatePicture(&shelf.Picture, &shelf.PreviewPicture)
+	if err != nil {
+		logg.Errf("Can't update picture %v", err.Error())
 	}
 
 	stmt := `
@@ -349,8 +230,8 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
 	_, err = db.Sql.Exec(stmt,
 		shelf.Label,
 		shelf.Description,
-		picture64,
-		previewPicture64,
+		shelf.Picture,
+		shelf.PreviewPicture,
 		shelf.QRCode,
 		shelf.Height,
 		shelf.Width,
