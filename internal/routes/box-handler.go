@@ -197,7 +197,7 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 		}
 
 		// box-list-row to fill box-list template
-		logg.Infof("has query: %v", urlQuery.Has("query"))
+		logg.Debugf("has query: %v", urlQuery.Has("query"))
 		var boxes []items.ListRow
 		err = nil
 		usedSearch := false
