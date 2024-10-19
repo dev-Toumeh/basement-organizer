@@ -13,6 +13,7 @@ import (
 	"maps"
 	"math"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -443,29 +444,13 @@ func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	errMsgForUser := "Can't delete boxes"
 	r.ParseForm()
-	toDelete := make([]uuid.UUID, 0)
-	for k, v := range r.Form {
-		logg.Debugf("k: %v, v:%v", k, v)
-		if strings.Contains(k, "delete:") {
-			ids := strings.Split(k, "delete:")
-			if len(ids) != 2 {
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprint(w, errMsgForUser)
-				logg.Debugf("Wrong delete key value pair: '%v'\n\t%s", k, errMsgForUser)
-				return
-			}
-			id, err := uuid.FromString(ids[1])
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprint(w, errMsgForUser)
-				logg.Errorf("%s: Malformed uuid \"%s\". %w", errMsgForUser, k, err)
-				return
-			}
-			toDelete = append(toDelete, id)
-		}
+	toDelete, err := parseIDsFromFormWithKey(r.Form, "delete")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, errMsgForUser)
+		logg.Err(err)
 	}
 	deleteErrorIds := []string{}
-	var err error
 	errOccurred := false
 	for _, deleteId := range toDelete {
 		err = nil
@@ -494,6 +479,34 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	}
 	fmt.Fprint(w, nil)
 	w.WriteHeader(http.StatusOK)
+}
+
+// parseIDsFromFormWithKey parses r.Form by searching for all keys that start with `key` name and returns a list of valid uuid.UUIDs
+//
+// `r.ParseForm()` must be called before using this function!
+//
+// Eample:
+//
+//	// search for all ID values that start with "delete:" key
+//	// like "delete:f47ac10b-58cc-0372-8567-0e02b2c3d479"
+//	toDeleteIDs := parseIDsFromFormWithKey(r.Form, "delete")
+func parseIDsFromFormWithKey(form url.Values, key string) ([]uuid.UUID, error) {
+	ids := make([]uuid.UUID, 0)
+	for k, v := range form {
+		logg.Debugf("k: %v, v:%v", k, v)
+		if strings.Contains(k, fmt.Sprintf("%s:", key)) {
+			idStr := strings.Split(k, fmt.Sprintf("%s:", key))
+			if len(idStr) != 2 {
+				return nil, logg.NewError(fmt.Sprintf("Wrong delete key value pair: '%v'", k))
+			}
+			id, err := uuid.FromString(idStr[1])
+			if err != nil {
+				return nil, logg.WrapErr(err)
+			}
+			ids = append(ids, id)
+		}
+	}
+	return ids, nil
 }
 
 // deleteBox deletes a single box.
