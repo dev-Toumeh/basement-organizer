@@ -262,18 +262,20 @@ func (db *DB) DeleteShelf(id uuid.UUID) error {
 	return nil
 }
 
-// ShelfListRowsPaginated returns always a slice with the number of rows specified.
-// If rows=5 with 3 results, the last 2 rows will be nil.
-// rows and page must be above 1.
-func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, error) {
-	shelfRows := make([]*items.ListRow, 0)
+// ShelfListRowsPaginated always returns a slice with the number of rows specified.
+//
+// If rows=5 returns 3 results with `found=2` the last 2 rows of `shelfRows` will be nil pointers.
+//
+// `rows` and `page` must be 1 or above.
+func (db *DB) ShelfListRowsPaginated(page int, rows int) (shelfRows []*items.ListRow, foundResults int, err error) {
+	shelfRows = make([]*items.ListRow, 0)
 
 	if page < 1 {
-		return shelfRows, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
+		return shelfRows, foundResults, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
 	}
 
 	if rows < 1 {
-		return shelfRows, logg.NewError(fmt.Sprintf("invalid rows '%d', needs at least 1 row", rows))
+		return shelfRows, foundResults, logg.NewError(fmt.Sprintf("invalid rows '%d', needs at least 1 row", rows))
 	}
 
 	shelfRows = make([]*items.ListRow, rows)
@@ -289,7 +291,7 @@ func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, erro
 		LIMIT ? OFFSET ?;`
 	results, err := db.Sql.Query(queryNoSearch, limit, offset)
 	if err != nil {
-		return shelfRows, logg.WrapErr(err)
+		return shelfRows, foundResults, logg.WrapErr(err)
 	}
 
 	i := 0
@@ -297,19 +299,20 @@ func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, erro
 		listRow := SQLListRow{}
 		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
 		if err != nil {
-			return shelfRows, logg.WrapErr(err)
+			return shelfRows, foundResults, logg.WrapErr(err)
 		}
 		shelfRows[i], err = listRow.ToListRow()
 		if err != nil {
-			return shelfRows, logg.WrapErr(err)
+			return shelfRows, foundResults, logg.WrapErr(err)
 		}
 		i += 1
 	}
 	if results.Err() != nil {
-		return shelfRows, logg.WrapErr(err)
+		return shelfRows, foundResults, logg.WrapErr(err)
 	}
+	foundResults = i
 
-	return shelfRows, nil
+	return shelfRows, foundResults, nil
 }
 
 // MoveShelfToArea moves shelf to an area.

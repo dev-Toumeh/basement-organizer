@@ -225,10 +225,14 @@ func (db *DB) NumOfItemRecords(searchString string) (int, error) {
 	return count, nil
 }
 
+// ShelfSearchListRowsPaginated always returns a slice with the number of rows specified.
+//
+// If rows=5 returns 3 results with `found=2` the last 2 rows of `shelfRows` will be nil pointers.
+//
+// `rows` and `page` must be 1 or above.
+//
+// Empty `search == ""` works the same as ShelfListRowsPaginated.
 func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (shelfRows []*items.ListRow, found int, err error) {
-	// shelfRows = make([]*items.ListRow, 0)
-	// found = 0
-	// err = nil
 	if page < 1 {
 		return shelfRows, found, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
 	}
@@ -237,17 +241,15 @@ func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (s
 		return shelfRows, found, logg.NewError(fmt.Sprintf("invalid rows '%d', needs at least 1 row", rows))
 	}
 
+	if search == "" {
+		return db.ShelfListRowsPaginated(page, rows)
+	}
+
 	shelfRows = make([]*items.ListRow, rows)
 
 	limit := rows
 	offset := (page - 1) * rows
 
-	// queryNoSearch := `
-	// 	SELECT
-	// 		id, label, area_id, area_label, preview_picture
-	// 	FROM shelf_fts
-	// 		ORDER BY label ASC
-	// 	LIMIT ? OFFSET ?;`
 	searchTrimmed := strings.TrimSpace(search)
 	re := regexp.MustCompile(`\s+`)
 	searchModified := re.ReplaceAllString(searchTrimmed, "*")
@@ -258,8 +260,6 @@ func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (s
 		WHERE label MATCH '%s*'
 		LIMIT ? OFFSET ?;`, searchModified)
 
-	// ORDER BY label ASC
-	// results, err := db.Sql.Query(querySearch, fmt.Sprintf("'%s'", search), limit, offset)
 	results, err := db.Sql.Query(querySearch, limit, offset)
 	if err != nil {
 		return shelfRows, found, logg.WrapErr(err)

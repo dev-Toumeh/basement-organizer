@@ -173,15 +173,17 @@ func TestShelfListRowsPaginated(t *testing.T) {
 	id1, _ := dbTest.CreateNewShelf()
 	id2, _ := dbTest.CreateNewShelf()
 	id3, _ := dbTest.CreateNewShelf()
-	shelves, err := dbTest.ShelfListRowsPaginated(1, 2)
+	shelves, found, err := dbTest.ShelfListRowsPaginated(1, 2)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(shelves), 2)
+	assert.Equal(t, found, 2)
 	assert.Equal(t, id1, shelves[0].ID)
 	assert.Equal(t, id2, shelves[1].ID)
 
-	shelves, err = dbTest.ShelfListRowsPaginated(2, 2)
+	shelves, found, err = dbTest.ShelfListRowsPaginated(2, 2)
 	assert.Equal(t, id3, shelves[0].ID)
 	assert.Equal(t, len(shelves), 2)
+	assert.Equal(t, found, 1)
 	assert.Equal(t, nil, shelves[1])
 }
 
@@ -234,6 +236,8 @@ func TestShelfSearchListRowsPaginated(t *testing.T) {
 	assert.Equal(t, found, 1)
 	assert.Equal(t, shelves[0].ID, SHELF_3.ID)
 
+	shelves, found, err = dbTest.ShelfSearchListRowsPaginated(1, 10, "")
+	assert.Equal(t, err, nil)
 }
 
 func TestMoveItemToShelf(t *testing.T) {
