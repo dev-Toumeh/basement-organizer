@@ -265,6 +265,7 @@ func TestMoveBoxToBox(t *testing.T) {
 	resetTestItems()
 
 	innerBox := BOX_1
+	innerBox2 := BOX_3
 	outerBox := BOX_2
 
 	// Insert test boxes into the database using range
@@ -280,6 +281,8 @@ func TestMoveBoxToBox(t *testing.T) {
 	if err != nil {
 		t.Fatalf("MoveBox function returned an error: %v", err)
 	}
+	err = dbTest.MoveBoxToBox(innerBox2.ID, outerBox.ID)
+	assert.Equal(t, err, nil)
 
 	// inner box
 	updatedInnerBox, err := dbTest.BoxById(innerBox.ID)
@@ -289,13 +292,20 @@ func TestMoveBoxToBox(t *testing.T) {
 	assert.Equal(t, outerBox.ID, updatedInnerBox.OuterBoxID)
 	assert.Equal(t, outerBox.ID, updatedInnerBox.OuterBox.ID)
 	assert.Equal(t, outerBox.Label, updatedInnerBox.OuterBox.Label)
+	updatedInnerBox2, err := dbTest.BoxById(innerBox.ID)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, outerBox.ID, updatedInnerBox2.OuterBoxID)
+	assert.Equal(t, outerBox.ID, updatedInnerBox2.OuterBox.ID)
+	assert.Equal(t, outerBox.Label, updatedInnerBox2.OuterBox.Label)
 
 	// outer box
 	updatedOuterBox, err := dbTest.BoxById(outerBox.ID)
 	assert.Equal(t, err, nil)
-	assert.Equal(t, len(updatedOuterBox.InnerBoxes), 1)
+	assert.Equal(t, len(updatedOuterBox.InnerBoxes), 2)
 	assert.Equal(t, updatedOuterBox.InnerBoxes[0].ID, innerBox.ID)
 	assert.Equal(t, updatedOuterBox.InnerBoxes[0].Label, innerBox.Label)
+	assert.Equal(t, updatedOuterBox.InnerBoxes[1].ID, innerBox2.ID)
+	assert.Equal(t, updatedOuterBox.InnerBoxes[1].Label, innerBox2.Label)
 
 	// 2. Test move to non-existent box (should return an error)
 	nonExistentBoxId := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174003"))
