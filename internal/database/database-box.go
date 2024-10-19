@@ -181,6 +181,7 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 		return nil, logg.WrapErr(err)
 	}
 	box.InnerBoxes = boxes
+	logg.Debug(boxes)
 
 	if box.OuterBoxID != uuid.Nil {
 		outerbox, err := db.BoxListRowByID(box.OuterBoxID)

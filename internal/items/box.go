@@ -54,7 +54,7 @@ func (tmpl BoxTemplateData) Map() map[string]any {
 }
 
 type BoxListTemplateData struct {
-	Boxes []*Box
+	Boxes []ListRow
 }
 
 func (tmpl BoxListTemplateData) Map() map[string]any {

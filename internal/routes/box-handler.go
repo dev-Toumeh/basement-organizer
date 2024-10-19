@@ -47,7 +47,8 @@ func registerBoxRoutes(db *database.DB) {
 	Handle("/boxes-list", boxesHandler(db))
 	// Boxes api
 	Handle("/api/v1/boxes", boxesHandler(db))
-	Handle("/api/v1/boxes/move", moveBoxes(db))
+	Handle("/api/v1/boxes/moveto/box/{id}", moveBoxes(db))
+	Handle("/get-boxes-move-page", getMoveBoxesPage(db))
 }
 
 // boxHandler handles read, create, update and delete for single box.
@@ -100,6 +101,51 @@ func boxHandler(db BoxDatabase) http.HandlerFunc {
 }
 
 // boxesHandler handles read and delete for multiple boxes.
+func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Uses POST so client can send long list
+		// of IDs of boxes inside PostForm body
+		if r.Method != http.MethodPost {
+			w.Header().Add("Allow", http.MethodPost)
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			fmt.Fprint(w, "Method:'", r.Method, "' not allowed")
+			return
+		}
+
+		boxes, err := db.BoxFuzzyFinder("", 100, 1)
+		if err != nil {
+			server.WriteInternalServerError("cant query boxes", logg.Errorf("%w", err), w, r)
+			return
+		}
+
+		a := items.BoxListTemplateData{Boxes: boxes}
+		d := a.Map()
+		d["Move"] = true
+		for i := range d["Boxes"].([]map[string]any) {
+			d["Boxes"].([]map[string]any)[i]["Move"] = true
+
+		}
+
+		// parse selected boxes
+		r.ParseForm()
+		toMove, err := parseIDsFromFormWithKey(r.Form, "move")
+		if err != nil {
+			server.WriteInternalServerError(fmt.Sprintf("can't move boxes %v", toMove), err, w, r)
+			return
+		}
+		moveData := make([]map[string]string, len(toMove))
+		for i, id := range toMove {
+			moveData[i] = map[string]string{
+				"Key":   "id-to-be-moved",
+				"Value": id.String(),
+			}
+		}
+		d["Data"] = moveData
+		server.MustRender(w, r, templates.TEMPLATE_BOX_LIST, d)
+	}
+}
+
+// boxesHandler handles read and delete for multiple boxes.
 func boxesHandler(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -115,16 +161,20 @@ func boxesHandler(db BoxDatabase) http.HandlerFunc {
 				return
 			}
 
-			boxes, err := db.BoxFuzzyFinder("", 2, 1)
+			boxes, err := db.BoxFuzzyFinder("", 100, 1)
 			if err != nil {
 				server.WriteNotFoundError("Can't find boxes", err, w, r)
 				return
 			}
 			if server.WantsTemplateData(r) {
-				err = renderBoxesListTemplate(w, r, db, boxes, "")
-				if err != nil {
-					server.WriteInternalServerError("Can't render box list", err, w, r)
+				a := items.BoxListTemplateData{Boxes: boxes}
+				d := a.Map()
+				d["Move"] = true
+				for i := range d["Boxes"].([]map[string]any) {
+					d["Boxes"].([]map[string]any)[i]["Move"] = true
+
 				}
+				server.MustRender(w, r, templates.TEMPLATE_BOX_LIST, d)
 			} else {
 				server.WriteJSON(w, boxes)
 			}
@@ -183,7 +233,7 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 		// @TODO: Implement move page
 		move := false
 		urlQuery := r.URL.Query()
-		logg.Debugf("query values: %v", urlQuery)
+		// logg.Debugf("query values: %v", urlQuery)
 
 		pageNr, err := strconv.Atoi(r.FormValue("page"))
 		if err != nil || pageNr < 1 {
@@ -492,8 +542,8 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 //	toDeleteIDs := parseIDsFromFormWithKey(r.Form, "delete")
 func parseIDsFromFormWithKey(form url.Values, key string) ([]uuid.UUID, error) {
 	ids := make([]uuid.UUID, 0)
-	for k, v := range form {
-		logg.Debugf("k: %v, v:%v", k, v)
+	for k := range form {
+		// logg.Debugf("k: %v, v:%v", k, v)
 		if strings.Contains(k, fmt.Sprintf("%s:", key)) {
 			idStr := strings.Split(k, fmt.Sprintf("%s:", key))
 			if len(idStr) != 2 {
@@ -535,7 +585,8 @@ func boxPageMove(db BoxDatabase) http.HandlerFunc {
 // boxesPageMove shows the page where client can choose where to move the selected boxes from the boxes page.
 func boxesPageMove(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		server.WriteNotImplementedWarning("Move multiple boxes page", w, r)
+		server.MustRender(w, r, "move-to", nil)
+		// server.WriteNotImplementedWarning("Move multiple boxes page", w, r)
 	}
 }
 
@@ -549,7 +600,41 @@ func moveBox(db BoxDatabase) http.HandlerFunc {
 // @TODO: Implement move boxes.
 func moveBoxes(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		server.WriteNotImplementedWarning("Move multiple boxes", w, r)
+		r.ParseForm()
+		moveToBoxID := server.ValidID(w, r, "can't move boxes")
+		if moveToBoxID == uuid.Nil {
+			return
+		}
+
+		// v := r.PostFormValue("id-to-be-moved")
+		// v := r.PostForm.Get("id-to-be-moved")
+		parseIDs := r.PostForm["id-to-be-moved"]
+		ids := make([]uuid.UUID, len(parseIDs))
+
+		logg.Debug(len(parseIDs))
+		errOccured := false
+		var lastError error
+		errors := make([]error, len(parseIDs))
+		for i, v := range parseIDs {
+			logg.Debug(v)
+			id := uuid.FromStringOrNil(v)
+			ids[i] = id
+			err := db.MoveBoxToBox(moveToBoxID, id)
+			errors[i] = err
+			if err != nil {
+				errOccured = true
+				lastError = err
+			}
+		}
+
+		if errOccured {
+			server.WriteInternalServerError("moving boxes error", lastError, w, r)
+			return
+		} else {
+			msg := fmt.Sprintf("moved %d boxes to %s", len(parseIDs), moveToBoxID.String())
+			server.TriggerSuccessNotification(w, msg)
+			return
+		}
 	}
 }
 

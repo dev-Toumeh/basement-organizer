@@ -31,7 +31,13 @@
     <td style="text-align: center;"><input type="checkbox" name="delete:{{.ID}}"></td>
     {{ else }}
     <td style="text-align: center;">
-        <button type="">move here</button>
+        <!--hidden inputs with "name=id-to-be-moved" are generated in box-list template
+            inside div<id="move-data-container"> to track IDs that were selected to be moved -->
+        <button hx-post="/api/v1/boxes/moveto/box/{{.ID}}"
+            hx-include="#move-data-container"
+            hx-push-url="false"
+            hx-swap="none"
+        >move here</button>
     </td>
     {{ end }}
 </tr>
