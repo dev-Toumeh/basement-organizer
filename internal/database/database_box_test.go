@@ -281,11 +281,21 @@ func TestMoveBoxToBox(t *testing.T) {
 		t.Fatalf("MoveBox function returned an error: %v", err)
 	}
 
+	// inner box
 	updatedInnerBox, err := dbTest.BoxById(innerBox.ID)
 	if err != nil {
 		t.Fatalf("Failed to retrieve updated inner box: %v", err)
 	}
 	assert.Equal(t, outerBox.ID, updatedInnerBox.OuterBoxID)
+	assert.Equal(t, outerBox.ID, updatedInnerBox.OuterBox.ID)
+	assert.Equal(t, outerBox.Label, updatedInnerBox.OuterBox.Label)
+
+	// outer box
+	updatedOuterBox, err := dbTest.BoxById(outerBox.ID)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(updatedOuterBox.InnerBoxes), 1)
+	assert.Equal(t, updatedOuterBox.InnerBoxes[0].ID, innerBox.ID)
+	assert.Equal(t, updatedOuterBox.InnerBoxes[0].Label, innerBox.Label)
 
 	// 2. Test move to non-existent box (should return an error)
 	nonExistentBoxId := uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174003"))

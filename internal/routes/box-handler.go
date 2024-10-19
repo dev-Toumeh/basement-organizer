@@ -427,20 +427,18 @@ func boxDetailsPage(db *database.DB) http.HandlerFunc {
 		data.Authenticated = authenticated
 		data.User = user
 		data.NotFound = notFound
-		nd := data.Map()
-		maps.Copy(nd, map[string]any{"Boxes": &box.InnerBoxes})
+
 		searchInput := items.NewSearchInputTemplate()
 		searchInput.SearchInputLabel = "Search boxes"
 		searchInput.SearchInputHxTarget = "#box-list"
 		searchInput.SearchInputHxPost = "/boxes"
-		maps.Copy(nd, searchInput.Map())
-		itemsMap := make([]map[string]any, len(box.Items))
-		for i, v := range box.Items {
-			itemsMap[i] = v.Map()
-		}
-		nd["ListRows"] = itemsMap
 
-		server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, nd)
+		dataForTemplate := data.Map()
+		maps.Copy(dataForTemplate, searchInput.Map())
+
+		dataForTemplate["ListRows"] = templates.SliceToSliceMaps(box.Items)
+
+		server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, dataForTemplate)
 	}
 }
 

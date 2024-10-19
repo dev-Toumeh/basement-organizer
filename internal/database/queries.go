@@ -134,6 +134,8 @@ const (
         UPDATE box_fts 
         SET 
 			label = new.label, 
+			box_id = new.box_id,
+			box_label = (SELECT label FROM box WHERE box.id = new.box_id),
 			shelf_id = new.shelf_id, 
 			shelf_label = (SELECT label FROM shelf WHERE shelf.id = new.shelf_id),
 			area_id = new.area_id, 
