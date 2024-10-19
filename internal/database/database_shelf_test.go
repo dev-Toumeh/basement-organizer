@@ -38,20 +38,13 @@ func TestCreateShelf(t *testing.T) {
 	resetShelves()
 
 	var err error
-	// should create new ID
-	shelf := SHELF_1
-	shelf.ID = uuid.Nil
-	err = dbTest.CreateShelf(shelf)
-	createdShelf, err := dbTest.Shelf(shelf.ID)
-	assert.Equal(t, err, nil)
-	assert.NotEqual(t, uuid.Nil, createdShelf.ID)
 
 	// should keep same ID
 	EmptyTestDatabase()
 	resetShelves()
-	shelf = SHELF_1
+	shelf := SHELF_1
 	err = dbTest.CreateShelf(shelf)
-	createdShelf, err = dbTest.Shelf(shelf.ID)
+	createdShelf, err := dbTest.Shelf(shelf.ID)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, shelf.ID, createdShelf.ID)
 
@@ -80,7 +73,6 @@ func TestCreateShelf(t *testing.T) {
 
 	shelf.Items = nil
 	shelf.Boxes = nil
-	shelf.ID = uuid.Nil // should create new id
 	err = dbTest.CreateShelf(shelf)
 	createdShelf, err = dbTest.Shelf(shelf.ID)
 	assert.Equal(t, err, nil)
@@ -281,3 +273,12 @@ func TestMoveItemToShelf(t *testing.T) {
 	// logg.Err(err)
 	assert.NotEqual(t, err, nil)
 }
+
+// ID is always checked for `uuid.Nil` in controller, this will never happen.
+// func TestCreateShelfWithUUIDNil(t *testing.T) {
+// 	shelf := SHELF_1
+// 	shelf.ID = uuid.Nil
+// 	err := dbTest.CreateShelf(shelf)
+// 	_, err = dbTest.Shelf(shelf.ID)
+// 	assert.NotEqual(t, err, nil)
+// }
