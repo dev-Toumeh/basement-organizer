@@ -617,7 +617,7 @@ func moveBoxes(db BoxDatabase) http.HandlerFunc {
 			logg.Debug(v)
 			id := uuid.FromStringOrNil(v)
 			ids[i] = id
-			err := db.MoveBoxToBox(moveToBoxID, id)
+			err := db.MoveBoxToBox(id, moveToBoxID)
 			errors[i] = err
 			if err != nil {
 				errOccured = true
