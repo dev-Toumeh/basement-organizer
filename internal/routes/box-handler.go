@@ -595,44 +595,33 @@ func moveBox(db BoxDatabase) http.HandlerFunc {
 	}
 }
 
-// @TODO: Implement move boxes.
 func moveBoxes(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
-		moveToBoxID := server.ValidID(w, r, "can't move boxes")
+		moveToBoxID := server.ValidID(w, r, "can't move boxes invalid id")
 		if moveToBoxID == uuid.Nil {
 			return
 		}
 
-		// v := r.PostFormValue("id-to-be-moved")
-		// v := r.PostForm.Get("id-to-be-moved")
 		parseIDs := r.PostForm["id-to-be-moved"]
 		ids := make([]uuid.UUID, len(parseIDs))
 
 		logg.Debug(len(parseIDs))
-		errOccured := false
-		var lastError error
-		errors := make([]error, len(parseIDs))
+
+		notifications := server.Notifications{}
 		for i, v := range parseIDs {
 			logg.Debug(v)
 			id := uuid.FromStringOrNil(v)
 			ids[i] = id
 			err := db.MoveBoxToBox(id, moveToBoxID)
-			errors[i] = err
 			if err != nil {
-				errOccured = true
-				lastError = err
+				notifications.AddError(fmt.Sprintf(`can't move "%s" to "%s"`, ids[i].String(), moveToBoxID.String()))
+				logg.Err(err)
+			} else {
+				notifications.AddSuccess(fmt.Sprintf(`moved "%s" to "%s"`, ids[i].String(), moveToBoxID.String()))
 			}
 		}
-
-		if errOccured {
-			server.WriteInternalServerError("moving boxes error", lastError, w, r)
-			return
-		} else {
-			msg := fmt.Sprintf("moved %d boxes to %s", len(parseIDs), moveToBoxID.String())
-			server.TriggerSuccessNotification(w, msg)
-			return
-		}
+		server.TriggerNotifications(w, notifications)
 	}
 }
 
