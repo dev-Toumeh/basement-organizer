@@ -18,7 +18,9 @@
           hx-push-url="true">
           Create Shelf
   </button>
-        
+    {{ if .Shelves }}
+      {{ template "shelf-list" . }}
+    {{ end }}
 {{ end }}
 
 {{ define "shelves-js" }}

@@ -1,24 +1,11 @@
 {{ define "shelf-list-row" }}
-{{ $empty := false }}
-{{ if not . }}
-    {{ $empty = true }}
-{{ end }}
 
-{{ if $empty }}
 <tr id="box-list-row-{{.ID}}">
-    <td colspan="7" style="text-align:center">
-        <span class="empty">empty<img class="preview" style="opacity:0"></span>
-    </td>  
-</tr>
-{{ else }}
-<tr id="box-list-row-{{.ID}}">
-    <td hx-get="/boxes/{{.ID}}"
+    <td hx-get="/shelves/update?id={{.ID}}"
         hx-push-url="true"
         hx-target="body"
         class="clickable"
     >{{.Label}}</td>
-    <td>{{.BoxLabel}}</td> 
-    <td>{{.ShelfLabel}}</td>
     <td>{{.AreaLabel}}</td>
     <td style="text-align: center;">
         <img class="preview" 
@@ -35,6 +22,5 @@
     </td>
     {{ end }}
 </tr>
-{{ end }}
 
 {{ end }}

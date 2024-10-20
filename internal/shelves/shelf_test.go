@@ -66,6 +66,10 @@ func (db *ShelfDatabaseError) DeleteShelf(id uuid.UUID) error {
 	return errors.New("unable to delete shelf")
 }
 
+func (db *ShelfDatabaseError) ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, error) {
+	return nil, errors.New("unable to delete shelf")
+}
+
 func (db *ShelfDatabaseError) ShelfSearchListRowsPaginated(page int, rows int, search string) (shelfRows []*items.ListRow, found int, err error) {
 	return nil, 1, errors.New("unable to delete shelf")
 }
@@ -87,6 +91,10 @@ func (db *ShelfDatabaseSuccess) UpdateShelf(shelf *Shelf) error {
 
 func (db *ShelfDatabaseSuccess) DeleteShelf(id uuid.UUID) error {
 	return nil
+}
+
+func (db *ShelfDatabaseSuccess) ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, error) {
+	return nil, nil
 }
 
 func (db *ShelfDatabaseSuccess) ShelfSearchListRowsPaginated(page int, rows int, search string) (shelfRows []*items.ListRow, found int, err error) {

@@ -11,16 +11,11 @@
         <input id="search-bar"
             type="text"
             value="{{ .SearchInputValue }}"
-            name="query"
-        >
-        <!--this input must have type submit and be after search-bar input-->
-        <!--or else search wont work if the next input is disabled-->
+            name="query">
         <input type="submit" name="page" value="{{.PageNumber}}" hidden>
-
         <button type="button" hx-get="/api/v1/implement-me">Alternative View</button>
 
         <div id="pagination">
-
             <label for="limit"></label>
             <input id="item-limit" type="number" name="limit" value="{{ if .Limit}}{{.Limit}}{{else}}5{{end}}" >
             {{  range .Pages }}

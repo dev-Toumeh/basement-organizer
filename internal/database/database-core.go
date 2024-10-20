@@ -132,7 +132,7 @@ func (db *DB) insirtDummyData() {
 	if err != nil {
 		logg.WrapErr(err)
 	}
-	shelfRows, err := db.ShelfListRowsPaginated(1, 3)
+	shelfRows, _, err := db.ShelfListRowsPaginated(1, 3)
 	if err != nil {
 		logg.WrapErr(err)
 	}

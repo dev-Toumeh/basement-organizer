@@ -263,23 +263,10 @@ func (db *DB) DeleteShelf(id uuid.UUID) error {
 }
 
 // ShelfListRowsPaginated returns always a slice with the number of rows specified.
-// If rows=5 with 3 results, the last 2 rows will be nil.
-// rows and page must be above 1.
-func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, error) {
-	shelfRows := make([]*items.ListRow, 0)
-
-	if page < 1 {
-		return shelfRows, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
-	}
-
-	if rows < 1 {
-		return shelfRows, logg.NewError(fmt.Sprintf("invalid rows '%d', needs at least 1 row", rows))
-	}
-
-	shelfRows = make([]*items.ListRow, rows)
-
-	limit := rows
-	offset := (page - 1) * rows
+func (db *DB) ShelfListRowsPaginated(limit int, offset int) (shelfRows []*items.ListRow, count int, err error) {
+	i := 0
+	count, err = shelfCounter("", db)
+	shelfRows = make([]*items.ListRow, count)
 
 	queryNoSearch := `
 		SELECT
@@ -289,31 +276,50 @@ func (db *DB) ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, erro
 		LIMIT ? OFFSET ?;`
 	results, err := db.Sql.Query(queryNoSearch, limit, offset)
 	if err != nil {
-		return shelfRows, logg.WrapErr(err)
+		return shelfRows, count, logg.WrapErr(err)
 	}
 
-	i := 0
 	for results.Next() {
 		listRow := SQLListRow{}
 		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
 		if err != nil {
-			return shelfRows, logg.WrapErr(err)
+			return shelfRows, count, logg.WrapErr(err)
 		}
 		shelfRows[i], err = listRow.ToListRow()
 		if err != nil {
-			return shelfRows, logg.WrapErr(err)
+			return shelfRows, count, logg.WrapErr(err)
 		}
 		i += 1
 	}
 	if results.Err() != nil {
-		return shelfRows, logg.WrapErr(err)
+		return shelfRows, count, logg.WrapErr(err)
 	}
 
-	return shelfRows, nil
+	return shelfRows, count, nil
 }
 
 // MoveShelfToArea moves shelf to an area.
 // To move out of an area set "toAreaID = uuid.Nil".
 func (db *DB) MoveShelfToArea(shelfID uuid.UUID, toAreaID uuid.UUID) error {
 	return logg.WrapErr(ErrNotImplemented)
+}
+
+// ShelfCounter returns the count of rows in the shelf_fts table that match
+// the specified queryString.
+// If queryString is empty, it returns the count of all rows in the table.
+func shelfCounter(queryString string, db *DB) (count int, err error) {
+	if queryString == "" {
+		countQuery := `SELECT COUNT(*) FROM shelf_fts;`
+		err = db.Sql.QueryRow(countQuery).Scan(&count)
+	} else {
+		countQuery := `
+			SELECT COUNT(*)
+			FROM shelf_fts
+			WHERE label = ?;`
+		err = db.Sql.QueryRow(countQuery, queryString).Scan(&count)
+	}
+	if err != nil {
+		return 0, logg.WrapErr(err)
+	}
+	return count, nil
 }

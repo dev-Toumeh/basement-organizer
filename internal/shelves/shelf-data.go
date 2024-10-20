@@ -40,6 +40,7 @@ type ShelfDB interface {
 	UpdateShelf(shelf *Shelf) error
 	DeleteShelf(id uuid.UUID) error
 	ShelfSearchListRowsPaginated(page int, rows int, search string) (shelfRows []*items.ListRow, found int, err error)
+	ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, int, error)
 }
 
 const (

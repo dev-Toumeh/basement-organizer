@@ -6,11 +6,10 @@ import (
 	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/server"
+	"basement/main/internal/templates"
+
 	"maps"
 	"math"
-
-	"basement/main/internal/templates"
-	_ "maps"
 	"net/http"
 	"strconv"
 )
@@ -20,46 +19,55 @@ func ShelvesPage(db ShelfDB) http.HandlerFunc {
 		authenticated, _ := auth.Authenticated(r)
 		user, _ := auth.UserSessionData(r)
 
-		// page template
+		// Initialize page template
 		page := templates.NewPageTemplate()
 		page.Title = "Shelves"
 		page.Authenticated = authenticated
 		page.User = user
 		data := page.Map()
 
-		server.MustRender(w, r, "shelves-page", data)
+		// search-input template
+		query := ""
+		searchInput := items.NewSearchInputTemplate()
+		searchInput.SearchInputLabel = "Search boxes"
+		searchInput.SearchInputValue = query
 
-		// // search-input template
-		// query := r.FormValue("query")
-		// searchInput := items.NewSearchInputTemplate()
-		// searchInput.SearchInputLabel = "Search boxes"
-		// searchInput.SearchInputValue = query
-		//
-		// maps.Copy(page.Map(), searchInput.Map())
-		//
-		// // @TODO: Implement move page
-		// var err error
-		// var count int
-		// var shelves []*items.ListRow
-		// usedSearch := false
-		// urlQuery := r.URL.Query()
-		//
-		// pageNr, limit, err := searchPaginationData(r)
-		//
-		// err = nil
-		// if urlQuery.Has("query") && query != "" {
-		// 	shelves, count, err = db.ShelfSearchListRowsPaginated(pageNr, limit, query)
-		// 	usedSearch = true
-		// } else {
-		// 	shelves, count, err = db.ShelfSearchListRowsPaginated(pageNr, 10, query)
-		// }
-		// if err != nil {
-		// 	server.WriteInternalServerError("cant query boxes", err, w, r)
-		// 	return
-		// }
-		//
-		// pagination(pageNr, count, limit, usedSearch, shelves)
+		maps.Copy(page.Map(), searchInput.Map())
+		var err error
+		var shelves []*items.ListRow
+		var count, offset int
+		limit := 100
+
+		offset, err = strconv.Atoi(r.URL.Query().Get("offset"))
+		if err != nil {
+			offset = 0
+		}
+
+		if len(query) == 0 {
+			shelves, count, err = db.ShelfListRowsPaginated(limit, offset)
+			if count > limit {
+				createPagination()
+			}
+		} else {
+			err = handleShelfSearchRequest(query, db)
+		}
+		if err != nil {
+			server.WriteInternalServerError("cant query Shelves", err, w, r)
+			return
+		}
+
+		// Map shelves to template data
+		shelvesMaps := make(map[int]any, count)
+		for i, shelf := range shelves {
+			shelvesMaps[i] = shelf.Map()
+		}
+		data["Shelves"] = shelvesMaps
+		server.MustRender(w, r, "shelves-page", data)
 	}
+}
+
+func createPagination() {
+	panic("unimplemented")
 }
 
 // generate create new Shelf Template with defaults Values
@@ -114,6 +122,12 @@ func DetailsTemplate(db ShelfDB) http.HandlerFunc {
 
 		templates.Render(w, "shelf-details-page", data)
 	}
+}
+
+func handleShelfSearchRequest(query string, db ShelfDB) (err error) {
+	// shelves, count, err := db.ShelfSearchListRowsPaginated(1, 20, query)
+	// shelvesMaps := make([]map[string]any, count)
+	return err
 }
 
 // retrieve the data from the request to create the pagination
