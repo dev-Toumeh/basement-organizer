@@ -7,15 +7,25 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-var VALID_UUID_1 uuid.UUID = uuid.Must(uuid.FromString("623e4567-e89b-12d3-a456-426614174000"))
-var VALID_UUID_2 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174000"))
-var VALID_UUID_3 uuid.UUID = uuid.Must(uuid.FromString("423e4567-e89b-12d3-a456-426614174000"))
-var VALID_UUID_4 uuid.UUID = uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174111"))
+var ITEM_VALID_UUID_1 uuid.UUID = uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174001"))
+var ITEM_VALID_UUID_2 uuid.UUID = uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174002"))
+var ITEM_VALID_UUID_3 uuid.UUID = uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174003"))
 
-var SHELF_VALID_UUID_1 uuid.UUID = uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000"))
-var SHELF_VALID_UUID_2 uuid.UUID = uuid.Must(uuid.FromString("223e4567-e89b-12d3-a456-426614174000"))
-var SHELF_VALID_UUID_3 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174000"))
-var ITEM_VALID_UUID uuid.UUID = uuid.Must(uuid.FromString("133e4567-e89b-12d3-a456-426614174000"))
+// var ITEM_VALID_UUID_4 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174000"))
+
+var BOX_VALID_UUID_1 uuid.UUID = uuid.Must(uuid.FromString("223e4567-e89b-12d3-a456-426614174001"))
+var BOX_VALID_UUID_2 uuid.UUID = uuid.Must(uuid.FromString("223e4567-e89b-12d3-a456-426614174002"))
+var BOX_VALID_UUID_3 uuid.UUID = uuid.Must(uuid.FromString("223e4567-e89b-12d3-a456-426614174003"))
+var BOX_VALID_UUID_4 uuid.UUID = uuid.Must(uuid.FromString("223e4567-e89b-12d3-a456-426614174114"))
+
+var SHELF_VALID_UUID_1 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174001"))
+var SHELF_VALID_UUID_2 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174002"))
+var SHELF_VALID_UUID_3 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174003"))
+var SHELF_VALID_UUID_4 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174004"))
+var SHELF_VALID_UUID_5 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174005"))
+var SHELF_VALID_UUID_6 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174006"))
+
+var ITEM_VALID_UUID uuid.UUID = uuid.Must(uuid.FromString("433e4567-e89b-12d3-a456-426614174000"))
 var VALID_UUID_NOT_EXISTING uuid.UUID = uuid.Must(uuid.FromString("033e4567-e89b-12d3-a456-426614174000"))
 
 const VALID_BASE64_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAtUlEQVR4nGJp2XGEAQb+/P49J7cgY8ZUuAgTnDUjI7vUQf3m5e3/zxyakZENFW3ZcURGQf/r52cQBGfLKhq0bD/MqKBu+ufnL4jSm5e3QxjmtuEfPnyCGn7z8na4BAMDg7quZ2mia2thMAMDA0j31TMb4XJr5s2BMKr71zIwMLAwYIDq/rWMMDaLobs7mjTEWJC6CeuYjL08+o/eU9f1RDPgsbpTxvQpjMjBAvEucrAAAgAA//+Elk5AOfCu8QAAAABJRU5ErkJggg=="
@@ -25,7 +35,7 @@ const INVALID_BASE64_PNG = "invalid base 64"
 func resetTestBoxes() {
 	BOX_1 = &items.Box{
 		BasicInfo: items.BasicInfo{
-			ID:          VALID_UUID_1,
+			ID:          BOX_VALID_UUID_1,
 			Label:       "box 1",
 			Description: "This is the sixth box",
 			Picture:     VALID_BASE64_PNG,
@@ -34,7 +44,7 @@ func resetTestBoxes() {
 	}
 	BOX_2 = &items.Box{
 		BasicInfo: items.BasicInfo{
-			ID:          VALID_UUID_2,
+			ID:          BOX_VALID_UUID_2,
 			Label:       "box 3",
 			Description: "This is the third box",
 			Picture:     VALID_BASE64_PNG,
@@ -43,7 +53,7 @@ func resetTestBoxes() {
 	}
 	BOX_3 = &items.Box{
 		BasicInfo: items.BasicInfo{
-			ID:          VALID_UUID_3,
+			ID:          BOX_VALID_UUID_3,
 			Label:       "box 4",
 			Description: "This is the fourth box",
 			Picture:     VALID_BASE64_PNG,
@@ -52,7 +62,7 @@ func resetTestBoxes() {
 	}
 	BOX_4 = &items.Box{
 		BasicInfo: items.BasicInfo{
-			ID:          VALID_UUID_4,
+			ID:          BOX_VALID_UUID_4,
 			Label:       "box 5",
 			Description: "This is the fifth box",
 			Picture:     VALID_BASE64_PNG,
@@ -67,7 +77,7 @@ func testBoxes() []*items.Box {
 
 var BOX_1 = &items.Box{
 	BasicInfo: items.BasicInfo{
-		ID:          VALID_UUID_1,
+		ID:          BOX_VALID_UUID_1,
 		Label:       "box 1",
 		Description: "This is the sixth box",
 		Picture:     VALID_BASE64_PNG,
@@ -77,7 +87,7 @@ var BOX_1 = &items.Box{
 
 var BOX_2 = &items.Box{
 	BasicInfo: items.BasicInfo{
-		ID:          VALID_UUID_2,
+		ID:          BOX_VALID_UUID_2,
 		Label:       "box 3",
 		Description: "This is the third box",
 		Picture:     VALID_BASE64_PNG,
@@ -87,7 +97,7 @@ var BOX_2 = &items.Box{
 
 var BOX_3 = &items.Box{
 	BasicInfo: items.BasicInfo{
-		ID:          VALID_UUID_3,
+		ID:          BOX_VALID_UUID_3,
 		Label:       "box 4",
 		Description: "This is the fourth box",
 		Picture:     VALID_BASE64_PNG,
@@ -97,7 +107,7 @@ var BOX_3 = &items.Box{
 
 var BOX_4 = &items.Box{
 	BasicInfo: items.BasicInfo{
-		ID:          VALID_UUID_4,
+		ID:          BOX_VALID_UUID_4,
 		Label:       "box 5",
 		Description: "This is the fifth box",
 		Picture:     VALID_BASE64_PNG,
@@ -107,7 +117,7 @@ var BOX_4 = &items.Box{
 
 var ITEM_1 = &items.Item{
 	BasicInfo: items.BasicInfo{
-		ID:          uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000")),
+		ID:          ITEM_VALID_UUID_1,
 		Label:       "Item 1",
 		Description: "Description for item 1",
 		Picture:     VALID_BASE64_PNG,
@@ -119,7 +129,7 @@ var ITEM_1 = &items.Item{
 
 var ITEM_2 = &items.Item{
 	BasicInfo: items.BasicInfo{
-		ID:          uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174001")),
+		ID:          ITEM_VALID_UUID_2,
 		Label:       "Item 2",
 		Description: "Description for item 2",
 		Picture:     VALID_BASE64_PNG,
@@ -131,7 +141,7 @@ var ITEM_2 = &items.Item{
 
 var ITEM_3 = &items.Item{
 	BasicInfo: items.BasicInfo{
-		ID:          uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174002")),
+		ID:          ITEM_VALID_UUID_3,
 		Label:       "Item 3",
 		Description: "Description for item 3",
 		Picture:     VALID_BASE64_PNG,
@@ -144,7 +154,7 @@ var ITEM_3 = &items.Item{
 func resetTestItems() {
 	ITEM_1 = &items.Item{
 		BasicInfo: items.BasicInfo{
-			ID:          uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174000")),
+			ID:          ITEM_VALID_UUID_1,
 			Label:       "Item 1",
 			Description: "Description for item 1",
 			Picture:     VALID_BASE64_PNG,
@@ -156,7 +166,7 @@ func resetTestItems() {
 
 	ITEM_2 = &items.Item{
 		BasicInfo: items.BasicInfo{
-			ID:          uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174001")),
+			ID:          ITEM_VALID_UUID_2,
 			Label:       "Item 2",
 			Description: "Description for item 2",
 			Picture:     VALID_BASE64_PNG,
@@ -168,7 +178,7 @@ func resetTestItems() {
 
 	ITEM_3 = &items.Item{
 		BasicInfo: items.BasicInfo{
-			ID:          uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426614174002")),
+			ID:          ITEM_VALID_UUID_3,
 			Label:       "Item 3",
 			Description: "Description for item 3",
 			Picture:     VALID_BASE64_PNG,
@@ -233,24 +243,22 @@ var SHELF_3 = &shelves.Shelf{
 }
 
 var SHELF_4 = &shelves.Shelf{
-
 	BasicInfo: items.BasicInfo{
-		ID:    uuid.Must(uuid.NewV4()),
+		ID:    SHELF_VALID_UUID_4,
 		Label: "A Shelf",
 	},
 }
 
 var SHELF_5 = &shelves.Shelf{
-
 	BasicInfo: items.BasicInfo{
-		ID:    uuid.Must(uuid.NewV4()),
+		ID:    SHELF_VALID_UUID_5,
 		Label: "AA Shelf",
 	},
 }
 
 var SHELF_6 = &shelves.Shelf{
 	BasicInfo: items.BasicInfo{
-		ID:    uuid.Must(uuid.NewV4()),
+		ID:    SHELF_VALID_UUID_6,
 		Label: "BBB",
 	},
 }
@@ -309,16 +317,15 @@ func resetShelves() {
 	}
 
 	SHELF_4 = &shelves.Shelf{
-
 		BasicInfo: items.BasicInfo{
-			ID:    uuid.Must(uuid.NewV4()),
+			ID:    SHELF_VALID_UUID_4,
 			Label: "keyword A",
 		},
 	}
 
 	SHELF_5 = &shelves.Shelf{
 		BasicInfo: items.BasicInfo{
-			ID:    uuid.Must(uuid.NewV4()),
+			ID:    SHELF_VALID_UUID_5,
 			Label: "keyword Shelf AA",
 		},
 	}
@@ -326,7 +333,7 @@ func resetShelves() {
 	SHELF_6 = &shelves.Shelf{
 
 		BasicInfo: items.BasicInfo{
-			ID:    uuid.Must(uuid.NewV4()),
+			ID:    SHELF_VALID_UUID_6,
 			Label: "BBB",
 		},
 	}

@@ -270,7 +270,12 @@ func TestMoveItemToShelf(t *testing.T) {
 
 	// Attempt to move the item to a non-existent shelf
 	err = dbTest.MoveItemToShelf(item.ID, VALID_UUID_NOT_EXISTING)
-	// logg.Err(err)
+	assert.NotEqual(t, err, nil)
+
+	// Move item to itself (makes no sense do to so)
+	err = dbTest.MoveItemToBox(item.ID, item.ID)
+	assert.NotEqual(t, err, nil)
+	err = dbTest.MoveItemToShelf(item.ID, item.ID)
 	assert.NotEqual(t, err, nil)
 }
 

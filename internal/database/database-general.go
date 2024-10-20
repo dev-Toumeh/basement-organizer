@@ -86,6 +86,9 @@ func ValidVirtualTable(table string) error {
 //
 //	toTableID = uuid.Nil
 func (db *DB) MoveTo(table string, id uuid.UUID, toTable string, toTableID uuid.UUID) error {
+	if id == toTableID {
+		return logg.NewError(fmt.Sprintf(`can't move "%s" to itself. ID=%s`, table, id.String()))
+	}
 	err := ValidTable(table)
 	if err != nil {
 		return logg.Errorf(`table: "%s" %w`, table, err)

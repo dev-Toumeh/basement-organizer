@@ -318,6 +318,10 @@ func TestMoveBoxToBox(t *testing.T) {
 	updatedInnerBox, err = dbTest.BoxById(innerBox.ID)
 	assert.Equal(t, updatedInnerBox.OuterBoxID, uuid.Nil)
 	assert.Equal(t, updatedInnerBox.OuterBox, nil)
+
+	// Move to itself
+	err = dbTest.MoveBoxToBox(innerBox.ID, innerBox.ID)
+	assert.NotEqual(t, err, nil)
 }
 
 func TestMoveBoxToShelf(t *testing.T) {
