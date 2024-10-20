@@ -59,7 +59,7 @@ func Config() *Configuration {
 
 var loadConfig = false
 
-func LoadConfig(c *Configuration) {
+func LoadConfig(c Configuration) {
 	if loadConfig {
 		logg.InfoForceOutput(4, "reload config")
 	}
@@ -88,7 +88,7 @@ func LoadConfig(c *Configuration) {
 	loadLog("config loaded", 2)
 }
 
-func (c *Configuration) Description() string {
+func (c Configuration) Description() string {
 	return fmt.Sprintf("environment config: isProduction=%t, isDevelopment=%t, defaultTableSize=%d", Production(), Development(), config.defaultTableSize)
 }
 
