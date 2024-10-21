@@ -322,6 +322,22 @@ func TestMoveBoxToBox(t *testing.T) {
 	// Move to itself
 	err = dbTest.MoveBoxToBox(innerBox.ID, innerBox.ID)
 	assert.NotEqual(t, err, nil)
+
+	// Inner and outerbox can't be inside eachother at the same time
+	EmptyTestDatabase()
+	resetTestBoxes()
+	resetTestItems()
+	innerBox = BOX_1
+	outerBox = BOX_2
+	for _, testBox := range testBoxes() {
+		dbTest.insertNewBox(testBox)
+	}
+	err = dbTest.MoveBoxToBox(innerBox.ID, outerBox.ID)
+	err = dbTest.MoveBoxToBox(outerBox.ID, innerBox.ID)
+	assert.NotEqual(t, err, nil)
+	updatedInnerBox, err = dbTest.BoxById(innerBox.ID)
+	updatedOuterBox, err = dbTest.BoxById(outerBox.ID)
+	assert.NotEqual(t, updatedOuterBox.OuterBoxID, updatedInnerBox.ID)
 }
 
 func TestMoveBoxToShelf(t *testing.T) {

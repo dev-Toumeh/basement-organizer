@@ -219,12 +219,21 @@ func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
 	return box.ID, nil
 }
 
-// MoveBoxToBox moves box to another box.
-// To move box out of a shelf set
+// MoveBoxToBox moves box1 to another box2.
+// To move box out of box2 set
 //
-//	toBoxID = uuid.Nil
-func (db *DB) MoveBoxToBox(boxID uuid.UUID, toBoxID uuid.UUID) error {
-	err := db.MoveTo("box", boxID, "box", toBoxID)
+//	box1 = uuid.Nil
+func (db *DB) MoveBoxToBox(box1 uuid.UUID, box2 uuid.UUID) error {
+	// Check if toBoxID is inside boxID.
+	// Can't move if if this is the case.
+	stmt := "SELECT box_id FROM box WHERE id = ?;"
+	var id sql.NullString
+	db.Sql.QueryRow(stmt, box2.String()).Scan(&id)
+	if id.Valid && id.String == box1.String() {
+		return logg.NewError(fmt.Sprintf("can't move box1 (%s) to box2 (%s). box2 is already in box1 and they can't be inside eachother at the same time", box1.String(), box2.String()))
+	}
+
+	err := db.MoveTo("box", box1, "box", box2)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
