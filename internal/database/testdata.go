@@ -45,7 +45,7 @@ func resetTestBoxes() {
 	BOX_2 = &items.Box{
 		BasicInfo: items.BasicInfo{
 			ID:          BOX_VALID_UUID_2,
-			Label:       "box 3",
+			Label:       "box 2",
 			Description: "This is the third box",
 			Picture:     VALID_BASE64_PNG,
 			QRCode:      "abababababcd",
@@ -54,7 +54,7 @@ func resetTestBoxes() {
 	BOX_3 = &items.Box{
 		BasicInfo: items.BasicInfo{
 			ID:          BOX_VALID_UUID_3,
-			Label:       "box 4",
+			Label:       "box 3",
 			Description: "This is the fourth box",
 			Picture:     VALID_BASE64_PNG,
 			QRCode:      "efghefghefgh",
@@ -63,7 +63,7 @@ func resetTestBoxes() {
 	BOX_4 = &items.Box{
 		BasicInfo: items.BasicInfo{
 			ID:          BOX_VALID_UUID_4,
-			Label:       "box 5",
+			Label:       "box 4",
 			Description: "This is the fifth box",
 			Picture:     VALID_BASE64_PNG,
 			QRCode:      "ijklmnopqrst",
@@ -88,7 +88,7 @@ var BOX_1 = &items.Box{
 var BOX_2 = &items.Box{
 	BasicInfo: items.BasicInfo{
 		ID:          BOX_VALID_UUID_2,
-		Label:       "box 3",
+		Label:       "box 2",
 		Description: "This is the third box",
 		Picture:     VALID_BASE64_PNG,
 		QRCode:      "abababababcd",
@@ -98,7 +98,7 @@ var BOX_2 = &items.Box{
 var BOX_3 = &items.Box{
 	BasicInfo: items.BasicInfo{
 		ID:          BOX_VALID_UUID_3,
-		Label:       "box 4",
+		Label:       "box 3",
 		Description: "This is the fourth box",
 		Picture:     VALID_BASE64_PNG,
 		QRCode:      "efghefghefgh",
@@ -108,7 +108,7 @@ var BOX_3 = &items.Box{
 var BOX_4 = &items.Box{
 	BasicInfo: items.BasicInfo{
 		ID:          BOX_VALID_UUID_4,
-		Label:       "box 5",
+		Label:       "box 4",
 		Description: "This is the fifth box",
 		Picture:     VALID_BASE64_PNG,
 		QRCode:      "ijklmnopqrst",
