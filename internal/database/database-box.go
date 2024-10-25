@@ -16,6 +16,17 @@ type SQLBox struct {
 	AreaID     sql.NullString
 }
 
+// RowsToScan returns list of pointers for Scan() method.
+func (b *SQLBox) RowsToScan() []any {
+	s := append(b.SQLBasicInfo.RowsToScan(), &b.OuterBoxID, &b.ShelfID, &b.AreaID)
+	return s
+}
+
+// Vals returns all scanned values as strings.
+func (s SQLBox) Vals() []string {
+	return append(s.SQLBasicInfo.Vals(), s.OuterBoxID.String, s.ShelfID.String, s.AreaID.String)
+}
+
 // this function used inside of BoxByField to convert the box sql struct into normal struct
 func (s *SQLBox) ToBox() (*items.Box, error) {
 	box := &items.Box{}
@@ -158,9 +169,7 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 	WHERE 
 		%s = ?;`, field)
 
-	err := db.Sql.QueryRow(stmt, value).Scan(
-		&sqlBox.SQLBasicInfo.ID, &sqlBox.SQLBasicInfo.Label, &sqlBox.SQLBasicInfo.Description, &sqlBox.SQLBasicInfo.Picture, &sqlBox.SQLBasicInfo.PreviewPicture, &sqlBox.SQLBasicInfo.QRCode, &sqlBox.OuterBoxID, &sqlBox.ShelfID, &sqlBox.AreaID,
-	)
+	err := db.Sql.QueryRow(stmt, value).Scan(sqlBox.RowsToScan()...)
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
