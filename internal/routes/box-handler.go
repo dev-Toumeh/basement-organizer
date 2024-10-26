@@ -533,7 +533,7 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 //
 // `r.ParseForm()` must be called before using this function!
 //
-// Eample:
+// Example:
 //
 //	// search for all ID values that start with "delete:" key
 //	// like "delete:f47ac10b-58cc-0372-8567-0e02b2c3d479"
