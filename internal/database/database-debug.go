@@ -140,6 +140,33 @@ func (db *DB) RepopulateItemFTS() error {
 	return nil
 }
 
+func (db *DB) PrintBoxRecords() {
+	sbox := SQLBox{}
+	query := "SELECT " + ALL_BOX_COLS + " FROM box;"
+	rows, err := db.Sql.Query(query)
+	if err != nil {
+		logg.Errf("Error querying user records: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	logg.Debug("box records:")
+
+	for rows.Next() {
+		err := rows.Scan(sbox.RowsToScan()...)
+		if err != nil {
+			logg.Errf("Error scanning sbox record: %v", err)
+			continue
+		}
+		b, _ := sbox.ToBox()
+		logg.Debug("box " + b.String())
+	}
+
+	if err := rows.Err(); err != nil {
+		logg.Errf("Error during rows iteration: %v", err)
+	}
+}
+
 // print the shelves Records in the console
 func (db *DB) PrintShelvesRecords() {
 	query := "SELECT id, label, description, picture, preview_picture, qrcode, height, width, depth, rows, cols FROM shelf"

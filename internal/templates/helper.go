@@ -200,6 +200,23 @@ type Mapable interface {
 	Map() map[string]any
 }
 
+// SliceToSliceMaps takes in a slice and creates a new slice with maps inside suitable for templates.
+// Each value in slice must implement Mapable interface so .Map() can be used.
+//
+// Will return nil if length is smaller than 1.
+func SliceToSliceMaps[T Mapable](slice []T) []map[string]any {
+	var dataMaps []map[string]any
+	if len(slice) > 0 {
+		dataMaps = make([]map[string]any, len(slice))
+		for i, v := range slice {
+			dataMaps[i] = v.Map()
+		}
+	} else {
+		return nil
+	}
+	return dataMaps
+}
+
 type Renderable interface {
 	Render() error
 }

@@ -118,10 +118,9 @@ func (db *DB) createNewShelf(nID uuid.UUID) error {
 
 // CreateShelf creates a shelf entry in database from the provided shelf.
 func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
+	// will never happen, uuid is always checked for nil
 	if shelf.ID == uuid.Nil {
-		id := uuid.Must(uuid.NewV4())
-		logg.Infof(`CreateShelf: Provided shelf "%s" had invalid uuid "%s". Creating a new one: "%s"`, shelf.Label, shelf.ID.String(), id.String())
-		shelf.ID = id
+		panic(fmt.Sprintf(`CreateShelf: Provided shelf "%s" had invalid uuid "%s". This will never happen, because uuid is always checked for nil.`, shelf.Label, shelf.ID.String()))
 	}
 
 	if shelf.Items != nil || shelf.Boxes != nil {

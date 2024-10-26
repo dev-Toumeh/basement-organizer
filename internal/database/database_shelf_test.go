@@ -38,20 +38,13 @@ func TestCreateShelf(t *testing.T) {
 	resetShelves()
 
 	var err error
-	// should create new ID
-	shelf := SHELF_1
-	shelf.ID = uuid.Nil
-	err = dbTest.CreateShelf(shelf)
-	createdShelf, err := dbTest.Shelf(shelf.ID)
-	assert.Equal(t, err, nil)
-	assert.NotEqual(t, uuid.Nil, createdShelf.ID)
 
 	// should keep same ID
 	EmptyTestDatabase()
 	resetShelves()
-	shelf = SHELF_1
+	shelf := SHELF_1
 	err = dbTest.CreateShelf(shelf)
-	createdShelf, err = dbTest.Shelf(shelf.ID)
+	createdShelf, err := dbTest.Shelf(shelf.ID)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, shelf.ID, createdShelf.ID)
 
@@ -80,7 +73,6 @@ func TestCreateShelf(t *testing.T) {
 
 	shelf.Items = nil
 	shelf.Boxes = nil
-	shelf.ID = uuid.Nil // should create new id
 	err = dbTest.CreateShelf(shelf)
 	createdShelf, err = dbTest.Shelf(shelf.ID)
 	assert.Equal(t, err, nil)
@@ -173,15 +165,17 @@ func TestShelfListRowsPaginated(t *testing.T) {
 	id1, _ := dbTest.CreateNewShelf()
 	id2, _ := dbTest.CreateNewShelf()
 	id3, _ := dbTest.CreateNewShelf()
-	shelves, err := dbTest.ShelfListRowsPaginated(1, 2)
+	shelves, found, err := dbTest.ShelfListRowsPaginated(1, 2)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(shelves), 2)
+	assert.Equal(t, found, 2)
 	assert.Equal(t, id1, shelves[0].ID)
 	assert.Equal(t, id2, shelves[1].ID)
 
-	shelves, err = dbTest.ShelfListRowsPaginated(2, 2)
+	shelves, found, err = dbTest.ShelfListRowsPaginated(2, 2)
 	assert.Equal(t, id3, shelves[0].ID)
 	assert.Equal(t, len(shelves), 2)
+	assert.Equal(t, found, 1)
 	assert.Equal(t, nil, shelves[1])
 }
 
@@ -234,6 +228,8 @@ func TestShelfSearchListRowsPaginated(t *testing.T) {
 	assert.Equal(t, found, 1)
 	assert.Equal(t, shelves[0].ID, SHELF_3.ID)
 
+	shelves, found, err = dbTest.ShelfSearchListRowsPaginated(1, 10, "")
+	assert.Equal(t, err, nil)
 }
 
 func TestMoveItemToShelf(t *testing.T) {
@@ -274,6 +270,20 @@ func TestMoveItemToShelf(t *testing.T) {
 
 	// Attempt to move the item to a non-existent shelf
 	err = dbTest.MoveItemToShelf(item.ID, VALID_UUID_NOT_EXISTING)
-	// logg.Err(err)
+	assert.NotEqual(t, err, nil)
+
+	// Move item to itself (makes no sense do to so)
+	err = dbTest.MoveItemToBox(item.ID, item.ID)
+	assert.NotEqual(t, err, nil)
+	err = dbTest.MoveItemToShelf(item.ID, item.ID)
 	assert.NotEqual(t, err, nil)
 }
+
+// ID is always checked for `uuid.Nil` in controller, this will never happen.
+// func TestCreateShelfWithUUIDNil(t *testing.T) {
+// 	shelf := SHELF_1
+// 	shelf.ID = uuid.Nil
+// 	err := dbTest.CreateShelf(shelf)
+// 	_, err = dbTest.Shelf(shelf.ID)
+// 	assert.NotEqual(t, err, nil)
+// }

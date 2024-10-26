@@ -25,8 +25,8 @@ type Box struct {
 func (box *Box) Map() map[string]any {
 	m := box.BasicInfo.Map()
 	m["OuterBoxID"] = box.OuterBoxID
-	m["Items"] = box.Items
-	m["InnerBoxes"] = box.InnerBoxes
+	m["Items"] = templates.SliceToSliceMaps(box.Items)
+	m["InnerBoxes"] = templates.SliceToSliceMaps(box.InnerBoxes)
 	m["OuterBox"] = box.OuterBox
 	m["ShelfID"] = box.ShelfID
 	m["AreaID"] = box.AreaID
@@ -54,7 +54,7 @@ func (tmpl BoxTemplateData) Map() map[string]any {
 }
 
 type BoxListTemplateData struct {
-	Boxes []*Box
+	Boxes []ListRow
 }
 
 func (tmpl BoxListTemplateData) Map() map[string]any {

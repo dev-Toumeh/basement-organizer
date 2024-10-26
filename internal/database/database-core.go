@@ -110,7 +110,7 @@ func (db *DB) createTable(statements map[string]string) {
 			logg.Fatalf("Failed to check the number of effected rows while creating the %s table: %v ", tableName, err)
 		}
 		if numEffectedRows != 0 {
-			logg.Debugf("Table '%s' created successfully\n", tableName)
+			// logg.Debugf("Table '%s' created successfully\n", tableName)
 		}
 	}
 }

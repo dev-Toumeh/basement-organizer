@@ -55,13 +55,6 @@ func ShelvesPage(db ShelfDB) http.HandlerFunc {
 
 		// Map shelves to template data
 		shelvesMaps := mapShelvesToTemplateData(shelves, count, limit)
-		for i, shelf := range shelves {
-			if shelf == nil {
-				shelvesMaps[i] = map[string]any{}
-			} else {
-				shelvesMaps[i] = shelf.Map()
-			}
-		}
 
 		data["Shelves"] = shelvesMaps
 		data["Pagination"] = pagination

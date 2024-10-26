@@ -25,6 +25,16 @@ type SQLBasicInfo struct {
 	QRCode         sql.NullString
 }
 
+// Vals returns all scanned values as strings.
+func (s SQLBasicInfo) Vals() []string {
+	return []string{s.ID.String, s.Label.String, s.Description.String, s.Picture.String, s.PreviewPicture.String, s.QRCode.String}
+}
+
+// RowsToScan returns list of pointers for Scan() method.
+func (s *SQLBasicInfo) RowsToScan() []any {
+	return []any{&s.ID, &s.Label, &s.Description, &s.Picture, &s.PreviewPicture, &s.QRCode}
+}
+
 func (s SQLBasicInfo) ToBasicInfo() (items.BasicInfo, error) {
 	id, err := uuid.FromString(s.ID.String)
 	if err != nil {

@@ -49,9 +49,10 @@
             {{ else }}
             <span>Is inside box:</span>
             <a href="/boxes/{{.OuterBoxID}}" 
+                class="clickable"
                 hx-boost="true"
                 style=""
-            >{{ .Outerbox.Label }}</a>
+            >{{ .OuterBox.Label }}</a>
             <br>
             {{ end }}
         </div>

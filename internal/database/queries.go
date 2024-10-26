@@ -1,73 +1,152 @@
 package database
 
 const (
+	BASIC_INFO_ID              = "id"
+	BASIC_INFO_LABEL           = "label"
+	BASIC_INFO_DESCRIPTION     = "description"
+	BASIC_INFO_PICTURE         = "picture"
+	BASIC_INFO_PREVIEW_PICTURE = "preview_picture"
+	BASIC_INFO_QRCODE          = "qrcode"
+
+	// single string with all columns of basic info which is present in every table
+	ALL_BASIC_INFO_COLS string = "" +
+		BASIC_INFO_ID + "," +
+		BASIC_INFO_LABEL + "," +
+		BASIC_INFO_DESCRIPTION + "," +
+		BASIC_INFO_PICTURE + "," +
+		BASIC_INFO_PREVIEW_PICTURE + "," +
+		BASIC_INFO_QRCODE
+	ALL_BASIC_INFO_COLS_LEN = 6
+
+	FTS_ID              = BASIC_INFO_ID
+	FTS_LABEL           = BASIC_INFO_LABEL
+	FTS_DESCRIPTION     = BASIC_INFO_DESCRIPTION
+	FTS_PREVIEW_PICTURE = BASIC_INFO_PREVIEW_PICTURE
+	FTS_BOX_ID          = "box_id"
+	FTS_BOX_LABEL       = "box_label"
+	FTS_SHELF_ID        = "shelf_id"
+	FTS_SHELF_LABEL     = "shelf_label"
+	FTS_AREA_ID         = "area_id"
+	FTS_AREA_LABEL      = "area_label"
+
+	// single string with all columns of fts table
+	ALL_FTS_COLS string = "" +
+		FTS_ID + "," +
+		FTS_LABEL + "," +
+		FTS_DESCRIPTION + "," +
+		FTS_PREVIEW_PICTURE + "," +
+		FTS_BOX_ID + "," +
+		FTS_BOX_LABEL + "," +
+		FTS_SHELF_ID + "," +
+		FTS_SHELF_LABEL + "," +
+		FTS_AREA_ID + "," +
+		FTS_AREA_LABEL
+
+	// to use in create item, box, shelf, area statements
+	CREATE_BASIC_INFO_BLOCK string = "" +
+		BASIC_INFO_ID + " TEXT PRIMARY KEY," +
+		BASIC_INFO_LABEL + " TEXT NOT NULL," +
+		BASIC_INFO_DESCRIPTION + " TEXT," +
+		BASIC_INFO_PICTURE + " TEXT," +
+		BASIC_INFO_PREVIEW_PICTURE + " TEXT," +
+		BASIC_INFO_QRCODE + " TEXT"
+
+	// to use in create fts table (fts_item, fts_box, fts_shelf, fts_area) statements
+	CREATE_FTS_BLOCK = "" +
+		FTS_ID + " UNINDEXED," +
+		FTS_LABEL + "," +
+		FTS_DESCRIPTION + "," +
+		FTS_PREVIEW_PICTURE + " UNINDEXED," +
+		FTS_BOX_ID + " UNINDEXED," +
+		FTS_BOX_LABEL + "," +
+		FTS_SHELF_ID + " UNINDEXED," +
+		FTS_SHELF_LABEL + "," +
+		FTS_AREA_ID + " UNINDEXED," +
+		FTS_AREA_LABEL
+
+	// to use inside insert trigger statements for item and box tables
+	CREATE_ITEM_BOX_INSERT_TRIGGER_VALUES_BLOCK = "" +
+		"new." + BASIC_INFO_ID + "," +
+		"new." + BASIC_INFO_LABEL + "," +
+		"new." + BASIC_INFO_DESCRIPTION + "," +
+		"new." + BASIC_INFO_PREVIEW_PICTURE + "," +
+		"new." + FTS_BOX_ID + "," +
+		"CASE " +
+		"	WHEN new." + FTS_BOX_ID + " IS NOT NULL THEN (SELECT " + BASIC_INFO_LABEL + " FROM box WHERE id = new." + FTS_BOX_ID + ")" +
+		"	ELSE NULL " +
+		"END," +
+		"new." + FTS_SHELF_ID + "," +
+		"CASE " +
+		"	WHEN new." + FTS_SHELF_ID + " IS NOT NULL THEN (SELECT " + BASIC_INFO_LABEL + " FROM shelf WHERE id = new." + FTS_SHELF_ID + ")" +
+		"	ELSE NULL " +
+		"END," +
+		"new." + FTS_AREA_ID + "," +
+		"CASE " +
+		"	WHEN new." + FTS_AREA_ID + " IS NOT NULL THEN (SELECT " + BASIC_INFO_LABEL + " FROM area WHERE id = new." + FTS_AREA_ID + ")" +
+		"	ELSE NULL " +
+		"END"
+
+	// to use inside update trigger statements
+	UPDATE_TRIGGER_BLOCK string = "" +
+		FTS_LABEL + " = new." + FTS_LABEL + "," +
+		FTS_DESCRIPTION + " = new." + FTS_DESCRIPTION + "," +
+		FTS_PREVIEW_PICTURE + " = new." + FTS_PREVIEW_PICTURE + "," +
+		FTS_BOX_ID + " = new." + FTS_BOX_ID + "," +
+		FTS_BOX_LABEL + " = (SELECT " + BASIC_INFO_LABEL + " FROM box WHERE box." + BASIC_INFO_ID + " = new." + ITEM_BOX_ID + ")," +
+		FTS_SHELF_ID + " = new." + FTS_SHELF_ID + "," +
+		FTS_SHELF_LABEL + " = (SELECT " + BASIC_INFO_LABEL + " FROM shelf WHERE shelf." + BASIC_INFO_ID + " = new." + ITEM_SHELF_ID + ")," +
+		FTS_AREA_ID + " = new." + FTS_AREA_ID + "," +
+		FTS_AREA_LABEL + " = (SELECT " + BASIC_INFO_LABEL + " FROM area WHERE area." + BASIC_INFO_ID + " = new." + ITEM_AREA_ID + ")"
+
 	CREATE_USER_TABLE_STMT = `CREATE TABLE IF NOT EXISTS user (
     id TEXT NOT NULL PRIMARY KEY,
     username TEXT UNIQUE,
     passwordhash TEXT);`
 
 	// Item
-	CREATE_ITEM_TABLE_STMT = `CREATE TABLE IF NOT EXISTS item (
-    id TEXT PRIMARY KEY,
-    label TEXT NOT NULL,
-    description TEXT,
-    picture TEXT,
-    preview_picture TEXT,
-    quantity INTEGER,
-    weight TEXT,
-    qrcode TEXT,
-    box_id TEXT REFERENCES box(id),
-    shelf_id TEXT REFERENCES shelf(id),
-    area_id TEXT REFERENCES area(id)
-	);`
+	// ITEM_TABLE_NAME = "item"
 
-	CREATE_ITEM_TABLE_STMT_FTS = `CREATE VIRTUAL TABLE IF NOT EXISTS item_fts USING fts5(
-    id UNINDEXED,
-    label, 
-    description, 
-    preview_picture UNINDEXED,
-    box_id UNINDEXED,
-    box_label,
-	shelf_id UNINDEXED,
-	shelf_label,
-	area_id UNINDEXED,
-	area_label,
-    tokenize = 'porter'
-	);`
+	ITEM_QUANTITY = "quantity"
+	ITEM_WEIGHT   = "weight"
+	ITEM_BOX_ID   = FTS_BOX_ID
+	ITEM_SHELF_ID = FTS_SHELF_ID
+	ITEM_AREA_ID  = FTS_AREA_ID
+	ALL_ITEM_COLS = "" +
+		ALL_BASIC_INFO_COLS + "," +
+		ITEM_QUANTITY + "," +
+		ITEM_WEIGHT + "," +
+		ITEM_BOX_ID + "," +
+		ITEM_SHELF_ID + "," +
+		ITEM_AREA_ID
 
-	CREATE_ITEM_INSERT_TRIGGER = `
-    CREATE TRIGGER IF NOT EXISTS item_ai BEFORE INSERT ON item 
-    BEGIN
-        INSERT INTO item_fts(id, label, description, preview_picture, box_id, box_label, shelf_id, shelf_label, area_id, area_label) 
-        VALUES (
-			new.id,
-			new.label,
-			new.description,
-			new.preview_picture,
-			new.box_id,
-			(SELECT label FROM box WHERE box.id = new.box_id),
-			new.shelf_id,
-			(SELECT label FROM shelf WHERE shelf.id = new.shelf_id),
-			new.area_id,
-			(SELECT label FROM area WHERE area.id = new.area_id)
-		);
-    END;`
+	CREATE_ITEM_TABLE_STMT string = "CREATE TABLE IF NOT EXISTS item (" +
+		CREATE_BASIC_INFO_BLOCK + "," +
+		ITEM_QUANTITY + " INTEGER," +
+		ITEM_WEIGHT + " TEXT," +
+		ITEM_BOX_ID + " TEXT REFERENCES box(id)," +
+		ITEM_SHELF_ID + " TEXT REFERENCES shelf(id)," +
+		ITEM_AREA_ID + " TEXT REFERENCES area(id)" +
+		");"
+
+	CREATE_ITEM_TABLE_STMT_FTS = "CREATE VIRTUAL TABLE IF NOT EXISTS item_fts USING fts5(" +
+		CREATE_FTS_BLOCK + "," +
+		"tokenize = 'porter'" +
+		");"
+
+	CREATE_ITEM_INSERT_TRIGGER = "" +
+		"CREATE TRIGGER IF NOT EXISTS item_ai BEFORE INSERT ON item " +
+		"BEGIN " +
+		"    INSERT INTO item_fts(" + ALL_FTS_COLS + ")" +
+		"    VALUES (" + CREATE_ITEM_BOX_INSERT_TRIGGER_VALUES_BLOCK + ");" +
+		"END;"
 
 	CREATE_ITEM_UPDATE_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS item_au BEFORE UPDATE ON item 
     BEGIN
-        UPDATE item_fts SET 
-            label = new.label,
-            description = new.description,
-            preview_picture = new.preview_picture,
-			box_id = new.box_id, 
-			box_label = (SELECT label FROM box WHERE box.id = new.box_id),
-			shelf_id = new.shelf_id, 
-			shelf_label = (SELECT label FROM shelf WHERE shelf.id = new.shelf_id),
-			area_id = new.area_id, 
-			area_label = (SELECT label FROM area WHERE area.id = new.area_id)
-        WHERE id = new.id;
-    END; `
+        UPDATE item_fts SET ` +
+		UPDATE_TRIGGER_BLOCK +
+		"WHERE " + BASIC_INFO_ID + "= new." + BASIC_INFO_ID + ";" +
+		"END; "
 
 	CREATE_ITEM_DELETE_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS item_ad BEFORE DELETE ON item 
@@ -76,77 +155,43 @@ const (
     END; `
 
 	// Box
-	CREATE_BOX_TABLE_STMT = `CREATE TABLE IF NOT EXISTS box (
-    id TEXT PRIMARY KEY,
-    label TEXT NOT NULL, 
-    description TEXT,
-    picture TEXT,
-    preview_picture TEXT,
-    qrcode TEXT,
-    box_id TEXT REFERENCES box(id),
-    shelf_id TEXT REFERENCES shelf(id),
-    area_id TEXT REFERENCES area(id)
-	); `
+	ALL_BOX_COLS = ALL_BASIC_INFO_COLS + "," +
+		FTS_BOX_ID + "," +
+		FTS_SHELF_ID + "," +
+		FTS_AREA_ID
 
-	CREATE_BOX_TABLE_STMT_FTS = `CREATE VIRTUAL TABLE IF NOT EXISTS box_fts USING fts5(
-    id UNINDEXED,
-    label, 
-    box_id UNINDEXED,
-    box_label,
-	shelf_id UNINDEXED,
-	shelf_label,
-	area_id UNINDEXED,
-	area_label,
-	preview_picture UNINDEXED,
-    tokenize = 'porter'
-	); `
+	ALL_BOX_COLS_LEN = ALL_BASIC_INFO_COLS_LEN + 3
 
-	CREATE_BOX_INSERT_TRIGGER = `
-    CREATE TRIGGER IF NOT EXISTS box_ai BEFORE INSERT ON box
-    BEGIN
-        INSERT INTO box_fts(id, label, box_label, box_id, shelf_id, shelf_label, area_id, area_label, preview_picture) 
-        VALUES (
-            new.id, 
-            new.label,
-            CASE 
-                WHEN new.box_id IS NOT NULL THEN (SELECT label FROM box WHERE id = new.box_id)
-                ELSE NULL 
-            END,
-            new.box_id,
-            new.shelf_id,
-            CASE 
-                WHEN new.shelf_id IS NOT NULL THEN (SELECT label FROM shelf WHERE id = new.shelf_id)
-                ELSE NULL 
-            END,
-            new.area_id,
-            CASE 
-                WHEN new.area_id IS NOT NULL THEN (SELECT label FROM area WHERE id = new.area_id)
-                ELSE NULL 
-            END,
-            new.preview_picture
-        );
-    END; `
+	CREATE_BOX_TABLE_STMT = "CREATE TABLE IF NOT EXISTS box (" +
+		CREATE_BASIC_INFO_BLOCK + "," +
+		FTS_BOX_ID + " TEXT REFERENCES box(" + BASIC_INFO_ID + ")," +
+		FTS_SHELF_ID + " TEXT REFERENCES shelf(" + BASIC_INFO_ID + ")," +
+		FTS_AREA_ID + " TEXT REFERENCES area(" + BASIC_INFO_ID + ")" +
+		"); "
 
-	CREATE_BOX_UPDATE_TRIGGER = `
-    CREATE TRIGGER IF NOT EXISTS box_au BEFORE UPDATE ON box 
+	CREATE_BOX_TABLE_STMT_FTS = "CREATE VIRTUAL TABLE IF NOT EXISTS box_fts USING fts5(" +
+		CREATE_FTS_BLOCK + "," +
+		"tokenize = 'porter'" +
+		");"
+
+	CREATE_BOX_INSERT_TRIGGER = "" +
+		"CREATE TRIGGER IF NOT EXISTS box_ai BEFORE INSERT ON box " +
+		"BEGIN " +
+		"    INSERT INTO box_fts(" + ALL_FTS_COLS + ")" +
+		"    VALUES (" + CREATE_ITEM_BOX_INSERT_TRIGGER_VALUES_BLOCK + ");" +
+		"END; "
+
+	CREATE_BOX_UPDATE_TRIGGER = `CREATE TRIGGER IF NOT EXISTS box_au BEFORE UPDATE ON box 
     BEGIN
         -- Update the original box's label
-        UPDATE box_fts 
-        SET 
-			label = new.label, 
-			shelf_id = new.shelf_id, 
-			shelf_label = (SELECT label FROM shelf WHERE shelf.id = new.shelf_id),
-			area_id = new.area_id, 
-			area_label = (SELECT label FROM area WHERE area.id = new.area_id),
-			preview_picture = new.preview_picture
-        WHERE id = old.id;
+        UPDATE box_fts SET ` +
+		UPDATE_TRIGGER_BLOCK +
+		"WHERE " + BASIC_INFO_ID + "= new." + BASIC_INFO_ID + ";" +
 
-        -- Update labels of boxes referencing this box as outerbox
-        UPDATE box_fts
-        SET box_label = new.label
-        WHERE box_id = old.id;
-
-    END; `
+		// "-- Update labels of boxes referencing this box as outerbox " +
+		"UPDATE box_fts SET " +
+		FTS_BOX_LABEL + " = new." + FTS_LABEL + " WHERE box_id = old.id;" +
+		"END;"
 
 	CREATE_BOX_DELETE_TRIGGER = `
     CREATE TRIGGER IF NOT EXISTS box_ad BEFORE DELETE ON box 
@@ -155,66 +200,70 @@ const (
     END; `
 
 	// Shelf
-	CREATE_SHELF_TABLE_STMT = `CREATE TABLE IF NOT EXISTS shelf (
-    id TEXT PRIMARY KEY,
-    label TEXT NOT NULL, 
-    description TEXT,
-    picture TEXT,
-    preview_picture TEXT,
-    qrcode TEXT,
-    height REAL,
-    width REAL,
-    depth REAL,
-    rows INTEGER,
-    cols INTEGER,
-	area_id TEXT REFERENCES area(id)
-	);`
+	SHELF_HEIGHT  = "height"
+	SHELF_WIDTH   = "width"
+	SHELF_DEPTH   = "depth"
+	SHELF_ROWS    = "rows"
+	SHELF_COLS    = "cols"
+	SHELF_AREA_ID = "area_id"
 
-	CREATE_SHELF_TABLE_STMT_FTS = `CREATE VIRTUAL TABLE IF NOT EXISTS shelf_fts USING fts5(
-    id UNINDEXED,
-    label,
-    area_id UNINDEXED,
-    area_label,
-    preview_picture UNINDEXED,
-    tokenize = 'unicode61'
-	);`
+	ALL_SHELF_COLS = ALL_BASIC_INFO_COLS + "," +
+		SHELF_HEIGHT + "," +
+		SHELF_WIDTH + "," +
+		SHELF_DEPTH + "," +
+		SHELF_ROWS + "," +
+		SHELF_COLS + "," +
+		SHELF_AREA_ID
 
-	CREATE_SHELF_INSERT_TRIGGER = `
-	CREATE TRIGGER IF NOT EXISTS shelf_ai BEFORE INSERT ON shelf
+	CREATE_SHELF_TABLE_STMT = "CREATE TABLE IF NOT EXISTS shelf (" + CREATE_BASIC_INFO_BLOCK + ", " +
+		SHELF_HEIGHT + " REAL," +
+		SHELF_WIDTH + " REAL," +
+		SHELF_DEPTH + " REAL," +
+		SHELF_ROWS + " INTEGER," +
+		SHELF_COLS + " INTEGER," +
+		SHELF_AREA_ID + " TEXT REFERENCES area(" + BASIC_INFO_ID + ")" +
+		");"
+
+	CREATE_SHELF_TABLE_STMT_FTS = "CREATE VIRTUAL TABLE IF NOT EXISTS shelf_fts USING fts5(" +
+		CREATE_FTS_BLOCK + "," +
+		"tokenize = 'unicode61'" +
+		");"
+
+	CREATE_SHELF_INSERT_TRIGGER = `CREATE TRIGGER IF NOT EXISTS shelf_ai BEFORE INSERT ON shelf
 	BEGIN
-		INSERT INTO shelf_fts(id, label, area_label, area_id, preview_picture)
-		VALUES (
-			new.id,
-			new.label,
-			(SELECT label FROM area WHERE id = new.area_id),
-			new.area_id,
-			new.preview_picture
-		);
-	END;`
+	    INSERT INTO shelf_fts(` +
+		FTS_ID + "," +
+		FTS_LABEL + "," +
+		FTS_DESCRIPTION + "," +
+		FTS_PREVIEW_PICTURE + "," +
+		FTS_AREA_ID + "," +
+		FTS_AREA_LABEL + ")" +
+		`VALUES (` +
+		"	new." + FTS_ID + "," +
+		"	new." + FTS_LABEL + "," +
+		"	new." + FTS_DESCRIPTION + "," +
+		"	new." + FTS_PREVIEW_PICTURE + "," +
+		"	new." + FTS_AREA_ID + "," +
+		"	(SELECT " + BASIC_INFO_LABEL + " FROM area WHERE area." + BASIC_INFO_ID + " = new." + ITEM_AREA_ID + ")" +
+		");" +
+		"END;"
 
-	CREATE_SHELF_UPDATE_TRIGGER = `
-	CREATE TRIGGER IF NOT EXISTS shelf_au BEFORE UPDATE ON shelf
+	CREATE_SHELF_UPDATE_TRIGGER = `CREATE TRIGGER IF NOT EXISTS shelf_au BEFORE UPDATE ON shelf
 	BEGIN
-		UPDATE shelf_fts SET
-			label = new.label,
-			area_label = (SELECT label FROM area WHERE id = new.area_id),
-			area_id = new.area_id,
-			preview_picture = new.preview_picture
-		WHERE id = old.id;
-	END;`
+		UPDATE shelf_fts SET ` +
+		FTS_LABEL + " = new." + FTS_LABEL + "," +
+		FTS_DESCRIPTION + " = new." + FTS_DESCRIPTION + "," +
+		FTS_PREVIEW_PICTURE + " = new." + FTS_PREVIEW_PICTURE + "," +
+		FTS_AREA_ID + " = new." + FTS_AREA_ID + ", " +
+		FTS_AREA_LABEL + " = (SELECT " + BASIC_INFO_LABEL + " FROM area WHERE area." + BASIC_INFO_ID + " = new." + ITEM_AREA_ID + ")" +
+		"WHERE " + BASIC_INFO_ID + "= new." + BASIC_INFO_ID + ";" +
+		"END;"
 
-	CREATE_SHELF_DELETE_TRIGGER = `
-	CREATE TRIGGER IF NOT EXISTS shelf_ad BEFORE DELETE ON shelf
-	BEGIN
-		DELETE FROM shelf_fts WHERE id = old.id;
-	END;`
+	CREATE_SHELF_DELETE_TRIGGER = "CREATE TRIGGER IF NOT EXISTS shelf_ad BEFORE DELETE ON shelf " +
+		"BEGIN " +
+		"	DELETE FROM shelf_fts WHERE " + FTS_ID + " = old." + FTS_ID + ";" +
+		"END;"
 
 	// Area
-	CREATE_AREA_TABLE_STMT = `CREATE TABLE IF NOT EXISTS area (
-    id TEXT PRIMARY KEY,
-    label TEXT NOT NULL,
-    description TEXT,
-    picture TEXT,
-    preview_picture TEXT 
-	);`
+	CREATE_AREA_TABLE_STMT = "CREATE TABLE IF NOT EXISTS area (" + ALL_BASIC_INFO_COLS + ");"
 )

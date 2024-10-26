@@ -1,33 +1,123 @@
 package server
 
 import (
+	"basement/main/internal/logg"
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
+type event struct {
+	Type     string `json:"type"`
+	Message  string `json:"message"`
+	Duration int    `json:"duration"`
+}
+
+type Notifications struct {
+	ServerNotificationEvents []event
+}
+
+func (e *Notifications) AddInfo(msg string) {
+	e.Add(msg, "", 2000)
+}
+
+func (e *Notifications) AddSuccess(msg string) {
+	e.Add(msg, "success", 4000)
+}
+
+func (e *Notifications) AddWarning(msg string) {
+	e.Add(msg, "warning", 5000)
+}
+
+func (e *Notifications) AddError(msg string) {
+	e.Add(msg, "error", 10000)
+}
+
+// Add adds a server notification that is triggered on the client.
+//
+// `notificationType` can be "" (info), "success", "warning", "error".
+//
+// `duration` in milliseconds: 2000 = 2s
+func (e *Notifications) Add(msg string, notificationType string, duration int) {
+	if duration < 500 {
+		duration = 500
+		logg.Infof("duration for server notification is below 500ms (%d), setting to 500", duration)
+	}
+	if notificationType != "" && notificationType != "success" && notificationType != "warning" && notificationType != "error" {
+		logg.Infof(`notificationType "%s" is not valid`, notificationType)
+		notificationType = ""
+	}
+	e.ServerNotificationEvents = append(e.ServerNotificationEvents, event{Type: notificationType, Message: msg, Duration: duration})
+}
+
+func (e Notifications) Messages() []string {
+	messages := make([]string, len(e.ServerNotificationEvents))
+	for i, m := range e.ServerNotificationEvents {
+		messages[i] = m.Message
+	}
+	return messages
+}
+
+func (e Notifications) toJSONString() string {
+	data, err := json.Marshal(e)
+	if err != nil {
+		logg.WrapErr(err)
+		return "error"
+	}
+	return fmt.Sprint(string(data))
+}
+
+// TriggerNotifications will trigger all notifications using "HX-Trigger-After-Swap" to trigger client side event to create notifications.
+func TriggerNotifications(w http.ResponseWriter, e Notifications) {
+	msgReturn := e.toJSONString()
+	logg.Debugf("TriggerNotificationEvents: %s", msgReturn)
+	w.Header().Set("HX-Trigger-After-Swap", msgReturn)
+}
+
+// Triggers all notifications for testing purposes.
 func TriggerAllServerNotifications(w http.ResponseWriter) {
-	w.Header().Set("HX-Trigger-After-Swap", `{"ServerNotificationEvents":[{"message":"error", "type":"error" },{"message":"warning", "type":"warning" },{"message":"success", "type":"success" }, {"message":"default", "type":"" }]}`)
+	n := Notifications{}
+	n.AddInfo("info")
+	n.AddSuccess("success")
+	n.AddWarning("warning")
+	n.AddError("error")
+	w.Header().Set("HX-Trigger-After-Swap", n.toJSONString())
 }
 
 // TriggerErrorNotification uses "HX-Trigger-After-Swap" to trigger client side event to create notification.
 // Must be called before any writing to w happens.
 func TriggerErrorNotification(w http.ResponseWriter, message string) {
-	msg := fmt.Sprintf(`{"ServerNotificationEvents":[{"message":"%s", "type":"error" }]}`, message)
-	w.Header().Set("HX-Trigger-After-Swap", msg)
+	n := Notifications{}
+	n.AddError(message)
+	w.Header().Set("HX-Trigger-After-Swap", n.toJSONString())
 }
 
 // TriggerSuccessNotification uses "HX-Trigger-After-Swap" to trigger client side event to create notification.
 // Must be called before any writing to w happens.
 func TriggerSuccessNotification(w http.ResponseWriter, message string) {
-	msg := fmt.Sprintf(`{"ServerNotificationEvents":[{"message":"%s", "type":"success" }]}`, message)
-	w.Header().Set("HX-Trigger-After-Swap", msg)
+	n := Notifications{}
+	n.AddSuccess(message)
+	w.Header().Set("HX-Trigger-After-Swap", n.toJSONString())
 }
 
 // TriggerWarningNotification uses "HX-Trigger-After-Swap" to trigger client side event to create notification.
 // Must be called before any writing to w happens.
 func TriggerWarningNotification(w http.ResponseWriter, message string) {
-	msg := fmt.Sprintf(`{"ServerNotificationEvents":[{"message":"%s", "type":"warning" }]}`, message)
-	w.Header().Set("HX-Trigger-After-Swap", msg)
+	n := Notifications{}
+	n.AddWarning(message)
+	w.Header().Set("HX-Trigger-After-Swap", n.toJSONString())
+}
+
+func TriggerWarningNotifications(w http.ResponseWriter, messages []string) {
+	eves := make([]event, len(messages))
+	serverEvents := Notifications{ServerNotificationEvents: eves}
+	for i := range eves {
+		serverEvents.ServerNotificationEvents[i].Message = messages[i]
+		serverEvents.ServerNotificationEvents[i].Type = "warning"
+	}
+	msgReturn := serverEvents.toJSONString()
+	logg.Infof("warning %s", msgReturn)
+	w.Header().Set("HX-Trigger-After-Swap", msgReturn)
 }
 
 // RedirectWithSuccessNotification redirects client to another page and shows a notification after for 2 seconds.

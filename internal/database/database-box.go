@@ -4,7 +4,6 @@ import (
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"database/sql"
-	"fmt"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -14,6 +13,17 @@ type SQLBox struct {
 	OuterBoxID sql.NullString
 	ShelfID    sql.NullString
 	AreaID     sql.NullString
+}
+
+// RowsToScan returns list of pointers for Scan() method.
+func (b *SQLBox) RowsToScan() []any {
+	s := append(b.SQLBasicInfo.RowsToScan(), &b.OuterBoxID, &b.ShelfID, &b.AreaID)
+	return s
+}
+
+// Vals returns all scanned values as strings.
+func (s SQLBox) Vals() []string {
+	return append(s.SQLBasicInfo.Vals(), s.OuterBoxID.String, s.ShelfID.String, s.AreaID.String)
 }
 
 // this function used inside of BoxByField to convert the box sql struct into normal struct
@@ -52,7 +62,7 @@ func (db *DB) BoxExistById(id uuid.UUID) bool {
 
 // check if the Box Exist based on given Field
 func (db *DB) BoxExist(field string, value string) bool {
-	query := fmt.Sprintf("SELECT COUNT(*) FROM box WHERE %s = ?", field)
+	query := "SELECT COUNT(*) FROM box WHERE " + field + " = ?"
 	var count int
 	err := db.Sql.QueryRow(query, value).Scan(&count)
 	if err != nil {
@@ -150,17 +160,9 @@ func (db *DB) BoxById(id uuid.UUID) (items.Box, error) {
 // Get Box  based on given Field
 func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 	var sqlBox SQLBox
-	stmt := fmt.Sprintf(`
-	SELECT
-		id, label, description, picture, preview_picture, qrcode, box_id, shelf_id, area_id
-	FROM 
-		box
-	WHERE 
-		%s = ?;`, field)
+	stmt := "SELECT " + ALL_BOX_COLS + " FROM box WHERE " + field + " = ?;"
 
-	err := db.Sql.QueryRow(stmt, value).Scan(
-		&sqlBox.SQLBasicInfo.ID, &sqlBox.SQLBasicInfo.Label, &sqlBox.SQLBasicInfo.Description, &sqlBox.SQLBasicInfo.Picture, &sqlBox.SQLBasicInfo.PreviewPicture, &sqlBox.SQLBasicInfo.QRCode, &sqlBox.OuterBoxID, &sqlBox.ShelfID, &sqlBox.AreaID,
-	)
+	err := db.Sql.QueryRow(stmt, value).Scan(sqlBox.RowsToScan()...)
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
@@ -181,6 +183,7 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 		return nil, logg.WrapErr(err)
 	}
 	box.InnerBoxes = boxes
+	logg.Debug(boxes)
 
 	if box.OuterBoxID != uuid.Nil {
 		outerbox, err := db.BoxListRowByID(box.OuterBoxID)
@@ -199,7 +202,7 @@ func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
 		return uuid.Nil, db.ErrorExist()
 	}
 
-	sqlStatement := `INSERT INTO box (id, label, description, picture, preview_picture, qrcode, box_id, shelf_id, area_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	sqlStatement := "INSERT INTO box (" + ALL_BOX_COLS + ") VALUES (?,?,?,?,?,?,?,?,?)"
 
 	updatePicture(&box.Picture, &box.PreviewPicture)
 
@@ -218,12 +221,21 @@ func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
 	return box.ID, nil
 }
 
-// MoveBoxToBox moves box to another box.
-// To move box out of a shelf set
+// MoveBoxToBox moves box1 to another box2.
+// To move box out of box2 set
 //
-//	toBoxID = uuid.Nil
-func (db *DB) MoveBoxToBox(boxID uuid.UUID, toBoxID uuid.UUID) error {
-	err := db.MoveTo("box", boxID, "box", toBoxID)
+//	box1 = uuid.Nil
+func (db *DB) MoveBoxToBox(box1 uuid.UUID, box2 uuid.UUID) error {
+	// Check if toBoxID is inside boxID.
+	// Can't move if if this is the case.
+	stmt := "SELECT box_id FROM box WHERE id = ?;"
+	var id sql.NullString
+	db.Sql.QueryRow(stmt, box2.String()).Scan(&id)
+	if id.Valid && id.String == box1.String() {
+		return logg.NewError("can't move box1 (" + box1.String() + ") to box2 (" + box2.String() + "). box2 is already in box1 and they can't be inside eachother at the same time")
+	}
+
+	err := db.MoveTo("box", box1, "box", box2)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
