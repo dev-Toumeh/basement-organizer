@@ -3,6 +3,7 @@ package shelves
 import (
 	"basement/main/internal/auth"
 	"basement/main/internal/common"
+	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
@@ -21,7 +22,7 @@ func ShelvesPage(db ShelfDB) http.HandlerFunc {
 
 		var shelves []*items.ListRow
 
-		limit := 10
+		limit := env.DefaultTableSize()
 		query := queryFromRequest(r)
 		authenticated, _ := auth.Authenticated(r)
 		user, _ := auth.UserSessionData(r)
