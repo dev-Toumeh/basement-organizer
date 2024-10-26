@@ -3,7 +3,6 @@ package shelves
 import (
 	"basement/main/internal/common"
 	"basement/main/internal/items"
-	"fmt"
 	"net/http"
 
 	"github.com/gofrs/uuid/v5"
@@ -39,10 +38,14 @@ type ShelfDB interface {
 	Shelf(id uuid.UUID) (*Shelf, error)
 	UpdateShelf(shelf *Shelf) error
 	DeleteShelf(id uuid.UUID) error
-	ShelfSearchListRowsPaginated(page int, rows int, search string) (shelfRows []*items.ListRow, found int, err error)
-	ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, int, error)
+	SearchShelves(limit int, offset int, count int, searchString string) (shelfRows []*items.ListRow, err error)
+	ShelfCounter(queryString string) (count int, err error)
 }
 
+//	type PaginationData struct {
+//		PageNumber int
+//		Offset     int
+//	}
 const (
 	ID             string = "id"
 	LABEL          string = "label"
@@ -111,6 +114,5 @@ func shelf(r *http.Request) (*Shelf, error) {
 		Cols:   common.StringToInt(r.PostFormValue(COLS)),
 		AreaId: areaId,
 	}
-	fmt.Print(newShelf)
 	return newShelf, nil
 }

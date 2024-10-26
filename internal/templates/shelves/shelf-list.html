@@ -1,3 +1,6 @@
+tmpl.Funcs(template.FuncMap{
+    "seq": seq,
+})
 {{ define "shelf-list" }}
 <form id="box-list"
     hx-get="/shelves"
@@ -8,26 +11,10 @@
 >
     {{ if .SearchInputLabel }}
         <label for="search">{{ with .SearchInputLabel }}{{ . }}{{end}}</label>
-        <input id="search-bar"
-            type="text"
-            value="{{ .SearchInputValue }}"
-            name="query">
-        <input type="submit" name="page" value="{{.PageNumber}}" hidden>
-        <button type="button" hx-get="/api/v1/implement-me">Alternative View</button>
+        <input id="search-bar" type="text" value="{{ .SearchInputValue }}" name="query">
 
-        <div id="pagination">
-            <label for="limit"></label>
-            <input id="item-limit" type="number" name="limit" value="{{ if .Limit}}{{.Limit}}{{else}}5{{end}}" >
-            {{  range .Pages }}
-            <input type="submit" name="page" value="{{.PageNumber}}"
-                {{ if .Selected }}
-                    class="selected"
-                {{end}}
-                {{ if .Disabled}}disabled{{end}}
-                style="width:2.5rem"
-            >
-            {{ end }}
-        </div> 
+        {{ template "shelf-pagination-unit" .}}
+         </br>
     {{ end }}
 
     <table class="box-list">
@@ -65,4 +52,6 @@
 
 <div id="data-container" style="display: none;"></div> 
 {{ end }}
+
+
 

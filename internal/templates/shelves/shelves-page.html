@@ -14,13 +14,11 @@
   <h1>Shelf list</h1>
   <button hx-post="/shelves/create" 
           hx-target="body"
-          hx-swap="innerHTML"
+          hx-swap="outerHTML"
           hx-push-url="true">
           Create Shelf
   </button>
-    {{ if .Shelves }}
       {{ template "shelf-list" . }}
-    {{ end }}
 {{ end }}
 
 {{ define "shelves-js" }}

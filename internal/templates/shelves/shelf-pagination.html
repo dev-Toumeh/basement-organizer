@@ -1,0 +1,26 @@
+{{ define "shelf-pagination-unit" }}
+
+  {{ if .Pagination }} 
+        <label for="limit"></label>
+    <div id="pagination">
+        {{ range .Pagination }}
+            <button 
+                type="button"
+                hx-get="shelves?page={{.PageNumber}}&offset={{.Offset}}&query={{.Query}}"
+                hx-include="[name=limit]"
+                hx-target="body"
+                hx-push-url="true"
+                {{ if .Selected }} class="selected" {{ end }}
+                {{ if .Disabled }} disabled {{ end }}
+                style="width:2.5rem"
+            >
+                {{.PageNumber}}
+            </button>
+        {{ end }}
+   {{ else }}
+    <button>1</button>
+  {{ end }}
+    </div> 
+{{ end }}
+
+

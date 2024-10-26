@@ -340,3 +340,39 @@ func (db *DB) InsertSampleShelves() {
 	}
 	return
 }
+
+// ShelfListRowsPaginated returns always a slice with the number of rows specified.
+func (db *DB) ShelfListRowsPaginated(limit int, offset int) (shelfRows []*items.ListRow, count int, err error) {
+	i := 0
+	count, err = db.ShelfCounter("")
+	shelfRows = make([]*items.ListRow, count)
+
+	queryNoSearch := `
+		SELECT
+			id, label, area_id, area_label, preview_picture
+		FROM shelf_fts
+			ORDER BY label ASC
+		LIMIT ? OFFSET ?;`
+	results, err := db.Sql.Query(queryNoSearch, limit, offset)
+	if err != nil {
+		return shelfRows, count, logg.WrapErr(err)
+	}
+
+	for results.Next() {
+		listRow := SQLListRow{}
+		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
+		if err != nil {
+			return shelfRows, count, logg.WrapErr(err)
+		}
+		shelfRows[i], err = listRow.ToListRow()
+		if err != nil {
+			return shelfRows, count, logg.WrapErr(err)
+		}
+		i += 1
+	}
+	if results.Err() != nil {
+		return shelfRows, count, logg.WrapErr(err)
+	}
+
+	return shelfRows, count, nil
+}

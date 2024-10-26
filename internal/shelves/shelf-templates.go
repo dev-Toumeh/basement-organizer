@@ -3,19 +3,26 @@ package shelves
 import (
 	"basement/main/internal/auth"
 	"basement/main/internal/common"
-	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
+	"regexp"
+	"strings"
 
 	"maps"
-	"math"
 	"net/http"
 	"strconv"
 )
 
+var offsetData *[]int
+
 func ShelvesPage(db ShelfDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		var shelves []*items.ListRow
+
+		limit := 10
+		query := queryFromRequest(r)
 		authenticated, _ := auth.Authenticated(r)
 		user, _ := auth.UserSessionData(r)
 
@@ -27,50 +34,43 @@ func ShelvesPage(db ShelfDB) http.HandlerFunc {
 		data := page.Map()
 
 		// search-input template
-		query := ""
 		searchInput := items.NewSearchInputTemplate()
-		searchInput.SearchInputLabel = "Search boxes"
+		searchInput.SearchInputLabel = "Search Shelves"
 		searchInput.SearchInputValue = query
+		maps.Copy(data, searchInput.Map())
 
-		maps.Copy(page.Map(), searchInput.Map())
-		var err error
-		var shelves []*items.ListRow
-		var count, offset int
-		limit := 100
-
-		offset, err = strconv.Atoi(r.URL.Query().Get("offset"))
+		count, err := db.ShelfCounter(query)
 		if err != nil {
-			offset = 0
+			server.WriteInternalServerError("error shelves counter", err, w, r)
+			return
 		}
 
-		if len(query) == 0 {
-			shelves, count, err = db.ShelfListRowsPaginated(limit, offset)
-			if count > limit {
-				createPagination()
-			}
-		} else {
-			err = handleShelfSearchRequest(query, db)
-		}
+		offsetRequest := offsetFromRequest(r)
+		pagination := paginate(count, limit, query)
+		shelves, err = db.SearchShelves(limit, offsetRequest, count, query)
 		if err != nil {
 			server.WriteInternalServerError("cant query Shelves", err, w, r)
 			return
 		}
 
 		// Map shelves to template data
-		shelvesMaps := make(map[int]any, count)
+		shelvesMaps := mapShelvesToTemplateData(shelves, count, limit)
 		for i, shelf := range shelves {
-			shelvesMaps[i] = shelf.Map()
+			if shelf == nil {
+				shelvesMaps[i] = map[string]any{}
+			} else {
+				shelvesMaps[i] = shelf.Map()
+			}
 		}
+
 		data["Shelves"] = shelvesMaps
+		data["Pagination"] = pagination
+		data["Limit"] = limit
 		server.MustRender(w, r, "shelves-page", data)
 	}
 }
 
-func createPagination() {
-	panic("unimplemented")
-}
-
-// generate create new Shelf Template with defaults Values
+// Generate create new Shelf Template with defaults Values
 func CreateTemplate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authenticated, _ := auth.Authenticated(r)
@@ -124,74 +124,59 @@ func DetailsTemplate(db ShelfDB) http.HandlerFunc {
 	}
 }
 
-func handleShelfSearchRequest(query string, db ShelfDB) (err error) {
-	// shelves, count, err := db.ShelfSearchListRowsPaginated(1, 20, query)
-	// shelvesMaps := make([]map[string]any, count)
-	return err
+// check the count of available shelves and generate the pagination
+// if the number of the available Shelves was less than the number of allowed rows per page it will return nil
+// if the number was bigger it will generate the Pagination Data
+func paginate(count, limit int, query string) []map[string]any {
+	if count <= limit {
+		return nil
+	}
+
+	totalPages := (count + limit - 1) / limit
+	paginationData := make([]map[string]any, totalPages)
+
+	for i := 0; i < totalPages; i++ {
+		pageData := make(map[string]any)
+		pageData["Query"] = query
+		pageData["PageNumber"] = i + 1
+		pageData["Offset"] = i * limit
+		paginationData[i] = pageData
+	}
+
+	return paginationData
 }
 
-// retrieve the data from the request to create the pagination
-// return the number of pages and the amount of rows for every page
-func searchPaginationData(r *http.Request) (int, int, error) {
-	pageNr, err := strconv.Atoi(r.FormValue("page"))
-	if err != nil || pageNr < 1 {
-		pageNr = 1
-	}
-	limit, err := strconv.Atoi(r.FormValue("limit"))
-	if err != nil || limit == 0 {
-		limit = env.DefaultTableSize()
-	}
-	return pageNr, limit, err
+// return query Value from the Request and filter, sanitize it
+func queryFromRequest(r *http.Request) string {
+	searchTrimmed := strings.TrimSpace(r.FormValue("query"))
+	re := regexp.MustCompile(`\s+`)
+	return re.ReplaceAllString(searchTrimmed, "*")
 }
 
-func pagination(pageNr int, count int, limit int, usedSearch bool, shelves []*items.ListRow) {
-	totalPages := 1
-	totalPagesF := float64(count) / float64(limit)
-	totalPagesCeil := math.Ceil(float64(totalPagesF))
-	totalPages = int(totalPagesCeil)
-	if totalPages < 1 {
-		totalPages = 1
+func offsetFromRequest(r *http.Request) int {
+	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil {
+		offset = 0
 	}
+	return offset
+}
 
-	currentPage := 1
-	if pageNr > totalPages {
-		currentPage = totalPages
-	} else {
-		currentPage = pageNr
-	}
+func mapShelvesToTemplateData(shelves []*items.ListRow, count, limit int) map[int]any {
+	shelvesMaps := make(map[int]any, count)
 
-	if totalPages == 0 {
-		totalPages = 1
-	}
-
-	nextPage := currentPage + 1
-	if nextPage < 1 {
-		nextPage = 1
-	}
-	if nextPage > totalPages {
-		nextPage = totalPages
-	}
-
-	prevPage := currentPage - 1
-	if prevPage < 1 {
-		prevPage = 1
-	}
-	if prevPage > totalPages {
-		prevPage = totalPages
-	}
-
-	if usedSearch {
-		fromOffset := (currentPage - 1) * limit
-		toOffset := currentPage * limit
-		if toOffset > count {
-			toOffset = count
+	// Original mapping logic
+	for i, shelf := range shelves {
+		if shelf == nil {
+			shelvesMaps[i] = map[string]any{}
+		} else {
+			shelvesMaps[i] = shelf.Map()
 		}
-		if toOffset < 0 {
-			toOffset = 0
-		}
-		if fromOffset < 0 {
-			fromOffset = 0
-		}
-		shelves = shelves[fromOffset:toOffset]
 	}
+
+	// If count is less than limit, add empty maps to reach the limit
+	for i := count; i < limit; i++ {
+		shelvesMaps[i] = map[string]any{}
+	}
+
+	return shelvesMaps
 }

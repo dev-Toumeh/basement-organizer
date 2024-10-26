@@ -66,12 +66,8 @@ func (db *ShelfDatabaseError) DeleteShelf(id uuid.UUID) error {
 	return errors.New("unable to delete shelf")
 }
 
-func (db *ShelfDatabaseError) ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, error) {
+func (db *ShelfDatabaseError) SearchShelves(page int, rows int, query string) ([]*items.ListRow, error) {
 	return nil, errors.New("unable to delete shelf")
-}
-
-func (db *ShelfDatabaseError) ShelfSearchListRowsPaginated(page int, rows int, search string) (shelfRows []*items.ListRow, found int, err error) {
-	return nil, 1, errors.New("unable to delete shelf")
 }
 
 // ShelfDatabaseSuccess implements ShelfDB interface without errors for success testing.
@@ -93,12 +89,8 @@ func (db *ShelfDatabaseSuccess) DeleteShelf(id uuid.UUID) error {
 	return nil
 }
 
-func (db *ShelfDatabaseSuccess) ShelfListRowsPaginated(page int, rows int) ([]*items.ListRow, error) {
+func (db *ShelfDatabaseSuccess) SearchShelves(page int, rows int, query string) ([]*items.ListRow, error) {
 	return nil, nil
-}
-
-func (db *ShelfDatabaseSuccess) ShelfSearchListRowsPaginated(page int, rows int, search string) (shelfRows []*items.ListRow, found int, err error) {
-	return nil, 0, nil
 }
 
 // func TestShelvesHandler(t *testing.T) {

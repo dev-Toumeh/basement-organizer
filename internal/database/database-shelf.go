@@ -262,64 +262,79 @@ func (db *DB) DeleteShelf(id uuid.UUID) error {
 	return nil
 }
 
-// ShelfListRowsPaginated returns always a slice with the number of rows specified.
-func (db *DB) ShelfListRowsPaginated(limit int, offset int) (shelfRows []*items.ListRow, count int, err error) {
-	i := 0
-	count, err = shelfCounter("", db)
-	shelfRows = make([]*items.ListRow, count)
-
-	queryNoSearch := `
-		SELECT
-			id, label, area_id, area_label, preview_picture
-		FROM shelf_fts
-			ORDER BY label ASC
-		LIMIT ? OFFSET ?;`
-	results, err := db.Sql.Query(queryNoSearch, limit, offset)
-	if err != nil {
-		return shelfRows, count, logg.WrapErr(err)
-	}
-
-	for results.Next() {
-		listRow := SQLListRow{}
-		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
-		if err != nil {
-			return shelfRows, count, logg.WrapErr(err)
-		}
-		shelfRows[i], err = listRow.ToListRow()
-		if err != nil {
-			return shelfRows, count, logg.WrapErr(err)
-		}
-		i += 1
-	}
-	if results.Err() != nil {
-		return shelfRows, count, logg.WrapErr(err)
-	}
-
-	return shelfRows, count, nil
-}
-
 // MoveShelfToArea moves shelf to an area.
 // To move out of an area set "toAreaID = uuid.Nil".
 func (db *DB) MoveShelfToArea(shelfID uuid.UUID, toAreaID uuid.UUID) error {
 	return logg.WrapErr(ErrNotImplemented)
 }
 
+// ShelfListRowsPaginated returns always a slice with the number of rows specified.
+func (db *DB) SearchShelves(limit int, offset int, count int, searchString string) (shelfRows []*items.ListRow, err error) {
+	i := 0
+	if count > limit {
+		shelfRows = make([]*items.ListRow, limit)
+	} else {
+		shelfRows = make([]*items.ListRow, count)
+	}
+
+	// by default use this query
+	query := `
+		SELECT
+			id, label, area_id, area_label, preview_picture
+		FROM shelf_fts
+			ORDER BY label ASC
+		LIMIT ? OFFSET ?;`
+
+	// if the searchString is not empty use this query
+	if searchString != "" {
+		query = fmt.Sprintf(`
+		SELECT
+			id, label, area_id, area_label, preview_picture
+		FROM shelf_fts
+		WHERE label MATCH '%s*'
+		LIMIT ? OFFSET ?;`, searchString)
+	}
+
+	results, err := db.Sql.Query(query, limit, offset)
+	if err != nil {
+		return shelfRows, fmt.Errorf("error while fetching shelves Data from the database: %v", err)
+	}
+
+	for results.Next() {
+		listRow := SQLListRow{}
+		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
+		if err != nil {
+			return shelfRows, fmt.Errorf("error while scanning the Shelf row during search in the database: %v", err)
+		}
+		shelfRows[i], err = listRow.ToListRow()
+		if err != nil {
+			return shelfRows, fmt.Errorf("error while mapping the row data to the shelfRows slice: %v", err)
+		}
+		i += 1
+	}
+	if results.Err() != nil {
+		return shelfRows, fmt.Errorf("error while assigning the row to the variable after fetching it: %v", err)
+	}
+
+	return shelfRows, nil
+}
+
 // ShelfCounter returns the count of rows in the shelf_fts table that match
 // the specified queryString.
 // If queryString is empty, it returns the count of all rows in the table.
-func shelfCounter(queryString string, db *DB) (count int, err error) {
-	if queryString == "" {
-		countQuery := `SELECT COUNT(*) FROM shelf_fts;`
-		err = db.Sql.QueryRow(countQuery).Scan(&count)
-	} else {
-		countQuery := `
+func (db *DB) ShelfCounter(queryString string) (count int, err error) {
+	countQuery := `SELECT COUNT(*) FROM shelf_fts;`
+
+	if queryString != "" {
+		countQuery = fmt.Sprintf(`
 			SELECT COUNT(*)
 			FROM shelf_fts
-			WHERE label = ?;`
-		err = db.Sql.QueryRow(countQuery, queryString).Scan(&count)
+      WHERE label MATCH '%s*' `, queryString)
 	}
+
+	err = db.Sql.QueryRow(countQuery).Scan(&count)
 	if err != nil {
-		return 0, logg.WrapErr(err)
+		return 0, fmt.Errorf("error while fetching the number of shelves from the database: %v", err)
 	}
 	return count, nil
 }

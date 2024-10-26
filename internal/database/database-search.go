@@ -5,7 +5,6 @@ import (
 	"basement/main/internal/logg"
 	"database/sql"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/gofrs/uuid/v5"
@@ -223,65 +222,4 @@ func (db *DB) NumOfItemRecords(searchString string) (int, error) {
 	}
 	logg.Debugf("count: %d \n", count)
 	return count, nil
-}
-
-func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (shelfRows []*items.ListRow, found int, err error) {
-	// shelfRows = make([]*items.ListRow, 0)
-	// found = 0
-	// err = nil
-	if page < 1 {
-		return shelfRows, found, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
-	}
-
-	if rows < 1 {
-		return shelfRows, found, logg.NewError(fmt.Sprintf("invalid rows '%d', needs at least 1 row", rows))
-	}
-
-	shelfRows = make([]*items.ListRow, rows)
-
-	limit := rows
-	offset := (page - 1) * rows
-
-	// queryNoSearch := `
-	// 	SELECT
-	// 		id, label, area_id, area_label, preview_picture
-	// 	FROM shelf_fts
-	// 		ORDER BY label ASC
-	// 	LIMIT ? OFFSET ?;`
-	searchTrimmed := strings.TrimSpace(search)
-	re := regexp.MustCompile(`\s+`)
-	searchModified := re.ReplaceAllString(searchTrimmed, "*")
-	querySearch := fmt.Sprintf(`
-		SELECT
-			id, label, area_id, area_label, preview_picture
-		FROM shelf_fts
-		WHERE label MATCH '%s*'
-		LIMIT ? OFFSET ?;`, searchModified)
-
-	// ORDER BY label ASC
-	// results, err := db.Sql.Query(querySearch, fmt.Sprintf("'%s'", search), limit, offset)
-	results, err := db.Sql.Query(querySearch, limit, offset)
-	if err != nil {
-		return shelfRows, found, logg.WrapErr(err)
-	}
-
-	i := 0
-	for results.Next() {
-		listRow := SQLListRow{}
-		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
-		if err != nil {
-			return shelfRows, found, logg.WrapErr(err)
-		}
-		shelfRows[i], err = listRow.ToListRow()
-		if err != nil {
-			return shelfRows, found, logg.WrapErr(err)
-		}
-		i += 1
-		found += 1
-	}
-	if results.Err() != nil {
-		return shelfRows, found, logg.WrapErr(err)
-	}
-
-	return shelfRows, found, nil
 }
