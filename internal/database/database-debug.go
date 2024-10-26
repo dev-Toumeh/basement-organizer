@@ -7,6 +7,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"regexp"
+	"strings"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gofrs/uuid/v5"
@@ -368,8 +370,61 @@ func (db *DB) InsertSampleShelves() {
 	return
 }
 
+// ShelfListRowsPaginated always returns a slice with the number of rows specified.
+//
+// If rows=5 returns 3 results with `found=2` the last 2 rows of `shelfRows` will be nil pointers.
+//
+// `rows` and `page` must be 1 or above.
+func (db *DB) ShelfListRowsPaginated(page int, rows int) (shelfRows []*items.ListRow, foundResults int, err error) {
+	shelfRows = make([]*items.ListRow, 0)
+
+	if page < 1 {
+		return shelfRows, foundResults, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
+	}
+
+	if rows < 1 {
+		return shelfRows, foundResults, logg.NewError(fmt.Sprintf("invalid rows '%d', needs at least 1 row", rows))
+	}
+
+	shelfRows = make([]*items.ListRow, rows)
+
+	limit := rows
+	offset := (page - 1) * rows
+
+	queryNoSearch := `
+		SELECT
+			id, label, area_id, area_label, preview_picture
+		FROM shelf_fts
+			ORDER BY label ASC
+		LIMIT ? OFFSET ?;`
+	results, err := db.Sql.Query(queryNoSearch, limit, offset)
+	if err != nil {
+		return shelfRows, foundResults, logg.WrapErr(err)
+	}
+
+	i := 0
+	for results.Next() {
+		listRow := SQLListRow{}
+		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
+		if err != nil {
+			return shelfRows, foundResults, logg.WrapErr(err)
+		}
+		shelfRows[i], err = listRow.ToListRow()
+		if err != nil {
+			return shelfRows, foundResults, logg.WrapErr(err)
+		}
+		i += 1
+	}
+	if results.Err() != nil {
+		return shelfRows, foundResults, logg.WrapErr(err)
+	}
+	foundResults = i
+
+	return shelfRows, foundResults, nil
+}
+
 // ShelfListRowsPaginated returns always a slice with the number of rows specified.
-func (db *DB) ShelfListRowsPaginated(limit int, offset int) (shelfRows []*items.ListRow, count int, err error) {
+func (db *DB) ShelfListRowsPaginated2(limit int, offset int) (shelfRows []*items.ListRow, count int, err error) {
 	i := 0
 	count, err = db.ShelfCounter("")
 	shelfRows = make([]*items.ListRow, count)
@@ -402,4 +457,65 @@ func (db *DB) ShelfListRowsPaginated(limit int, offset int) (shelfRows []*items.
 	}
 
 	return shelfRows, count, nil
+}
+
+// ShelfSearchListRowsPaginated always returns a slice with the number of rows specified.
+//
+// If rows=5 returns 3 results with `found=2` the last 2 rows of `shelfRows` will be nil pointers.
+//
+// `rows` and `page` must be 1 or above.
+//
+// Empty `search == ""` works the same as ShelfListRowsPaginated.
+func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (shelfRows []*items.ListRow, found int, err error) {
+	if page < 1 {
+		return shelfRows, found, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
+	}
+
+	if rows < 1 {
+		return shelfRows, found, logg.NewError(fmt.Sprintf("invalid rows '%d', needs at least 1 row", rows))
+	}
+
+	if search == "" {
+		return db.ShelfListRowsPaginated(page, rows)
+	}
+
+	shelfRows = make([]*items.ListRow, rows)
+
+	limit := rows
+	offset := (page - 1) * rows
+
+	searchTrimmed := strings.TrimSpace(search)
+	re := regexp.MustCompile(`\s+`)
+	searchModified := re.ReplaceAllString(searchTrimmed, "*")
+	querySearch := fmt.Sprintf(`
+		SELECT
+			id, label, area_id, area_label, preview_picture
+		FROM shelf_fts
+		WHERE label MATCH '%s*'
+		LIMIT ? OFFSET ?;`, searchModified)
+
+	results, err := db.Sql.Query(querySearch, limit, offset)
+	if err != nil {
+		return shelfRows, found, logg.WrapErr(err)
+	}
+
+	i := 0
+	for results.Next() {
+		listRow := SQLListRow{}
+		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
+		if err != nil {
+			return shelfRows, found, logg.WrapErr(err)
+		}
+		shelfRows[i], err = listRow.ToListRow()
+		if err != nil {
+			return shelfRows, found, logg.WrapErr(err)
+		}
+		i += 1
+		found += 1
+	}
+	if results.Err() != nil {
+		return shelfRows, found, logg.WrapErr(err)
+	}
+
+	return shelfRows, found, nil
 }
