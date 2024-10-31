@@ -3,12 +3,12 @@ package shelves
 import (
 	"basement/main/internal/items"
 	"errors"
-	// "net/http"
-	// "net/http/httptest"
+	"net/http"
+	"net/http/httptest"
 	// "net/url"
 	// "strconv"
 	// "strings"
-	// "testing"
+	"testing"
 
 	"github.com/gofrs/uuid/v5"
 	// "github.com/stretchr/testify/assert"
@@ -91,6 +91,71 @@ func (db *ShelfDatabaseSuccess) DeleteShelf(id uuid.UUID) error {
 
 func (db *ShelfDatabaseSuccess) SearchShelves(page int, rows int, query string) ([]*items.ListRow, error) {
 	return nil, nil
+}
+
+// TestTypeFromRequest tests the typeFromRequest function with different scenarios.
+func TestTypeFromRequest(t *testing.T) {
+	tests := []struct {
+		name     string
+		url      string
+		want     string
+		wantErr  bool
+		errorMsg string
+	}{
+		{
+			name:    "Valid type 'add'",
+			url:     "/?type=add",
+			want:    "Add",
+			wantErr: false,
+		},
+		{
+			name:    "Valid type 'move'",
+			url:     "/?type=move",
+			want:    "Move",
+			wantErr: false,
+		},
+		{
+			name:    "Valid type 'search'",
+			url:     "/?type=search",
+			want:    "Search",
+			wantErr: false,
+		},
+		{
+			name:     "Invalid type 'delete'",
+			url:      "/?type=delete",
+			want:     "",
+			wantErr:  true,
+			errorMsg: "unexpected type: delete, while preparing the search Template",
+		},
+		{
+			name:    "Empty type",
+			url:     "/?type=",
+			want:    "",
+			wantErr: false,
+		},
+		{
+			name:    "No type parameter",
+			url:     "/",
+			want:    "",
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, tc.url, nil)
+			got, err := typeFromRequest(req)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("typeFromRequest() error = %v, wantErr %v", err, tc.wantErr)
+			}
+			if err != nil && tc.errorMsg != "" && err.Error() != tc.errorMsg {
+				t.Errorf("typeFromRequest() error = %v, wantErr message %v", err, tc.errorMsg)
+			}
+			if got != tc.want {
+				t.Errorf("typeFromRequest() = %v, want %v", got, tc.want)
+			}
+		})
+	}
 }
 
 // func TestShelvesHandler(t *testing.T) {

@@ -1,7 +1,8 @@
-tmpl.Funcs(template.FuncMap{
-    "seq": seq,
-})
 {{ define "shelf-list" }}
+{{ $Add := false }}
+{{ if .Add }}
+    {{ $Add = true }}
+{{ end }}
 <form id="box-list"
     hx-get="/shelves"
     hx-push-url="true"
@@ -14,7 +15,6 @@ tmpl.Funcs(template.FuncMap{
         <input id="search-bar" type="text" value="{{ .SearchInputValue }}" name="query">
 
         {{ template "shelf-pagination-unit" .}}
-         </br>
     {{ end }}
 
     <table class="box-list">
@@ -23,35 +23,36 @@ tmpl.Funcs(template.FuncMap{
                 <th>Label</th>
                 <th>Area</th>
                 <th style="width: 10%">Image</th>
+                {{ if .Move }}
+                {{ else if .Add }}
+                <th style="width: 10%">Add to</th>
+                {{ else}}
                 <th style="width: 10%">Move</th>
-                {{ if not .Move }}
                 <th style="width: 10%">Delete</th>
                 {{ end }}
             </tr>
-        </thead> 
-        <!--boxes are created directly by backend with template-->
+        </thead>
         <tbody id="box-list-body">
         {{ if .Shelves }}
             {{ range .Shelves }}
-            {{ template "shelf-list-row" . }}
+            {{ template "shelf-list-row" .  }}
             {{ end }}
         {{ end }}
         </tbody>
     </table>
-    <div >
-        <button hx-delete="/boxes-list"
-            hx-target="#box-list"
-            hx-select="#box-list"
-            hx-push-url="true"
-        >delete</button>
-        <button type="button" 
-            hx-get="/boxes/move"
-        >move</button>
-    </div>
+    {{ if not (or .Move .Add .Preview) }}
+        <div>
+            <button hx-delete="/boxes-list"
+                    hx-target="#box-list"
+                    hx-select="#box-list"
+                    hx-push-url="true"
+            >delete</button>
+            <button type="button" 
+                    hx-get="/boxes/move"
+            >move</button>
+        </div>
+    {{ end }}
 </form>
 
 <div id="data-container" style="display: none;"></div> 
 {{ end }}
-
-
-

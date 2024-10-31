@@ -3,68 +3,39 @@ package shelves
 import (
 	"basement/main/internal/auth"
 	"basement/main/internal/common"
-	"basement/main/internal/env"
-	"basement/main/internal/items"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
-	"regexp"
-	"strings"
+	"fmt"
 
 	"maps"
 	"net/http"
-	"strconv"
 )
 
-var offsetData *[]int
-
-func ShelvesPage(db ShelfDB) http.HandlerFunc {
+// Render shelf Root page where you can search the available Shelves
+func PageTemplate(db ShelfDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		var shelves []*items.ListRow
-
-		limit := env.DefaultTableSize()
-		query := queryFromRequest(r)
-		authenticated, _ := auth.Authenticated(r)
-		user, _ := auth.UserSessionData(r)
-
 		// Initialize page template
+		user, _ := auth.UserSessionData(r)
+		authenticated, _ := auth.Authenticated(r)
+
 		page := templates.NewPageTemplate()
 		page.Title = "Shelves"
 		page.Authenticated = authenticated
 		page.User = user
 		data := page.Map()
 
-		// search-input template
-		searchInput := items.NewSearchInputTemplate()
-		searchInput.SearchInputLabel = "Search Shelves"
-		searchInput.SearchInputValue = query
+		shelvesMaps, pagination, searchInput := shelfRowListData(w, r, db, "")
+
 		maps.Copy(data, searchInput.Map())
-
-		count, err := db.ShelfCounter(query)
-		if err != nil {
-			server.WriteInternalServerError("error shelves counter", err, w, r)
-			return
-		}
-
-		offsetRequest := offsetFromRequest(r)
-		pagination := paginate(count, limit, query)
-		shelves, err = db.SearchShelves(limit, offsetRequest, count, query)
-		if err != nil {
-			server.WriteInternalServerError("cant query Shelves", err, w, r)
-			return
-		}
-
-		// Map shelves to template data
-		shelvesMaps := mapShelvesToTemplateData(shelves, count, limit)
 
 		data["Shelves"] = shelvesMaps
 		data["Pagination"] = pagination
-		data["Limit"] = limit
 		server.MustRender(w, r, "shelves-page", data)
 	}
 }
 
-// Generate create new Shelf Template with defaults Values
+// Render create Shelf Template with defaults Values
 func CreateTemplate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authenticated, _ := auth.Authenticated(r)
@@ -83,7 +54,7 @@ func CreateTemplate() http.HandlerFunc {
 	}
 }
 
-// Generate Shelf Details Page where you can preview the shelf and update the relevant Data
+// Render Shelf Details Template where you can preview the shelf and update the relevant Data
 func DetailsTemplate(db ShelfDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		errMsgForUser := "the requested Shelf doesn't exist"
@@ -118,59 +89,58 @@ func DetailsTemplate(db ShelfDB) http.HandlerFunc {
 	}
 }
 
-// check the count of available shelves and generate the pagination
-// if the number of the available Shelves was less than the number of allowed rows per page it will return nil
-// if the number was bigger it will generate the Pagination Data
-func paginate(count, limit int, query string) []map[string]any {
-	if count <= limit {
-		return nil
-	}
-
-	totalPages := (count + limit - 1) / limit
-	paginationData := make([]map[string]any, totalPages)
-
-	for i := 0; i < totalPages; i++ {
-		pageData := make(map[string]any)
-		pageData["Query"] = query
-		pageData["PageNumber"] = i + 1
-		pageData["Offset"] = i * limit
-		paginationData[i] = pageData
-	}
-
-	return paginationData
-}
-
-// return query Value from the Request and filter, sanitize it
-func queryFromRequest(r *http.Request) string {
-	searchTrimmed := strings.TrimSpace(r.FormValue("query"))
-	re := regexp.MustCompile(`\s+`)
-	return re.ReplaceAllString(searchTrimmed, "*")
-}
-
-func offsetFromRequest(r *http.Request) int {
-	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
-	if err != nil {
-		offset = 0
-	}
-	return offset
-}
-
-func mapShelvesToTemplateData(shelves []*items.ListRow, count, limit int) map[int]any {
-	shelvesMaps := make(map[int]any, count)
-
-	// Original mapping logic
-	for i, shelf := range shelves {
-		if shelf == nil {
-			shelvesMaps[i] = map[string]any{}
-		} else {
-			shelvesMaps[i] = shelf.Map()
+// Render the SearchTemplate, you can use it with difference Args
+// "/shelves/search?type=add" will return SearchTemplate with add functionality
+// "/shelves/search?type=move" will return SearchTemplate with move functionality
+// "/shelves/search?type=search" will return SearchTemplate with search functionality
+func SearchTemplate(db ShelfDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		rowType, err := typeFromRequest(r)
+		if err != nil {
+			server.WriteInternalServerError("false request", err, w, r)
+			return
 		}
-	}
 
-	// If count is less than limit, add empty maps to reach the limit
-	for i := count; i < limit; i++ {
-		shelvesMaps[i] = map[string]any{}
-	}
+		shelvesMaps, pagination, searchInput := shelfRowListData(w, r, db, rowType)
 
-	return shelvesMaps
+		data := searchInput.Map()
+		data[rowType] = true
+		data["Shelves"] = shelvesMaps
+		data["Pagination"] = pagination
+
+		server.MustRender(w, r, "shelf-list", data)
+	}
+}
+
+// render html element from type input Field with the desired Id and label
+// the response element should be placed inside of the create/update of Item/Box forms
+func InputTemplate(db ShelfDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		errMsgForUser := "can't add, please comeback later"
+		id := server.ValidID(w, r, errMsgForUser)
+
+		shelf, err := db.Shelf(id)
+		if err != nil {
+			server.WriteInternalServerError("false request", err, w, r)
+			return
+		}
+
+		inputHTML := fmt.Sprintf(`
+      <label for="shelf_id">Shelf</label>
+      <input type="text" name="shelf_id" value="%s" hidden>
+      <input type="text" name="label" value="%s" disabled>
+      <button
+       hx-get="/shelves/search?type=add"
+       hx-target="#tg"
+       hx-push-url="false">
+       Add to another Shelf
+      </button>
+      `,
+			shelf.ID.String(), shelf.Label)
+
+		w.Header().Set("Content-Type", "text/html")
+
+		w.Write([]byte(inputHTML))
+	}
 }
