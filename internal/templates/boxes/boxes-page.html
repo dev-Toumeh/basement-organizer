@@ -4,7 +4,9 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
+    <div class="scrollable-content">
     {{ template "boxes-page-content" . }}
+    </div>
 </body>
 {{ template "close-html-tag" . }}
 {{end}} 

@@ -9,7 +9,7 @@
 @import url("search.css");
 
 html {
-  scrollbar-gutter: stable;
+  /*scrollbar-gutter: stable;*/
   /*scroll-behavior: smooth;*/
   height: -webkit-fill-available;
 }
@@ -95,6 +95,11 @@ input[readonly] {
   100% {
     transform: rotate(360deg);
   }
+}
+
+.scrollable-content {
+  scrollbar-gutter: stable;
+  overflow: overlay;
 }
 
 .box-container {
