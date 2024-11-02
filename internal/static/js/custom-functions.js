@@ -119,6 +119,8 @@ function createAndShowNotification(text, notificationType, duration = 2000, id) 
  */
 function createNotification(text, notificationType, id) {
     const snackbar = document.createElement('div');
+    const p = document.createElement("p");
+    snackbar.appendChild(p)
 
     snackbar.className = "notification noshow " + notificationType;
 
@@ -130,7 +132,7 @@ function createNotification(text, notificationType, id) {
     }
 
     snackbar.id = "notification-" + snackbarId;
-    snackbar.textContent = text;
+    p.textContent = text;
 
     switch (notificationType) {
         case NotificationTypeError:

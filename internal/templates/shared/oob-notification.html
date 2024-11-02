@@ -7,7 +7,7 @@
     <div id="notification-{{.NotificationId}}"
         class="notification noshow {{.Type}}"
         hx-on::load="showNotification('notification-{{.NotificationId}}', {{.Duration}})"
-    >{{.Message}}</div>
+    ><p>{{.Message}}</p></div>
 </div>
 {{end}}
 

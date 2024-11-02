@@ -19,6 +19,7 @@ div.notification {
   opacity: 0;
   margin-bottom: 0.1rem;
   border-bottom: outset;
+  white-space: pre-line;
 
   /* for animation */
   /*visibility: hidden; /* Hidden by default. Visible on click */
