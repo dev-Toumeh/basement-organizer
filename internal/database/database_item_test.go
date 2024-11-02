@@ -1,7 +1,7 @@
 package database
 
 import (
-	"basement/main/internal/items"
+	"basement/main/internal/common"
 	"context"
 	"testing"
 
@@ -30,7 +30,7 @@ func TestInsertNewItem(t *testing.T) {
 	assert.NotEqual(t, "", retrievedItem.PreviewPicture)
 
 	// ListRow
-	var retrievedItemRow *items.ListRow
+	var retrievedItemRow *common.ListRow
 	retrievedItemRow, err = dbTest.ItemListRowByID(item.ID)
 	assert.Equal(t, err, nil)
 
@@ -60,7 +60,7 @@ func TestUpdateItem(t *testing.T) {
 	assert.Equal(t, item.Description, retrievedItem.Description)
 
 	// ListRow
-	var retrievedItemRow *items.ListRow
+	var retrievedItemRow *common.ListRow
 	retrievedItemRow, err = dbTest.ItemListRowByID(item.ID)
 	assert.Equal(t, err, nil)
 

@@ -1,8 +1,10 @@
-package items
+package common
 
 import (
 	"basement/main/internal/templates"
 	"net/http"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 type ListTemplate struct {
@@ -49,4 +51,31 @@ func (tmpl ListTemplate) Render(w http.ResponseWriter) error {
 	// logg.Debug(tmpl.Rows)
 	// d := ListTemplate{HXGet: "/boxes"}
 	return templates.SafeRender(w, "list", tmpl)
+}
+
+// ListRow is a single row entry used for list templates.
+type ListRow struct {
+	ID             uuid.UUID
+	Label          string
+	BoxID          uuid.UUID
+	BoxLabel       string
+	ShelfID        uuid.UUID
+	ShelfLabel     string
+	AreaID         uuid.UUID
+	AreaLabel      string
+	PreviewPicture string
+}
+
+func (row *ListRow) Map() map[string]any {
+	return map[string]interface{}{
+		"ID":             row.ID,
+		"Label":          row.Label,
+		"BoxID":          row.BoxID,
+		"BoxLabel":       row.BoxLabel,
+		"ShelfID":        row.ShelfID,
+		"ShelfLabel":     row.ShelfLabel,
+		"AreaID":         row.AreaID,
+		"AreaLabel":      row.AreaLabel,
+		"PreviewPicture": row.PreviewPicture,
+	}
 }

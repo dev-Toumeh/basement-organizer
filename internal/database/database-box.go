@@ -1,7 +1,7 @@
 package database
 
 import (
-	"basement/main/internal/items"
+	"basement/main/internal/boxes"
 	"basement/main/internal/logg"
 	"database/sql"
 
@@ -27,8 +27,8 @@ func (s SQLBox) Vals() []string {
 }
 
 // this function used inside of BoxByField to convert the box sql struct into normal struct
-func (s *SQLBox) ToBox() (*items.Box, error) {
-	box := &items.Box{}
+func (s *SQLBox) ToBox() (*boxes.Box, error) {
+	box := &boxes.Box{}
 	info, err := s.ToBasicInfo()
 	if err != nil {
 		return box, logg.WrapErr(err)
@@ -42,7 +42,7 @@ func (s *SQLBox) ToBox() (*items.Box, error) {
 }
 
 // Create New Item Record
-func (db *DB) CreateBox(newBox *items.Box) (uuid.UUID, error) {
+func (db *DB) CreateBox(newBox *boxes.Box) (uuid.UUID, error) {
 	if db.BoxExistById(newBox.ID) {
 		return uuid.Nil, db.ErrorExist()
 	}
@@ -93,7 +93,7 @@ func (db *DB) BoxIDs() ([]string, error) {
 }
 
 // update box data
-func (db *DB) UpdateBox(box items.Box) error {
+func (db *DB) UpdateBox(box boxes.Box) error {
 	exist := db.BoxExistById(box.ID)
 	if !exist {
 		return logg.Errorf("the box does not exist")
@@ -144,8 +144,8 @@ func (db *DB) DeleteBox(boxId uuid.UUID) error {
 
 // Get Box based on his ID
 // Wrapper function for BoxByField
-func (db *DB) BoxById(id uuid.UUID) (items.Box, error) {
-	box := items.Box{}
+func (db *DB) BoxById(id uuid.UUID) (boxes.Box, error) {
+	box := boxes.Box{}
 	if !db.BoxExistById(id) {
 		return box, logg.Errorf("box is not exist \n")
 	}
@@ -158,7 +158,7 @@ func (db *DB) BoxById(id uuid.UUID) (items.Box, error) {
 }
 
 // Get Box  based on given Field
-func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
+func (db *DB) BoxByField(field string, value string) (*boxes.Box, error) {
 	var sqlBox SQLBox
 	stmt := "SELECT " + ALL_BOX_COLS + " FROM box WHERE " + field + " = ?;"
 
@@ -197,7 +197,7 @@ func (db *DB) BoxByField(field string, value string) (*items.Box, error) {
 }
 
 // insert new Box record in the Database
-func (db *DB) insertNewBox(box *items.Box) (uuid.UUID, error) {
+func (db *DB) insertNewBox(box *boxes.Box) (uuid.UUID, error) {
 	if db.BoxExistById(box.ID) {
 		return uuid.Nil, db.ErrorExist()
 	}

@@ -1,8 +1,9 @@
 package routes
 
 import (
+	"basement/main/internal/boxes"
+	"basement/main/internal/common"
 	"basement/main/internal/env"
-	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"errors"
@@ -38,12 +39,12 @@ const BOX_ID_INVALID_UUID_FORMAT string = "ac9c-54ce5855bf0b"
 // boxDatabaseError returns errors on every function.
 type boxDatabaseError struct{}
 
-func (db *boxDatabaseError) CreateBox(newBox *items.Box) (uuid.UUID, error) {
+func (db *boxDatabaseError) CreateBox(newBox *boxes.Box) (uuid.UUID, error) {
 	return uuid.Nil, errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) BoxById(id uuid.UUID) (items.Box, error) {
-	return items.Box{BasicInfo: items.BasicInfo{ID: uuid.Nil}}, errors.New("AAAAAAAA")
+func (db *boxDatabaseError) BoxById(id uuid.UUID) (boxes.Box, error) {
+	return boxes.Box{BasicInfo: common.BasicInfo{ID: uuid.Nil}}, errors.New("AAAAAAAA")
 }
 
 func (db *boxDatabaseError) BoxIDs() ([]string, error) {
@@ -54,8 +55,8 @@ func (db *boxDatabaseError) MoveBoxToBox(id1 uuid.UUID, id2 uuid.UUID) error {
 	return errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) BoxByField(field string, value string) (*items.Box, error) {
-	return &items.Box{}, errors.New("AAAAAAAA")
+func (db *boxDatabaseError) BoxByField(field string, value string) (*boxes.Box, error) {
+	return &boxes.Box{}, errors.New("AAAAAAAA")
 }
 
 func (db *boxDatabaseError) BoxExistById(id uuid.UUID) bool {
@@ -66,7 +67,7 @@ func (db *boxDatabaseError) ErrorExist() error {
 	return errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) UpdateBox(box items.Box) error {
+func (db *boxDatabaseError) UpdateBox(box boxes.Box) error {
 	return errors.New("AAAAA")
 }
 
@@ -74,23 +75,23 @@ func (db *boxDatabaseError) DeleteBox(boxId uuid.UUID) error {
 	return errors.New("AAAAA")
 }
 
-func (db *boxDatabaseError) BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow, error) {
-	return make([]items.ListRow, 0), errors.New("AAAAAAAA")
+func (db *boxDatabaseError) BoxFuzzyFinder(query string, limit int, page int) ([]common.ListRow, error) {
+	return make([]common.ListRow, 0), errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) BoxListRowByID(id uuid.UUID) (items.ListRow, error) {
-	return items.ListRow{}, errors.New("AAAAAAAA")
+func (db *boxDatabaseError) BoxListRowByID(id uuid.UUID) (common.ListRow, error) {
+	return common.ListRow{}, errors.New("AAAAAAAA")
 }
 
 // boxDatabaseSuccess never returns errors.
 type boxDatabaseSuccess struct{}
 
-func (db *boxDatabaseSuccess) CreateBox(newBox *items.Box) (uuid.UUID, error) {
+func (db *boxDatabaseSuccess) CreateBox(newBox *boxes.Box) (uuid.UUID, error) {
 	return uuid.Must(uuid.FromString(BOX_ID_VALID)), nil
 }
 
-func (db *boxDatabaseSuccess) BoxById(id uuid.UUID) (items.Box, error) {
-	return items.Box{BasicInfo: items.BasicInfo{ID: uuid.Must(uuid.FromString(BOX_ID_VALID))}}, nil
+func (db *boxDatabaseSuccess) BoxById(id uuid.UUID) (boxes.Box, error) {
+	return boxes.Box{BasicInfo: common.BasicInfo{ID: uuid.Must(uuid.FromString(BOX_ID_VALID))}}, nil
 }
 
 func (db *boxDatabaseSuccess) BoxIDs() ([]string, error) {
@@ -109,7 +110,7 @@ func (db *boxDatabaseSuccess) ErrorExist() error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) UpdateBox(box items.Box) error {
+func (db *boxDatabaseSuccess) UpdateBox(box boxes.Box) error {
 	return nil
 }
 
@@ -117,12 +118,12 @@ func (db *boxDatabaseSuccess) DeleteBox(boxId uuid.UUID) error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow, error) {
-	return make([]items.ListRow, 0), nil
+func (db *boxDatabaseSuccess) BoxFuzzyFinder(query string, limit int, page int) ([]common.ListRow, error) {
+	return make([]common.ListRow, 0), nil
 }
 
-func (db *boxDatabaseSuccess) BoxListRowByID(id uuid.UUID) (items.ListRow, error) {
-	return items.ListRow{}, nil
+func (db *boxDatabaseSuccess) BoxListRowByID(id uuid.UUID) (common.ListRow, error) {
+	return common.ListRow{}, nil
 }
 
 func TestBoxHandlerDBErrors(t *testing.T) {

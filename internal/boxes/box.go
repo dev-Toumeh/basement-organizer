@@ -1,6 +1,8 @@
-package items
+package boxes
 
 import (
+	"basement/main/internal/common"
+	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"encoding/json"
@@ -12,11 +14,11 @@ import (
 )
 
 type Box struct {
-	BasicInfo
+	common.BasicInfo
 	OuterBoxID       uuid.UUID  `json:"outerboxid"`
-	Items            []*ListRow `json:"items"`
-	InnerBoxes       []*ListRow `json:"innerboxes"`
-	OuterBox         *ListRow   `json:"outerbox"`
+	Items            []*common.ListRow `json:"items"`
+	InnerBoxes       []*common.ListRow `json:"innerboxes"`
+	OuterBox         *common.ListRow   `json:"outerbox"`
 	ShelfID          uuid.UUID
 	AreaID           uuid.UUID
 	ShelfCoordinates *ShelfCoordinates `json:"shelfcoordinates"`
@@ -54,7 +56,7 @@ func (tmpl BoxTemplateData) Map() map[string]any {
 }
 
 type BoxListTemplateData struct {
-	Boxes []ListRow
+	Boxes []common.ListRow
 }
 
 func (tmpl BoxListTemplateData) Map() map[string]any {
@@ -109,14 +111,14 @@ type BoxC struct {
 	Description string    `json:"description" validate:"omitempty,lte=256"`
 	Picture     string    `json:"picture"     validate:"omitempty,base64"`
 	QRCode      string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	Items       []Item    `json:"items"`
+	Items       []items.Item    `json:"items"`
 	InnerBoxes  []Box     `json:"innerboxes"`
 	OuterBox    Box       `json:"outerbox" `
 }
 
 // NewBox returns an empty box with a new uuid.
 func NewBox() Box {
-	b := NewBasicInfoWithLabel("Box")
+	b := common.NewBasicInfoWithLabel("Box")
 	return Box{BasicInfo: b}
 }
 
@@ -124,11 +126,11 @@ func (b *Box) MarshalJSON() ([]byte, error) {
 	c := Box{}
 	for _, item := range b.Items {
 		it := *item
-		c.Items = append(c.Items, &ListRow{ID: it.ID, Label: it.Label, PreviewPicture: it.PreviewPicture})
+		c.Items = append(c.Items, &common.ListRow{ID: it.ID, Label: it.Label, PreviewPicture: it.PreviewPicture})
 	}
 
 	for _, innerb := range b.InnerBoxes {
-		c.InnerBoxes = append(c.InnerBoxes, &ListRow{BoxID: innerb.BoxID, Label: innerb.Label, PreviewPicture: innerb.PreviewPicture})
+		c.InnerBoxes = append(c.InnerBoxes, &common.ListRow{BoxID: innerb.BoxID, Label: innerb.Label, PreviewPicture: innerb.PreviewPicture})
 	}
 
 	// if b.OuterBox != nil {

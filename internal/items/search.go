@@ -1,6 +1,7 @@
 package items
 
 import (
+	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 type SearchItemData struct {
 	Query          string
 	TotalCount     int
-	Records        []ListRow
+	Records        []common.ListRow
 	PaginationData []PaginationData
 }
 

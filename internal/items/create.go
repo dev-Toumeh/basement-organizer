@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid/v5"
@@ -19,70 +18,8 @@ import (
 	"basement/main/internal/templates"
 )
 
-// BasicInfo is present in item, box, shelf and area
-type BasicInfo struct {
-	ID             uuid.UUID
-	Label          string
-	Description    string
-	Picture        string
-	PreviewPicture string
-	QRCode         string
-}
-
-func (b BasicInfo) Map() map[string]any {
-	return map[string]interface{}{
-		"ID":             b.ID,
-		"Label":          b.Label,
-		"Description":    b.Description,
-		"Picture":        b.Picture,
-		"PreviewPicture": b.PreviewPicture,
-		"QRCode":         b.QRCode,
-	}
-}
-
-func NewBasicInfo() BasicInfo {
-	return BasicInfo{ID: uuid.Must(uuid.NewV4())}.MakeLabelWithTime("thing")
-}
-
-func NewBasicInfoWithLabel(label string) BasicInfo {
-	return BasicInfo{ID: uuid.Must(uuid.NewV4())}.MakeLabelWithTime(label)
-}
-
-func (b BasicInfo) MakeLabelWithTime(label string) BasicInfo {
-	t := time.Now().Format("2006-01-02_15_04_05")
-	b.Label = fmt.Sprintf("%s_%s", label, t)
-	return b
-}
-
-// ListRow is a single row entry used for list templates.
-type ListRow struct {
-	ID             uuid.UUID
-	Label          string
-	BoxID          uuid.UUID
-	BoxLabel       string
-	ShelfID        uuid.UUID
-	ShelfLabel     string
-	AreaID         uuid.UUID
-	AreaLabel      string
-	PreviewPicture string
-}
-
-func (row *ListRow) Map() map[string]any {
-	return map[string]interface{}{
-		"ID":             row.ID,
-		"Label":          row.Label,
-		"BoxID":          row.BoxID,
-		"BoxLabel":       row.BoxLabel,
-		"ShelfID":        row.ShelfID,
-		"ShelfLabel":     row.ShelfLabel,
-		"AreaID":         row.AreaID,
-		"AreaLabel":      row.AreaLabel,
-		"PreviewPicture": row.PreviewPicture,
-	}
-}
-
 type Item struct {
-	BasicInfo
+	common.BasicInfo
 	Quantity int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
 	Weight   string    `json:"weight"      validate:"omitempty,numeric"`
 	BoxID    uuid.UUID `json:"box_id"`
@@ -98,7 +35,7 @@ func (i Item) String() string {
 type ItemDatabase interface {
 	CreateNewItem(newItem Item) error
 	ItemByField(field string, value string) (Item, error)
-	ItemListRowByID(id uuid.UUID) (*ListRow, error)
+	ItemListRowByID(id uuid.UUID) (*common.ListRow, error)
 	Item(id string) (Item, error)
 	ItemIDs() ([]string, error)
 	ItemExist(field string, value string) bool
@@ -111,8 +48,8 @@ type ItemDatabase interface {
 	MoveItemToBox(itemID uuid.UUID, boxID uuid.UUID) error
 
 	// search functions
-	ItemFuzzyFinder(query string) ([]ListRow, error)
-	ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]ListRow, error)
+	ItemFuzzyFinder(query string) ([]common.ListRow, error)
+	ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]common.ListRow, error)
 	NumOfItemRecords(searchString string) (int, error)
 }
 
@@ -288,7 +225,7 @@ func item(r *http.Request) (Item, error) {
 	}
 
 	newItem := Item{
-		BasicInfo: BasicInfo{
+		BasicInfo: common.BasicInfo{
 			ID:          id,
 			Label:       r.PostFormValue(LABEL),
 			Description: r.PostFormValue(DESCRIPTION),

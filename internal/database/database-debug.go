@@ -1,6 +1,8 @@
 package database
 
 import (
+	"basement/main/internal/boxes"
+	"basement/main/internal/common"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/shelves"
@@ -306,7 +308,7 @@ func (db *DB) InsertSampleItems() {
 
 	for i := 0; i < 10; i++ {
 		newItem := items.Item{
-			BasicInfo: items.BasicInfo{
+			BasicInfo: common.BasicInfo{
 				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
 				Label:       gofakeit.ProductName(),
 				Description: gofakeit.Sentence(5),
@@ -330,8 +332,8 @@ func (db *DB) InsertSampleBoxes() {
 	gofakeit.Seed(SEED)
 
 	for i := 0; i < 10; i++ {
-		newBox := items.Box{
-			BasicInfo: items.BasicInfo{
+		newBox := boxes.Box{
+			BasicInfo: common.BasicInfo{
 				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
 				Label:       gofakeit.ProductName(),
 				Description: gofakeit.Sentence(5),
@@ -353,7 +355,7 @@ func (db *DB) InsertSampleShelves() {
 
 	for i := 0; i < 10; i++ {
 		newShelf := &shelves.Shelf{
-			BasicInfo: items.BasicInfo{
+			BasicInfo: common.BasicInfo{
 				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
 				Label:       gofakeit.ProductName(),
 				Description: gofakeit.Sentence(5),
@@ -375,8 +377,8 @@ func (db *DB) InsertSampleShelves() {
 // If rows=5 returns 3 results with `found=2` the last 2 rows of `shelfRows` will be nil pointers.
 //
 // `rows` and `page` must be 1 or above.
-func (db *DB) ShelfListRowsPaginated(page int, rows int) (shelfRows []*items.ListRow, foundResults int, err error) {
-	shelfRows = make([]*items.ListRow, 0)
+func (db *DB) ShelfListRowsPaginated(page int, rows int) (shelfRows []*common.ListRow, foundResults int, err error) {
+	shelfRows = make([]*common.ListRow, 0)
 
 	if page < 1 {
 		return shelfRows, foundResults, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
@@ -386,7 +388,7 @@ func (db *DB) ShelfListRowsPaginated(page int, rows int) (shelfRows []*items.Lis
 		return shelfRows, foundResults, logg.NewError(fmt.Sprintf("invalid rows '%d', needs at least 1 row", rows))
 	}
 
-	shelfRows = make([]*items.ListRow, rows)
+	shelfRows = make([]*common.ListRow, rows)
 
 	limit := rows
 	offset := (page - 1) * rows
@@ -424,10 +426,10 @@ func (db *DB) ShelfListRowsPaginated(page int, rows int) (shelfRows []*items.Lis
 }
 
 // ShelfListRowsPaginated returns always a slice with the number of rows specified.
-func (db *DB) ShelfListRowsPaginated2(limit int, offset int) (shelfRows []*items.ListRow, count int, err error) {
+func (db *DB) ShelfListRowsPaginated2(limit int, offset int) (shelfRows []*common.ListRow, count int, err error) {
 	i := 0
 	count, err = db.ShelfCounter("")
-	shelfRows = make([]*items.ListRow, count)
+	shelfRows = make([]*common.ListRow, count)
 
 	queryNoSearch := `
 		SELECT
@@ -466,7 +468,7 @@ func (db *DB) ShelfListRowsPaginated2(limit int, offset int) (shelfRows []*items
 // `rows` and `page` must be 1 or above.
 //
 // Empty `search == ""` works the same as ShelfListRowsPaginated.
-func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (shelfRows []*items.ListRow, found int, err error) {
+func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (shelfRows []*common.ListRow, found int, err error) {
 	if page < 1 {
 		return shelfRows, found, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
 	}
@@ -479,7 +481,7 @@ func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (s
 		return db.ShelfListRowsPaginated(page, rows)
 	}
 
-	shelfRows = make([]*items.ListRow, rows)
+	shelfRows = make([]*common.ListRow, rows)
 
 	limit := rows
 	offset := (page - 1) * rows

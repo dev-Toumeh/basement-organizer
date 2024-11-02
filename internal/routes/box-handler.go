@@ -2,6 +2,7 @@ package routes
 
 import (
 	"basement/main/internal/auth"
+	"basement/main/internal/boxes"
 	"basement/main/internal/common"
 	"basement/main/internal/database"
 	"basement/main/internal/env"
@@ -21,14 +22,14 @@ import (
 )
 
 type BoxDatabase interface {
-	CreateBox(newBox *items.Box) (uuid.UUID, error)
+	CreateBox(newBox *boxes.Box) (uuid.UUID, error)
 	MoveBoxToBox(id1 uuid.UUID, id2 uuid.UUID) error
-	UpdateBox(box items.Box) error
+	UpdateBox(box boxes.Box) error
 	DeleteBox(boxId uuid.UUID) error
-	BoxById(id uuid.UUID) (items.Box, error)
+	BoxById(id uuid.UUID) (boxes.Box, error)
 	BoxIDs() ([]string, error) // @TODO: Change string to uuid.UUID
-	BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow, error)
-	BoxListRowByID(id uuid.UUID) (items.ListRow, error)
+	BoxFuzzyFinder(query string, limit int, page int) ([]common.ListRow, error)
+	BoxListRowByID(id uuid.UUID) (common.ListRow, error)
 }
 
 func registerBoxRoutes(db *database.DB) {
@@ -112,13 +113,13 @@ func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 			return
 		}
 
-		boxes, err := db.BoxFuzzyFinder("", 100, 1)
+		boxs, err := db.BoxFuzzyFinder("", 100, 1)
 		if err != nil {
 			server.WriteInternalServerError("cant query boxes", logg.Errorf("%w", err), w, r)
 			return
 		}
 
-		a := items.BoxListTemplateData{Boxes: boxes}
+		a := boxes.BoxListTemplateData{Boxes: boxs}
 		d := a.Map()
 		d["Move"] = true
 		for i := range d["Boxes"].([]map[string]any) {
@@ -161,13 +162,13 @@ func boxesHandler(db BoxDatabase) http.HandlerFunc {
 				return
 			}
 
-			boxes, err := db.BoxFuzzyFinder("", 100, 1)
+			boxs, err := db.BoxFuzzyFinder("", 100, 1)
 			if err != nil {
 				server.WriteNotFoundError("Can't find boxes", err, w, r)
 				return
 			}
 			if server.WantsTemplateData(r) {
-				a := items.BoxListTemplateData{Boxes: boxes}
+				a := boxes.BoxListTemplateData{Boxes: boxs}
 				d := a.Map()
 				d["Move"] = true
 				for i := range d["Boxes"].([]map[string]any) {
@@ -176,7 +177,7 @@ func boxesHandler(db BoxDatabase) http.HandlerFunc {
 				}
 				server.MustRender(w, r, templates.TEMPLATE_BOX_LIST, d)
 			} else {
-				server.WriteJSON(w, boxes)
+				server.WriteJSON(w, boxs)
 			}
 			break
 
@@ -249,7 +250,7 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 
 		// box-list-row to fill box-list template
 		logg.Debugf("has query: %v", urlQuery.Has("query"))
-		var boxes []items.ListRow
+		var boxes []common.ListRow
 		err = nil
 		usedSearch := false
 		if urlQuery.Has("query") && query != "" {
@@ -420,7 +421,7 @@ func boxDetailsPage(db *database.DB) http.HandlerFunc {
 			notFound = true
 		}
 		box.ID = id
-		data := items.BoxPageTemplateData()
+		data := boxes.BoxPageTemplateData()
 		data.Box = &box
 
 		data.Title = fmt.Sprintf("Box - %s", box.Label)
@@ -443,7 +444,7 @@ func boxDetailsPage(db *database.DB) http.HandlerFunc {
 }
 
 func createBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
-	box := items.NewBox()
+	box := boxes.NewBox()
 	logg.Debug("create box: ", box)
 	id, err := db.CreateBox(&box)
 	if err != nil {
@@ -477,7 +478,7 @@ func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		return
 	}
 	if server.WantsTemplateData(r) {
-		boxTemplate := items.BoxTemplateData{Box: &box, Edit: false}
+		boxTemplate := boxes.BoxTemplateData{Box: &box, Edit: false}
 		err := server.RenderWithSuccessNotification(w, r, templates.TEMPLATE_BOX_DETAILS, boxTemplate.Map(), fmt.Sprintf("Updated box: %v", boxTemplate.Label))
 		if err != nil {
 			server.WriteInternalServerError(errMsgForUser, err, w, r)
@@ -626,8 +627,8 @@ func moveBoxes(db BoxDatabase) http.HandlerFunc {
 }
 
 // boxFromPostFormValue returns items.Box without references to inner boxes, outer box and items.
-func boxFromPostFormValue(id uuid.UUID, r *http.Request) items.Box {
-	box := items.Box{}
+func boxFromPostFormValue(id uuid.UUID, r *http.Request) boxes.Box {
+	box := boxes.Box{}
 	box.ID = id
 	box.Label = r.PostFormValue("label")
 	box.Description = r.PostFormValue("description")
@@ -642,17 +643,17 @@ func wantsTemplateData(r *http.Request) bool {
 	return !strings.Contains(r.URL.Path, "/api/")
 }
 
-func renderBoxTemplate(box *items.Box, w http.ResponseWriter, r *http.Request) {
+func renderBoxTemplate(box *boxes.Box, w http.ResponseWriter, r *http.Request) {
 	editParam := r.FormValue("edit")
 	edit := false
 	if editParam == "true" {
 		edit = true
 	}
-	b := items.BoxTemplateData{Box: box, Edit: edit}
+	b := boxes.BoxTemplateData{Box: box, Edit: edit}
 	server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS, b.Map())
 }
 
-func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatabase, boxes []items.ListRow, query string) error {
+func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatabase, boxes []common.ListRow, query string) error {
 	searchInput := items.NewSearchInputTemplate()
 	searchInput.SearchInputLabel = "Search boxes"
 	searchInput.SearchInputHxTarget = "#box-list"
@@ -676,11 +677,11 @@ func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatab
 
 // // sampleBoxDB to test request handler.
 // type sampleBoxDB struct {
-// 	Boxes map[string]*items.Box
+// 	Boxes map[string]*boxes.Box
 // }
 //
 // func newSampleBoxDB() *sampleBoxDB {
-// 	db := sampleBoxDB{Boxes: make(map[string]*items.Box, 100)}
+// 	db := sampleBoxDB{Boxes: make(map[string]*boxes.Box, 100)}
 // 	for i := range 10 {
 // 		box := items.NewBox()
 // 		box.Label = fmt.Sprintf("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa %d", i)
@@ -696,18 +697,18 @@ func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatab
 // // 	return box.Id, nil
 // // }
 //
-// func (db *sampleBoxDB) CreateBox(box *items.Box) (uuid.UUID, error) {
+// func (db *sampleBoxDB) CreateBox(box *boxes.Box) (uuid.UUID, error) {
 // 	// box := items.NewBox()
 // 	db.Boxes[box.Id.String()] = box
 // 	logg.Debug(db.Boxes)
 // 	return box.Id, nil
 // }
 //
-// func (db *sampleBoxDB) BoxById(id uuid.UUID) (items.Box, error) {
+// func (db *sampleBoxDB) BoxById(id uuid.UUID) (boxes.Box, error) {
 // 	box, ok := db.Boxes[id.String()]
 // 	if !ok {
 // 		// logg.Debug("BoxByID: ",db.Boxes)
-// 		return items.Box{}, errors.New("ID " + id.String() + " doesn't exist")
+// 		return boxes.Box{}, errors.New("ID " + id.String() + " doesn't exist")
 // 	}
 // 	return *box, nil
 // }
@@ -726,7 +727,7 @@ func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatab
 // 	return ids, nil
 // }
 //
-// func (db *sampleBoxDB) UpdateBox(box items.Box) error {
+// func (db *sampleBoxDB) UpdateBox(box boxes.Box) error {
 // 	oldBox, err := db.BoxById(box.Id)
 // 	if err != nil {
 // 		return logg.Errorf("UpdateBox(): %w", err)

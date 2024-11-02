@@ -1,7 +1,7 @@
 package database
 
 import (
-	"basement/main/internal/items"
+	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"basement/main/internal/shelves"
 	"database/sql"
@@ -268,12 +268,12 @@ func (db *DB) MoveShelfToArea(shelfID uuid.UUID, toAreaID uuid.UUID) error {
 }
 
 // ShelfListRowsPaginated returns always a slice with the number of rows specified.
-func (db *DB) SearchShelves(limit int, offset int, count int, searchString string) (shelfRows []*items.ListRow, err error) {
+func (db *DB) SearchShelves(limit int, offset int, count int, searchString string) (shelfRows []*common.ListRow, err error) {
 	i := 0
 	if count > limit {
-		shelfRows = make([]*items.ListRow, limit)
+		shelfRows = make([]*common.ListRow, limit)
 	} else {
-		shelfRows = make([]*items.ListRow, count)
+		shelfRows = make([]*common.ListRow, count)
 	}
 
 	// by default use this query

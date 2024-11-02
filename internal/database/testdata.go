@@ -1,6 +1,8 @@
 package database
 
 import (
+	"basement/main/internal/boxes"
+	"basement/main/internal/common"
 	"basement/main/internal/items"
 	"basement/main/internal/shelves"
 
@@ -33,8 +35,8 @@ const VALID_BASE64_PREVIEW_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAA
 const INVALID_BASE64_PNG = "invalid base 64"
 
 func resetTestBoxes() {
-	BOX_1 = &items.Box{
-		BasicInfo: items.BasicInfo{
+	BOX_1 = &boxes.Box{
+		BasicInfo: common.BasicInfo{
 			ID:          BOX_VALID_UUID_1,
 			Label:       "box 1",
 			Description: "This is the sixth box",
@@ -42,8 +44,8 @@ func resetTestBoxes() {
 			QRCode:      "uvwxyzabcdefg",
 		},
 	}
-	BOX_2 = &items.Box{
-		BasicInfo: items.BasicInfo{
+	BOX_2 = &boxes.Box{
+		BasicInfo: common.BasicInfo{
 			ID:          BOX_VALID_UUID_2,
 			Label:       "box 2",
 			Description: "This is the third box",
@@ -51,8 +53,8 @@ func resetTestBoxes() {
 			QRCode:      "abababababcd",
 		},
 	}
-	BOX_3 = &items.Box{
-		BasicInfo: items.BasicInfo{
+	BOX_3 = &boxes.Box{
+		BasicInfo: common.BasicInfo{
 			ID:          BOX_VALID_UUID_3,
 			Label:       "box 3",
 			Description: "This is the fourth box",
@@ -60,8 +62,8 @@ func resetTestBoxes() {
 			QRCode:      "efghefghefgh",
 		},
 	}
-	BOX_4 = &items.Box{
-		BasicInfo: items.BasicInfo{
+	BOX_4 = &boxes.Box{
+		BasicInfo: common.BasicInfo{
 			ID:          BOX_VALID_UUID_4,
 			Label:       "box 4",
 			Description: "This is the fifth box",
@@ -71,12 +73,12 @@ func resetTestBoxes() {
 	}
 }
 
-func testBoxes() []*items.Box {
-	return []*items.Box{BOX_1, BOX_2, BOX_3, BOX_4}
+func testBoxes() []*boxes.Box {
+	return []*boxes.Box{BOX_1, BOX_2, BOX_3, BOX_4}
 }
 
-var BOX_1 = &items.Box{
-	BasicInfo: items.BasicInfo{
+var BOX_1 = &boxes.Box{
+	BasicInfo: common.BasicInfo{
 		ID:          BOX_VALID_UUID_1,
 		Label:       "box 1",
 		Description: "This is the sixth box",
@@ -85,8 +87,8 @@ var BOX_1 = &items.Box{
 	},
 }
 
-var BOX_2 = &items.Box{
-	BasicInfo: items.BasicInfo{
+var BOX_2 = &boxes.Box{
+	BasicInfo: common.BasicInfo{
 		ID:          BOX_VALID_UUID_2,
 		Label:       "box 2",
 		Description: "This is the third box",
@@ -95,8 +97,8 @@ var BOX_2 = &items.Box{
 	},
 }
 
-var BOX_3 = &items.Box{
-	BasicInfo: items.BasicInfo{
+var BOX_3 = &boxes.Box{
+	BasicInfo: common.BasicInfo{
 		ID:          BOX_VALID_UUID_3,
 		Label:       "box 3",
 		Description: "This is the fourth box",
@@ -105,8 +107,8 @@ var BOX_3 = &items.Box{
 	},
 }
 
-var BOX_4 = &items.Box{
-	BasicInfo: items.BasicInfo{
+var BOX_4 = &boxes.Box{
+	BasicInfo: common.BasicInfo{
 		ID:          BOX_VALID_UUID_4,
 		Label:       "box 4",
 		Description: "This is the fifth box",
@@ -116,7 +118,7 @@ var BOX_4 = &items.Box{
 }
 
 var ITEM_1 = &items.Item{
-	BasicInfo: items.BasicInfo{
+	BasicInfo: common.BasicInfo{
 		ID:          ITEM_VALID_UUID_1,
 		Label:       "Item 1",
 		Description: "Description for item 1",
@@ -128,7 +130,7 @@ var ITEM_1 = &items.Item{
 }
 
 var ITEM_2 = &items.Item{
-	BasicInfo: items.BasicInfo{
+	BasicInfo: common.BasicInfo{
 		ID:          ITEM_VALID_UUID_2,
 		Label:       "Item 2",
 		Description: "Description for item 2",
@@ -140,7 +142,7 @@ var ITEM_2 = &items.Item{
 }
 
 var ITEM_3 = &items.Item{
-	BasicInfo: items.BasicInfo{
+	BasicInfo: common.BasicInfo{
 		ID:          ITEM_VALID_UUID_3,
 		Label:       "Item 3",
 		Description: "Description for item 3",
@@ -153,7 +155,7 @@ var ITEM_3 = &items.Item{
 
 func resetTestItems() {
 	ITEM_1 = &items.Item{
-		BasicInfo: items.BasicInfo{
+		BasicInfo: common.BasicInfo{
 			ID:          ITEM_VALID_UUID_1,
 			Label:       "Item 1",
 			Description: "Description for item 1",
@@ -165,7 +167,7 @@ func resetTestItems() {
 	}
 
 	ITEM_2 = &items.Item{
-		BasicInfo: items.BasicInfo{
+		BasicInfo: common.BasicInfo{
 			ID:          ITEM_VALID_UUID_2,
 			Label:       "Item 2",
 			Description: "Description for item 2",
@@ -177,7 +179,7 @@ func resetTestItems() {
 	}
 
 	ITEM_3 = &items.Item{
-		BasicInfo: items.BasicInfo{
+		BasicInfo: common.BasicInfo{
 			ID:          ITEM_VALID_UUID_3,
 			Label:       "Item 3",
 			Description: "Description for item 3",
@@ -195,7 +197,7 @@ func testItems() []items.Item {
 
 var SHELF_1 = &shelves.Shelf{
 
-	BasicInfo: items.BasicInfo{
+	BasicInfo: common.BasicInfo{
 		ID:             SHELF_VALID_UUID_1,
 		Label:          "Test Shelf",
 		Description:    "A shelf for testing",
@@ -211,7 +213,7 @@ var SHELF_1 = &shelves.Shelf{
 }
 
 var SHELF_2 = &shelves.Shelf{
-	BasicInfo: items.BasicInfo{
+	BasicInfo: common.BasicInfo{
 		ID:             SHELF_VALID_UUID_2,
 		Label:          "Test Shelf 2",
 		Description:    "A shelf for testing",
@@ -227,7 +229,7 @@ var SHELF_2 = &shelves.Shelf{
 }
 
 var SHELF_3 = &shelves.Shelf{
-	BasicInfo: items.BasicInfo{
+	BasicInfo: common.BasicInfo{
 		ID:             SHELF_VALID_UUID_3,
 		Label:          "Test Shelf 3",
 		Description:    "A shelf for testing",
@@ -243,21 +245,21 @@ var SHELF_3 = &shelves.Shelf{
 }
 
 var SHELF_4 = &shelves.Shelf{
-	BasicInfo: items.BasicInfo{
+	BasicInfo: common.BasicInfo{
 		ID:    SHELF_VALID_UUID_4,
 		Label: "A Shelf",
 	},
 }
 
 var SHELF_5 = &shelves.Shelf{
-	BasicInfo: items.BasicInfo{
+	BasicInfo: common.BasicInfo{
 		ID:    SHELF_VALID_UUID_5,
 		Label: "AA Shelf",
 	},
 }
 
 var SHELF_6 = &shelves.Shelf{
-	BasicInfo: items.BasicInfo{
+	BasicInfo: common.BasicInfo{
 		ID:    SHELF_VALID_UUID_6,
 		Label: "BBB",
 	},
@@ -269,7 +271,7 @@ func testShelves() []shelves.Shelf {
 
 func resetShelves() {
 	SHELF_1 = &shelves.Shelf{
-		BasicInfo: items.BasicInfo{
+		BasicInfo: common.BasicInfo{
 			ID:             SHELF_VALID_UUID_1,
 			Label:          "Test Shelf",
 			Description:    "A shelf for testing",
@@ -285,7 +287,7 @@ func resetShelves() {
 	}
 
 	SHELF_2 = &shelves.Shelf{
-		BasicInfo: items.BasicInfo{
+		BasicInfo: common.BasicInfo{
 			ID:             SHELF_VALID_UUID_2,
 			Label:          "Test Shelf 2",
 			Description:    "A shelf for testing",
@@ -301,7 +303,7 @@ func resetShelves() {
 	}
 
 	SHELF_3 = &shelves.Shelf{
-		BasicInfo: items.BasicInfo{
+		BasicInfo: common.BasicInfo{
 			ID:             SHELF_VALID_UUID_3,
 			Label:          "Test   Shelf 3",
 			Description:    "A shelf for testing",
@@ -317,14 +319,14 @@ func resetShelves() {
 	}
 
 	SHELF_4 = &shelves.Shelf{
-		BasicInfo: items.BasicInfo{
+		BasicInfo: common.BasicInfo{
 			ID:    SHELF_VALID_UUID_4,
 			Label: "keyword A",
 		},
 	}
 
 	SHELF_5 = &shelves.Shelf{
-		BasicInfo: items.BasicInfo{
+		BasicInfo: common.BasicInfo{
 			ID:    SHELF_VALID_UUID_5,
 			Label: "keyword Shelf AA",
 		},
@@ -332,7 +334,7 @@ func resetShelves() {
 
 	SHELF_6 = &shelves.Shelf{
 
-		BasicInfo: items.BasicInfo{
+		BasicInfo: common.BasicInfo{
 			ID:    SHELF_VALID_UUID_6,
 			Label: "BBB",
 		},

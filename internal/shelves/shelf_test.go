@@ -1,10 +1,11 @@
 package shelves
 
 import (
-	"basement/main/internal/items"
+	"basement/main/internal/common"
 	"errors"
 	"net/http"
 	"net/http/httptest"
+
 	// "net/url"
 	// "strconv"
 	// "strings"
@@ -15,7 +16,7 @@ import (
 )
 
 var shelf1 *Shelf = &Shelf{
-	BasicInfo: items.BasicInfo{
+	BasicInfo: common.BasicInfo{
 		ID:             uuid.Must(uuid.FromString("111e4567-e89b-12d3-a456-426614174000")),
 		Label:          "Storage Shelf 1",
 		Description:    "This is the first dummy shelf",
@@ -32,7 +33,7 @@ var shelf1 *Shelf = &Shelf{
 }
 
 var shelf2 *Shelf = &Shelf{
-	BasicInfo: items.BasicInfo{
+	BasicInfo: common.BasicInfo{
 		ID:             uuid.Must(uuid.FromString("333e4567-e89b-12d3-a456-426614174002")),
 		Label:          "Storage Shelf 2",
 		Description:    "This is the second dummy shelf",
@@ -66,7 +67,7 @@ func (db *ShelfDatabaseError) DeleteShelf(id uuid.UUID) error {
 	return errors.New("unable to delete shelf")
 }
 
-func (db *ShelfDatabaseError) SearchShelves(page int, rows int, query string) ([]*items.ListRow, error) {
+func (db *ShelfDatabaseError) SearchShelves(page int, rows int, query string) ([]*common.ListRow, error) {
 	return nil, errors.New("unable to delete shelf")
 }
 
@@ -89,7 +90,7 @@ func (db *ShelfDatabaseSuccess) DeleteShelf(id uuid.UUID) error {
 	return nil
 }
 
-func (db *ShelfDatabaseSuccess) SearchShelves(page int, rows int, query string) ([]*items.ListRow, error) {
+func (db *ShelfDatabaseSuccess) SearchShelves(page int, rows int, query string) ([]*common.ListRow, error) {
 	return nil, nil
 }
 

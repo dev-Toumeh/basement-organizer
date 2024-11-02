@@ -1,7 +1,7 @@
 package database
 
 import (
-	"basement/main/internal/items"
+	"basement/main/internal/common"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -49,14 +49,14 @@ func TestCreateShelf(t *testing.T) {
 	assert.Equal(t, shelf.ID, createdShelf.ID)
 
 	// item does not exist and should not be created
-	shelf.Items = append(shelf.Items, &items.ListRow{ID: ITEM_1.ID})
+	shelf.Items = append(shelf.Items, &common.ListRow{ID: ITEM_1.ID})
 	assert.Equal(t, len(shelf.Items), 1)
 	err = dbTest.CreateShelf(shelf)
 	assert.NotEqual(t, err, nil)
 	shelf.Items = nil
 
 	// box does not exist and should not be created
-	shelf.Boxes = append(shelf.Boxes, &items.ListRow{ID: BOX_1.ID})
+	shelf.Boxes = append(shelf.Boxes, &common.ListRow{ID: BOX_1.ID})
 	assert.Equal(t, len(shelf.Boxes), 1)
 	err = dbTest.CreateShelf(shelf)
 	assert.NotEqual(t, err, nil)
@@ -66,8 +66,8 @@ func TestCreateShelf(t *testing.T) {
 	assert.Equal(t, err, nil)
 	_, err = dbTest.CreateBox(BOX_1)
 	assert.Equal(t, err, nil)
-	shelf.Items = append(shelf.Items, &items.ListRow{ID: ITEM_1.ID})
-	shelf.Boxes = append(shelf.Boxes, &items.ListRow{ID: BOX_1.ID})
+	shelf.Items = append(shelf.Items, &common.ListRow{ID: ITEM_1.ID})
+	shelf.Boxes = append(shelf.Boxes, &common.ListRow{ID: BOX_1.ID})
 	err = dbTest.CreateShelf(shelf)
 	assert.NotEqual(t, err, nil)
 

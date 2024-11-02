@@ -2,16 +2,15 @@ package shelves
 
 import (
 	"basement/main/internal/common"
-	"basement/main/internal/items"
 	"net/http"
 
 	"github.com/gofrs/uuid/v5"
 )
 
 type Shelf struct {
-	items.BasicInfo
-	Items  []*items.ListRow `json:"items"`
-	Boxes  []*items.ListRow `json:"boxes"`
+	common.BasicInfo
+	Items  []*common.ListRow `json:"items"`
+	Boxes  []*common.ListRow `json:"boxes"`
 	Height float32
 	Width  float32
 	Depth  float32
@@ -38,7 +37,7 @@ type ShelfDB interface {
 	Shelf(id uuid.UUID) (*Shelf, error)
 	UpdateShelf(shelf *Shelf) error
 	DeleteShelf(id uuid.UUID) error
-	SearchShelves(limit int, offset int, count int, searchString string) (shelfRows []*items.ListRow, err error)
+	SearchShelves(limit int, offset int, count int, searchString string) (shelfRows []*common.ListRow, err error)
 	ShelfCounter(queryString string) (count int, err error)
 }
 
@@ -81,7 +80,7 @@ func (s *Shelf) Map() map[string]interface{} {
 
 // return new Shelf with default Values
 func newShelf() *Shelf {
-	s := items.NewBasicInfoWithLabel("Shelf")
+	s := common.NewBasicInfoWithLabel("Shelf")
 	return &Shelf{
 		BasicInfo: s,
 		Height:    2.0,
@@ -100,7 +99,7 @@ func shelf(r *http.Request) (*Shelf, error) {
 	}
 
 	newShelf := &Shelf{
-		BasicInfo: items.BasicInfo{
+		BasicInfo: common.BasicInfo{
 			ID:             id,
 			Label:          r.PostFormValue(LABEL),
 			Description:    r.PostFormValue(DESCRIPTION),

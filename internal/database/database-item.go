@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/common"
 	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
@@ -35,13 +36,13 @@ func (s *SQLBasicInfo) RowsToScan() []any {
 	return []any{&s.ID, &s.Label, &s.Description, &s.Picture, &s.PreviewPicture, &s.QRCode}
 }
 
-func (s SQLBasicInfo) ToBasicInfo() (items.BasicInfo, error) {
+func (s SQLBasicInfo) ToBasicInfo() (common.BasicInfo, error) {
 	id, err := uuid.FromString(s.ID.String)
 	if err != nil {
-		return items.BasicInfo{}, logg.WrapErr(err)
+		return common.BasicInfo{}, logg.WrapErr(err)
 	}
 
-	return items.BasicInfo{
+	return common.BasicInfo{
 		ID:             id,
 		Label:          ifNullString(s.Label),
 		Description:    ifNullString(s.Description),
@@ -118,13 +119,13 @@ type SQLListRow struct {
 	PreviewPicture sql.NullString
 }
 
-func (s SQLListRow) ToListRow() (*items.ListRow, error) {
+func (s SQLListRow) ToListRow() (*common.ListRow, error) {
 	id, err := uuid.FromString(s.ID.String)
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
 
-	return &items.ListRow{
+	return &common.ListRow{
 		ID:             id,
 		Label:          ifNullString(s.Label),
 		BoxID:          ifNullUUID(s.BoxID),
@@ -198,7 +199,7 @@ func (db *DB) Item(id string) (items.Item, error) {
 }
 
 // ListItemById returns a single item with less information suitable for a list row.
-func (db *DB) ItemListRowByID(id uuid.UUID) (*items.ListRow, error) {
+func (db *DB) ItemListRowByID(id uuid.UUID) (*common.ListRow, error) {
 	query := `
 		SELECT 
             i.id, i.label, i.preview_picture,

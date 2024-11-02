@@ -2,8 +2,8 @@ package routes
 
 import (
 	"basement/main/internal/auth"
+	"basement/main/internal/common"
 	"basement/main/internal/database"
-	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
@@ -40,14 +40,14 @@ func handleSampleListTemplate(db *database.DB) http.HandlerFunc {
 		boxes, _ := db.BoxFuzzyFinder("", 10, 1)
 		// boxes, _ := db.BoxFuzzyFinder(uuid.FromStringOrNil("17973d34-1942-4a15-bcba-80ddca1b29fc"))
 
-		tmpl := items.ListTemplate{
+		tmpl := common.ListTemplate{
 			// FormHXGet: "/items",
 			// RowHXGet:  "/api/v1/read/item",
 			RowHXGet:  "/api/v1/box",
 			Rows:      boxes,
 			RowAction: true,
 			// DataInputName:   "id-to-be-moved",
-			AdditionalDataInputs: []items.DataInput{
+			AdditionalDataInputs: []common.DataInput{
 				{Key: "return-hidden-input", Value: "false"},
 				{Key: "id-to-be-moved", Value: "1f73d774-8bd5-4246-940f-ef9abd1c480e"},
 			},

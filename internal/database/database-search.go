@@ -1,7 +1,7 @@
 package database
 
 import (
-	"basement/main/internal/items"
+	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"database/sql"
 	"fmt"
@@ -11,14 +11,14 @@ import (
 )
 
 // Search items based on search query, return array of virtualItems
-func (db *DB) ItemFuzzyFinder(query string) ([]items.ListRow, error) {
+func (db *DB) ItemFuzzyFinder(query string) ([]common.ListRow, error) {
 	rows, err := db.Sql.Query(` SELECT id, label FROM item_fts WHERE label LIKE ? ORDER BY id; `, query+"%")
 	if err != nil {
 		return nil, fmt.Errorf("error while fetching virtual items: %w", err)
 	}
 	defer rows.Close()
 
-	var virtualItems []items.ListRow
+	var virtualItems []common.ListRow
 	var sqlItem SQLListRow
 
 	for rows.Next() {
@@ -37,7 +37,7 @@ func (db *DB) ItemFuzzyFinder(query string) ([]items.ListRow, error) {
 }
 
 // Search items based on search query, return limited number of results used to generate pagination
-func (db *DB) ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]items.ListRow, error) {
+func (db *DB) ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]common.ListRow, error) {
 	rows, err := db.Sql.Query(`
         SELECT id, label 
         FROM item_fts 
@@ -51,7 +51,7 @@ func (db *DB) ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]
 	}
 	defer rows.Close()
 
-	var virtualItems []items.ListRow
+	var virtualItems []common.ListRow
 	var sqlItem SQLListRow
 
 	for rows.Next() {
@@ -71,7 +71,7 @@ func (db *DB) ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]
 
 // BoxFuzzyFinder retrieves virtual boxes by label.
 // If the query is empty or contains only spaces, it returns 10 default results.
-func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow, error) {
+func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]common.ListRow, error) {
 	var rows *sql.Rows
 	var err error
 	if page == 0 {
@@ -99,12 +99,12 @@ func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow
 	}
 
 	if err != nil {
-		return []items.ListRow{}, logg.Errorf("error while fetching the virtualBox from box_fts: %w", err)
+		return []common.ListRow{}, logg.Errorf("error while fetching the virtualBox from box_fts: %w", err)
 	}
 	defer rows.Close()
 
 	var sqlBoxListRow SQLListRow
-	var virtualBoxes []items.ListRow
+	var virtualBoxes []common.ListRow
 
 	for rows.Next() {
 		err := rows.Scan(
@@ -115,11 +115,11 @@ func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow
 			&sqlBoxListRow.PreviewPicture,
 		)
 		if err != nil {
-			return []items.ListRow{}, logg.Errorf("error while assigning the Data to the Virtualbox struct %w", err)
+			return []common.ListRow{}, logg.Errorf("error while assigning the Data to the Virtualbox struct %w", err)
 		}
 		vBox, err := sqlBoxListRow.ToListRow()
 		if err != nil {
-			return []items.ListRow{}, logg.WrapErr(err)
+			return []common.ListRow{}, logg.WrapErr(err)
 		}
 		virtualBoxes = append(virtualBoxes, *vBox)
 	}
@@ -128,7 +128,7 @@ func (db *DB) BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow
 }
 
 // Search shelves based on search query, return array of virtueShelves
-func (db *DB) ShelfFuzzyFinder(query string) ([]items.ListRow, error) {
+func (db *DB) ShelfFuzzyFinder(query string) ([]common.ListRow, error) {
 	rows, err := db.Sql.Query(` SELECT id, label, area_id, area_label, preview_picture tokenize 
                               FROM shelf_fts WHERE label LIKE ? ORDER BY id; `, query+"%")
 	if err != nil {
@@ -136,7 +136,7 @@ func (db *DB) ShelfFuzzyFinder(query string) ([]items.ListRow, error) {
 	}
 	defer rows.Close()
 
-	var virtuaShelves []items.ListRow
+	var virtuaShelves []common.ListRow
 	var sqlShelf SQLListRow
 
 	for rows.Next() {
@@ -160,19 +160,19 @@ func (db *DB) VirtualBoxExist(id uuid.UUID) (bool, error) {
 }
 
 // Get the virtual Box based on his ID
-func (db *DB) BoxListRowByID(id uuid.UUID) (items.ListRow, error) {
+func (db *DB) BoxListRowByID(id uuid.UUID) (common.ListRow, error) {
 	exists, err := db.VirtualBoxExist(id)
 	if err != nil {
-		return items.ListRow{}, logg.WrapErr(err)
+		return common.ListRow{}, logg.WrapErr(err)
 	}
 	if !exists {
-		return items.ListRow{}, fmt.Errorf("the Box Id does not exsist in the virtual table")
+		return common.ListRow{}, fmt.Errorf("the Box Id does not exsist in the virtual table")
 	}
 
 	query := fmt.Sprintf("SELECT id, label, box_id, box_label, shelf_id, shelf_label, area_id, area_label FROM box_fts WHERE id = ?")
 	row, err := db.Sql.Query(query, id.String())
 	if err != nil {
-		return items.ListRow{}, fmt.Errorf("error while fetching the virtual box: %w", err)
+		return common.ListRow{}, fmt.Errorf("error while fetching the virtual box: %w", err)
 	}
 
 	var sqlVertualBox SQLListRow
@@ -188,13 +188,13 @@ func (db *DB) BoxListRowByID(id uuid.UUID) (items.ListRow, error) {
 			&sqlVertualBox.AreaLabel,
 		)
 		if err != nil {
-			return items.ListRow{}, fmt.Errorf("error while assigning the Data to the Virtualbox struct : %w", err)
+			return common.ListRow{}, fmt.Errorf("error while assigning the Data to the Virtualbox struct : %w", err)
 		}
 	}
 
 	vBox, err := sqlVertualBox.ToListRow()
 	if err != nil {
-		return items.ListRow{}, err
+		return common.ListRow{}, err
 	}
 	return *vBox, nil
 }

@@ -1,7 +1,7 @@
 package database
 
 import (
-	"basement/main/internal/items"
+	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"database/sql"
 	"fmt"
@@ -158,7 +158,7 @@ func (db *DB) MoveTo(table string, id uuid.UUID, toTable string, toTableID uuid.
 //	WHERE "item"_id = ID
 //	WHERE "box"_id = ID
 //	...
-func (db *DB) innerListRowsFrom(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string) ([]*items.ListRow, error) {
+func (db *DB) innerListRowsFrom(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string) ([]*common.ListRow, error) {
 	err := ValidVirtualTable(listRowsTable)
 	if err != nil {
 		return nil, logg.WrapErr(err)
@@ -169,7 +169,7 @@ func (db *DB) innerListRowsFrom(belongsToTable string, belongsToTableID uuid.UUI
 		return nil, logg.WrapErr(err)
 	}
 
-	var listRows []*items.ListRow
+	var listRows []*common.ListRow
 
 	stmt := fmt.Sprintf(`
 	SELECT id, label, box_id, box_label, shelf_id, shelf_label, area_id, area_label

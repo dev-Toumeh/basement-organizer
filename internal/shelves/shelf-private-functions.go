@@ -1,6 +1,7 @@
 package shelves
 
 import (
+	"basement/main/internal/common"
 	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/server"
@@ -18,7 +19,7 @@ func shelfRowListData(w http.ResponseWriter, r *http.Request, db ShelfDB, typeRe
 	queryRequest := queryFromRequest(r)
 
 	count, err := db.ShelfCounter(queryRequest)
-		limit := env.DefaultTableSize()
+	limit := env.DefaultTableSize()
 	if err != nil {
 		server.WriteInternalServerError("error shelves counter", err, w, r)
 		return nil, nil, nil
@@ -70,7 +71,7 @@ func paginate(count, limit int, query string, typeRequest string) []map[string]a
 
 // transform the default listRow structs array into listRow maps array and
 // include the type of rows what will help while rendering the search Template
-func mapShelvesToTemplateData(shelves []*items.ListRow, count, limit int, rowType string) map[any]any {
+func mapShelvesToTemplateData(shelves []*common.ListRow, count, limit int, rowType string) map[any]any {
 	shelvesMaps := make(map[any]any, count)
 
 	for i, shelf := range shelves {
