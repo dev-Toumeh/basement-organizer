@@ -55,6 +55,16 @@
   overflow: hidden;
 }
 
+/* sticky table header */
+/*.box-list thead tr {*/
+/*  position: sticky;*/
+/*  top: 30px;*/
+/*  border: 1px solid black;*/
+/*  text-wrap-mode: nowrap;*/
+/*}*/
+  /*top: calc(var(--navbar-height) + 30px);*/
+  /*overflow: hidden;*/
+
 .box-list td {
   overflow: hidden;
   border: 1px solid black;
