@@ -85,12 +85,14 @@ func itemsRoutes(db items.ItemDatabase) {
 
 func shelvesRoutes(db shelves.ShelfDB) {
 	//Template
-	Handle("/shelves", shelves.ShelvesPage(db))
+	Handle("/shelves", shelves.PageTemplate(db))
 	Handle("/shelves/create", shelves.CreateTemplate())
+	Handle("/shelves/search", shelves.SearchTemplate(db))
 	Handle("/shelves/update", shelves.DetailsTemplate(db)) // example /shelves/update?id=91903531-85c4-4d57-b61f-543e81197268&edit=true
+	Handle("/shelves/input", shelves.InputTemplate(db))
 
 	// Api
-	Handle("/api/v1/create/shelf", shelves.ShelfHandler(db))
+	http.HandleFunc("/api/v1/create/shelf", shelves.ShelfHandler(db))
 	Handle("/api/v1/update/shelf", shelves.ShelfHandler(db))
 }
 

@@ -5,15 +5,20 @@
     <div id="pagination">
         {{ range .Pagination }}
             <button 
+                {{if .Type }}
+                    hx-get="shelves/search?page={{.PageNumber}}&offset={{.Offset}}&query={{.Query}}&type={{.Type}}"
+                    hx-target="#tg"
+                    hx-push-url="false"
+                    hx-swap="innerHTML"
+                {{ else }}
+                    hx-get="shelves?page={{.PageNumber}}&offset={{.Offset}}&query={{.Query}}"
+                    hx-target="body"
+                    hx-push-url="true"
+                {{ end }}
                 type="button"
-                hx-get="shelves?page={{.PageNumber}}&offset={{.Offset}}&query={{.Query}}"
-                hx-include="[name=limit]"
-                hx-target="body"
-                hx-push-url="true"
                 {{ if .Selected }} class="selected" {{ end }}
                 {{ if .Disabled }} disabled {{ end }}
-                style="width:2.5rem"
-            >
+                style="width:2.5rem" >
                 {{.PageNumber}}
             </button>
         {{ end }}
