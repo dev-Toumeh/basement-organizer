@@ -2,6 +2,8 @@ package routes
 
 import (
 	"basement/main/internal/auth"
+	"basement/main/internal/database"
+	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
@@ -31,4 +33,70 @@ func SamplePage(w http.ResponseWriter, r *http.Request) {
 	server.TriggerAllServerNotifications(w)
 	// server.MustRender(w, r, templates.TEMPLATE_SAMPLE_PAGE, "sdf")
 	server.MustRender(w, r, templates.TEMPLATE_SAMPLE_PAGE, data.Map())
+}
+
+func handleSampleListTemplate(db *database.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		boxes, _ := db.BoxFuzzyFinder("", 10, 1)
+		// boxes, _ := db.BoxFuzzyFinder(uuid.FromStringOrNil("17973d34-1942-4a15-bcba-80ddca1b29fc"))
+
+		tmpl := items.ListTemplate{
+			// FormHXGet: "/items",
+			// RowHXGet:  "/api/v1/read/item",
+			RowHXGet:  "/api/v1/box",
+			Rows:      boxes,
+			RowAction: true,
+			// DataInputName:   "id-to-be-moved",
+			AdditionalDataInputs: []items.DataInput{
+				{Key: "return-hidden-input", Value: "false"},
+				{Key: "id-to-be-moved", Value: "1f73d774-8bd5-4246-940f-ef9abd1c480e"},
+			},
+			// AdditionalDataInputName:   "hidden",
+			// AdditionalDataInputValues: []string{"1f73d774-8bd5-4246-940f-ef9abd1c480e"},
+			RowActionName: "move to",
+			// RowActionHXPost:   "/api/v1/boxes/moveto/box",
+			// RowActionHXPost:   "/api/v1/boxes?query=b",
+			// RowActionHXPost:   "/api/v1/implement-me",
+			// RowActionHXPostWithID: "/samples/return-selected-row-as-input",
+			RowActionHXPostWithID: "/samples/notification",
+			// RowActionHXPostWithIDAsQueryParam: "/samples/return-selected-row-as-input",
+			RowActionHXTarget: "#mytarget",
+		}
+
+		err := tmpl.Render(w)
+		if err != nil {
+			logg.Err(err)
+			server.TriggerErrorNotification(w, err.Error())
+			return
+		}
+	}
+}
+
+func handleReturnSelectedInput(db *database.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			id := r.PathValue("id")
+			hidden := r.PostFormValue("hidden")
+			server.MustRender(w, r, "selected-input", map[string]string{"Name": "select", "Value": id, "Hidden": hidden})
+		} else {
+			return
+		}
+	}
+}
+
+func handleReturnSelectedInputAsNotification(db *database.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			id := r.PathValue("id")
+			hidden := r.PostFormValue("hidden")
+			s := server.Notifications{}
+			s.Add("id="+id+"\nhidden="+hidden, "", 1000000)
+			server.TriggerNotifications(w, s)
+			server.MustRender(w, r, "selected-input", map[string]string{"Name": "select", "Value": id, "Hidden": hidden})
+		} else {
+			w.Header().Add("Allowed", http.MethodPost)
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+	}
 }

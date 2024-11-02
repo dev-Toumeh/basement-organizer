@@ -36,7 +36,7 @@ func RegisterRoutes(db *database.DB) {
 	shelvesRoutes(db)
 	registerBoxRoutes(db)
 	navigationRoutes()
-	experimentalRoutes()
+	experimentalRoutes(db)
 }
 
 func authRoutes(db auth.AuthDatabase) {
@@ -114,7 +114,7 @@ func staticRoutes() {
 	Handle("/", AuthPage)
 }
 
-func experimentalRoutes() {
+func experimentalRoutes(db *database.DB) {
 	Handle("/switch-debug-style", SwitchDebugStyle)
 	Handle("/notification-success", func(w http.ResponseWriter, r *http.Request) {
 		templates.RenderSuccessNotification(w, "success")
@@ -122,6 +122,9 @@ func experimentalRoutes() {
 	Handle("/notification-warning", func(w http.ResponseWriter, r *http.Request) {
 		templates.RenderWarningNotification(w, "warning")
 	})
+	Handle("/templates/list", handleSampleListTemplate(db))
+	Handle("/samples/return-selected-row-as-input/{id}", handleReturnSelectedInput(db))
+	Handle("/samples/notification/{id}", handleReturnSelectedInputAsNotification(db))
 }
 
 func navigationRoutes() {
