@@ -665,7 +665,7 @@ func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatab
 	}
 	data := map[string]any{"Boxes": boxesMaps}
 	maps.Copy(data, searchInput.Map())
-	logg.Debug(data)
+	logg.Debug("renderBoxesListTemplate: Boxes=", len(data["Boxes"].([]map[string]any)))
 
 	err := templates.SafeRender(w, templates.TEMPLATE_BOX_LIST, data)
 	if err != nil {
