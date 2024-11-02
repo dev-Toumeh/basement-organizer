@@ -22,7 +22,7 @@ func main() {
 	defer db.Sql.Close()
 
 	routes.RegisterRoutes(db)
-	err := templates.InitTemplates("./internal/templates")
+	err := templates.InitTemplates("./internal")
 	if err != nil {
 		logg.Fatal("Templates failed to initialize", err)
 	}
