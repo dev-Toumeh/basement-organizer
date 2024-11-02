@@ -1,0 +1,188 @@
+{{ define "list" }}
+<form id="list"
+  hx-get="{{ .FormHXGet }}"
+    hx-push-url="true"
+    hx-target="body"
+    hx-swap="outerHTML"
+    hx-trigger="keyup changed delay:500ms from:#search-bar, keyup changed delay:500ms from:#item-limit"
+>
+    {{ if .SearchInput }}
+        <label for="search">{{ with .SearchInput }}{{ . }}{{end}}</label>
+        <input id="search-bar"
+            type="text"
+            value="{{ .SearchInputValue }}"
+            name="query"
+        >
+        <!--this input must have type submit and be after search-bar input-->
+        <!--or else search wont work if the next input is disabled-->
+        <input type="submit" name="page" value="{{.PageNumber}}" hidden>
+
+        <button type="button" hx-get="/api/v1/implement-me">Alternative View</button>
+
+        <div id="pagination">
+
+            <label for="limit"></label>
+            <input id="item-limit" type="number" name="limit" value="{{ if .Limit}}{{.Limit}}{{else}}5{{end}}" >
+            {{  range .Pages }}
+            <input type="submit" name="page" value="{{.PageNumber}}"
+                {{ if .Selected }}
+                    class="selected"
+                {{end}}
+                {{ if .Disabled}}disabled{{end}}
+                style="width:2.5rem"
+            >
+            {{ end }}
+        </div> 
+    {{ end }}
+
+    {{ template "list-table" . }}
+
+    {{ $RowAction := false }}
+    {{ if .RowAction }}
+        <div id="additional-data-container">
+        {{ if .AdditionalDataInputs }}
+            Boxes selected to be moved:
+            {{ range .AdditionalDataInputs }}
+                <input name="{{.Key}}" value="{{.Value}}" readonly>
+            {{ end }}
+        {{ else }}
+            Nothing selected to be moved.
+        {{ end }}
+        </div> 
+    {{ end }}
+
+    {{ if not .RowAction }}
+    <div>
+        <button hx-delete="/boxes-list"
+            hx-target="#list"
+            hx-select="#list"
+            hx-push-url="false"
+        >delete</button>
+        <button
+            hx-post="/get-boxes-move-page"
+            type="button"
+            hx-swap="innerHTML"
+            hx-push-url="false"
+            hx-target="#move-to-list"
+            hx-include=":checked"
+        >move to box
+        </button>
+        <button 
+            hx-get="/template/item-form" 
+            type="button"
+            hx-swap="innerHTML"
+            hx-target="#level-two"
+            hx-push-url="false"
+        >move to shelf
+        </button>
+        <button 
+            hx-post="/template/item-dummy" 
+            type="button"
+            hx-swap="none"
+            hx-target="#level-two"
+            hx-push-url="false"
+        >move to area
+        </button>
+    </div>
+
+    <div id="move-to-list"></div>
+    {{ end }}
+</form>
+{{ end }}
+
+
+{{ define "list-table" }}
+<table class="box-list">
+<thead>
+    <tr>
+        <th>Label</th>
+        <th>Box</th>
+        <th>Shelf</th>
+        <th>Area</th>
+        <th style="width: 10%">Image</th>
+        <th style="width: 10%">{{.RowActionName}}</th>
+        {{ if not .RowAction }}
+        <th style="width: 10%">Delete</th>
+        {{ end }}
+    </tr>
+</thead> 
+<!--boxes are created directly by backend with template-->
+<tbody id="list-body">
+    {{ if not .Rows }}
+        <tr id="empty-list-row">
+            <td colspan="7" style="text-align:center">No Entries</td>  
+        </tr>
+    {{ else }} <!--not empty-->
+
+    {{ $RowHXGet := .RowHXGet }}
+    {{ $RowAction := .RowAction }}
+    {{ $RowActionHXPost := .RowActionHXPost }}
+    {{ $RowActionHXPostWithID := .RowActionHXPostWithID }}
+    {{ $RowActionHXPostWithIDAsQueryParam := .RowActionHXPostWithIDAsQueryParam }}
+    {{ $RowActionName := .RowActionName }}
+    {{ $RowActionHXTarget := .RowActionHXTarget }}
+
+    {{ range .Rows }}
+        {{ $empty := false }}
+        {{ if not . }} {{ $empty = true }} {{ end }}
+
+        {{ if $empty }}
+            <tr id="list-row-{{.ID}}">
+                <td colspan="7" style="text-align:center">
+                    <span class="empty">empty<img class="preview" style="opacity:0"></span>
+                </td>  
+            </tr>
+        {{ else }}
+            <tr id="list-row-{{.ID}}">
+                <td hx-get="{{$RowHXGet}}/{{.ID}}"
+                        hx-push-url="true"
+                        hx-target="body"
+                        class="clickable"
+                    >{{.Label}}</td>
+                <td>{{.BoxLabel}}</td> 
+                <td>{{.ShelfLabel}}</td>
+                <td>{{.AreaLabel}}</td>
+                <td style="text-align: center;">
+                    <img class="preview" 
+                        src="data:image/png;base64,{{.PreviewPicture}}" 
+                        {{if .PreviewPicture}}alt="{{.Label}}"{{end}}
+                    >
+                </td>
+                {{ if not $RowAction}}
+                <td style="text-align: center;"><input type="checkbox" name="move:{{.ID}}"></td>
+                <td style="text-align: center;"><input type="checkbox" name="delete:{{.ID}}"></td>
+                {{ else }}
+                <td style="text-align: center;">
+                    <!--hidden inputs with "name=id-to-be-moved" are generated in box-list template
+                        inside div<id="additional-data-container"> to track IDs that were selected to be moved -->
+                    <button 
+                        {{ if $RowActionHXPostWithID }}
+                            hx-post="{{ $RowActionHXPostWithID }}/{{.ID}}"
+                        {{ else if $RowActionHXPostWithIDAsQueryParam }}
+                            hx-post="{{ $RowActionHXPostWithIDAsQueryParam }}?id={{.ID}}"
+                        {{ else }}
+                            hx-post="{{ $RowActionHXPost }}"
+                        {{ end }}
+                        hx-include="#additional-data-container"
+                        hx-push-url="false"
+                        {{ if $RowActionHXTarget }}
+                            hx-target="{{$RowActionHXTarget}}"
+                            hx-swap="innerHTML"
+                        {{ else }}
+                            hx-swap="none"
+                        {{ end }}
+                    >{{ $RowActionName }}</button>
+                </td>
+                {{ end }}
+            </tr>
+        {{ end }}
+    {{ end }} <!--range rows -->
+{{ end }} <!--if not .Rows -->
+</tbody>
+</table>
+{{ end }}
+
+{{ define "selected-input" }}
+<input type="{{if .Hidden}}hidden{{else}}text{{end}}" 
+    name="{{.Name}}" value="{{.Value}}" readonly>
+{{ end }}
