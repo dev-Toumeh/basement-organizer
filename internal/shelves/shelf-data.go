@@ -38,8 +38,8 @@ type ShelfDB interface {
 	Shelf(id uuid.UUID) (*Shelf, error)
 	UpdateShelf(shelf *Shelf) error
 	DeleteShelf(id uuid.UUID) error
-	SearchShelves(limit int, offset int, count int, searchString string) (shelfRows []*items.ListRow, err error)
-	ShelfCounter(queryString string) (count int, err error)
+	ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []items.ListRow, err error)
+	ShelfListCounter(queryString string) (count int, err error)
 }
 
 //	type PaginationData struct {
