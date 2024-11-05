@@ -66,7 +66,7 @@ func (db *ShelfDatabaseError) DeleteShelf(id uuid.UUID) error {
 	return errors.New("unable to delete shelf")
 }
 
-func (db *ShelfDatabaseError) SearchShelves(page int, rows int, query string) ([]*items.ListRow, error) {
+func (db *ShelfDatabaseError) ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []items.ListRow, err error) {
 	return nil, errors.New("unable to delete shelf")
 }
 
@@ -89,8 +89,8 @@ func (db *ShelfDatabaseSuccess) DeleteShelf(id uuid.UUID) error {
 	return nil
 }
 
-func (db *ShelfDatabaseSuccess) SearchShelves(page int, rows int, query string) ([]*items.ListRow, error) {
-	return nil, nil
+func (db *ShelfDatabaseSuccess) ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []items.ListRow, err error) {
+	return shelfRows, nil
 }
 
 // TestTypeFromRequest tests the typeFromRequest function with different scenarios.

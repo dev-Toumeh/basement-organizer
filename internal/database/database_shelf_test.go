@@ -232,6 +232,43 @@ func TestShelfSearchListRowsPaginated(t *testing.T) {
 	assert.Equal(t, err, nil)
 }
 
+func TestShelfListRows(t *testing.T) {
+	EmptyTestDatabase()
+	resetShelves()
+
+	for _, shelf := range testShelves() {
+		err := dbTest.CreateShelf(&shelf)
+		if err != nil {
+			t.Fatalf("create shelf setup failed: %v", err)
+		}
+	}
+
+	shelves, err := dbTest.ShelfListRows("Shelf", 10, 1)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 4)
+
+	shelves, err = dbTest.ShelfListRows("A", 10, 1)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 2)
+
+	shelves, err = dbTest.ShelfListRows("B", 10, 1)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 1)
+
+	shelves, err = dbTest.ShelfListRows("Test", 10, 1)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 3)
+
+	shelves, err = dbTest.ShelfListRows("Shelf A", 2, 1)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 1)
+	assert.Equal(t, shelves[0].ID, SHELF_5.ID)
+
+	shelves, err = dbTest.ShelfListRows("", 10, 1)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(shelves), 6)
+}
+
 func TestMoveItemToShelf(t *testing.T) {
 	EmptyTestDatabase()
 	resetTestItems()

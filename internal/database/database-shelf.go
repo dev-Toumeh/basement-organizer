@@ -6,6 +6,7 @@ import (
 	"basement/main/internal/shelves"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -267,52 +268,58 @@ func (db *DB) MoveShelfToArea(shelfID uuid.UUID, toAreaID uuid.UUID) error {
 	return logg.WrapErr(ErrNotImplemented)
 }
 
-// ShelfListRowsPaginated returns always a slice with the number of rows specified.
-func (db *DB) SearchShelves(limit int, offset int, count int, searchString string) (shelfRows []*items.ListRow, err error) {
-	i := 0
-	if count > limit {
-		shelfRows = make([]*items.ListRow, limit)
-	} else {
-		shelfRows = make([]*items.ListRow, count)
+// ShelfListRows retrieves shelves by label.
+// If the query is empty or contains only spaces, it returns default results.
+func (db *DB) ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []items.ListRow, err error) {
+	if pageNr == 0 {
+		panic("offset starts at 1, can't be 0")
 	}
 
-	// by default use this query
+	offset := (pageNr - 1) * limit
 	query := `
 		SELECT
 			id, label, area_id, area_label, preview_picture
 		FROM shelf_fts
-			ORDER BY label ASC
+		ORDER BY label ASC
 		LIMIT ? OFFSET ?;`
 
-	// if the searchString is not empty use this query
-	if searchString != "" {
-		query = fmt.Sprintf(`
-		SELECT
+	args := []interface{}{limit, offset}
+
+	if strings.TrimSpace(searchString) != "" {
+		query = `
+		SELECT 
 			id, label, area_id, area_label, preview_picture
 		FROM shelf_fts
-		WHERE label MATCH '%s*'
-		LIMIT ? OFFSET ?;`, searchString)
+		WHERE label MATCH ?
+		ORDER BY label ASC
+		LIMIT ? OFFSET ?;`
+		args = []interface{}{searchString + "*", limit, offset}
 	}
 
-	results, err := db.Sql.Query(query, limit, offset)
+	rows, err := db.Sql.Query(query, args...)
 	if err != nil {
-		return shelfRows, fmt.Errorf("error while fetching shelves Data from the database: %v", err)
+		return []items.ListRow{}, fmt.Errorf("error while fetching shelves from shelf_fts: %w", err)
 	}
+	defer rows.Close()
 
-	for results.Next() {
-		listRow := SQLListRow{}
-		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
+	var sqlShelfListRow SQLListRow
+
+	for rows.Next() {
+		err := rows.Scan(
+			&sqlShelfListRow.ID,
+			&sqlShelfListRow.Label,
+			&sqlShelfListRow.AreaID,
+			&sqlShelfListRow.AreaLabel,
+			&sqlShelfListRow.PreviewPicture,
+		)
 		if err != nil {
-			return shelfRows, fmt.Errorf("error while scanning the Shelf row during search in the database: %v", err)
+			return []items.ListRow{}, fmt.Errorf("error while scanning the Shelf row: %w", err)
 		}
-		shelfRows[i], err = listRow.ToListRow()
+		shelfRow, err := sqlShelfListRow.ToListRow()
 		if err != nil {
-			return shelfRows, fmt.Errorf("error while mapping the row data to the shelfRows slice: %v", err)
+			return []items.ListRow{}, fmt.Errorf("error while converting to ListRow: %w", err)
 		}
-		i += 1
-	}
-	if results.Err() != nil {
-		return shelfRows, fmt.Errorf("error while assigning the row to the variable after fetching it: %v", err)
+		shelfRows = append(shelfRows, *shelfRow)
 	}
 
 	return shelfRows, nil
@@ -321,7 +328,7 @@ func (db *DB) SearchShelves(limit int, offset int, count int, searchString strin
 // ShelfCounter returns the count of rows in the shelf_fts table that match
 // the specified queryString.
 // If queryString is empty, it returns the count of all rows in the table.
-func (db *DB) ShelfCounter(queryString string) (count int, err error) {
+func (db *DB) ShelfListCounter(queryString string) (count int, err error) {
 	countQuery := `SELECT COUNT(*) FROM shelf_fts;`
 
 	if queryString != "" {
