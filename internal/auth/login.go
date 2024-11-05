@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
@@ -123,6 +124,9 @@ func LoginForm(w http.ResponseWriter, r *http.Request) {
 
 // Authenticated shows if user is authenticated and has "authenticated" value in session cookie.
 func Authenticated(r *http.Request) (authenticated bool, hasAuthenticatedCookieValue bool) {
+	if env.Development() { // Always authenticated.
+		return true, true
+	}
 	session, _ := store.Get(r, COOKIE_NAME)
 	authenticated, hasAuthenticatedCookieValue = session.Values["authenticated"].(bool)
 	// log.Println("session authenticated", session.Values["authenticated"])
@@ -139,6 +143,9 @@ func saveSession(w http.ResponseWriter, r *http.Request, user User) {
 
 // UserSessionData returns username and id from stored session.
 func UserSessionData(r *http.Request) (string, string) {
+	if env.Development() { // "Development User", "10000000-0000-0000-0000-000000000001"
+		return "Development User", "10000000-0000-0000-0000-000000000001"
+	}
 
 	session, _ := store.Get(r, COOKIE_NAME)
 	username, ok1 := session.Values["username"].(string)
