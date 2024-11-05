@@ -1,6 +1,7 @@
 package shelves
 
 import (
+	"basement/main/internal/common"
 	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/server"
@@ -15,10 +16,10 @@ import (
 func shelfRowListData(w http.ResponseWriter, r *http.Request, db ShelfDB, typeRequest string) (map[any]any, []map[string]any, *items.SearchInputTemplate) {
 
 	offsetRequest := offsetFromRequest(r)
-	queryRequest := queryFromRequest(r)
+	queryRequest := common.QueryFromRequest(r)
 
 	count, err := db.ShelfCounter(queryRequest)
-		limit := env.DefaultTableSize()
+	limit := env.DefaultTableSize()
 	if err != nil {
 		server.WriteInternalServerError("error shelves counter", err, w, r)
 		return nil, nil, nil

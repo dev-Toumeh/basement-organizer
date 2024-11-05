@@ -11,7 +11,6 @@ import (
 	"basement/main/internal/templates"
 	"fmt"
 	"maps"
-	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -224,10 +223,10 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 		data := page.Map()
 
 		// search-input template
-		query := r.FormValue("query")
+		searchString := common.SearchString(r)
 		searchInput := items.NewSearchInputTemplate()
 		searchInput.SearchInputLabel = "Search boxes"
-		searchInput.SearchInputValue = query
+		searchInput.SearchInputValue = searchString
 		logg.Debugf("searchInput %v", searchInput.Map())
 		maps.Copy(data, searchInput.Map())
 
@@ -248,155 +247,42 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 			limit = env.DefaultTableSize()
 		}
 
+		count, err := db.BoxListCounter(searchString)
+		if err != nil {
+			server.WriteInternalServerError("cant query boxes", err, w, r)
+			return
+		}
+
 		// box-list-row to fill box-list template
 		logg.Debugf("has query: %v", urlQuery.Has("query"))
 		var boxes []items.ListRow
 		err = nil
-		usedSearch := false
-		if urlQuery.Has("query") && query != "" {
-			boxes, err = db.BoxFuzzyFinder(query, 10000, 1)
-			usedSearch = true
-		} else {
-			boxes, err = db.BoxFuzzyFinder(query, limit, pageNr)
-		}
+
+		// Fetch the Records from the Database and pack it into map
+		boxes, err = db.BoxListRows(searchString, limit, pageNr)
 		if err != nil {
 			server.WriteInternalServerError("cant query boxes", err, w, r)
 			return
 		}
 
 		// pagination
-		results := 0
-		totalPages := 1
-		if usedSearch {
-			results = len(boxes)
+		data = common.Pagination(data, count, limit, pageNr)
 
-		} else {
-			ids, _ := db.BoxIDs()
-			results = len(ids)
-		}
-		logg.Debugf("limit: %d, boxes: %d, totalPages: %d, results: %d", limit, results, totalPages, results)
-
-		totalPagesF := float64(results) / float64(limit)
-		totalPagesCeil := math.Ceil(float64(totalPagesF))
-		totalPages = int(totalPagesCeil)
-		if totalPages < 1 {
-			totalPages = 1
-		}
-
-		currentPage := 1
-		if pageNr > totalPages {
-			currentPage = totalPages
-		} else {
-			currentPage = pageNr
-		}
-
-		if totalPages == 0 {
-			totalPages = 1
-		}
-
-		nextPage := currentPage + 1
-		if nextPage < 1 {
-			nextPage = 1
-		}
-		if nextPage > totalPages {
-			nextPage = totalPages
-		}
-
-		prevPage := currentPage - 1
-		if prevPage < 1 {
-			prevPage = 1
-		}
-		if prevPage > totalPages {
-			prevPage = totalPages
-		}
-
-		logg.Debugf("currentPage %d", currentPage)
-		// Search is not paginated and returns all results.
-		// Limit items per page manually
-		if usedSearch {
-			fromOffset := (currentPage - 1) * limit
-			toOffset := currentPage * limit
-			if toOffset > results {
-				toOffset = results
+		boxesMaps := make([]map[string]any, limit)
+		for i, box := range boxes {
+			mappedBox := box.Map()
+			if mappedBox == nil {
+				boxesMaps[i] = map[string]any{}
+			} else {
+				boxesMaps[i] = mappedBox
+				mappedBox["Move"] = move
 			}
-			if toOffset < 0 {
-				toOffset = 0
-			}
-			if fromOffset < 0 {
-				fromOffset = 0
-			}
-			logg.Debugf("fromOffset: %d, toOffset: %d", fromOffset, toOffset)
-			boxes = boxes[fromOffset:toOffset]
 		}
-
-		// fill Boxes field for box-list template
-		boxesMaps := make([]map[string]any, len(boxes))
-		for i := range boxes {
-			boxesMaps[i] = boxes[i].Map()
-			boxesMaps[i]["Move"] = move
-		}
-		fillEmpty := limit - len(boxes)
-		for range fillEmpty {
-			boxesMaps = append(boxesMaps, map[string]any{})
+		// If count is less than limit, add empty maps to reach the limit
+		for i := count; i < limit; i++ {
+			boxesMaps[i] = map[string]any{}
 		}
 		maps.Copy(data, map[string]any{"Boxes": boxesMaps})
-		pages := make([]map[string]any, 0)
-
-		// more pagination
-		disablePrev := false
-		disableNext := false
-		disableFirst := false
-		disableLast := false
-		if currentPage == nextPage {
-			disableNext = true
-		}
-		if currentPage == totalPages {
-			disableLast = true
-		}
-		if currentPage == prevPage {
-			disablePrev = true
-		}
-		if currentPage == 1 {
-			disableFirst = true
-		}
-
-		pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", 1), "Limit": fmt.Sprint(limit), "ID": fmt.Sprintf("pagination-%d", 1), "Disabled": disableFirst})
-
-		if totalPages >= 10 {
-			disabled := false
-			prevFive := currentPage - 5
-			if prevFive < 1 {
-				prevFive = 1
-			}
-			if currentPage == prevFive {
-				disabled = true
-			}
-			pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", prevFive), "Limit": fmt.Sprint(limit), "ID": fmt.Sprintf("pagination-%d", prevFive), "Disabled": disabled})
-		}
-		pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", prevPage), "Limit": fmt.Sprint(limit), "ID": fmt.Sprintf("pagination-%d", prevPage), "Disabled": disablePrev})
-		pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", currentPage), "Limit": fmt.Sprint(limit), "Selected": true, "ID": fmt.Sprintf("pagination-%d", currentPage)})
-		pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", nextPage), "Limit": fmt.Sprint(limit), "ID": fmt.Sprintf("pagination-%d", nextPage), "Disabled": disableNext})
-		if totalPages >= 10 {
-			disabled := false
-			nextFive := currentPage + 5
-			if nextFive > totalPages {
-				nextFive = totalPages
-			}
-			if currentPage == nextFive {
-				disabled = true
-			}
-			pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", nextFive), "Limit": fmt.Sprint(limit), "ID": fmt.Sprintf("pagination-%d", nextFive), "Disabled": disabled})
-		}
-
-		pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", totalPages), "Limit": fmt.Sprint(limit), "ID": fmt.Sprintf("pagination-%d", totalPages), "Disabled": disableLast})
-
-		// Putting required data for templates together.
-		data["Pages"] = pages
-		data["Limit"] = fmt.Sprint(limit)
-		data["NextPage"] = nextPage
-		data["PrevPage"] = prevPage
-		data["PageNumber"] = currentPage
-		data["Move"] = move
 
 		server.MustRender(w, r, templates.TEMPLATE_BOXES_PAGE, data)
 	}
