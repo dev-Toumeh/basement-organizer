@@ -90,7 +90,7 @@ func TestVirtualBoxDelete(t *testing.T) {
 	assert.NotEqual(t, exist, true)
 }
 
-func TestBoxFuzzyFinder(t *testing.T) {
+func TestBoxListRows(t *testing.T) {
 	EmptyTestDatabase()
 	resetTestBoxes()
 	// Insert the new boxes
@@ -116,7 +116,7 @@ func TestBoxFuzzyFinder(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			virtualBoxes, err := dbTest.BoxFuzzyFinder(tc.query, 10, 1)
+			virtualBoxes, err := dbTest.BoxListRows(tc.query, 10, 1)
 			if err != nil {
 				t.Fatalf("error occurred while testing boxFuzzyFinder(): %v", err)
 			}

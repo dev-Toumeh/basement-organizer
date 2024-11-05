@@ -2,8 +2,11 @@ package database
 
 import (
 	"basement/main/internal/boxes"
+	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -252,4 +255,122 @@ func (db *DB) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
 		return logg.WrapErr(err)
 	}
 	return nil
+}
+
+// BoxListRows retrieves virtual boxes by label.
+// If the query is empty or contains only spaces, it returns default results.
+func (db *DB) BoxListRows(searchString string, limit int, pageN int) (virtualBoxes []common.ListRow, err error) {
+	if pageN == 0 {
+		panic("offset starts at 1, can't be 0")
+	}
+
+	pageN = (pageN - 1) * limit
+	query := `
+		SELECT
+			id, label, box_id, box_label, preview_picture
+		FROM box_fts AS b_fts
+		ORDER BY label ASC
+		LIMIT ? OFFSET ?;`
+
+	args := []interface{}{limit, pageN}
+
+	if strings.TrimSpace(searchString) != "" {
+		query = `
+		SELECT 
+			id, label, box_id, box_label, preview_picture
+		FROM box_fts
+		WHERE label MATCH ?
+		ORDER BY label ASC
+		LIMIT ? OFFSET ?;`
+		args = []interface{}{searchString + "*", limit, pageN}
+	}
+
+	rows, err := db.Sql.Query(query, args...)
+	if err != nil {
+		return []common.ListRow{}, logg.Errorf("error while fetching the virtualBox from box_fts: %w", err)
+	}
+	defer rows.Close()
+
+	var sqlBoxListRow SQLListRow
+
+	for rows.Next() {
+		err := rows.Scan(
+			&sqlBoxListRow.ID,
+			&sqlBoxListRow.Label,
+			&sqlBoxListRow.BoxID,
+			&sqlBoxListRow.BoxLabel,
+			&sqlBoxListRow.PreviewPicture,
+		)
+		if err != nil {
+			return []common.ListRow{}, logg.Errorf("error while assigning the Data to the Virtualbox struct %w", err)
+		}
+		vBox, err := sqlBoxListRow.ToListRow()
+		if err != nil {
+			return []common.ListRow{}, logg.WrapErr(err)
+		}
+		virtualBoxes = append(virtualBoxes, *vBox)
+	}
+
+	return virtualBoxes, nil
+}
+
+// Get the virtual Box based on his ID
+func (db *DB) BoxListRowByID(id uuid.UUID) (common.ListRow, error) {
+	exists, err := db.VirtualBoxExist(id)
+	if err != nil {
+		return common.ListRow{}, logg.WrapErr(err)
+	}
+	if !exists {
+		return common.ListRow{}, fmt.Errorf("the Box Id does not exsist in the virtual table")
+	}
+
+	query := fmt.Sprintf("SELECT id, label, box_id, box_label, shelf_id, shelf_label, area_id, area_label FROM box_fts WHERE id = ?")
+	row, err := db.Sql.Query(query, id.String())
+	if err != nil {
+		return common.ListRow{}, fmt.Errorf("error while fetching the virtual box: %w", err)
+	}
+
+	var sqlVertualBox SQLListRow
+	for row.Next() {
+		err := row.Scan(
+			&sqlVertualBox.ID,
+			&sqlVertualBox.Label,
+			&sqlVertualBox.BoxID,
+			&sqlVertualBox.BoxLabel,
+			&sqlVertualBox.ShelfID,
+			&sqlVertualBox.ShelfLabel,
+			&sqlVertualBox.AreaID,
+			&sqlVertualBox.AreaLabel,
+		)
+		if err != nil {
+			return common.ListRow{}, fmt.Errorf("error while assigning the Data to the Virtualbox struct : %w", err)
+		}
+	}
+
+	vBox, err := sqlVertualBox.ToListRow()
+	if err != nil {
+		return common.ListRow{}, err
+	}
+	return *vBox, nil
+}
+
+// returns the count of rows in the box_fts table that match the specified searchString.
+// If queryString is empty, it returns the count of all rows in the table.
+func (db *DB) BoxListCounter(searchString string) (count int, err error) {
+	countQuery := `SELECT COUNT(*) FROM box_fts;`
+
+	if searchString != "" {
+		countQuery = ` SELECT COUNT(*) FROM box_fts WHERE label MATCH '` + searchString + `*'`
+	}
+
+	err = db.Sql.QueryRow(countQuery).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("error while fetching the number of box from the database: %v", err)
+	}
+	return count, nil
+}
+
+// check if the box row  exist
+func (db *DB) BoxRowExist(id uuid.UUID) (bool, error) {
+	return db.Exists("box_fts", id)
 }

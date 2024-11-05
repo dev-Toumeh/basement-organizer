@@ -428,7 +428,7 @@ func (db *DB) ShelfListRowsPaginated(page int, rows int) (shelfRows []*common.Li
 // ShelfListRowsPaginated returns always a slice with the number of rows specified.
 func (db *DB) ShelfListRowsPaginated2(limit int, offset int) (shelfRows []*common.ListRow, count int, err error) {
 	i := 0
-	count, err = db.ShelfCounter("")
+	count, err = db.ShelfListCounter("")
 	shelfRows = make([]*common.ListRow, count)
 
 	queryNoSearch := `
