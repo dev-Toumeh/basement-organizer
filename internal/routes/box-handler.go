@@ -27,8 +27,9 @@ type BoxDatabase interface {
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (items.Box, error)
 	BoxIDs() ([]string, error) // @TODO: Change string to uuid.UUID
-	BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow, error)
+	BoxListRows(query string, limit int, page int) ([]items.ListRow, error)
 	BoxListRowByID(id uuid.UUID) (items.ListRow, error)
+	BoxListCounter(searchString string) (count int, err error)
 }
 
 func registerBoxRoutes(db *database.DB) {
@@ -112,7 +113,7 @@ func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 			return
 		}
 
-		boxes, err := db.BoxFuzzyFinder("", 100, 1)
+		boxes, err := db.BoxListRows("", 100, 1)
 		if err != nil {
 			server.WriteInternalServerError("cant query boxes", logg.Errorf("%w", err), w, r)
 			return
@@ -152,7 +153,7 @@ func boxesHandler(db BoxDatabase) http.HandlerFunc {
 
 		case http.MethodGet:
 			if !server.WantsTemplateData(r) {
-				boxes, err := db.BoxFuzzyFinder("", 5, 1)
+				boxes, err := db.BoxListRows("", 5, 1)
 				if err != nil {
 					server.WriteInternalServerError("cant query boxes", logg.Errorf("%w", err), w, r)
 					return
@@ -161,7 +162,7 @@ func boxesHandler(db BoxDatabase) http.HandlerFunc {
 				return
 			}
 
-			boxes, err := db.BoxFuzzyFinder("", 100, 1)
+			boxes, err := db.BoxListRows("", 100, 1)
 			if err != nil {
 				server.WriteNotFoundError("Can't find boxes", err, w, r)
 				return
@@ -183,7 +184,7 @@ func boxesHandler(db BoxDatabase) http.HandlerFunc {
 		case http.MethodPost:
 			query := r.PostFormValue("query")
 			logg.Debugf("search query: %s", query)
-			boxes, err := db.BoxFuzzyFinder(query, 5, 1)
+			boxes, err := db.BoxListRows(query, 5, 1)
 			if err != nil {
 				server.WriteInternalServerError("cant query boxes", err, w, r)
 				return

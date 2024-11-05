@@ -159,46 +159,6 @@ func (db *DB) VirtualBoxExist(id uuid.UUID) (bool, error) {
 	return db.Exists("box_fts", id)
 }
 
-// Get the virtual Box based on his ID
-func (db *DB) BoxListRowByID(id uuid.UUID) (items.ListRow, error) {
-	exists, err := db.VirtualBoxExist(id)
-	if err != nil {
-		return items.ListRow{}, logg.WrapErr(err)
-	}
-	if !exists {
-		return items.ListRow{}, fmt.Errorf("the Box Id does not exsist in the virtual table")
-	}
-
-	query := fmt.Sprintf("SELECT id, label, box_id, box_label, shelf_id, shelf_label, area_id, area_label FROM box_fts WHERE id = ?")
-	row, err := db.Sql.Query(query, id.String())
-	if err != nil {
-		return items.ListRow{}, fmt.Errorf("error while fetching the virtual box: %w", err)
-	}
-
-	var sqlVertualBox SQLListRow
-	for row.Next() {
-		err := row.Scan(
-			&sqlVertualBox.ID,
-			&sqlVertualBox.Label,
-			&sqlVertualBox.BoxID,
-			&sqlVertualBox.BoxLabel,
-			&sqlVertualBox.ShelfID,
-			&sqlVertualBox.ShelfLabel,
-			&sqlVertualBox.AreaID,
-			&sqlVertualBox.AreaLabel,
-		)
-		if err != nil {
-			return items.ListRow{}, fmt.Errorf("error while assigning the Data to the Virtualbox struct : %w", err)
-		}
-	}
-
-	vBox, err := sqlVertualBox.ToListRow()
-	if err != nil {
-		return items.ListRow{}, err
-	}
-	return *vBox, nil
-}
-
 func (db *DB) NumOfItemRecords(searchString string) (int, error) {
 	searchString = strings.TrimSpace(searchString)
 

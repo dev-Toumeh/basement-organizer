@@ -74,12 +74,16 @@ func (db *boxDatabaseError) DeleteBox(boxId uuid.UUID) error {
 	return errors.New("AAAAA")
 }
 
-func (db *boxDatabaseError) BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow, error) {
+func (db *boxDatabaseError) BoxListRows(query string, limit int, page int) ([]items.ListRow, error) {
 	return make([]items.ListRow, 0), errors.New("AAAAAAAA")
 }
 
 func (db *boxDatabaseError) BoxListRowByID(id uuid.UUID) (items.ListRow, error) {
 	return items.ListRow{}, errors.New("AAAAAAAA")
+}
+
+func (db *boxDatabaseError) BoxListCounter(searchString string) (count int, err error) {
+	return count, err
 }
 
 // boxDatabaseSuccess never returns errors.
@@ -117,12 +121,16 @@ func (db *boxDatabaseSuccess) DeleteBox(boxId uuid.UUID) error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) BoxFuzzyFinder(query string, limit int, page int) ([]items.ListRow, error) {
+func (db *boxDatabaseSuccess) BoxListRows(query string, limit int, page int) ([]items.ListRow, error) {
 	return make([]items.ListRow, 0), nil
 }
 
 func (db *boxDatabaseSuccess) BoxListRowByID(id uuid.UUID) (items.ListRow, error) {
 	return items.ListRow{}, nil
+}
+
+func (db *boxDatabaseSuccess) BoxListCounter(searchString string) (count int, err error) {
+	return 1, nil
 }
 
 func TestBoxHandlerDBErrors(t *testing.T) {
