@@ -64,7 +64,7 @@ func Pagination(data map[string]any, count int, limit int, pageNr int) map[strin
 
 	logg.Debugf("currentPage %d", currPage)
 
-	pages := make([]any, 0)
+	pages := make([]PaginationButton, 0)
 
 	// more pagination
 	disablePrev := false
