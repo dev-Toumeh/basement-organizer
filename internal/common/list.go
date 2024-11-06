@@ -11,6 +11,7 @@ type ListTemplate struct {
 	FormHXGet   string // /boxes, /shelves
 	RowHXGet    string // hx-get="{{ .RowHXGet }}/{{.ID}}"
 	SearchInput any
+	PaginationButtons []PaginationButton
 
 	Rows                              []ListRow
 	RowAction                         bool   // If an action button should be displayed inside each row instead of checkmarks.
@@ -24,6 +25,12 @@ type ListTemplate struct {
 	AdditionalDataInputValues []string
 	AdditionalDataInputName   string
 	ReturnSelectedRowInput    bool
+}
+
+type PaginationButton struct {
+	PageNumber int
+	Selected   bool
+	Disabled   bool
 }
 
 type listTemplate2 struct {
@@ -50,7 +57,7 @@ func (tmpl ListTemplate) Render(w http.ResponseWriter) error {
 
 	// logg.Debug(tmpl.Rows)
 	// d := ListTemplate{HXGet: "/boxes"}
-	return templates.SafeRender(w, "list", tmpl)
+	return templates.SafeRender(w, templates.TEMPLATE_LIST, tmpl)
 }
 
 // ListRow is a single row entry used for list templates.
