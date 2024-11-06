@@ -314,7 +314,7 @@ func TestBoxHandlerOK(t *testing.T) {
 			expectedTemplate:   false,
 		},
 	}
-	err := templates.InitTemplates("../templates")
+	err := templates.InitTemplates("../")
 	if err != nil {
 		logg.Fatal(err)
 	}
