@@ -8,9 +8,16 @@ import (
 )
 
 type ListTemplate struct {
-	FormHXGet   string // /boxes, /shelves
-	RowHXGet    string // hx-get="{{ .RowHXGet }}/{{.ID}}"
-	SearchInput any
+	FormHXGet string // Replaces form. Is triggered by search input and pagination buttons. "/boxes, /shelves, ..."
+	RowHXGet  string // hx-get="{{ .RowHXGet }}/{{.ID}}"
+
+	SearchInput      bool   // Show search input
+	SearchInputLabel string // Label of input
+	SearchInputValue string // Current value for search input to "remember" last input after form is replaced
+
+	Pagination        bool // Show pagination buttons
+	CurrentPageNumber int
+	Limit             int // How many things will be shown or requested
 	PaginationButtons []PaginationButton
 
 	Rows                              []ListRow
@@ -25,6 +32,30 @@ type ListTemplate struct {
 	AdditionalDataInputValues []string
 	AdditionalDataInputName   string
 	ReturnSelectedRowInput    bool
+}
+
+func (tmpl ListTemplate) Map() map[string]any {
+	return map[string]any{
+		"FormHXGet":                         tmpl.FormHXGet,
+		"RowHXGet":                          tmpl.RowHXGet,
+		"SearchInput":                       tmpl.SearchInput,
+		"SearchInputLabel":                  tmpl.SearchInputLabel,
+		"SearchInputValue":                  tmpl.SearchInputValue,
+		"Pagination":                        tmpl.Pagination,
+		"Limit":                             tmpl.Limit,
+		"PaginationButtons":                 tmpl.PaginationButtons,
+		"Rows":                              tmpl.Rows,
+		"RowAction":                         tmpl.RowAction,
+		"RowActionHXPost":                   tmpl.RowActionHXPost,
+		"RowActionHXPostWithID":             tmpl.RowActionHXPostWithID,
+		"RowActionHXPostWithIDAsQueryParam": tmpl.RowActionHXPostWithIDAsQueryParam,
+		"RowActionName":                     tmpl.RowActionName,
+		"RowActionHXTarget":                 tmpl.RowActionHXTarget,
+		"AdditionalDataInputs":              tmpl.AdditionalDataInputs,
+		"AdditionalDataInputValues":         tmpl.AdditionalDataInputValues,
+		"AdditionalDataInputName":           tmpl.AdditionalDataInputName,
+		"ReturnSelectedRowInput":            tmpl.ReturnSelectedRowInput,
+	}
 }
 
 type PaginationButton struct {
