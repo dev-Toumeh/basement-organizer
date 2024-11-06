@@ -22,6 +22,11 @@ func SearchString(r *http.Request) string {
 // @param limit - The maximum number of records displayed per page.
 // @param pageNr - The current page number.
 // @return - A map containing the pagination information to be used in the template.
+//
+// Example buttons layout for 99 total pages with current page = 15:
+//
+//	[firstPage] [prevFive] [prevPage] [currPage] [nextPage] [nextFive] [lastPage]
+//	   [1]         [10]       [14]       [15]      [16]        [20]       [99]
 func Pagination(data map[string]any, count int, limit int, pageNr int) map[string]any {
 	totalPages := int(math.Ceil(float64(count) / float64(limit)))
 	if totalPages < 1 {
@@ -30,18 +35,18 @@ func Pagination(data map[string]any, count int, limit int, pageNr int) map[strin
 
 	logg.Debugf("limit: %d, totalPages: %d, results: %d", limit, totalPages, count)
 
-	currentPage := 1
+	currPage := 1
 	if pageNr > totalPages {
-		currentPage = totalPages
+		currPage = totalPages
 	} else {
-		currentPage = pageNr
+		currPage = pageNr
 	}
 
 	if totalPages == 0 {
 		totalPages = 1
 	}
 
-	nextPage := currentPage + 1
+	nextPage := currPage + 1
 	if nextPage < 1 {
 		nextPage = 1
 	}
@@ -49,7 +54,7 @@ func Pagination(data map[string]any, count int, limit int, pageNr int) map[strin
 		nextPage = totalPages
 	}
 
-	prevPage := currentPage - 1
+	prevPage := currPage - 1
 	if prevPage < 1 {
 		prevPage = 1
 	}
@@ -57,72 +62,65 @@ func Pagination(data map[string]any, count int, limit int, pageNr int) map[strin
 		prevPage = totalPages
 	}
 
-	logg.Debugf("currentPage %d", currentPage)
+	logg.Debugf("currentPage %d", currPage)
 
-	pages := make([]map[string]any, 0)
+	pages := make([]PaginationButton, 0)
 
 	// more pagination
 	disablePrev := false
 	disableNext := false
 	disableFirst := false
 	disableLast := false
-	if currentPage == nextPage {
+	if currPage == nextPage {
 		disableNext = true
 	}
-	if currentPage == totalPages {
+	if currPage == totalPages {
 		disableLast = true
 	}
-	if currentPage == prevPage {
+	if currPage == prevPage {
 		disablePrev = true
 	}
-	if currentPage == 1 {
+	if currPage == 1 {
 		disableFirst = true
 	}
 
-	pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", 1), "Limit": fmt.Sprint(limit),
-		"ID": fmt.Sprintf("pagination-%d", 1), "Disabled": disableFirst})
+	pages = append(pages, PaginationButton{PageNumber: 1, Disabled: disableFirst})
 
 	if totalPages >= 10 {
 		disabled := false
-		prevFive := currentPage - 5
+		prevFive := currPage - 5
 		if prevFive < 1 {
 			prevFive = 1
 		}
-		if currentPage == prevFive {
+		if currPage == prevFive {
 			disabled = true
 		}
 
-		pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", prevFive), "Limit": fmt.Sprint(limit),
-			"ID": fmt.Sprintf("pagination-%d", prevFive), "Disabled": disabled})
+		pages = append(pages, PaginationButton{PageNumber: prevFive, Disabled: disabled})
 	}
-	pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", prevPage), "Limit": fmt.Sprint(limit),
-		"ID": fmt.Sprintf("pagination-%d", prevPage), "Disabled": disablePrev})
-	pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", currentPage), "Limit": fmt.Sprint(limit),
-		"Selected": true, "ID": fmt.Sprintf("pagination-%d", currentPage)})
-	pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", nextPage), "Limit": fmt.Sprint(limit),
-		"ID": fmt.Sprintf("pagination-%d", nextPage), "Disabled": disableNext})
+	pages = append(pages, PaginationButton{PageNumber: prevPage, Disabled: disablePrev})
+	pages = append(pages, PaginationButton{PageNumber: currPage, Selected: true})
+	pages = append(pages, PaginationButton{PageNumber: nextPage, Disabled: disableNext})
 
 	if totalPages >= 10 {
 		disabled := false
-		nextFive := currentPage + 5
+		nextFive := currPage + 5
 		if nextFive > totalPages {
 			nextFive = totalPages
 		}
-		if currentPage == nextFive {
+		if currPage == nextFive {
 			disabled = true
 		}
-		pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", nextFive), "Limit": fmt.Sprint(limit),
-			"ID": fmt.Sprintf("pagination-%d", nextFive), "Disabled": disabled})
+		pages = append(pages, PaginationButton{PageNumber: nextFive, Disabled: disabled})
 	}
-	pages = append(pages, map[string]any{"PageNumber": fmt.Sprintf("%d", totalPages), "Limit": fmt.Sprint(limit),
-		"ID": fmt.Sprintf("pagination-%d", totalPages), "Disabled": disableLast})
+	pages = append(pages, PaginationButton{PageNumber: totalPages, Disabled: disableLast})
 
 	// Putting required data for templates together.
 	data["Pages"] = pages
 	data["Limit"] = fmt.Sprint(limit)
 	data["NextPage"] = nextPage
 	data["PrevPage"] = prevPage
-	data["PageNumber"] = currentPage
+	data["PageNumber"] = currPage
 
 	move := false
 	data["Move"] = move

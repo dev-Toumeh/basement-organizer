@@ -1,13 +1,14 @@
 {{ define "list" }}
+<!--is triggered by search input and pagination buttons -->
 <form id="list"
-  hx-get="{{ .FormHXGet }}"
+    hx-get="{{ .FormHXGet }}" 
     hx-push-url="true"
     hx-target="body"
     hx-swap="outerHTML"
-    hx-trigger="keyup changed delay:500ms from:#search-bar, keyup changed delay:500ms from:#item-limit"
+    hx-trigger="keyup changed delay:500ms from:#search-bar, keyup changed delay:500ms from:#limit"
 >
     {{ if .SearchInput }}
-        <label for="search">{{ with .SearchInput }}{{ . }}{{end}}</label>
+        <label for="search-bar">{{ .SearchInputLabel }}</label>
         <input id="search-bar"
             type="text"
             value="{{ .SearchInputValue }}"
@@ -18,19 +19,20 @@
         <input type="submit" name="page" value="{{.PageNumber}}" hidden>
 
         <button type="button" hx-get="/api/v1/implement-me">Alternative View</button>
+    {{ end }}
 
+    {{ if .Pagination }}
         <div id="pagination">
-
-            <label for="limit"></label>
-            <input id="item-limit" type="number" name="limit" value="{{ if .Limit}}{{.Limit}}{{else}}5{{end}}" >
-            {{  range .Pages }}
-            <input type="submit" name="page" value="{{.PageNumber}}"
-                {{ if .Selected }}
-                    class="selected"
-                {{end}}
-                {{ if .Disabled}}disabled{{end}}
-                style="width:2.5rem"
-            >
+            <input id="limit" type="number" name="limit" value="{{ if .Limit}}{{.Limit}}{{else}}5{{end}}" >
+            {{ range $i, $e := .PaginationButtons }}
+                <label for="pagebutton-{{$i}}"></label>
+                <input id="pagebutton-{{$i}}" type="submit" name="page" value="{{.PageNumber}}"
+                    {{ if .Selected }}
+                        class="selected"
+                    {{end}}
+                    {{ if .Disabled}}disabled{{end}}
+                    style="width:2.5rem"
+                >
             {{ end }}
         </div> 
     {{ end }}
@@ -100,8 +102,10 @@
         <th>Shelf</th>
         <th>Area</th>
         <th style="width: 10%">Image</th>
+        {{ if .RowAction }}
         <th style="width: 10%">{{.RowActionName}}</th>
-        {{ if not .RowAction }}
+        {{ else }}
+        <th style="width: 10%">Move</th>
         <th style="width: 10%">Delete</th>
         {{ end }}
     </tr>
@@ -124,7 +128,8 @@
 
     {{ range .Rows }}
         {{ $empty := false }}
-        {{ if not . }} {{ $empty = true }} {{ end }}
+        {{ if eq .ID.String "00000000-0000-0000-0000-000000000000" }} {{ $empty = true }} {{ end }}
+
 
         {{ if $empty }}
             <tr id="list-row-{{.ID}}">
@@ -149,8 +154,12 @@
                     >
                 </td>
                 {{ if not $RowAction}}
-                <td style="text-align: center;"><input type="checkbox" name="move:{{.ID}}"></td>
-                <td style="text-align: center;"><input type="checkbox" name="delete:{{.ID}}"></td>
+                <td style="text-align: center;">
+                    <label for="move:{{.ID}}"></label>
+                    <input id="move:{{.ID}}" type="checkbox" name="move:{{.ID}}"></td>
+                <td style="text-align: center;">
+                    <label for="delete:{{.ID}}"></label>
+                    <input id="delete:{{.ID}}" type="checkbox" name="delete:{{.ID}}"></td>
                 {{ else }}
                 <td style="text-align: center;">
                     <!--hidden inputs with "name=id-to-be-moved" are generated in box-list template

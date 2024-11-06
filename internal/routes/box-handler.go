@@ -223,19 +223,26 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 		page.User = user
 		data := page.Map()
 
-		// search-input template
+		// list template
+		listTmpl := common.ListTemplate{
+			FormHXGet: "/boxes",
+			RowHXGet:  "/boxes",
+		}
+
 		searchString := common.SearchString(r)
-		searchInput := items.NewSearchInputTemplate()
-		searchInput.SearchInputLabel = "Search boxes"
-		searchInput.SearchInputValue = searchString
-		logg.Debugf("searchInput %v", searchInput.Map())
-		maps.Copy(data, searchInput.Map())
+
+		// search-input template
+		listTmpl.SearchInput = true
+		listTmpl.SearchInputLabel = "Search boxes"
+		listTmpl.SearchInputValue = searchString
 
 		// @TODO: Implement move page
-		move := false
+		// move := false
 		urlQuery := r.URL.Query()
-		// logg.Debugf("query values: %v", urlQuery)
+		logg.Debugf("has query: %v", urlQuery.Has("query"))
 
+		// pagination
+		listTmpl.Pagination = true
 		pageNr, err := strconv.Atoi(r.FormValue("page"))
 		if err != nil || pageNr < 1 {
 			pageNr = 1
@@ -254,37 +261,36 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 			return
 		}
 
-		// box-list-row to fill box-list template
-		logg.Debugf("has query: %v", urlQuery.Has("query"))
-		var boxes []common.ListRow
-		err = nil
-
-		// Fetch the Records from the Database and pack it into map
-		boxes, err = db.BoxListRows(searchString, limit, pageNr)
-		if err != nil {
-			server.WriteInternalServerError("cant query boxes", err, w, r)
-			return
-		}
-
-		// pagination
 		data = common.Pagination(data, count, limit, pageNr)
+		listTmpl.CurrentPageNumber = pageNr
+		listTmpl.Limit = limit
+		listTmpl.PaginationButtons = data["Pages"].([]common.PaginationButton)
 
-		boxesMaps := make([]map[string]any, limit)
-		for i, box := range boxes {
-			mappedBox := box.Map()
-			if mappedBox == nil {
-				boxesMaps[i] = map[string]any{}
-			} else {
-				boxesMaps[i] = mappedBox
-				mappedBox["Move"] = move
+		// box-list-row to fill box-list template
+		boxes := make([]common.ListRow, limit)
+
+		// Boxes found
+		if count > 0 {
+			// Fetch the Records from the Database and pack it into map
+			rows, err := db.BoxListRows(searchString, limit, pageNr)
+			if err != nil {
+				server.WriteInternalServerError("cant query boxes", err, w, r)
+				return
+			}
+
+			for i, b := range rows {
+				boxes[i] = b
+			}
+			// Fill up empty rows to keep same table size
+			if count < limit {
+				for i := count; i < limit; i++ {
+					boxes[i] = common.ListRow{}
+				}
 			}
 		}
-		// If count is less than limit, add empty maps to reach the limit
-		for i := count; i < limit; i++ {
-			boxesMaps[i] = map[string]any{}
-		}
-		maps.Copy(data, map[string]any{"Boxes": boxesMaps})
+		listTmpl.Rows = boxes
 
+		maps.Copy(data, listTmpl.Map())
 		server.MustRender(w, r, templates.TEMPLATE_BOXES_PAGE, data)
 	}
 }
