@@ -30,7 +30,7 @@
         >
         <!--this input must have type submit and be after search-bar input-->
         <!--or else search wont work if the next input is disabled-->
-        <input type="submit" name="page" value="{{.PageNumber}}" hidden>
+        <input type="submit" name="page" value="{{.CurrentPageNumber}}" hidden>
 
         <button type="button" hx-get="/api/v1/implement-me">Alternative View</button>
     {{ end }}
