@@ -8,8 +8,11 @@ import (
 )
 
 type ListTemplate struct {
-	FormHXGet string // Replaces form. Is triggered by search input and pagination buttons. "/boxes, /shelves, ..."
-	RowHXGet  string // hx-get="{{ .RowHXGet }}/{{.ID}}"
+	FormID       string
+	FormHXGet    string // Replaces form. Is triggered by search input and pagination buttons. "/boxes, /shelves, ..."
+	FormHXPost   string // Replaces form. Is triggered by search input and pagination buttons. "/boxes, /shelves, ..."
+	FormHXTarget string
+	RowHXGet     string // hx-get="{{ .RowHXGet }}/{{.ID}}"
 
 	SearchInput      bool   // Show search input
 	SearchInputLabel string // Label of input
@@ -19,6 +22,8 @@ type ListTemplate struct {
 	CurrentPageNumber int
 	Limit             int // How many things will be shown or requested
 	PaginationButtons []PaginationButton
+
+	MoveButtonHXTarget string
 
 	Rows                              []ListRow
 	RowAction                         bool   // If an action button should be displayed inside each row instead of checkmarks.

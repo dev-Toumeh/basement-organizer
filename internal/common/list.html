@@ -1,11 +1,25 @@
 {{ define "list" }}
 <!--is triggered by search input and pagination buttons -->
-<form id="list"
-    hx-get="{{ .FormHXGet }}" 
-    hx-push-url="true"
-    hx-target="body"
-    hx-swap="outerHTML"
-    hx-trigger="keyup changed delay:500ms from:#search-bar, keyup changed delay:500ms from:#limit"
+<form {{ $FormID := "list" }}
+    {{ if .FormID }} {{ $FormID := .FormID}} {{ end }}
+
+    id="{{$FormID}}"
+
+    {{ if .FormHXPost }}
+        hx-post="{{ .FormHXPost }}" 
+    {{ else }}
+        hx-get="{{ .FormHXGet }}" 
+    {{ end }}
+
+    {{ if .FormHXTarget }}
+        hx-target="{{ .FormHXTarget }}"
+        hx-swap="innerHTML"
+        hx-push-url="false"
+    {{ else }}
+        hx-target="body"
+        hx-swap="outerHTML"
+        hx-push-url="true"
+    {{ end }}
 >
     {{ if .SearchInput }}
         <label for="search-bar">{{ .SearchInputLabel }}</label>
@@ -65,7 +79,12 @@
             type="button"
             hx-swap="innerHTML"
             hx-push-url="false"
-            hx-target="#move-to-list"
+            {{ if .MoveButtonHXTarget }}
+                hx-target="{{.MoveButtonHXTarget}}"
+            {{ else }}
+                hx-target="#move-to-list"
+                hx-swap="outerHTML"
+            {{ end }}
             hx-include=":checked"
         >move to box
         </button>
