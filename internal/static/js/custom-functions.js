@@ -258,6 +258,22 @@ function serverNotificationsFromHeaderCallback(event) {
     }
 }
 
+/** Callback for handling checkboxes when they are changed. */
+function checkboxChangedCallback(event) {
+    if (event.target.classList.contains('move-checkbox') || event.target.classList.contains('delete-checkbox')) {
+        // @TODO: Is this still used or needed?
+        handleCheckboxChange();
+    }
+    if (event.target.matches("[type='checkbox']")) {
+        const checkbox = event.target;
+        if (checkbox.checked) {
+            checkbox.setAttribute("checked", "");
+        } else {
+            checkbox.removeAttribute("checked");
+        }
+    }
+}
+
 var init = false;
 function registerCallbackEventListener() {
     if (init) {
@@ -267,14 +283,8 @@ function registerCallbackEventListener() {
     document.body.addEventListener('htmx:afterSwap', serverNotificationsFromHeaderCallback);
     document.body.addEventListener('htmx:sendError', noResponseCallback);
     document.body.addEventListener('ServerNotificationEvents', serverNotificationsCallback);
-    htmx.on('htmx:beforeHistorySave', function() {
-        removeAllNotifications();
-    })
-    document.addEventListener('change', function(event) {
-        if (event.target.classList.contains('move-checkbox') || event.target.classList.contains('delete-checkbox')) {
-            handleCheckboxChange();
-        }
-    });
+    document.body.addEventListener('change', checkboxChangedCallback);
+    htmx.on('htmx:beforeHistorySave', removeAllNotifications);
     init = true;
 }
 
