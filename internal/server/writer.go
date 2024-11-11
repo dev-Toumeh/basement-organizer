@@ -22,6 +22,17 @@ func WriteJSON(w io.Writer, data any) {
 }
 
 // WriteNotFoundError sets not found status code 404, logs error and writes error message to client.
+func WriteBadRequestError(message string, err error, w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusBadRequest)
+	fmt.Fprint(w, message)
+	if err == nil {
+		logg.Alog(logg.ErrorLogger(), 3, `%s "%s": %s`, r.Method, r.URL.String(), message)
+	} else {
+		logg.Alog(logg.ErrorLogger(), 3, `%s "%s": %s: %s`, r.Method, r.URL.String(), message, err.Error())
+	}
+}
+
+// WriteNotFoundError sets not found status code 404, logs error and writes error message to client.
 func WriteNotFoundError(message string, err error, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	fmt.Fprint(w, message)
