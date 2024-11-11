@@ -530,12 +530,6 @@ func boxFromPostFormValue(id uuid.UUID, r *http.Request) boxes.Box {
 	return box
 }
 
-// wantsTemplateData checks if current request requires template data.
-// Helps deciding how to write the data.
-func wantsTemplateData(r *http.Request) bool {
-	return !strings.Contains(r.URL.Path, "/api/")
-}
-
 func renderBoxTemplate(box *boxes.Box, w http.ResponseWriter, r *http.Request) {
 	editParam := r.FormValue("edit")
 	edit := false
