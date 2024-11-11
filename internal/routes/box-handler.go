@@ -113,6 +113,7 @@ func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 			return
 		}
 
+		// Request doesn't come from this move template.
 		isRequestFromMovePage := r.FormValue("move") != ""
 
 		var toMove []uuid.UUID
@@ -144,7 +145,7 @@ func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 			additionalData[i] = common.DataInput{Key: "id-to-be-moved", Value: id.String()}
 		}
 		if isRequestFromMovePage {
-			// Store values to return to the original page where the move started.
+			// Store values to return to the original page where the move was requested.
 			additionalData = append(additionalData,
 				common.DataInput{Key: "return:page", Value: r.FormValue("return:page")},
 				common.DataInput{Key: "return:limit", Value: r.FormValue("return:limit")},
@@ -173,6 +174,7 @@ func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 		}
 
 		// search-input template
+		// Clear search when move template is requested the first time.
 		if !isRequestFromMovePage {
 			searchString = ""
 		}
@@ -190,6 +192,7 @@ func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 		}
 
 		var page int
+		// Show first page when move template is requested the first time.
 		if isRequestFromMovePage {
 			page = pageNr
 		} else {
