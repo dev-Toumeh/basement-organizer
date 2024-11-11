@@ -5,12 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type event struct {
 	Type     string `json:"type"`
 	Message  string `json:"message"`
 	Duration int    `json:"duration"`
+}
+
+func (e event) toJSONString() string {
+	data, err := json.Marshal(e)
+	if err != nil {
+		logg.WrapErr(err)
+		return "error"
+	}
+	return string(data)
 }
 
 type Notifications struct {
@@ -44,7 +54,7 @@ func (e *Notifications) Add(msg string, notificationType string, duration int) {
 		logg.Infof("duration for server notification is below 500ms (%d), setting to 500", duration)
 	}
 	if notificationType != "" && notificationType != "success" && notificationType != "warning" && notificationType != "error" {
-		logg.Infof(`notificationType "%s" is not valid`, notificationType)
+		logg.Infof(`notificationType "%s" is not valid. Setting default type=""`, notificationType)
 		notificationType = ""
 	}
 	e.ServerNotificationEvents = append(e.ServerNotificationEvents, event{Type: notificationType, Message: msg, Duration: duration})
@@ -156,6 +166,19 @@ func RedirectWithInfoNotification(w http.ResponseWriter, path string, message st
 //
 // duration in milliseconds.
 func redirectWithNotification(w http.ResponseWriter, path string, message string, notificationType string, duration int) {
-	notification := fmt.Sprintf(`{ "path":"%s", "headers":{ "notification":{ "message":"%s", "type":"%s", "duration":"%v" } } }`, path, message, notificationType, duration)
+	n := Notifications{}
+	n.Add(message, notificationType, duration)
+	notification := fmt.Sprintf(`{ "path":"%s", "headers":{ "ServerNotificationEvents":[%s] } }`, path, n.ServerNotificationEvents[0].toJSONString())
+	logg.Debug(notification)
+	w.Header().Set("HX-Location", notification)
+}
+
+// RedirectWithNotifications redirects client to another page and shows a notification after.
+//
+// It uses "HX-Redirect" to change page and triggers javascript notification after swap.
+func RedirectWithNotifications(w http.ResponseWriter, path string, notifications Notifications) {
+	n := strings.Trim(notifications.toJSONString(), "{}")
+	notification := fmt.Sprintf(`{ "path":"%s", "headers":{ %s } }`, path, n)
+	logg.Debug(notification)
 	w.Header().Set("HX-Location", notification)
 }
