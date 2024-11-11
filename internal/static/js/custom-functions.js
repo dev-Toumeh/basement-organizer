@@ -1,3 +1,18 @@
+const NotificationTypeError = "error";
+const NotificationTypeSuccess = "success";
+const NotificationTypeWarning = "warning";
+const NotificationTypeInfo = "";
+/** @typedef {(typeof NotificationTypeError | typeof NotificationTypeSuccess | typeof NotificationTypeWarning | NotificationTypeInfo | undefined)} NotificationType
+ * 
+ * Possible notification types: "error", "success", "warning", "" (info), or undefined. */
+
+/**
+ * @typedef {Object} ServerNotification  
+ * @property {string} message - The message text.
+ * @property {NotificationTypeError | NotificationTypeSuccess | NotificationTypeWarning | NotificationTypeInfo | undefined} notificationType
+ * @property {number | undefined} duration - How long is should display before removal. Default is 2000 (2 seconds).
+ * @property {number | undefined} id - Add Id to HTML element: <div id="notification-{id}</div>. Will be random by default */
+
 //document.getElementById('registerButton').addEventListener('click', function(event) {
 //    var password = document.getElementById('password').value;
 //    var confirmPassword = document.getElementById('password-confirm').value;
@@ -51,7 +66,7 @@ function cancelEdit(id) {
 
 /** Callback function that handles Error responses to display for the user.
  * Is registered as an eventListener
- * @param {HtmxResponseInfo}resInfo */
+ * @param {CustomEvent<HtmxResponseInfo>} resInfo */
 function errorResponseCallback(resInfo) {
     var notificationType
     var responseMessage
@@ -91,16 +106,11 @@ function errorResponseCallback(resInfo) {
 
 }
 
-const NotificationTypeError = "error";
-const NotificationTypeSuccess = "success";
-const NotificationTypeWarning = "warning";
-const NotificationTypeInfo = "";
-
 /** createAndShowNotification is for showing errors and information on updates.
- * @param text {string} Message to display.
- * @param notificationType {NotificationTypeError | NotificationTypeInfo | NotificationTypeSuccess | NotificationTypeWarning | undefined } Can be "error" or undefined for info.
- * @param duration {number | undefined} How long is should display before removal. Default is 2000 (2 seconds).
- * @param id {number | undefined} Add Id to HTML element: <div id="notification-{id}</div>. Will be random by default */
+ * @param {string} text - Message to display.
+ * @param {NotificationTypeError | NotificationTypeInfo | NotificationTypeSuccess | NotificationTypeWarning | undefined } notificationType
+ * @param {number | undefined} duration - How long is should display before removal. Default is 2000 (2 seconds).
+ * @param {number | undefined} id - Add Id to HTML element: <div id="notification-{id}</div>. Will be random by default. */
 function createAndShowNotification(text, notificationType, duration = 2000, id) {
     const snackbar = createNotification(text, notificationType, id);
     const snackbarElements = document.getElementById("notification-container");
@@ -115,8 +125,7 @@ function createAndShowNotification(text, notificationType, duration = 2000, id) 
  * @param {string} text - The message to be displayed in the snackbar.
  * @param notificationType {NotificationTypeError | NotificationTypeInfo | NotificationTypeSuccess | NotificationTypeWarning | undefined } Can be "error" or undefined for info.
  * @param {string} [id] - Optional unique identifier for the snackbar. If not provided, a random ID is generated.
- * @returns {HTMLDivElement} The created snackbar element.
- */
+ * @returns {HTMLDivElement} The created snackbar element. */
 function createNotification(text, notificationType, id) {
     const snackbar = document.createElement('div');
     const p = document.createElement("p");
@@ -229,32 +238,52 @@ function noResponseCallback(resInfo) {
  * Handles ServerNotificationEvents triggered with the "HX-Trigger" response header from the server.
  * <https://htmx.org/headers/hx-trigger/>
  *
- * @param {CustomEvent} evt - The event object containing details about the server notifications.
- * @param {Object} evt.detail - The event detail payload.
- * @param {Array} evt.detail.value - An array of notification objects.
- * @param {string} evt.detail.value[].message - The message to be displayed in the snackbar.
- * @param {string} evt.detail.value[].type - The type of notification (e.g., "success", "error").
- * @param {number} [evt.detail.value[].duration] - Optional duration for which the snackbar is displayed.
- * @param {string} [evt.detail.value[].id] - Optional unique identifier for the snackbar.
- */
+ * @param {CustomEvent<{value: ServerNotification[]}>} evt - The event object containing details about the server notifications. */
 function serverNotificationsCallback(evt) {
-    for (let i = 0; i < evt.detail.value.length; i++) {
-        createAndShowNotification(evt.detail.value[i].message, evt.detail.value[i].type, evt.detail.value[i].duration, evt.detail.value[i].id);
+    serverNotifications(evt.detail.value);
+}
+
+/** Creates notifications from list.
+ * @param {ServerNotification[]} notifications */
+function serverNotifications(notifications) {
+    for (let i = 0; i < notifications.length; i++) {
+        createAndShowNotification(notifications[i].message, notifications[i].type, notifications[i].duration, notifications[i].id);
     }
 }
 
 /** Callback for header field "notification".
  * Will create notification with the value of that field.
- * */
+ *
+ * @param {CustomEvent<HtmxResponseInfo>} event */
 function serverNotificationsFromHeaderCallback(event) {
-    const serverNotification = event.detail.requestConfig.headers.notification;
-    if (serverNotification !== undefined) {
+    const hasNotificationEvent = event.detail.requestConfig.headers.hasOwnProperty("notification");
+    if (hasNotificationEvent) {
+        let serverNotification = event.detail.requestConfig.headers.notification;
         //debugger;
         let message = serverNotification.message ? serverNotification.message : "";
         let type = serverNotification.type ? serverNotification.type : "";
         let duration = serverNotification.duration ? parseInt(serverNotification.duration) : undefined;
         let id = serverNotification.id ? parseInt(serverNotification.id) : undefined;
         createAndShowNotification(message, type, duration, id);
+    }
+    if (event.detail.requestConfig.headers.hasOwnProperty("ServerNotificationEvents")) {
+        serverNotifications(event.detail.requestConfig.headers.ServerNotificationEvents);
+    }
+}
+
+/** Callback for handling checkboxes when they are changed. */
+function checkboxChangedCallback(event) {
+    if (event.target.classList.contains('move-checkbox') || event.target.classList.contains('delete-checkbox')) {
+        // @TODO: Is this still used or needed?
+        handleCheckboxChange();
+    }
+    if (event.target.matches("[type='checkbox']")) {
+        const checkbox = event.target;
+        if (checkbox.checked) {
+            checkbox.setAttribute("checked", "");
+        } else {
+            checkbox.removeAttribute("checked");
+        }
     }
 }
 
@@ -267,14 +296,8 @@ function registerCallbackEventListener() {
     document.body.addEventListener('htmx:afterSwap', serverNotificationsFromHeaderCallback);
     document.body.addEventListener('htmx:sendError', noResponseCallback);
     document.body.addEventListener('ServerNotificationEvents', serverNotificationsCallback);
-    htmx.on('htmx:beforeHistorySave', function() {
-        removeAllNotifications();
-    })
-    document.addEventListener('change', function(event) {
-        if (event.target.classList.contains('move-checkbox') || event.target.classList.contains('delete-checkbox')) {
-            handleCheckboxChange();
-        }
-    });
+    document.body.addEventListener('change', checkboxChangedCallback);
+    htmx.on('htmx:beforeHistorySave', removeAllNotifications);
     init = true;
 }
 
@@ -306,11 +329,11 @@ let selectedIds = [];
 
 function handleMoveItems(event) {
     const checkedCheckboxes = document.querySelectorAll('input.move-checkbox:checked');
-    
+
     selectedIds = [];
     checkedCheckboxes.forEach((checkbox) => {
         selectedIds.push(checkbox.name);
     });
-    
+
     console.log(selectedIds);
 }

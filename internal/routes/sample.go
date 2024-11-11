@@ -4,6 +4,7 @@ import (
 	"basement/main/internal/auth"
 	"basement/main/internal/common"
 	"basement/main/internal/database"
+	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
@@ -46,12 +47,12 @@ func handleSampleListTemplate(db *database.DB) http.HandlerFunc {
 			RowHXGet:  "/api/v1/box",
 			Rows:      boxes,
 			RowAction: true,
+			ShowLimit: env.Config().ShowTableSize(),
 			// DataInputName:   "id-to-be-moved",
 			AdditionalDataInputs: []common.DataInput{
 				{Key: "return-hidden-input", Value: "false"},
 				{Key: "id-to-be-moved", Value: "1f73d774-8bd5-4246-940f-ef9abd1c480e"},
 			},
-			// AdditionalDataInputName:   "hidden",
 			// AdditionalDataInputValues: []string{"1f73d774-8bd5-4246-940f-ef9abd1c480e"},
 			RowActionName: "move to",
 			// RowActionHXPost:   "/api/v1/boxes/moveto/box",

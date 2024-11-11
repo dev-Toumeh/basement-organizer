@@ -14,7 +14,6 @@ import (
 	"maps"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 
 	"github.com/gofrs/uuid/v5"
@@ -45,10 +44,11 @@ func registerBoxRoutes(db *database.DB) {
 	Handle("/boxes", boxesPage(db))
 	Handle("/boxes/{id}", boxDetailsPage(db))
 	Handle("/boxes/move", boxesPageMove(db))
+	Handle("/boxes/moveto/box/{id}", moveBoxesToBoxHandler(db))
 	Handle("/boxes-list", boxesHandler(db))
 	// Boxes api
 	Handle("/api/v1/boxes", boxesHandler(db))
-	Handle("/api/v1/boxes/moveto/box/{id}", moveBoxes(db))
+	Handle("/api/v1/boxes/moveto/box/{id}", moveBoxesToBoxAPI(db))
 	Handle("/get-boxes-move-page", getMoveBoxesPage(db))
 }
 
@@ -101,7 +101,7 @@ func boxHandler(db BoxDatabase) http.HandlerFunc {
 	}
 }
 
-// boxesHandler handles read and delete for multiple boxes.
+// getMoveBoxesPage handles list form for moving things.
 func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Uses POST so client can send long list
@@ -113,36 +113,109 @@ func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 			return
 		}
 
-		boxs, err := db.BoxListRows("", 100, 1)
-		if err != nil {
-			server.WriteInternalServerError("cant query boxes", logg.Errorf("%w", err), w, r)
-			return
-		}
+		isRequestFromMovePage := r.FormValue("move") != ""
 
-		a := boxes.BoxListTemplateData{Boxes: boxs}
-		d := a.Map()
-		d["Move"] = true
-		for i := range d["Boxes"].([]map[string]any) {
-			d["Boxes"].([]map[string]any)[i]["Move"] = true
-
-		}
-
-		// parse selected boxes
-		r.ParseForm()
-		toMove, err := parseIDsFromFormWithKey(r.Form, "move")
-		if err != nil {
-			server.WriteInternalServerError(fmt.Sprintf("can't move boxes %v", toMove), err, w, r)
-			return
-		}
-		moveData := make([]map[string]string, len(toMove))
-		for i, id := range toMove {
-			moveData[i] = map[string]string{
-				"Key":   "id-to-be-moved",
-				"Value": id.String(),
+		var toMove []uuid.UUID
+		if isRequestFromMovePage { // IDs are stored as "id-to-be-moved":UUID
+			ids := r.PostForm["id-to-be-moved"]
+			toMove = make([]uuid.UUID, len(ids))
+			for i, id := range ids {
+				toMove[i] = uuid.FromStringOrNil(id)
+			}
+		} else { // IDs are stored as "move:UUID"
+			var err error
+			toMove, err = parseIDsFromFormWithKey(r.Form, "move")
+			if err != nil {
+				server.WriteInternalServerError(fmt.Sprintf("can't move boxes %v", toMove), err, w, r)
+				return
+			}
+			if len(toMove) == 0 {
+				server.WriteBadRequestError("No box selected to move", nil, w, r)
+				return
 			}
 		}
-		d["Data"] = moveData
-		server.MustRender(w, r, templates.TEMPLATE_BOX_LIST, d)
+
+		searchString := common.SearchString(r)
+		pageNr := common.ParsePageNumber(r)
+		limit := common.ParseLimit(r)
+
+		additionalData := make([]common.DataInput, len(toMove))
+		for i, id := range toMove {
+			additionalData[i] = common.DataInput{Key: "id-to-be-moved", Value: id.String()}
+		}
+		if isRequestFromMovePage {
+			// Store values to return to the original page where the move started.
+			additionalData = append(additionalData,
+				common.DataInput{Key: "return:page", Value: r.FormValue("return:page")},
+				common.DataInput{Key: "return:limit", Value: r.FormValue("return:limit")},
+				common.DataInput{Key: "return:query", Value: r.FormValue("return:query")},
+			)
+		} else {
+			additionalData = append(additionalData,
+				common.DataInput{Key: "return:page", Value: pageNr},
+				common.DataInput{Key: "return:limit", Value: limit},
+				common.DataInput{Key: "return:query", Value: searchString},
+			)
+		}
+
+		listTmpl := common.ListTemplate{
+			FormID:       "list-move",
+			FormHXPost:   "/get-boxes-move-page",
+			FormHXTarget: "this",
+			RowHXGet:     "/boxes",
+			ShowLimit:    env.Config().ShowTableSize(),
+
+			RowAction:             true,
+			RowActionName:         "Move here",
+			RowActionHXPostWithID: "/boxes/moveto/box",
+			RowActionHXTarget:     "#list-move",
+			AdditionalDataInputs:  additionalData,
+		}
+
+		// search-input template
+		if !isRequestFromMovePage {
+			searchString = ""
+		}
+		listTmpl.SearchInput = true
+		listTmpl.SearchInputLabel = "Search boxes"
+		listTmpl.SearchInputValue = searchString
+
+		// pagination
+		listTmpl.Pagination = true
+
+		count, err := db.BoxListCounter(searchString)
+		if err != nil {
+			server.WriteInternalServerError("cant query boxes", err, w, r)
+			return
+		}
+
+		var page int
+		if isRequestFromMovePage {
+			page = pageNr
+		} else {
+			page = 1
+		}
+		data := common.Pagination(map[string]any{}, count, limit, page)
+
+		listTmpl.Limit = limit
+		listTmpl.PaginationButtons = data["Pages"].([]common.PaginationButton)
+
+		// box rows
+		var boxes []common.ListRow
+		// if there are search results
+		if count > 0 {
+			boxes, err = filledBoxRows(db, searchString, limit, page, count)
+			if err != nil {
+				server.WriteInternalServerError("can't query boxes", err, w, r)
+				return
+			}
+		}
+		listTmpl.Rows = boxes
+		err = listTmpl.Render(w)
+		if err != nil {
+			server.WriteInternalServerError("can't render move page", err, w, r)
+			return
+		}
 	}
 }
 
@@ -227,33 +300,14 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 		listTmpl := common.ListTemplate{
 			FormHXGet: "/boxes",
 			RowHXGet:  "/boxes",
+			ShowLimit: env.Config().ShowTableSize(),
 		}
 
-		searchString := common.SearchString(r)
-
 		// search-input template
+		searchString := common.SearchString(r)
 		listTmpl.SearchInput = true
 		listTmpl.SearchInputLabel = "Search boxes"
 		listTmpl.SearchInputValue = searchString
-
-		// @TODO: Implement move page
-		// move := false
-		urlQuery := r.URL.Query()
-		logg.Debugf("has query: %v", urlQuery.Has("query"))
-
-		// pagination
-		listTmpl.Pagination = true
-		pageNr, err := strconv.Atoi(r.FormValue("page"))
-		if err != nil || pageNr < 1 {
-			pageNr = 1
-		}
-		limit, err := strconv.Atoi(r.FormValue("limit"))
-		if err != nil {
-			limit = env.DefaultTableSize()
-		}
-		if limit == 0 {
-			limit = env.DefaultTableSize()
-		}
 
 		count, err := db.BoxListCounter(searchString)
 		if err != nil {
@@ -261,31 +315,24 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 			return
 		}
 
+		// pagination
+		pageNr := common.ParsePageNumber(r)
+		limit := common.ParseLimit(r)
 		data = common.Pagination(data, count, limit, pageNr)
-		listTmpl.CurrentPageNumber = pageNr
+		listTmpl.Pagination = true
+		listTmpl.CurrentPageNumber = data["PageNumber"].(int)
 		listTmpl.Limit = limit
 		listTmpl.PaginationButtons = data["Pages"].([]common.PaginationButton)
 
 		// box-list-row to fill box-list template
-		boxes := make([]common.ListRow, limit)
+		var boxes []common.ListRow
 
 		// Boxes found
 		if count > 0 {
-			// Fetch the Records from the Database and pack it into map
-			rows, err := db.BoxListRows(searchString, limit, pageNr)
+			boxes, err = filledBoxRows(db, searchString, limit, pageNr, count)
 			if err != nil {
 				server.WriteInternalServerError("cant query boxes", err, w, r)
 				return
-			}
-
-			for i, b := range rows {
-				boxes[i] = b
-			}
-			// Fill up empty rows to keep same table size
-			if count < limit {
-				for i := count; i < limit; i++ {
-					boxes[i] = common.ListRow{}
-				}
 			}
 		}
 		listTmpl.Rows = boxes
@@ -423,7 +470,7 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// parseIDsFromFormWithKey parses r.Form by searching for all keys that start with `key` name and returns a list of valid uuid.UUIDs
+// parseIDsFromFormWithKey parses r.Form by searching all HTML input elements that start with `key` name and returns a list of valid uuid.UUIDs
 //
 // `r.ParseForm()` must be called before using this function!
 //
@@ -489,32 +536,52 @@ func moveBox(db BoxDatabase) http.HandlerFunc {
 	}
 }
 
-func moveBoxes(db BoxDatabase) http.HandlerFunc {
+func moveBoxesToBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) server.Notifications {
+	r.ParseForm()
+	moveToBoxID := server.ValidID(w, r, "can't move boxes invalid id")
+	if moveToBoxID == uuid.Nil {
+		return server.Notifications{}
+	}
+
+	parseIDs := r.PostForm["id-to-be-moved"]
+	ids := make([]uuid.UUID, len(parseIDs))
+
+	logg.Debug(len(parseIDs))
+
+	notifications := server.Notifications{}
+	for i, v := range parseIDs {
+		logg.Debug(v)
+		id := uuid.FromStringOrNil(v)
+		ids[i] = id
+		err := db.MoveBoxToBox(id, moveToBoxID)
+		if err != nil {
+			notifications.AddError(fmt.Sprintf(`can't move "%s" to "%s"`, ids[i].String(), moveToBoxID.String()))
+			logg.Err(err)
+		} else {
+			notifications.AddSuccess(fmt.Sprintf(`moved "%s" to "%s"`, ids[i].String(), moveToBoxID.String()))
+		}
+	}
+	return notifications
+}
+
+func moveBoxesToBoxHandler(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		r.ParseForm()
-		moveToBoxID := server.ValidID(w, r, "can't move boxes invalid id")
-		if moveToBoxID == uuid.Nil {
-			return
-		}
+		notifications := moveBoxesToBox(w, r, db)
+		params := listPageParams(r)
+		server.RedirectWithNotifications(w, "/boxes"+params, notifications)
+	}
+}
 
-		parseIDs := r.PostForm["id-to-be-moved"]
-		ids := make([]uuid.UUID, len(parseIDs))
+func listPageParams(r *http.Request) string {
+	query := "query=" + r.FormValue("return:query")
+	limit := "limit=" + r.FormValue("return:limit")
+	page := "page=" + r.FormValue("return:page")
+	return "?" + query + "&" + limit + "&" + page
+}
 
-		logg.Debug(len(parseIDs))
-
-		notifications := server.Notifications{}
-		for i, v := range parseIDs {
-			logg.Debug(v)
-			id := uuid.FromStringOrNil(v)
-			ids[i] = id
-			err := db.MoveBoxToBox(id, moveToBoxID)
-			if err != nil {
-				notifications.AddError(fmt.Sprintf(`can't move "%s" to "%s"`, ids[i].String(), moveToBoxID.String()))
-				logg.Err(err)
-			} else {
-				notifications.AddSuccess(fmt.Sprintf(`moved "%s" to "%s"`, ids[i].String(), moveToBoxID.String()))
-			}
-		}
+func moveBoxesToBoxAPI(db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		notifications := moveBoxesToBox(w, r, db)
 		server.TriggerNotifications(w, notifications)
 	}
 }
@@ -528,12 +595,6 @@ func boxFromPostFormValue(id uuid.UUID, r *http.Request) boxes.Box {
 	box.Picture = common.ParsePicture(r)
 	box.QRCode = r.PostFormValue("qrcode")
 	return box
-}
-
-// wantsTemplateData checks if current request requires template data.
-// Helps deciding how to write the data.
-func wantsTemplateData(r *http.Request) bool {
-	return !strings.Contains(r.URL.Path, "/api/")
 }
 
 func renderBoxTemplate(box *boxes.Box, w http.ResponseWriter, r *http.Request) {
@@ -568,72 +629,25 @@ func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatab
 	return nil
 }
 
-// // sampleBoxDB to test request handler.
-// type sampleBoxDB struct {
-// 	Boxes map[string]*boxes.Box
-// }
-//
-// func newSampleBoxDB() *sampleBoxDB {
-// 	db := sampleBoxDB{Boxes: make(map[string]*boxes.Box, 100)}
-// 	for i := range 10 {
-// 		box := items.NewBox()
-// 		box.Label = fmt.Sprintf("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa %d", i)
-// 		db.CreateBox(&box)
-// 	}
-// 	return &db
-// }
-//
-// // func (db *sampleBoxDB) CreateBox() (uuid.UUID, error) {
-// // 	box := items.NewBox()
-// // 	db.Boxes[box.Id.String()] = &box
-// // 	logg.Debug(db.Boxes)
-// // 	return box.Id, nil
-// // }
-//
-// func (db *sampleBoxDB) CreateBox(box *boxes.Box) (uuid.UUID, error) {
-// 	// box := items.NewBox()
-// 	db.Boxes[box.Id.String()] = box
-// 	logg.Debug(db.Boxes)
-// 	return box.Id, nil
-// }
-//
-// func (db *sampleBoxDB) BoxById(id uuid.UUID) (boxes.Box, error) {
-// 	box, ok := db.Boxes[id.String()]
-// 	if !ok {
-// 		// logg.Debug("BoxByID: ",db.Boxes)
-// 		return boxes.Box{}, errors.New("ID " + id.String() + " doesn't exist")
-// 	}
-// 	return *box, nil
-// }
-//
-// // func (db *sampleBoxDB) BoxIDs() ([]uuid.UUID, error) {
-// func (db *sampleBoxDB) BoxIDs() ([]string, error) {
-// 	// ids := make([]uuid.UUID, len(db.Boxes))
-// 	ids := make([]string, len(db.Boxes))
-// 	i := 0
-// 	for _, v := range db.Boxes {
-// 		// ids[i] = v.Id
-// 		ids[i] = v.Id.String()
-// 		i++
-// 	}
-// 	slices.Sort(ids)
-// 	return ids, nil
-// }
-//
-// func (db *sampleBoxDB) UpdateBox(box boxes.Box) error {
-// 	oldBox, err := db.BoxById(box.Id)
-// 	if err != nil {
-// 		return logg.Errorf("UpdateBox(): %w", err)
-// 	}
-// 	db.Boxes[oldBox.Id.String()] = &box
-// 	return nil
-// }
-//
-// func (db *sampleBoxDB) DeleteBox(id uuid.UUID) error {
-// 	_, err := db.BoxById(id)
-// 	if err != nil {
-// 		return logg.Errorf("DeleteBox(): %w", err)
-// 	}
-// 	delete(db.Boxes, id.String())
-// 	return nil
-// }
+// filledBoxRows returns BoxListRows with empty entries filled up to match limit.
+// count - The total number of records found from the search query.
+func filledBoxRows(db BoxDatabase, searchString string, limit int, pageNr int, count int) ([]common.ListRow, error) {
+	boxes := make([]common.ListRow, limit)
+
+	// Fetch the Records from the Database and pack it into map
+	rows, err := db.BoxListRows(searchString, limit, pageNr)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	for i, b := range rows {
+		boxes[i] = b
+	}
+	// Fill up empty rows to keep same table size
+	if count < limit {
+		for i := count; i < limit; i++ {
+			boxes[i] = common.ListRow{}
+		}
+	}
+	return boxes, nil
+}

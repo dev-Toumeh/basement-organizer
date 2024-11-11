@@ -16,6 +16,7 @@ const (
 type Configuration struct {
 	env              Environment
 	defaultTableSize int
+	showTableSize    bool
 	infoLogsEnabled  bool
 	debugLogsEnabled bool
 	errorLogsEnabled bool
@@ -78,6 +79,7 @@ func LoadConfig(c Configuration) {
 		config.SetTest()
 		break
 	}
+	config.SetShowTableSize(c.showTableSize)
 	config.SetDefaultTableSize(c.defaultTableSize)
 	if c.useMemoryDB {
 		config.SetDBPath(":memory:")
@@ -89,7 +91,7 @@ func LoadConfig(c Configuration) {
 }
 
 func (c Configuration) Description() string {
-	return fmt.Sprintf("environment config: isProduction=%t, isDevelopment=%t, defaultTableSize=%d", Production(), Development(), config.defaultTableSize)
+	return fmt.Sprintf("environment config: isProduction=%t, isDevelopment=%t, defaultTableSize=%d, showTableSize=%v", Production(), Development(), config.defaultTableSize, config.showTableSize)
 }
 
 // SetDevelopment sets environment setting to development.
@@ -124,6 +126,18 @@ func (c *Configuration) SetDBPath(path string) *Configuration {
 // DBPath returns the path to the configured database.
 func (c *Configuration) DBPath() string {
 	return c.dbPath
+}
+
+// SetShowTableSize sets if the table size option should be shown in the list template.
+func (c *Configuration) SetShowTableSize(show bool) *Configuration {
+	c.showTableSize = show
+	loadLog(fmt.Sprintf("set showTablesize to %v", show), 2)
+	return c
+}
+
+// ShowTableSize returns true if the table size option should be shown in the list template.
+func (c *Configuration) ShowTableSize() bool {
+	return c.showTableSize
 }
 
 // SetDefaultTableSize sets the default amount of shown rows in a table on a page with a list.
