@@ -39,12 +39,17 @@
     {{ $CurrentPageNumber := .CurrentPageNumber}}
 
     {{ if .Pagination }}
+    <div>
+    </div>
         <div id="pagination">
-            <input id="{{$FormID}}-limit" type="number" name="limit" value="{{ if .Limit}}{{.Limit}}{{else}}5{{end}}" >
-            <label for="{{$FormID}}-current-page">current page</label>
+            <input id="{{$FormID}}-limit" type="number" name="limit" 
+                value="{{ if .Limit}}{{.Limit}}{{else}}5{{end}}"
+                {{ if not .ShowLimit }}hidden{{end}}>
             <!--this input must have type submit and be after search-bar input-->
             <!--or else search wont work if the next input is disabled-->
-            <input id="{{$FormID}}-current-page" type="text" name="page" value="{{$CurrentPageNumber}}" hidden>
+            <label for="{{$FormID}}-current-page" hidden>current page</label>
+            <input id="{{$FormID}}-current-page" type="text" name="page" 
+                value="{{$CurrentPageNumber}}" hidden>
             {{ range $i, $e := .PaginationButtons }}
                 <button type="button"
                     hx-on:click="document.getElementById('{{$FormID}}-current-page').value = {{.PageNumber}}"
@@ -97,13 +102,12 @@
     {{ $RowAction := false }}
     {{ if .RowAction }}
         <!--Holds information for subsequent requests from this template.-->
-        <div id="additional-data-container" disabled>
-        {{ if $FormHXPost }}<input name="move" value="true">{{end}}
+        <div id="additional-data-container">
+        {{ if $FormHXPost }}<input name="move" value="true" hidden>{{end}}
         {{ if .AdditionalDataInputs }}
-            Additional data:
             {{ range .AdditionalDataInputs }}
-                <label for="{{.Key}}">{{.Key}}</label>
-                <input name="{{.Key}}" value="{{.Value}}" readonly>
+                <label for="{{.Key}}" hidden>{{.Key}}</label>
+                <input name="{{.Key}}" value="{{.Value}}" readonly hidden>
             {{ end }}
         {{ else }}
             Nothing selected to be moved.

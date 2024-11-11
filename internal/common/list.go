@@ -21,6 +21,7 @@ type ListTemplate struct {
 	Pagination        bool // Show pagination buttons
 	CurrentPageNumber int  // Sets "page" input element. Used in requests as query params or POST body value.
 	Limit             int  // Sets "limit" input element. How many things will be shown or requested. Used in requests as query params or POST body value.
+	ShowLimit         bool // Show limit input element.
 	PaginationButtons []PaginationButton
 
 	MoveButtonHXTarget string // Change response target. Default: "#move-to-list"
@@ -49,6 +50,7 @@ func (tmpl ListTemplate) Map() map[string]any {
 		"Pagination":                        tmpl.Pagination,
 		"CurrentPageNumber":                 tmpl.CurrentPageNumber,
 		"Limit":                             tmpl.Limit,
+		"ShowLimit":                         tmpl.ShowLimit,
 		"PaginationButtons":                 tmpl.PaginationButtons,
 		"MoveButtonHXTarget":                tmpl.MoveButtonHXTarget,
 		"Rows":                              tmpl.Rows,
