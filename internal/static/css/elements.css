@@ -38,7 +38,7 @@ margin: 10px;
   display: none;
 }
 
-#search-bar {
+.search-bar {
   width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
@@ -47,7 +47,7 @@ margin: 10px;
   box-sizing: border-box;
 }
 
-#search-bar:focus {
+.search-bar:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);

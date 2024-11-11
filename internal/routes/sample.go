@@ -51,7 +51,6 @@ func handleSampleListTemplate(db *database.DB) http.HandlerFunc {
 				{Key: "return-hidden-input", Value: "false"},
 				{Key: "id-to-be-moved", Value: "1f73d774-8bd5-4246-940f-ef9abd1c480e"},
 			},
-			// AdditionalDataInputName:   "hidden",
 			// AdditionalDataInputValues: []string{"1f73d774-8bd5-4246-940f-ef9abd1c480e"},
 			RowActionName: "move to",
 			// RowActionHXPost:   "/api/v1/boxes/moveto/box",
