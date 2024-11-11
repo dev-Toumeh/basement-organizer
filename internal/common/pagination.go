@@ -1,11 +1,13 @@
 package common
 
 import (
+	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"fmt"
 	"math"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -126,4 +128,23 @@ func Pagination(data map[string]any, count int, limit int, pageNr int) map[strin
 	data["Move"] = move
 
 	return data
+}
+
+func ParsePageNumber(r *http.Request) int {
+	pageNr, err := strconv.Atoi(r.FormValue("page"))
+	if err != nil || pageNr < 1 {
+		pageNr = 1
+	}
+	return pageNr
+}
+
+func ParseLimit(r *http.Request) int {
+	limit, err := strconv.Atoi(r.FormValue("limit"))
+	if err != nil {
+		limit = env.DefaultTableSize()
+	}
+	if limit == 0 {
+		limit = env.DefaultTableSize()
+	}
+	return limit
 }
