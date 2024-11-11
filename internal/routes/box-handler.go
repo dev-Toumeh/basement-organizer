@@ -423,7 +423,7 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// parseIDsFromFormWithKey parses r.Form by searching for all keys that start with `key` name and returns a list of valid uuid.UUIDs
+// parseIDsFromFormWithKey parses r.Form by searching all HTML input elements that start with `key` name and returns a list of valid uuid.UUIDs
 //
 // `r.ParseForm()` must be called before using this function!
 //
