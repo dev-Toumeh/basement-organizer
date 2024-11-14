@@ -15,6 +15,7 @@ const DATABASE_FILE_PATH = "./internal/database/sqlite-database.db"
 
 var ErrExist = errors.New("already exists")
 var ErrNotExist = errors.New("does not exist")
+var ErrNotEmpty = errors.New("already exists")
 var ErrNotImplemented = errors.New("is not implemented")
 
 // add statement to create new table
@@ -118,6 +119,12 @@ func (db *DB) createTable(statements map[string]string) {
 // ErrorExist returns a predefined error indicating that the requested SQL data insertion failed
 func (db *DB) ErrorExist() error {
 	return logg.WrapErrWithSkip(ErrExist, 2)
+}
+
+// ErrorNotEmpty returns a predefined error indicating that the requested unit is not empty
+func (db *DB) ErrorNotEmpty() error {
+	return ErrNotEmpty
+	// return logg.WrapErrWithSkip(ErrNotEmpty, 2)  @TODO (Alex) fix it so we can use it without colors
 }
 
 func (db *DB) insirtDummyData() {

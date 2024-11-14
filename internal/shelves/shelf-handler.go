@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
@@ -34,10 +35,6 @@ func ShelfHandler(db ShelfDB) http.HandlerFunc {
 				server.WriteJSON(w, shelf)
 				return
 			}
-
-			// Template writer
-			renderShelfTemplate(shelf, w, r)
-			break
 
 		case http.MethodPost:
 			createShelf(w, r, db)
@@ -117,8 +114,8 @@ func updateShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
 	server.RedirectWithSuccessNotification(w, url, "Shelf updated successfully")
 }
 
+// delete single shelf
 func deleteShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
-	// Extract the shelf ID from the request
 	idStr := r.URL.Query().Get("id")
 	if idStr == "" {
 		logg.Errf("Shelf ID is missing in the request")
@@ -131,14 +128,53 @@ func deleteShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
 		templates.RenderErrorNotification(w, "Invalid shelf ID")
 		return
 	}
-	err = db.DeleteShelf(id)
+	label, err := db.DeleteShelf(id)
 	if err != nil {
+		if err == db.ErrorNotEmpty() {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprint(w, "the Shelf"+label+"is not Empty")
+			return
+		}
+		fmt.Printf("error while deleting the shelf: %v", err)
 		templates.RenderErrorNotification(w, "Error deleting the shelf, please try again later")
 		return
 	}
-	templates.RenderSuccessNotification(w, "Shelf deleted successfully")
+	server.RedirectWithSuccessNotification(w, "/shelves", "Shelf deleted successfully")
 }
 
-func renderShelfTemplate(box *Shelf, w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
+// delete multiple Shelves
+func DeleteShelves(db ShelfDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		errMsgForUser := "Can't delete the Shelves please try again later"
+		r.ParseForm()
+		toDelete, err := common.ParseIDsFromFormWithKey(r.Form, "delete")
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, errMsgForUser)
+			logg.Err(err)
+		}
+
+		notifications := server.Notifications{}
+
+		for _, deleteId := range toDelete {
+			label, err := db.DeleteShelf(deleteId)
+			if err != nil {
+				if err == db.ErrorNotEmpty() {
+					logg.Debug("the Shelf with the label: " + label + " and id:" + deleteId.String() +
+						"could not be deleted as it is not empty \n")
+					notifications.AddWarning("the Shelf: " + label +
+						"could not be deleted as it is not empty")
+					continue
+				}
+				fmt.Printf("an error accrue while deleting the Shelf with id: %s : %v",
+					deleteId.String(), err)
+				templates.RenderErrorNotification(w, errMsgForUser)
+			}
+			logg.Debug("the Shelf with the label: " + label + " and id:" +
+				deleteId.String() + " was deleted \n")
+			notifications.AddSuccess("the Shelf " + label + "was deleted")
+		}
+		server.RedirectWithNotifications(w, "/shelves", notifications)
+	}
 }

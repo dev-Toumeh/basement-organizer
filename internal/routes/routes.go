@@ -93,6 +93,8 @@ func shelvesRoutes(db shelves.ShelfDB) {
 
 	// Api
 	http.HandleFunc("/api/v1/create/shelf", shelves.ShelfHandler(db))
+	http.HandleFunc("/api/v1/delete/shelf", shelves.ShelfHandler(db))
+	http.HandleFunc("/api/v1/delete/shelves", shelves.DeleteShelves(db))
 	Handle("/api/v1/update/shelf", shelves.ShelfHandler(db))
 }
 

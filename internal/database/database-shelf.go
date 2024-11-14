@@ -247,19 +247,19 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
 }
 
 // DeleteShelf deletes a single shelf.
-func (db *DB) DeleteShelf(id uuid.UUID) error {
+func (db *DB) DeleteShelf(id uuid.UUID) (label string, err error) {
 	shelf, err := db.Shelf(id)
 	if err != nil {
-		return logg.WrapErr(err)
+		return label, logg.WrapErr(err)
 	}
 	if shelf.Items != nil || shelf.Boxes != nil {
-		return logg.NewError(fmt.Sprintf(`can't delete shelf "%s": has %d items and %d boxes`, shelf.ID, len(shelf.Items), len(shelf.Boxes)))
+		return shelf.Label, db.ErrorNotEmpty()
 	}
 	err = db.deleteFrom("shelf", id)
 	if err != nil {
-		return logg.WrapErr(err)
+		return label, logg.WrapErr(err)
 	}
-	return nil
+	return shelf.Label, nil
 }
 
 // MoveShelfToArea moves shelf to an area.

@@ -109,7 +109,7 @@ func TestDeleteShelf(t *testing.T) {
 	var err error
 	err = dbTest.CreateShelf(SHELF_1)
 	assert.Equal(t, err, nil)
-	err = dbTest.DeleteShelf(SHELF_1.ID)
+	_, err = dbTest.DeleteShelf(SHELF_1.ID)
 	assert.Equal(t, err, nil)
 
 	// should not delete shelf with an item
@@ -117,7 +117,7 @@ func TestDeleteShelf(t *testing.T) {
 	dbTest.CreateNewItem(*ITEM_1)
 	dbTest.MoveItemToShelf(ITEM_1.ID, SHELF_1.ID)
 
-	err = dbTest.DeleteShelf(SHELF_1.ID)
+	_, err = dbTest.DeleteShelf(SHELF_1.ID)
 	assert.NotEqual(t, err, nil)
 }
 

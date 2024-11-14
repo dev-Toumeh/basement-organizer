@@ -33,12 +33,13 @@ type shelfTemplateDetailsData struct {
 }
 
 type ShelfDB interface {
-	CreateShelf(shelf *Shelf) error
 	Shelf(id uuid.UUID) (*Shelf, error)
+	CreateShelf(shelf *Shelf) error
 	UpdateShelf(shelf *Shelf) error
-	DeleteShelf(id uuid.UUID) error
+	DeleteShelf(id uuid.UUID) (label string, err error)
 	ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error)
 	ShelfListCounter(queryString string) (count int, err error)
+	ErrorNotEmpty() error
 }
 
 //	type PaginationData struct {

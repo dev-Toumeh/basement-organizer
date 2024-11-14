@@ -55,18 +55,15 @@
         {{ end }}
         </tbody>
     </table>
-    {{ if not (or .Move .Add .Preview) }}
         <div>
-            <button hx-delete="/boxes-list"
-                    hx-target="#box-list"
+            <button hx-delete="/api/v1/delete/shelves"
                     hx-select="#box-list"
-                    hx-push-url="true"
+                    hx-push-url="false"
             >delete</button>
             <button type="button" 
                     hx-get="/boxes/move"
             >move</button>
         </div>
-    {{ end }}
 </form>
 
 <div id="data-container" style="display: none;"></div> 
