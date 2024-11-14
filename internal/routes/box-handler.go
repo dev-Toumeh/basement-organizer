@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"maps"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/gofrs/uuid/v5"
@@ -125,7 +124,7 @@ func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 			}
 		} else { // IDs are stored as "move:UUID"
 			var err error
-			toMove, err = parseIDsFromFormWithKey(r.Form, "move")
+			toMove, err = common.ParseIDsFromFormWithKey(r.Form, "move")
 			if err != nil {
 				server.WriteInternalServerError(fmt.Sprintf("can't move boxes %v", toMove), err, w, r)
 				return
@@ -436,7 +435,7 @@ func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	errMsgForUser := "Can't delete boxes"
 	r.ParseForm()
-	toDelete, err := parseIDsFromFormWithKey(r.Form, "delete")
+	toDelete, err := common.ParseIDsFromFormWithKey(r.Form, "delete")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, errMsgForUser)
@@ -471,34 +470,6 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	}
 	fmt.Fprint(w, nil)
 	w.WriteHeader(http.StatusOK)
-}
-
-// parseIDsFromFormWithKey parses r.Form by searching all HTML input elements that start with `key` name and returns a list of valid uuid.UUIDs
-//
-// `r.ParseForm()` must be called before using this function!
-//
-// Example:
-//
-//	// search for all ID values that start with "delete:" key
-//	// like "delete:f47ac10b-58cc-0372-8567-0e02b2c3d479"
-//	toDeleteIDs := parseIDsFromFormWithKey(r.Form, "delete")
-func parseIDsFromFormWithKey(form url.Values, key string) ([]uuid.UUID, error) {
-	ids := make([]uuid.UUID, 0)
-	for k := range form {
-		// logg.Debugf("k: %v, v:%v", k, v)
-		if strings.Contains(k, fmt.Sprintf("%s:", key)) {
-			idStr := strings.Split(k, fmt.Sprintf("%s:", key))
-			if len(idStr) != 2 {
-				return nil, logg.NewError(fmt.Sprintf("Wrong delete key value pair: '%v'", k))
-			}
-			id, err := uuid.FromString(idStr[1])
-			if err != nil {
-				return nil, logg.WrapErr(err)
-			}
-			ids = append(ids, id)
-		}
-	}
-	return ids, nil
 }
 
 // deleteBox deletes a single box.

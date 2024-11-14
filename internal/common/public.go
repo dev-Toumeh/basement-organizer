@@ -8,7 +8,9 @@ import (
 	"log"
 	"maps"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -126,4 +128,32 @@ func CheckEditMode(r *http.Request) bool {
 	}
 
 	return false
+}
+
+// parseIDsFromFormWithKey parses r.Form by searching all HTML input elements that start with `key` name and returns a list of valid uuid.UUIDs
+//
+// `r.ParseForm()` must be called before using this function!
+//
+// Example:
+//
+//	// search for all ID values that start with "delete:" key
+//	// like "delete:f47ac10b-58cc-0372-8567-0e02b2c3d479"
+//	toDeleteIDs := parseIDsFromFormWithKey(r.Form, "delete")
+func ParseIDsFromFormWithKey(form url.Values, key string) ([]uuid.UUID, error) {
+	ids := make([]uuid.UUID, 0)
+	for k := range form {
+		// logg.Debugf("k: %v, v:%v", k, v)
+		if strings.Contains(k, fmt.Sprintf("%s:", key)) {
+			idStr := strings.Split(k, fmt.Sprintf("%s:", key))
+			if len(idStr) != 2 {
+				return nil, logg.NewError(fmt.Sprintf("Wrong delete key value pair: '%v'", k))
+			}
+			id, err := uuid.FromString(idStr[1])
+			if err != nil {
+				return nil, logg.WrapErr(err)
+			}
+			ids = append(ids, id)
+		}
+	}
+	return ids, nil
 }

@@ -15,7 +15,7 @@ import (
 
 type Box struct {
 	common.BasicInfo
-	OuterBoxID       uuid.UUID  `json:"outerboxid"`
+	OuterBoxID       uuid.UUID         `json:"outerboxid"`
 	Items            []*common.ListRow `json:"items"`
 	InnerBoxes       []*common.ListRow `json:"innerboxes"`
 	OuterBox         *common.ListRow   `json:"outerbox"`
@@ -106,14 +106,14 @@ func (tmpl *boxPageTemplateData) Map() map[string]any {
 }
 
 type BoxC struct {
-	Id          uuid.UUID `json:"id"`
-	Label       string    `json:"label"       validate:"required,lte=128"`
-	Description string    `json:"description" validate:"omitempty,lte=256"`
-	Picture     string    `json:"picture"     validate:"omitempty,base64"`
-	QRCode      string    `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	Items       []items.Item    `json:"items"`
-	InnerBoxes  []Box     `json:"innerboxes"`
-	OuterBox    Box       `json:"outerbox" `
+	Id          uuid.UUID    `json:"id"`
+	Label       string       `json:"label"       validate:"required,lte=128"`
+	Description string       `json:"description" validate:"omitempty,lte=256"`
+	Picture     string       `json:"picture"     validate:"omitempty,base64"`
+	QRCode      string       `json:"qrcode"      validate:"omitempty,alphanumunicode"`
+	Items       []items.Item `json:"items"`
+	InnerBoxes  []Box        `json:"innerboxes"`
+	OuterBox    Box          `json:"outerbox" `
 }
 
 // NewBox returns an empty box with a new uuid.
