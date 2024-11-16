@@ -194,8 +194,8 @@ func (db *DB) ItemExist(field string, value string) bool {
 }
 
 // Item returns new Item struct if id matches.
-func (db *DB) Item(id string) (items.Item, error) {
-	return db.ItemByField("id", id)
+func (db *DB) ItemById(id uuid.UUID) (items.Item, error) {
+	return db.ItemByField("id", id.String())
 }
 
 // ListItemById returns a single item with less information suitable for a list row.

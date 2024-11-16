@@ -1,7 +1,6 @@
 package items
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -16,54 +15,6 @@ import (
 	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
-)
-
-type Item struct {
-	common.BasicInfo
-	Quantity int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
-	Weight   string    `json:"weight"      validate:"omitempty,numeric"`
-	BoxID    uuid.UUID `json:"box_id"`
-	ShelfID  uuid.UUID `json:"shelf_id"`
-	AreaID   uuid.UUID `json:"area_id"`
-}
-
-func (i Item) String() string {
-	return fmt.Sprintf("Item[ID=%s, Label=%s, QRCode=%s, Quantity=%d, Weight=%s, BoxID=%s, ShelfID=%s, AreaID=%s]",
-		i.BasicInfo.ID, i.BasicInfo.Label, i.BasicInfo.QRCode, i.Quantity, i.Weight, i.BoxID, i.ShelfID, i.AreaID)
-}
-
-type ItemDatabase interface {
-	CreateNewItem(newItem Item) error
-	ItemByField(field string, value string) (Item, error)
-	ItemListRowByID(id uuid.UUID) (*common.ListRow, error)
-	Item(id string) (Item, error)
-	ItemIDs() ([]string, error)
-	ItemExist(field string, value string) bool
-	Items() ([][]string, error)
-	UpdateItem(ctx context.Context, item Item) error
-	DeleteItem(itemId uuid.UUID) error
-	DeleteItems(itemId []uuid.UUID) error
-	InsertSampleItems()
-	ErrorExist() error
-	MoveItemToBox(itemID uuid.UUID, boxID uuid.UUID) error
-
-	// search functions
-	ItemFuzzyFinder(query string) ([]common.ListRow, error)
-	ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]common.ListRow, error)
-	NumOfItemRecords(searchString string) (int, error)
-}
-
-const (
-	ID          string = "id"
-	LABEL       string = "label"
-	DESCRIPTION string = "description"
-	PICTURE     string = "picture"
-	QUANTITY    string = "quantity"
-	WEIGHT      string = "weight"
-	QRCODE      string = "qrcode"
-	BOX_ID      string = "box_id"
-	SHELF_ID    string = "shelf_id"
-	AREA_ID     string = "area_id"
 )
 
 var validate *validator.Validate
@@ -218,15 +169,9 @@ func responseGenerator(w http.ResponseWriter, responseMessage []string, success 
 
 // this function will pack the request into struct from type Item, so it will be easier to handle it
 func item(r *http.Request) (Item, error) {
-
-	id, boxId, err := common.CheckIDs(r.PostFormValue(ID), r.PostFormValue(BOX_ID))
-	if err != nil {
-		return Item{}, err
-	}
-
 	newItem := Item{
 		BasicInfo: common.BasicInfo{
-			ID:          id,
+			ID:          uuid.FromStringOrNil(r.PostFormValue(ID)),
 			Label:       r.PostFormValue(LABEL),
 			Description: r.PostFormValue(DESCRIPTION),
 			Picture:     common.ParsePicture(r),
@@ -234,7 +179,7 @@ func item(r *http.Request) (Item, error) {
 		},
 		Quantity: common.ParseQuantity(r.PostFormValue(QUANTITY)),
 		Weight:   r.PostFormValue(WEIGHT),
-		BoxID:    boxId,
+		BoxID:    uuid.FromStringOrNil(r.PostFormValue(BOX_ID)),
 		ShelfID:  uuid.FromStringOrNil(r.PostFormValue(SHELF_ID)),
 		AreaID:   uuid.FromStringOrNil(r.PostFormValue(AREA_ID)),
 	}

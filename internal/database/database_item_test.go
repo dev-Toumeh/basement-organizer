@@ -19,7 +19,7 @@ func TestInsertNewItem(t *testing.T) {
 	err := dbTest.insertNewItem(*item)
 	assert.Equal(t, err, nil)
 
-	retrievedItem, err := dbTest.Item(item.ID.String())
+	retrievedItem, err := dbTest.ItemById(item.ID)
 	assert.Equal(t, err, nil)
 
 	assert.Equal(t, item.ID, retrievedItem.ID)
@@ -53,7 +53,7 @@ func TestUpdateItem(t *testing.T) {
 
 	err = dbTest.UpdateItem(context.Background(), *item)
 	assert.Equal(t, err, nil)
-	retrievedItem, err := dbTest.Item(item.ID.String())
+	retrievedItem, err := dbTest.ItemById(item.ID)
 	assert.Equal(t, err, nil)
 
 	assert.Equal(t, item.Label, retrievedItem.Label)
@@ -81,7 +81,7 @@ func TestDeleteItem(t *testing.T) {
 	err = dbTest.DeleteItem(item.ID)
 	assert.Equal(t, err, nil)
 
-	_, err = dbTest.Item(item.ID.String())
+	_, err = dbTest.ItemById(item.ID)
 	assert.NotEqual(t, nil, err)
 }
 
@@ -144,7 +144,7 @@ func TestDeleteItems(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	for _, id := range itemIDs {
-		_, err := dbTest.Item(id.String())
+		_, err := dbTest.ItemById(id)
 		assert.NotEqual(t, nil, err)
 	}
 }
@@ -168,7 +168,7 @@ func TestMoveItemToBox(t *testing.T) {
 	// Move item in box2
 	err = dbTest.MoveItemToBox(item.ID, box2.ID)
 	assert.Equal(t, err, nil)
-	retrievedItem, err := dbTest.Item(item.ID.String())
+	retrievedItem, err := dbTest.ItemById(item.ID)
 	assert.Equal(t, err, nil)
 	retrievedBox, err := dbTest.BoxById(box2.ID)
 	assert.Equal(t, err, nil)
@@ -180,7 +180,7 @@ func TestMoveItemToBox(t *testing.T) {
 	// Move item out of box2
 	err = dbTest.MoveItemToBox(item.ID, uuid.Nil)
 	assert.Equal(t, err, nil)
-	retrievedItem, err = dbTest.Item(item.ID.String())
+	retrievedItem, err = dbTest.ItemById(item.ID)
 	assert.Equal(t, err, nil)
 	retrievedBox, err = dbTest.BoxById(box2.ID)
 	assert.Equal(t, err, nil)

@@ -33,6 +33,7 @@ func RegisterRoutes(db *database.DB) {
 	staticRoutes()
 	authRoutes(db)
 	itemsRoutes(db)
+	itemsRoutes2(db)
 	shelvesRoutes(db)
 	registerBoxRoutes(db)
 	navigationRoutes()
@@ -52,7 +53,6 @@ func authRoutes(db auth.AuthDatabase) {
 
 func itemsRoutes(db items.ItemDatabase) {
 	Handle("/api/v1/implement-me", server.ImplementMeHandler)
-	Handle("/items", itemsPage)
 	Handle("/template/item-form", itemTemp)
 	Handle("/template/item-search", searchItemTemp)
 	Handle("/template/item-dummy", func(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +70,7 @@ func itemsRoutes(db items.ItemDatabase) {
 		templates.Render(w, templates.TEMPLATE_ITEMS_CONTAINER, data)
 	}))
 
-	Handle("/api/v1/create/item", items.CreateItemHandler(db))
+	// Handle("/api/v1/create/item", items.CreateItemHandler(db))
 	Handle("/api/v1/read/item/{id}", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
 	}))
@@ -83,19 +83,26 @@ func itemsRoutes(db items.ItemDatabase) {
 	}))
 }
 
+func itemsRoutes2(db items.ItemDatabase) {
+	// Handle("/items", items.PageTemplate(db))
+	Handle("/items/create", items.CreateTemplate())
+
+	// API's
+	http.Handle("/api/v1/create/item", items.ItemHandler(db))
+}
+
 func shelvesRoutes(db shelves.ShelfDB) {
 	//Template
 	Handle("/shelves", shelves.PageTemplate(db))
 	Handle("/shelves/create", shelves.CreateTemplate())
-	// Handle("/shelves/search", shelves.SearchTemplate(db))
 	Handle("/shelves/{id}", shelves.DetailsTemplate(db))
 	Handle("/shelves/input", shelves.InputTemplate(db))
 
 	// Api
 	http.HandleFunc("/api/v1/create/shelf", shelves.ShelfHandler(db))
-	http.HandleFunc("/api/v1/delete/shelf", shelves.ShelfHandler(db))
-	http.HandleFunc("/api/v1/delete/shelves", shelves.DeleteShelves(db))
+	Handle("/api/v1/delete/shelf", shelves.ShelfHandler(db))
 	Handle("/api/v1/update/shelf", shelves.ShelfHandler(db))
+	Handle("/api/v1/delete/shelves", shelves.DeleteShelves(db))
 }
 
 var testStyle = templates.DEBUG_STYLE
