@@ -84,7 +84,7 @@ func itemsRoutes(db items.ItemDatabase) {
 }
 
 func itemsRoutes2(db items.ItemDatabase) {
-	// Handle("/items", items.PageTemplate(db))
+	Handle("/items", items.PageTemplate(db))
 	Handle("/items/create", items.CreateTemplate())
 
 	// API's

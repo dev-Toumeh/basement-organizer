@@ -1,0 +1,22 @@
+{{ define "item-page-template" }}
+{{ template "open-html-tag" .}}
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    {{ template "items-page-content" . }}
+</body>
+{{ template "close-html-tag" .}}
+{{ end }}
+
+{{ define "items-page-content" }}
+  <h1>Items list</h1>
+  <button hx-post="/items/create" 
+          hx-target="body"
+          hx-swap="outerHTML"
+          hx-push-url="true">
+          Create item
+  </button>
+
+  {{ template "list" . }}
+{{ end }}
