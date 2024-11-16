@@ -2,22 +2,13 @@ package shelves
 
 import (
 	"basement/main/internal/common"
+	"basement/main/internal/env"
 	"basement/main/internal/logg"
+	"basement/main/internal/server"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 )
-
-// retrieve the Page Number Value from the Request and filter, sanitize it
-func pageNumber(r *http.Request) int {
-	pageNumber, err := strconv.Atoi(r.URL.Query().Get("page"))
-	if err != nil {
-		pageNumber = 1
-	}
-
-	return pageNumber
-}
 
 // retrieve the desired type from the Request (add, move or search) and validate it.
 func typeFromRequest(r *http.Request) (string, error) {
@@ -54,4 +45,44 @@ func filledShelfRows(db ShelfDB, searchString string, limit int, pageNr int, cou
 		shelvesMaps[i] = common.ListRow{}
 	}
 	return shelvesMaps, nil
+}
+
+func shelfListRowTemplate(r *http.Request, db ShelfDB, w http.ResponseWriter) {
+	data := common.Data
+	pageNr := common.ParsePageNumber(r)
+	limit := common.ParseLimit(r)
+
+	// list template
+	data.SetFormHXGet("/shelves")
+	data.SetRowHXGet("/shelves")
+	data.SetShowLimit(env.Config().ShowTableSize())
+
+	// search-input template
+	searchString := common.SearchString(r)
+	data.SetSearchInput(true)
+	data.SetSearchInputLabel("Search Shelves")
+	data.SetSearchInputValue(searchString)
+
+	count, err := db.ShelfListCounter(searchString)
+	if err != nil {
+		server.WriteInternalServerError("error shelves counter", err, w, r)
+	}
+
+	var shelves []common.ListRow
+
+	// pagination
+	data.SetPageNumber(pageNr)
+	data.SetLimit(limit)
+	data.SetCount(count)
+
+	if count > 0 {
+		data.SetPagination(true)
+		common.Pagination2()
+		shelves, err = filledShelfRows(db, searchString, limit, pageNr, count)
+		if err != nil {
+			server.WriteInternalServerError("cant query shelves please comeback later", err, w, r)
+		}
+	}
+
+	data.SetRows(shelves)
 }

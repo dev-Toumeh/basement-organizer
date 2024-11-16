@@ -3,7 +3,6 @@ package shelves
 import (
 	"basement/main/internal/auth"
 	"basement/main/internal/common"
-	"basement/main/internal/env"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
 	"fmt"
@@ -20,55 +19,14 @@ func PageTemplate(db ShelfDB) http.HandlerFunc {
 		user, _ := auth.UserSessionData(r)
 		authenticated, _ := auth.Authenticated(r)
 
-		page := templates.NewPageTemplate()
-		page.Title = "Shelves"
-		page.Authenticated = authenticated
-		page.User = user
-		data := page.Map()
+		data := common.Data
+		data.SetUser(user)
+		data.SetAuthenticated(authenticated)
+		data.SetTitle("Shelves")
 
-		// list template
-		listTmpl := common.ListTemplate{
-			FormHXGet: "/shelves",
-			RowHXGet:  "/shelves",
-			ShowLimit: env.Config().ShowTableSize(),
-		}
+		shelfListRowTemplate(r, db, w)
 
-		// search-input template
-		searchString := common.SearchString(r)
-		listTmpl.SearchInput = true
-		listTmpl.SearchInputLabel = "Search Shelves"
-		listTmpl.SearchInputValue = searchString
-
-		count, err := db.ShelfListCounter(searchString)
-		if err != nil {
-			server.WriteInternalServerError("error shelves counter", err, w, r)
-			return
-		}
-
-		// box-list-row to fill box-list template
-		var shelves []common.ListRow
-
-		// pagination
-		pageNr := common.ParsePageNumber(r)
-		limit := common.ParseLimit(r)
-		data = common.Pagination(data, count, limit, pageNr)
-		listTmpl.Pagination = true
-		listTmpl.CurrentPageNumber = data["PageNumber"].(int)
-		listTmpl.Limit = limit
-		listTmpl.PaginationButtons = data["Pages"].([]common.PaginationButton)
-
-		if count > 0 {
-			shelves, err = filledShelfRows(db, searchString, limit, pageNr, count)
-			if err != nil {
-				server.WriteInternalServerError("cant query shelves please comeback later", err, w, r)
-				return
-			}
-		}
-		fmt.Print(len(shelves))
-		listTmpl.Rows = shelves
-
-		maps.Copy(data, listTmpl.Map())
-		server.MustRender(w, r, "shelves-page", data)
+		server.MustRender(w, r, "shelves-page", data.TypeMap)
 	}
 }
 
