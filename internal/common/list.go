@@ -23,9 +23,12 @@ type ListTemplate struct {
 	Limit             int  // Sets "limit" input element. How many things will be shown or requested. Used in requests as query params or POST body value.
 	ShowLimit         bool // Show limit input element.
 	PaginationButtons []PaginationButton
+	Pages             []PaginationButton
+	NextPage          int
+	PrevPage          int
 
-	MoveButtonHXTarget string // Change response target. Default: "#move-to-list"
-
+	MoveButtonHXTarget                string // Change response target. Default: "#move-to-list"
+	Count                             int
 	Rows                              []ListRow
 	RowAction                         bool   // If an action button should be displayed inside each row instead of checkmarks.
 	RowActionHXPost                   string // hx-post="{{ .ActionHXPost }}"

@@ -148,3 +148,104 @@ func ParseLimit(r *http.Request) int {
 	}
 	return limit
 }
+
+func Pagination2() {
+	count, _ := Data.GetCount()
+	limit, _ := Data.GetLimit()
+	pageNr, _ := Data.GetPageNumber()
+	totalPages := int(math.Ceil(float64(count) / float64(limit)))
+	if totalPages < 1 {
+		totalPages = 1
+	}
+
+	logg.Debugf("limit: %d, totalPages: %d, results: %d", limit, totalPages, count)
+
+	currPage := 1
+	if pageNr > totalPages {
+		currPage = totalPages
+	} else {
+		currPage = pageNr
+	}
+
+	if totalPages == 0 {
+		totalPages = 1
+	}
+
+	nextPage := currPage + 1
+	if nextPage < 1 {
+		nextPage = 1
+	}
+	if nextPage > totalPages {
+		nextPage = totalPages
+	}
+
+	prevPage := currPage - 1
+	if prevPage < 1 {
+		prevPage = 1
+	}
+	if prevPage > totalPages {
+		prevPage = totalPages
+	}
+
+	logg.Debugf("currentPage %d", currPage)
+
+	pages := make([]PaginationButton, 0)
+
+	// more pagination
+	disablePrev := false
+	disableNext := false
+	disableFirst := false
+	disableLast := false
+	if currPage == nextPage {
+		disableNext = true
+	}
+	if currPage == totalPages {
+		disableLast = true
+	}
+	if currPage == prevPage {
+		disablePrev = true
+	}
+	if currPage == 1 {
+		disableFirst = true
+	}
+
+	pages = append(pages, PaginationButton{PageNumber: 1, Disabled: disableFirst})
+
+	if totalPages >= 10 {
+		disabled := false
+		prevFive := currPage - 5
+		if prevFive < 1 {
+			prevFive = 1
+		}
+		if currPage == prevFive {
+			disabled = true
+		}
+
+		pages = append(pages, PaginationButton{PageNumber: prevFive, Disabled: disabled})
+	}
+	pages = append(pages, PaginationButton{PageNumber: prevPage, Disabled: disablePrev})
+	pages = append(pages, PaginationButton{PageNumber: currPage, Selected: true})
+	pages = append(pages, PaginationButton{PageNumber: nextPage, Disabled: disableNext})
+
+	if totalPages >= 10 {
+		disabled := false
+		nextFive := currPage + 5
+		if nextFive > totalPages {
+			nextFive = totalPages
+		}
+		if currPage == nextFive {
+			disabled = true
+		}
+		pages = append(pages, PaginationButton{PageNumber: nextFive, Disabled: disabled})
+	}
+	pages = append(pages, PaginationButton{PageNumber: totalPages, Disabled: disableLast})
+	move := false
+
+	// Putting required data for templates together.
+	Data.SetPages(pages)
+	Data.SetNextPage(nextPage)
+	Data.SetPrevPage(prevPage)
+	Data.SetPageNumber(currPage)
+	Data.SetPaginationButtons(pages)
+	Data.SetMove(move)
+}
