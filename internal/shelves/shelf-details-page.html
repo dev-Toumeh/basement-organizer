@@ -65,14 +65,16 @@
     {{ if .Edit }}
         <button hx-put="/api/v1/update/shelf"
                 hx-target="#shelf-{{ .ID }}"
+                hx-push-url="false"
                 hx-swap="outerHTML"
         >Update</button>
         <button type="button"
-                onclick="window.history.back();"
+                hx-get="/shelves/{{ .ID }}"
+                hx-target="body"
                 hx-confirm="Are you sure?"
         >Cancel</button>
     {{ else }}
-        <button hx-get="/shelves/update?id={{ .ID }}&edit=true"
+        <button hx-get="/shelves/{{ .ID }}?edit=true"
                 hx-target="body"
                 hx-swap="innerHTML"
         >Edit</button>

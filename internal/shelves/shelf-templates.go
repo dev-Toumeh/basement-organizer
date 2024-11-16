@@ -4,7 +4,6 @@ import (
 	"basement/main/internal/auth"
 	"basement/main/internal/common"
 	"basement/main/internal/env"
-	"basement/main/internal/items"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
 	"fmt"
@@ -16,9 +15,6 @@ import (
 // Render shelf Root page where you can search the available Shelves
 func PageTemplate(db ShelfDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		searchString := common.SearchString(r)
-		pageNumber := pageNumber(r)
-		limit := env.DefaultTableSize()
 
 		// Initialize page template
 		user, _ := auth.UserSessionData(r)
@@ -30,11 +26,18 @@ func PageTemplate(db ShelfDB) http.HandlerFunc {
 		page.User = user
 		data := page.Map()
 
+		// list template
+		listTmpl := common.ListTemplate{
+			FormHXGet: "/shelves",
+			RowHXGet:  "/shelves",
+			ShowLimit: env.Config().ShowTableSize(),
+		}
+
 		// search-input template
-		searchInput := items.NewSearchInputTemplate()
-		searchInput.SearchInputLabel = "Search Shelves"
-		searchInput.SearchInputValue = searchString
-		maps.Copy(data, searchInput.Map())
+		searchString := common.SearchString(r)
+		listTmpl.SearchInput = true
+		listTmpl.SearchInputLabel = "Search Shelves"
+		listTmpl.SearchInputValue = searchString
 
 		count, err := db.ShelfListCounter(searchString)
 		if err != nil {
@@ -42,30 +45,29 @@ func PageTemplate(db ShelfDB) http.HandlerFunc {
 			return
 		}
 
-		shelves, err := db.ShelfListRows(searchString, limit, pageNumber)
-		if err != nil {
-			server.WriteInternalServerError("cant query Shelves", err, w, r)
-			return
-		}
+		// box-list-row to fill box-list template
+		var shelves []common.ListRow
 
 		// pagination
-		data = common.Pagination(data, count, limit, pageNumber)
+		pageNr := common.ParsePageNumber(r)
+		limit := common.ParseLimit(r)
+		data = common.Pagination(data, count, limit, pageNr)
+		listTmpl.Pagination = true
+		listTmpl.CurrentPageNumber = data["PageNumber"].(int)
+		listTmpl.Limit = limit
+		listTmpl.PaginationButtons = data["Pages"].([]common.PaginationButton)
 
-		shelvesMaps := make([]map[string]any, limit)
-		for i, box := range shelves {
-			mappedBox := box.Map()
-			if mappedBox == nil {
-				shelvesMaps[i] = map[string]any{}
-			} else {
-				shelvesMaps[i] = mappedBox
+		if count > 0 {
+			shelves, err = filledShelfRows(db, searchString, limit, pageNr, count)
+			if err != nil {
+				server.WriteInternalServerError("cant query shelves please comeback later", err, w, r)
+				return
 			}
 		}
-		// If count is less than limit, add empty maps to reach the limit
-		for i := count; i < limit; i++ {
-			shelvesMaps[i] = map[string]any{}
-		}
-		maps.Copy(data, map[string]any{"Shelves": shelvesMaps})
+		fmt.Print(len(shelves))
+		listTmpl.Rows = shelves
 
+		maps.Copy(data, listTmpl.Map())
 		server.MustRender(w, r, "shelves-page", data)
 	}
 }
@@ -123,29 +125,6 @@ func DetailsTemplate(db ShelfDB) http.HandlerFunc {
 		templates.Render(w, "shelf-details-page", data)
 	}
 }
-
-// Render the SearchTemplate, you can use it with difference Args
-// "/shelves/search?type=add" will return SearchTemplate with add functionality
-// "/shelves/search?type=move" will return SearchTemplate with move functionality
-// "/shelves/search?type=search" will return SearchTemplate with search functionality
-// func SearchTemplate(db ShelfDB) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		rowType, err := typeFromRequest(r)
-// 		if err != nil {
-// 			server.WriteInternalServerError("false request", err, w, r)
-// 			return
-// 		}
-//
-// 		shelvesMaps := shelfRowListData(w, r, db, rowType)
-//
-// 		data := searchInput.Map()
-// 		data[rowType] = true
-// 		data["Shelves"] = shelvesMaps
-// 		data["Pagination"] = pagination
-//
-// 		server.MustRender(w, r, "shelf-list", data)
-// 	}
-// }
 
 // render html element from type input Field with the desired Id and label
 // the response element should be placed inside of the create/update of Item/Box forms

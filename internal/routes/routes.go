@@ -88,7 +88,7 @@ func shelvesRoutes(db shelves.ShelfDB) {
 	Handle("/shelves", shelves.PageTemplate(db))
 	Handle("/shelves/create", shelves.CreateTemplate())
 	// Handle("/shelves/search", shelves.SearchTemplate(db))
-	Handle("/shelves/update", shelves.DetailsTemplate(db)) // example /shelves/update?id=91903531-85c4-4d57-b61f-543e81197268&edit=true
+	Handle("/shelves/{id}", shelves.DetailsTemplate(db))
 	Handle("/shelves/input", shelves.InputTemplate(db))
 
 	// Api

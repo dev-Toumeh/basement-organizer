@@ -2,19 +2,12 @@
     {{ if .ID }}
         <tr id="shelf-list-row-{{.ID}}">
             <!-- Do something if any of .Move, .Add, or .Preview is true -->
-            {{ if or .Move (or .Add .Preview) }}
-                <td hx-get="/shelves/update?id={{.ID}}"
-                    hx-push-url="false"
-                    hx-target="#add-input"
-                    class="clickable"
-                >{{.Label}}</td>
-            {{ else }}
                 <td hx-get="/shelves/update?id={{.ID}}"
                     hx-push-url="true"
                     hx-target="body"
-                    class="clickable"
-                >{{.Label}}</td>
-            {{ end }}
+                    class="clickable">
+                    {{.Label}}
+                </td>
             <td>{{.AreaLabel}}</td>
             <td style="text-align: center;">
                 <img class="preview" 
@@ -35,8 +28,6 @@
                             hx-on:click="htmx:afterRequest: document.getElementById('tg').innerHTML = ''"
                     >Add to</button>
                 </td>
-            {{ else if .Preview}}
-                <td style="text-align: center;"><input type="checkbox" name="delete:{{.ID}}"></td>
             {{ else }}
                 <td style="text-align: center;"><input type="checkbox" name="move:{{.ID}}"></td>
                 <td style="text-align: center;"><input type="checkbox" name="delete:{{.ID}}"></td>

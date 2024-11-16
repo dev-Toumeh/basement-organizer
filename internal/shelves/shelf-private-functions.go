@@ -1,6 +1,8 @@
 package shelves
 
 import (
+	"basement/main/internal/common"
+	"basement/main/internal/logg"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -32,4 +34,24 @@ func typeFromRequest(r *http.Request) (string, error) {
 	}
 
 	return strings.ToUpper(t[:1]) + t[1:], nil
+}
+
+// filledShelfRows returns ListRows of Shelves with empty entries filled up to match limit.
+// count - The total number of records found from the search query.
+func filledShelfRows(db ShelfDB, searchString string, limit int, pageNr int, count int) ([]common.ListRow, error) {
+	shelvesMaps := make([]common.ListRow, limit)
+	shelves, err := db.ShelfListRows(searchString, limit, pageNr)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	for i, box := range shelves {
+		shelvesMaps[i] = box
+	}
+
+	// If count is less than limit, add empty maps to reach the limit
+	for i := count; i < limit; i++ {
+		shelvesMaps[i] = common.ListRow{}
+	}
+	return shelvesMaps, nil
 }

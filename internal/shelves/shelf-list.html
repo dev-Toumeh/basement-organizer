@@ -1,5 +1,4 @@
 {{ define "shelf-list" }}
-
 <form id="box-list"
     hx-get="/shelves"
     hx-push-url="true"
@@ -15,9 +14,7 @@
         <!--or else search wont work if the next input is disabled-->
         <input type="submit" name="page" value="{{.PageNumber}}" hidden>
 
-        <button type="button" hx-get="/api/v1/implement-me">Alternative View</button>
         <div id="pagination">
-
             <label for="limit"></label>
             <input id="item-limit" type="number" name="limit" value="{{ if .Limit}}{{.Limit}}{{else}}5{{end}}" >
             {{  range .Pages }}
@@ -30,6 +27,20 @@
             >
             {{ end }}
         </div> 
+
+    {{ end }}
+
+    {{ if .Move }}
+        <div id="move-data-container">
+            {{ if .Data }}
+                Shelves selected to be moved:
+                {{ range .Data }}
+                    <input name="{{ .Key }}" value="{{ .Value }}" readonly>
+                {{ end }}
+            {{ else }}
+                Nothing selected to be moved.
+            {{ end }}
+        </div>
     {{ end }}
 
     <table class="box-list">
@@ -38,33 +49,56 @@
                 <th>Label</th>
                 <th>Area</th>
                 <th style="width: 10%">Image</th>
-                {{ if .Move }}
-                {{ else if .Add }}
-                <th style="width: 10%">Add to</th>
-                {{ else}}
                 <th style="width: 10%">Move</th>
+                {{ if not .Move }}
                 <th style="width: 10%">Delete</th>
                 {{ end }}
             </tr>
         </thead>
         <tbody id="box-list-body">
-        {{ if .Shelves }}
-            {{ range .Shelves }}
-            {{ template "shelf-list-row" .  }}
+            {{ if .Shelves }}
+                {{ range .Shelves }}
+                {{ template "shelf-list-row" . }}
+                {{ end }}
             {{ end }}
-        {{ end }}
         </tbody>
     </table>
-        <div>
-            <button hx-delete="/api/v1/delete/shelves"
-                    hx-select="#box-list"
-                    hx-push-url="false"
-            >delete</button>
-            <button type="button" 
-                    hx-get="/boxes/move"
-            >move</button>
-        </div>
-</form>
 
-<div id="data-container" style="display: none;"></div> 
+    {{ if not .Move }}
+    <div>
+        <button hx-delete="/api/v1/delete/shelves"
+            hx-select="#shelf-list"
+            hx-push-url="false"
+        >delete</button>
+        <button
+            hx-post="/get-shelves-move-page"
+            type="button"
+            hx-swap="innerHTML"
+            hx-push-url="false"
+            hx-target="#move-to-list"
+            hx-include=":checked"
+        >move to box
+        </button>
+        <button 
+            hx-get="/template/item-form" 
+            type="button"
+            hx-swap="innerHTML"
+            hx-target="#level-two"
+            hx-push-url="false"
+        >move to area
+        </button>
+        <button 
+            hx-post="/template/item-dummy" 
+            type="button"
+            hx-swap="none"
+            hx-target="#level-two"
+            hx-push-url="false"
+        >move to another location
+        </button>
+    </div>
+
+    <div id="move-to-list"></div>
+    {{ end }}
+
+</form>
 {{ end }}
