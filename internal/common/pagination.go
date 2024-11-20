@@ -149,10 +149,10 @@ func ParseLimit(r *http.Request) int {
 	return limit
 }
 
-func Pagination2() {
-	count, _ := Data.GetCount()
-	limit, _ := Data.GetLimit()
-	pageNr, _ := Data.GetPageNumber()
+func Pagination2(data Data) Data {
+	count := data.GetCount()
+	limit := data.GetLimit()
+	pageNr := data.GetPageNumber()
 	totalPages := int(math.Ceil(float64(count) / float64(limit)))
 	if totalPages < 1 {
 		totalPages = 1
@@ -242,10 +242,13 @@ func Pagination2() {
 	move := false
 
 	// Putting required data for templates together.
-	Data.SetPages(pages)
-	Data.SetNextPage(nextPage)
-	Data.SetPrevPage(prevPage)
-	Data.SetPageNumber(currPage)
-	Data.SetPaginationButtons(pages)
-	Data.SetMove(move)
+	data.SetPages(pages)
+	data.SetNextPage(nextPage)
+	data.SetPrevPage(prevPage)
+	data.SetPageNumber(currPage)
+	data.SetPaginationButtons(pages)
+	data.SetMove(move)
+	data.SetPagination(true)
+
+	return data
 }
