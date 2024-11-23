@@ -15,6 +15,7 @@ import (
 func PageTemplate(db ShelfDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := getTemolateData(r, db, w)
+    data.SetPlaceHolder(true)
 		server.MustRender(w, r, "shelves-page", data.TypeMap)
 	}
 }

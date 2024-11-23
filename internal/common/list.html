@@ -77,7 +77,7 @@
             {{ if .MoveButtonHXTarget }}
                 hx-target="{{.MoveButtonHXTarget}}"
             {{ else }}
-                hx-target="#move-to-list"
+                hx-target="#place-holder"
                 hx-swap="outerHTML"
             {{ end }}
             hx-include=":checked"
@@ -99,7 +99,6 @@
     </div>
     {{ end }}
 
-    {{ $RowAction := false }}
     {{ if .RowAction }}
         <!--Holds information for subsequent requests from this template.-->
         <div id="additional-data-container">
@@ -116,9 +115,9 @@
     {{ end }}
 </form>
 
-{{ if not .FormHXPost }}
+{{ if .PlaceHolder }}
     <!--Placeholder for another "list" template to move things-->
-    <div id="move-to-list"></div>
+    <div id="place-holder"></div>
 {{ end }}
 
 {{ end }}

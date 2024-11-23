@@ -27,6 +27,7 @@ type ListTemplate struct {
 	NextPage          int
 	PrevPage          int
 
+	PlaceHolder                       bool   // Responsible of rendering the placeholder for the Additional listTemplate (move, add etc..)
 	MoveButtonHXTarget                string // Change response target. Default: "#move-to-list"
 	Count                             int
 	Rows                              []ListRow
@@ -63,6 +64,7 @@ func (tmpl ListTemplate) Map() map[string]any {
 		"RowActionHXPostWithIDAsQueryParam": tmpl.RowActionHXPostWithIDAsQueryParam,
 		"RowActionName":                     tmpl.RowActionName,
 		"RowActionHXTarget":                 tmpl.RowActionHXTarget,
+		"PlaceHolder":                       tmpl.PlaceHolder,
 		"AdditionalDataInputs":              tmpl.AdditionalDataInputs,
 	}
 }

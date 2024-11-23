@@ -415,3 +415,14 @@ func (data *Data) GetCount() int {
 	}
 	return 0
 }
+
+func (data *Data) SetPlaceHolder(placeHolder bool) {
+	data.TypeMap["PlaceHolder"] = placeHolder
+}
+
+func (data *Data) GetPlaceHolder() bool {
+	if _, exists := data.TypeMap["PlaceHolder"]; exists {
+		return true
+	}
+	return false
+}

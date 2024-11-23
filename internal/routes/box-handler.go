@@ -170,6 +170,7 @@ func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 			RowActionHXPostWithID: "/boxes/moveto/box",
 			RowActionHXTarget:     "#list-move",
 			AdditionalDataInputs:  additionalData,
+			PlaceHolder:           false,
 		}
 
 		// search-input template
@@ -300,9 +301,10 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 
 		// list template
 		listTmpl := common.ListTemplate{
-			FormHXGet: "/boxes",
-			RowHXGet:  "/boxes",
-			ShowLimit: env.Config().ShowTableSize(),
+			FormHXGet:   "/boxes",
+			RowHXGet:    "/boxes",
+			PlaceHolder: true,
+			ShowLimit:   env.Config().ShowTableSize(),
 		}
 
 		// search-input template
