@@ -16,23 +16,24 @@ type Data struct {
 	Debug          bool
 	NotFound       bool
 	EnvDevelopment bool
+	RequestOrigin  string
 	TypeMap        map[string]any
 }
 
-func InitData() Data {
-	return Data{
+func InitData(r *http.Request) (data Data) {
+	data = Data{
 		TypeMap: make(map[string]any),
 	}
-}
-
-func (data *Data) SetBaseData(r *http.Request) {
 	data.SetPageNumber(ParsePageNumber(r))
 	data.SetSearchInputValue(SearchString(r))
 	data.SetLimit(ParseLimit(r))
+
 	user, _ := auth.UserSessionData(r)
 	authenticated, _ := auth.Authenticated(r)
 	data.SetUser(user)
 	data.SetAuthenticated(authenticated)
+
+	return data
 }
 
 func (data *Data) SetTitle(value string) {
@@ -425,4 +426,15 @@ func (data *Data) GetPlaceHolder() bool {
 		return true
 	}
 	return false
+}
+
+func (data *Data) SetRequestOrigin(value string) {
+	data.TypeMap["RequestOrigin"] = value
+}
+
+func (data *Data) GetOriginRequest() string {
+	if val, exists := data.TypeMap["RequestOrigin"]; exists {
+		return val.(string)
+	}
+	return ""
 }

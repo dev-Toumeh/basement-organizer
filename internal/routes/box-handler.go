@@ -295,6 +295,7 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 		// page template
 		page := templates.NewPageTemplate()
 		page.Title = "Boxes"
+		page.RequestOrigin = "Boxes"
 		page.Authenticated = authenticated
 		page.User = user
 		data := page.Map()

@@ -22,6 +22,7 @@ func PageTemplate(db ItemDatabase) http.HandlerFunc {
 		page.Title = "items"
 		page.Authenticated = authenticated
 		page.User = user
+		page.RequestOrigin = "Items"
 		data := page.Map()
 
 		// list template

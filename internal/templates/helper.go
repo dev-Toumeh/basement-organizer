@@ -44,6 +44,7 @@ type PageTemplate struct {
 	User           string
 	Debug          bool
 	NotFound       bool
+	RequestOrigin  string
 	EnvDevelopment bool
 }
 
@@ -54,6 +55,7 @@ func (tmpl PageTemplate) Map() map[string]any {
 		"User":           tmpl.User,
 		"Debug":          tmpl.Debug,
 		"NotFound":       tmpl.NotFound,
+		"RequestOrigin":  tmpl.RequestOrigin,
 		"EnvDevelopment": tmpl.EnvDevelopment,
 	}
 }
@@ -66,6 +68,7 @@ func NewPageTemplate() PageTemplate {
 		User:           "Default User",
 		Debug:          DEBUG_STYLE,
 		NotFound:       false,
+		RequestOrigin:  "Boxes",
 		EnvDevelopment: env.Development(),
 	}
 }

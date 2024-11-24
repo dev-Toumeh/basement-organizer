@@ -14,8 +14,9 @@ import (
 // Render shelf Root page where you can search the available Shelves
 func PageTemplate(db ShelfDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data := getTemolateData(r, db, w)
-    data.SetPlaceHolder(true)
+		data := getTemplateData(r, db, w)
+		data.SetPlaceHolder(true)
+		data.SetRequestOrigin("shelves")
 		server.MustRender(w, r, "shelves-page", data.TypeMap)
 	}
 }

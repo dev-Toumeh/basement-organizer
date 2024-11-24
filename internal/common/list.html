@@ -63,40 +63,7 @@
     {{ template "list-table" . }}
 
     {{ if not .RowAction }}
-    <div id="actions">
-        <button hx-delete="/boxes-list"
-            hx-target="#list"
-            hx-select="#list"
-            hx-push-url="false"
-        >delete</button>
-        <button
-            hx-post="/get-boxes-move-page"
-            type="button"
-            hx-swap="innerHTML"
-            hx-push-url="false"
-            {{ if .MoveButtonHXTarget }}
-                hx-target="{{.MoveButtonHXTarget}}"
-            {{ else }}
-                hx-target="#place-holder"
-                hx-swap="outerHTML"
-            {{ end }}
-            hx-include=":checked"
-        >move to box</button>
-        <button 
-            hx-get="/template/item-form" 
-            type="button"
-            hx-swap="innerHTML"
-            hx-target="#level-two"
-            hx-push-url="false"
-        >move to shelf</button>
-        <button 
-            hx-post="/template/item-dummy" 
-            type="button"
-            hx-swap="none"
-            hx-target="#level-two"
-            hx-push-url="false"
-        >move to area</button>
-    </div>
+        {{ template "list-buttons" . }}
     {{ end }}
 
     {{ if .RowAction }}
@@ -225,4 +192,93 @@
 <label for="{{.Name}}">{{.Name}}</label>
 <input type="{{if .Hidden}}hidden{{else}}text{{end}}" 
     name="{{.Name}}" value="{{.Value}}" readonly>
+{{ end }}
+
+
+{{ define "list-buttons"}}
+<div id="actions">
+    {{ if eq .RequestOrigin "Items" }}
+        <button 
+            hx-delete="/delete-item"
+            hx-target="#item-list"
+            hx-swap="innerHTML"
+            hx-push-url="false"
+        >Delete</button>
+        <button 
+            hx-post="/move-item-to-box"
+            type="button"
+            hx-target="#box-list"
+            hx-swap="innerHTML"
+            hx-push-url="false"
+        >Move to Box</button>
+        <button 
+            hx-post="/move-item-to-shelf"
+            type="button"
+            hx-target="#shelf-list"
+            hx-swap="innerHTML"
+            hx-push-url="false"
+        >Move to Shelf</button>
+        <button 
+            hx-post="/move-item-to-area"
+            type="button"
+            hx-target="#area-list"
+            hx-swap="innerHTML"
+            hx-push-url="false"
+        >Move to Area</button>
+
+    {{ else if eq .RequestOrigin "Boxes" }}
+        <button hx-delete="/boxes-list"
+            hx-target="#list"
+            hx-select="#list"
+            hx-push-url="false"
+        >Delete</button>
+        <button
+            hx-post="/get-boxes-move-page"
+            type="button"
+            hx-swap="innerHTML"
+            hx-push-url="false"
+            {{ if .MoveButtonHXTarget }}
+                hx-target="{{.MoveButtonHXTarget}}"
+            {{ else }}
+                hx-target="#place-holder"
+                hx-swap="outerHTML"
+            {{ end }}
+            hx-include=":checked"
+        >Move to Box</button>
+        <button 
+            hx-get="/template/item-form"
+            type="button"
+            hx-swap="innerHTML"
+            hx-target="#level-two"
+            hx-push-url="false"
+        >Move to Shelf</button>
+        <button 
+            hx-post="/template/item-dummy"
+            type="button"
+            hx-swap="none"
+            hx-target="#level-two"
+            hx-push-url="false"
+        >Move to Area</button>
+
+    {{ else if eq .RequestOrigin "shelves" }}
+        <button 
+            hx-delete="/api/v1/delete/shelves"
+            hx-swap="outerHTML"
+            hx-push-url="false"
+        >Delete</button>
+        <button 
+            hx-get="/api/v1/implement-me"
+            type="button"
+            hx-push-url="false"
+        >Move to Area</button>
+
+    {{ else if eq .RequestOrigin "Areas" }}
+        <button 
+            hx-delete="/delete-area"
+            hx-target="#area-container"
+            hx-swap="outerHTML"
+            hx-push-url="false"
+        >Delete</button>
+    {{ end }}
+</div>
 {{ end }}
