@@ -41,13 +41,22 @@
             <label for="box_id">Box Id:</label>
             <input type="text" name="box_id" value="{{ .BoxID }}">
 
-            <label for="Shelf_id">Shelf Id:</label>
-            <input type="text" name="Shelf_id" value="{{ .ShelfID }}">
+            <div id="shelf-target">
+                <label for="shelf_id">Put inside of Shelf:</label> </br>
+                <input type="text" name="shelf_id" value="empty" disabled>
+                <button 
+                  hx-post="/shelves/add-list"
+                  hx-target="#place-holder"
+                  hx-swap="innerHTML"
+                  hx-push-url="false"
+                  type="button"
+                  >Add to Shelf
+                </button>
+            </div>
 
             <label for="area_id">Area Id:</label>
             <input type="text"  name="area_id" value="{{ .AreaID }}">
         </div>
-
 
         <div id="image-preview-{{ .ID }}" class="box-detail-picture">
             {{ if .Picture }}
@@ -63,4 +72,5 @@
     <button type="submit">Create</button>
     <button type="button" onclick="window.history.back();">Cancel</button>
 </form>
+<div id="place-holder"></div>
 {{ end }}

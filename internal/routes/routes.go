@@ -96,7 +96,8 @@ func shelvesRoutes(db shelves.ShelfDB) {
 	Handle("/shelves", shelves.PageTemplate(db))
 	Handle("/shelves/create", shelves.CreateTemplate())
 	Handle("/shelves/{id}", shelves.DetailsTemplate(db))
-	Handle("/shelves/input", shelves.InputTemplate(db))
+	Handle("/shelves/add-list", shelves.AddListTemplate(db))
+	Handle("/shelves/add-input/{id}", shelves.AddInputTemplate(db))
 
 	// Api
 	http.HandleFunc("/api/v1/create/shelf", shelves.ShelfHandler(db))

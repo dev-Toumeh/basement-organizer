@@ -68,7 +68,8 @@
 
     {{ if .RowAction }}
         <!--Holds information for subsequent requests from this template.-->
-        <div id="additional-data-container">
+    <div id="additional-data-container">
+    {{ if eq .RowActionType "move" }}
         {{ if $FormHXPost }}<input name="move" value="true" hidden>{{end}}
         {{ if .AdditionalDataInputs }}
             {{ range .AdditionalDataInputs }}
@@ -79,6 +80,7 @@
             Nothing selected to be moved.
         {{ end }}
         </div> 
+    {{ end }}
     {{ end }}
 </form>
 

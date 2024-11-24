@@ -170,7 +170,9 @@ func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 			RowActionHXPostWithID: "/boxes/moveto/box",
 			RowActionHXTarget:     "#list-move",
 			AdditionalDataInputs:  additionalData,
-			PlaceHolder:           false,
+			// I added those extra variables (Naseem)
+			PlaceHolder:   false,
+			RowActionType: "move",
 		}
 
 		// search-input template

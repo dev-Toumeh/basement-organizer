@@ -5,32 +5,12 @@ import (
 	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
-	"fmt"
 	"net/http"
-	"strings"
 )
 
-// retrieve the desired type from the Request (add, move or search) and validate it.
-func typeFromRequest(r *http.Request) (string, error) {
-	t := strings.TrimSpace(r.URL.Query().Get("type"))
-
-	if t == "" {
-		return "", nil
-	}
-
-	// Validate that 'type' is one of the allowed values
-	allowedTypes := map[string]bool{"add": true, "move": true, "search": true}
-	if _, ok := allowedTypes[t]; !ok {
-		return "", fmt.Errorf("unexpected type: %s, while preparing the search Template", t)
-	}
-
-	return strings.ToUpper(t[:1]) + t[1:], nil
-}
-
 // Prepare the necessary Data for the Shelf-list-rows
-func getTemolateData(r *http.Request, db ShelfDB, w http.ResponseWriter) common.Data {
-	data := common.InitData()
-	data.SetBaseData(r)
+func getTemplateData(r *http.Request, db ShelfDB, w http.ResponseWriter) common.Data {
+	data := common.InitData(r)
 
 	count, err := db.ShelfListCounter(data.GetSearchInputValue())
 	if err != nil {

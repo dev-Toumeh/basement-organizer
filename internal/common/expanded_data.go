@@ -285,6 +285,17 @@ func (data *Data) GetRowAction() (bool, error) {
 	return false, errors.New("key 'RowAction' does not exist")
 }
 
+func (data *Data) SetRowActionType(value string) {
+	data.TypeMap["RowActionType"] = value
+}
+
+func (data *Data) GetRowActionType() string {
+	if val, exists := data.TypeMap["RowAction"]; exists {
+		return val.(string)
+	}
+	return ""
+}
+
 func (data *Data) SetRowActionHXPost(value string) {
 	data.TypeMap["RowActionHXPost"] = value
 }

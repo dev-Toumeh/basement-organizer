@@ -32,6 +32,7 @@ type ListTemplate struct {
 	Count                             int
 	Rows                              []ListRow
 	RowAction                         bool   // If an action button should be displayed inside each row instead of checkmarks.
+	RowActionType                     string // the type of the RequestAction (add, move, preview, ...etc)
 	RowActionHXPost                   string // hx-post="{{ .ActionHXPost }}"
 	RowActionHXPostWithID             string // hx-post="{{ .ActionHXPost }}/{{.ID}}"
 	RowActionHXPostWithIDAsQueryParam string // hx-post="{{ .ActionHXPost }}?id={{.ID}}"
@@ -58,6 +59,7 @@ func (tmpl ListTemplate) Map() map[string]any {
 		"PaginationButtons":                 tmpl.PaginationButtons,
 		"MoveButtonHXTarget":                tmpl.MoveButtonHXTarget,
 		"Rows":                              tmpl.Rows,
+		"RowActionType":                     tmpl.RowActionType,
 		"RowAction":                         tmpl.RowAction,
 		"RowActionHXPost":                   tmpl.RowActionHXPost,
 		"RowActionHXPostWithID":             tmpl.RowActionHXPostWithID,

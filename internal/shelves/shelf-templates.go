@@ -3,6 +3,8 @@ package shelves
 import (
 	"basement/main/internal/auth"
 	"basement/main/internal/common"
+	"basement/main/internal/env"
+	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
 	"fmt"
@@ -75,9 +77,36 @@ func DetailsTemplate(db ShelfDB) http.HandlerFunc {
 	}
 }
 
-// render html element from type input Field with the desired Id and label
-// the response element should be placed inside of the create/update of Item/Box forms
-func InputTemplate(db ShelfDB) http.HandlerFunc {
+// render the Shelf List template with Add option
+func AddListTemplate(db ShelfDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method != http.MethodPost {
+			w.Header().Add("Allow", http.MethodPost)
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			logg.Debug(w, "Method:'", r.Method, "' not allowed")
+			fmt.Fprint(w, "something went wrong please try again later")
+			return
+		}
+
+		data := getTemplateData(r, db, w)
+		data.SetFormHXTarget("this")
+		data.SetRowHXGet("shelves/add-input")
+		data.SetFormID("list-add")
+		data.SetShowLimit(env.Config().ShowTableSize())
+		data.SetPlaceHolder(false)
+
+		data.SetRowAction(true)
+		data.SetRowActionName("Add to")
+		data.SetRowActionHXPostWithID("/shelves/add-input")
+		data.SetRowActionHXTarget("#shelf-target")
+
+		server.MustRender(w, r, "list", data.TypeMap)
+	}
+}
+
+// render an html element from type input Field with the desired Shelf Id and label
+func AddInputTemplate(db ShelfDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		errMsgForUser := "can't add, please comeback later"
@@ -90,15 +119,16 @@ func InputTemplate(db ShelfDB) http.HandlerFunc {
 		}
 
 		inputHTML := fmt.Sprintf(`
-      <label for="shelf_id">Shelf</label>
+      <label for="shelf_id">Put inside of Shelf</label></br>
       <input type="text" name="shelf_id" value="%s" hidden>
       <input type="text" name="label" value="%s" disabled>
       <button
-       hx-get="/shelves/search?type=add"
-       hx-target="#tg"
+       hx-target="#place-holder"
+       hx-post="/shelves/add-list"
        hx-push-url="false">
        Add to another Shelf
       </button>
+      <div id="place-holder" hx-swap-oob="true"></div>
       `,
 			shelf.ID.String(), shelf.Label)
 
