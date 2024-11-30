@@ -32,19 +32,22 @@ type BoxDatabase interface {
 
 func registerBoxRoutes(db *database.DB) {
 	// Box templates
-	// http.HandleFunc("/box", boxHandler(db))
 	Handle("/box", boxHandler(db))
 	Handle("/box/{id}/move", boxPageMove(db))
+	Handle("/box/{id}/move/{value}", boxMoveConfirm(db))
+
 	// Box api
 	Handle("/api/v1/box", boxHandler(db))
 	Handle("/api/v1/box/{id}", boxHandler(db))
-	Handle("/api/v1/box/{id}/move", moveBox(db))
+	Handle("/api/v1/box/{id}/move/{toid}", moveBox(db))
+
 	// Boxes templates
 	Handle("/boxes", boxesPage(db))
 	Handle("/boxes/{id}", boxDetailsPage(db))
 	Handle("/boxes/move", boxesPageMove(db))
 	Handle("/boxes/moveto/box/{id}", moveBoxesToBoxHandler(db))
 	Handle("/boxes-list", boxesHandler(db))
+
 	// Boxes api
 	Handle("/api/v1/boxes", boxesHandler(db))
 	Handle("/api/v1/boxes/moveto/box/{id}", moveBoxesToBoxAPI(db))
@@ -424,6 +427,13 @@ func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		server.WriteNotFoundError(errMsgForUser, err, w, r)
 		return
 	}
+	// @TODO: Find a better solution?
+	// This is done because box is missing OuterBox field after it's parsed.
+	box, err = db.BoxById(id)
+	if err != nil {
+		server.WriteInternalServerError("can't get box after update succeeded, should not happen!", err, w, r)
+		return
+	}
 	if server.WantsTemplateData(r) {
 		boxTemplate := boxes.BoxTemplateData{Box: &box, Edit: false}
 		err := server.RenderWithSuccessNotification(w, r, templates.TEMPLATE_BOX_DETAILS, boxTemplate.Map(), fmt.Sprintf("Updated box: %v", boxTemplate.Label))
@@ -492,11 +502,75 @@ func deleteBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	server.RedirectWithSuccessNotification(w, "/boxes", fmt.Sprintf("%s deleted", id))
 }
 
-// @TODO: Implement move box.
 // boxPageMove shows the page where client can choose where to move the box.
 func boxPageMove(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		server.WriteNotImplementedWarning("Move single box page", w, r)
+		errMsgForUser := "Can't move box"
+		id := server.ValidID(w, r, errMsgForUser)
+		if id.IsNil() {
+			return
+		}
+		data := common.InitData(r)
+		data.SetFormHXPost("/box/" + id.String() + "/move")
+		data.SetFormID("box-list")
+		data.SetFormHXTarget("#place-holder")
+
+		data.SetRowAction(true)
+		data.SetRowActionType("move")
+		data.SetRowActionHXTarget("#box_id")
+		data.SetRowActionName("Move here")
+		data.SetRowActionHXPostWithID("/box/" + id.String() + "/move")
+
+		count, err := db.BoxListCounter("")
+		if err != nil {
+			server.WriteInternalServerError("no box list counter", err, w, r)
+			return
+		}
+
+		data.SetCount(count)
+		data = common.Pagination2(data)
+		data.SetShowLimit(env.Config().ShowTableSize())
+
+		var boxes []common.ListRow
+		if count > 0 {
+			boxes, err = filledBoxRows(db, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count)
+			if err != nil {
+				server.WriteInternalServerError("cant query boxes please comeback later", err, w, r)
+			}
+		}
+		data.SetRows(boxes)
+		server.MustRender(w, r, templates.TEMPLATE_LIST, data.TypeMap)
+	}
+}
+
+// boxMoveConfirm handles data after a box move action is clicked from boxPageMove().
+func boxMoveConfirm(db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		outerboxID := r.PathValue("value")
+		boxID := uuid.FromStringOrNil(r.PathValue("id"))
+		err := db.MoveBoxToBox(boxID, uuid.FromStringOrNil(outerboxID))
+		if err != nil {
+			logg.Err(err)
+			server.WriteBadRequestError(`can't move "`+boxID.String()+`" to "`+outerboxID+`"`, err, w, r)
+			return
+		}
+
+		outerbox, err := db.BoxById(uuid.FromStringOrNil(outerboxID))
+		if err != nil {
+			server.WriteNotFoundError("can't find box "+outerboxID, err, w, r)
+		}
+
+		inputOuterboxID := `<input hx-swap-oob="true" type="text" id="box_id" name="box_id" value="` + outerboxID + `" readonly>`
+		aOuterboxLabel := `
+			<a id="outerbox-link" hx-swap-oob="true" href="/boxes/` + outerboxID + `" 
+			class="clickable"
+			hx-boost="true"
+			style="">` + outerbox.Label + `</a>`
+
+		server.TriggerSuccessNotification(w, `moved"`+boxID.String()+`" to "`+outerboxID+`"`)
+		server.WriteFprint(w, inputOuterboxID)
+		server.WriteFprint(w, aOuterboxLabel)
+		server.WriteFprint(w, `<div id="place-holder" hx-swap-oob="true"></div>`)
 	}
 }
 
@@ -508,10 +582,18 @@ func boxesPageMove(db BoxDatabase) http.HandlerFunc {
 	}
 }
 
-// @TODO: Implement moveBox.
+// moveBox moves a box to another box. For direct API calls.
 func moveBox(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		server.WriteNotImplementedWarning("Move single box", w, r)
+		id := uuid.FromStringOrNil(r.PathValue("id"))
+		moveToBoxID := uuid.FromStringOrNil(r.PathValue("toid"))
+		err := db.MoveBoxToBox(id, moveToBoxID)
+		if err != nil {
+			server.WriteBadRequestError("can't move box", err, w, r)
+			logg.Err(err)
+		} else {
+			w.WriteHeader(200)
+		}
 	}
 }
 
@@ -573,6 +655,7 @@ func boxFromPostFormValue(id uuid.UUID, r *http.Request) boxes.Box {
 	box.Description = r.PostFormValue("description")
 	box.Picture = common.ParsePicture(r)
 	box.QRCode = r.PostFormValue("qrcode")
+	box.OuterBoxID = uuid.FromStringOrNil(r.PostFormValue("box_id"))
 	return box
 }
 

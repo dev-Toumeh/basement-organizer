@@ -18,6 +18,7 @@
         <p style="text-align: center">:^(</p>
     {{ else }}
         {{ template "box-details" . }}
+        <div id="place-holder"></div>
         <h2>Items</h2>
         {{ template "item-list" . }}
         <h2>Inner Boxes</h2>
@@ -45,16 +46,23 @@
             <input type="text" id="qrcode" name="qrcode" value="{{ .QRCode }}" {{ if not .Edit}}disabled{{end}}>
             <br>
 
+            <label for="box_id">Is inside box:</label>
             {{ if eq .OuterBoxID.String "00000000-0000-0000-0000-000000000000" }}
+                <span id="outerbox-link">None</span>
             {{ else }}
-            <span>Is inside box:</span>
-            <a href="/boxes/{{.OuterBoxID}}" 
-                class="clickable"
-                hx-boost="true"
-                style=""
-            >{{ .OuterBox.Label }}</a>
-            <br>
+                <a id="outerbox-link" href="/boxes/{{.OuterBoxID}}" 
+                    class="clickable"
+                    hx-boost="true"
+                >{{ .OuterBox.Label }}</a>
             {{ end }}
+            <input type="text" id="box_id" name="box_id" value="{{ .OuterBoxID }}" readonly>
+            <button id="move-btn"
+                hx-post="/box/{{.ID}}/move"
+                hx-target="#place-holder"
+                hx-push-url="false"
+                {{ if not .Edit }}disabled{{ end }}
+            >Move to another box</button>
+            <br>
         </div>
 
         <div id="image-preview-{{ .ID }}" class="box-detail-picture">
@@ -102,9 +110,6 @@
         hx-swap="outerHTML"
 >edit</button>
 {{ end }}
-
-
-<button hx-get="/box/{{.ID}}/move">move</button>
 
 <button hx-delete="/box?id={{.ID}}" 
         hx-swap="outerHTML"
