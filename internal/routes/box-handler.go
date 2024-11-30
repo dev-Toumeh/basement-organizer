@@ -725,6 +725,7 @@ func boxFromPostFormValue(id uuid.UUID, r *http.Request) boxes.Box {
 	box.QRCode = r.PostFormValue("qrcode")
 	box.OuterBoxID = uuid.FromStringOrNil(r.PostFormValue("box_id"))
 	box.ShelfID = uuid.FromStringOrNil(r.PostFormValue("shelf_id"))
+	box.AreaID = uuid.FromStringOrNil(r.PostFormValue("area_id"))
 	return box
 }
 
