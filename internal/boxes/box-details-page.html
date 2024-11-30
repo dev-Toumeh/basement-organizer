@@ -63,6 +63,24 @@
                 {{ if not .Edit }}disabled{{ end }}
             >Move to another box</button>
             <br>
+
+            <label for="shelf_id">Is inside shelf:</label>
+            {{ if eq .ShelfID.String "00000000-0000-0000-0000-000000000000" }}
+                <span id="shelf-link">None</span>
+            {{ else }}
+                <a id="shelf-link" href="/shelves/{{.ShelfID}}" 
+                    class="clickable"
+                    hx-boost="true"
+                >{{ .ShelfID }}</a>
+            {{ end }}
+            <input type="text" id="shelf_id" name="shelf_id" value="{{ .ShelfID }}" readonly>
+            <button id="move-btn"
+                hx-post="/box/{{.ID}}/moveto/shelf"
+                hx-target="#place-holder"
+                hx-push-url="false"
+                {{ if not .Edit }}disabled{{ end }}
+            >Move to shelf</button>
+            <br>
         </div>
 
         <div id="image-preview-{{ .ID }}" class="box-detail-picture">
