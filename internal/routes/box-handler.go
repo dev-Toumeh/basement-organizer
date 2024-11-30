@@ -212,7 +212,7 @@ func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 		var boxes []common.ListRow
 		// if there are search results
 		if count > 0 {
-			boxes, err = filledBoxRows(db, searchString, limit, page, count)
+			boxes, err = common.FilledRows(db.BoxListRows, searchString, limit, page, count)
 			if err != nil {
 				server.WriteInternalServerError("can't query boxes", err, w, r)
 				return
@@ -339,7 +339,7 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 
 		// Boxes found
 		if count > 0 {
-			boxes, err = filledBoxRows(db, searchString, limit, pageNr, count)
+			boxes, err = common.FilledRows(db.BoxListRows, searchString, limit, pageNr, count)
 			if err != nil {
 				server.WriteInternalServerError("cant query boxes", err, w, r)
 				return
@@ -522,7 +522,7 @@ func boxPageMove(thing string, db BoxDatabase) http.HandlerFunc {
 
 			var boxes []common.ListRow
 			if count > 0 {
-				boxes, err = filledBoxRows(db, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count)
+				boxes, err = common.FilledRows(db.BoxListRows, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count)
 				if err != nil {
 					server.WriteInternalServerError("cant query "+thing+" please comeback later", err, w, r)
 				}
@@ -721,27 +721,4 @@ func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatab
 		return logg.Errorf("%w", err)
 	}
 	return nil
-}
-
-// filledBoxRows returns BoxListRows with empty entries filled up to match limit.
-// count - The total number of records found from the search query.
-func filledBoxRows(db BoxDatabase, searchString string, limit int, pageNr int, count int) ([]common.ListRow, error) {
-	boxes := make([]common.ListRow, limit)
-
-	// Fetch the Records from the Database and pack it into map
-	rows, err := db.BoxListRows(searchString, limit, pageNr)
-	if err != nil {
-		return nil, logg.WrapErr(err)
-	}
-
-	for i, b := range rows {
-		boxes[i] = b
-	}
-	// Fill up empty rows to keep same table size
-	if count < limit {
-		for i := count; i < limit; i++ {
-			boxes[i] = common.ListRow{}
-		}
-	}
-	return boxes, nil
 }
