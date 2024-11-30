@@ -20,7 +20,9 @@ import (
 
 type BoxDatabase interface {
 	CreateBox(newBox *boxes.Box) (uuid.UUID, error)
-	MoveBoxToBox(id1 uuid.UUID, id2 uuid.UUID) error
+	MoveBoxToBox(box1 uuid.UUID, box2 uuid.UUID) error
+
+	MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error
 	UpdateBox(box boxes.Box) error
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (boxes.Box, error)
@@ -28,23 +30,30 @@ type BoxDatabase interface {
 	BoxListRows(query string, limit int, page int) ([]common.ListRow, error)
 	BoxListRowByID(id uuid.UUID) (common.ListRow, error)
 	BoxListCounter(searchString string) (count int, err error)
+	ShelfListCounter(queryString string) (count int, err error)
+	ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error)
 }
 
 func registerBoxRoutes(db *database.DB) {
 	// Box templates
-	// http.HandleFunc("/box", boxHandler(db))
 	Handle("/box", boxHandler(db))
-	Handle("/box/{id}/move", boxPageMove(db))
+	Handle("/box/{id}/moveto/box", boxPageMove("box", db))
+	Handle("/box/{id}/moveto/box/{value}", boxMoveConfirm("box", db))
+	Handle("/box/{id}/moveto/shelf", boxPageMove("shelf", db))
+	Handle("/box/{id}/moveto/shelf/{value}", boxMoveConfirm("shelf", db))
+
 	// Box api
 	Handle("/api/v1/box", boxHandler(db))
 	Handle("/api/v1/box/{id}", boxHandler(db))
-	Handle("/api/v1/box/{id}/move", moveBox(db))
+	Handle("/api/v1/box/{id}/move/{toid}", moveBox(db))
+
 	// Boxes templates
 	Handle("/boxes", boxesPage(db))
 	Handle("/boxes/{id}", boxDetailsPage(db))
 	Handle("/boxes/move", boxesPageMove(db))
 	Handle("/boxes/moveto/box/{id}", moveBoxesToBoxHandler(db))
 	Handle("/boxes-list", boxesHandler(db))
+
 	// Boxes api
 	Handle("/api/v1/boxes", boxesHandler(db))
 	Handle("/api/v1/boxes/moveto/box/{id}", moveBoxesToBoxAPI(db))
@@ -209,7 +218,7 @@ func getMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 		var boxes []common.ListRow
 		// if there are search results
 		if count > 0 {
-			boxes, err = filledBoxRows(db, searchString, limit, page, count)
+			boxes, err = common.FilledRows(db.BoxListRows, searchString, limit, page, count)
 			if err != nil {
 				server.WriteInternalServerError("can't query boxes", err, w, r)
 				return
@@ -336,7 +345,7 @@ func boxesPage(db BoxDatabase) http.HandlerFunc {
 
 		// Boxes found
 		if count > 0 {
-			boxes, err = filledBoxRows(db, searchString, limit, pageNr, count)
+			boxes, err = common.FilledRows(db.BoxListRows, searchString, limit, pageNr, count)
 			if err != nil {
 				server.WriteInternalServerError("cant query boxes", err, w, r)
 				return
@@ -424,6 +433,13 @@ func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		server.WriteNotFoundError(errMsgForUser, err, w, r)
 		return
 	}
+	// @TODO: Find a better solution?
+	// This is done because box is missing OuterBox field after it's parsed.
+	box, err = db.BoxById(id)
+	if err != nil {
+		server.WriteInternalServerError("can't get box after update succeeded, should not happen!", err, w, r)
+		return
+	}
 	if server.WantsTemplateData(r) {
 		boxTemplate := boxes.BoxTemplateData{Box: &box, Edit: false}
 		err := server.RenderWithSuccessNotification(w, r, templates.TEMPLATE_BOX_DETAILS, boxTemplate.Map(), fmt.Sprintf("Updated box: %v", boxTemplate.Label))
@@ -492,11 +508,137 @@ func deleteBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	server.RedirectWithSuccessNotification(w, "/boxes", fmt.Sprintf("%s deleted", id))
 }
 
-// @TODO: Implement move box.
-// boxPageMove shows the page where client can choose where to move the box.
-func boxPageMove(db BoxDatabase) http.HandlerFunc {
+// shows the page where client can choose where to move the box.
+// thing = item / box / shelf / area
+func boxPageMove(thing string, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		server.WriteNotImplementedWarning("Move single box page", w, r)
+		data := common.InitData(r)
+
+		var err error
+		var count int
+
+		switch thing {
+		case "box":
+			count, err = db.BoxListCounter("")
+			if err != nil {
+				server.WriteInternalServerError("no box list counter", err, w, r)
+				return
+			}
+			data.SetCount(count)
+
+			var boxes []common.ListRow
+			if count > 0 {
+				boxes, err = common.FilledRows(db.BoxListRows, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count)
+				if err != nil {
+					server.WriteInternalServerError("cant query "+thing+" please comeback later", err, w, r)
+				}
+			}
+			data.SetRows(boxes)
+
+		case "shelf":
+			count, err = db.ShelfListCounter("")
+			if err != nil {
+				server.WriteInternalServerError("no shelf list counter", err, w, r)
+				return
+			}
+			data.SetCount(count)
+
+			var shelves []common.ListRow
+			if count > 0 {
+				shelves, err = common.FilledRows(db.ShelfListRows, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count)
+				if err != nil {
+					server.WriteInternalServerError("cant query "+thing+" please comeback later", err, w, r)
+				}
+			}
+			data.SetRows(shelves)
+			break
+
+		default:
+			server.WriteInternalServerError("can't move box to \""+thing+"\"", logg.NewError("can't move box to \""+thing+"\""), w, r)
+			return
+		}
+
+		data = common.Pagination2(data)
+		data.SetShowLimit(env.Config().ShowTableSize())
+
+		errMsgForUser := "Can't move " + thing
+		id := server.ValidID(w, r, errMsgForUser)
+		if id.IsNil() {
+			return
+		}
+		data.SetFormHXPost("/box/" + id.String() + "/moveto/" + thing)
+		data.SetFormID(thing + "-list")
+		data.SetFormHXTarget("#place-holder")
+
+		data.SetRowAction(true)
+		data.SetRowActionType("move")
+		data.SetRowActionHXTarget("#" + thing + "_id")
+		data.SetRowActionName("Move here")
+		data.SetRowActionHXPostWithID("/box/" + id.String() + "/moveto/" + thing)
+
+		server.MustRender(w, r, templates.TEMPLATE_LIST, data.TypeMap)
+	}
+}
+
+// boxMoveConfirm handles data after a box move action is clicked from boxPageMove().
+// thing = item / box / shelf / area
+func boxMoveConfirm(thing string, db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		moveToThingID := r.PathValue("value")
+		boxID := uuid.FromStringOrNil(r.PathValue("id"))
+
+		var err1 error
+		var err2 error
+		var otherThingLabel string
+		var otherThingElementID string
+		var otherThingHref string
+		switch thing {
+		case "box":
+			err1 = db.MoveBoxToBox(boxID, uuid.FromStringOrNil(moveToThingID))
+			var outerbox boxes.Box
+			outerbox, err2 = db.BoxById(uuid.FromStringOrNil(moveToThingID))
+			if err2 == nil {
+				otherThingLabel = outerbox.Label
+				otherThingElementID = "outerbox-link"
+				otherThingHref = "/boxes/" + moveToThingID
+			}
+			break
+		case "shelf":
+			err1 = db.MoveBoxToShelf(boxID, uuid.FromStringOrNil(moveToThingID))
+			// var outerbox boxes.Box
+			// outerbox, err2 = db.BoxById(uuid.FromStringOrNil(moveToThingID))
+			if err1 == nil {
+				otherThingLabel = moveToThingID
+				otherThingElementID = "shelf-link"
+				otherThingHref = "/shelves/" + moveToThingID
+			}
+			break
+		case "area":
+			break
+		default:
+			server.WriteInternalServerError("can't move box to \""+thing+"\"", logg.NewError("can't move box to \""+thing+"\""), w, r)
+			return
+		}
+		if err1 != nil {
+			logg.Err(err1)
+			server.WriteBadRequestError(`can't move "`+boxID.String()+`" to "`+moveToThingID+`"`, err1, w, r)
+			return
+		}
+		if err2 != nil {
+			server.WriteNotFoundError("can't find "+thing+" "+moveToThingID, err1, w, r)
+		}
+
+		inputThingID := `<input hx-swap-oob="true" type="text" id="` + thing + `_id" name="` + thing + `_id" value="` + moveToThingID + `" readonly>`
+		aThingLabel := `
+			<a id="` + otherThingElementID + `" hx-swap-oob="true" href="` + otherThingHref + `" 
+			class="clickable"
+			hx-boost="true"
+			style="">` + otherThingLabel + `</a>`
+
+		server.TriggerSuccessNotification(w, `moved"`+boxID.String()+`" to "`+moveToThingID+`"`)
+		server.WriteFprint(w, inputThingID)
+		server.WriteFprint(w, aThingLabel)
+		server.WriteFprint(w, `<div id="place-holder" hx-swap-oob="true"></div>`)
 	}
 }
 
@@ -508,10 +650,18 @@ func boxesPageMove(db BoxDatabase) http.HandlerFunc {
 	}
 }
 
-// @TODO: Implement moveBox.
+// moveBox moves a box to another box. For direct API calls.
 func moveBox(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		server.WriteNotImplementedWarning("Move single box", w, r)
+		id := uuid.FromStringOrNil(r.PathValue("id"))
+		moveToBoxID := uuid.FromStringOrNil(r.PathValue("toid"))
+		err := db.MoveBoxToBox(id, moveToBoxID)
+		if err != nil {
+			server.WriteBadRequestError("can't move box", err, w, r)
+			logg.Err(err)
+		} else {
+			w.WriteHeader(200)
+		}
 	}
 }
 
@@ -573,6 +723,9 @@ func boxFromPostFormValue(id uuid.UUID, r *http.Request) boxes.Box {
 	box.Description = r.PostFormValue("description")
 	box.Picture = common.ParsePicture(r)
 	box.QRCode = r.PostFormValue("qrcode")
+	box.OuterBoxID = uuid.FromStringOrNil(r.PostFormValue("box_id"))
+	box.ShelfID = uuid.FromStringOrNil(r.PostFormValue("shelf_id"))
+	box.AreaID = uuid.FromStringOrNil(r.PostFormValue("area_id"))
 	return box
 }
 
@@ -606,27 +759,4 @@ func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatab
 		return logg.Errorf("%w", err)
 	}
 	return nil
-}
-
-// filledBoxRows returns BoxListRows with empty entries filled up to match limit.
-// count - The total number of records found from the search query.
-func filledBoxRows(db BoxDatabase, searchString string, limit int, pageNr int, count int) ([]common.ListRow, error) {
-	boxes := make([]common.ListRow, limit)
-
-	// Fetch the Records from the Database and pack it into map
-	rows, err := db.BoxListRows(searchString, limit, pageNr)
-	if err != nil {
-		return nil, logg.WrapErr(err)
-	}
-
-	for i, b := range rows {
-		boxes[i] = b
-	}
-	// Fill up empty rows to keep same table size
-	if count < limit {
-		for i := count; i < limit; i++ {
-			boxes[i] = common.ListRow{}
-		}
-	}
-	return boxes, nil
 }

@@ -87,6 +87,18 @@ func (db *boxDatabaseError) BoxListCounter(searchString string) (count int, err 
 	return count, err
 }
 
+func (db *boxDatabaseError) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
+	return errors.New("AAAAAAAA")
+}
+
+func (db *boxDatabaseError) ShelfListCounter(queryString string) (count int, err error) {
+	return 0, errors.New("AAAAAAAA")
+}
+
+func (db *boxDatabaseError) ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error) {
+	return shelfRows, errors.New("AAAAAAAA")
+}
+
 // boxDatabaseSuccess never returns errors.
 type boxDatabaseSuccess struct{}
 
@@ -132,6 +144,18 @@ func (db *boxDatabaseSuccess) BoxListRowByID(id uuid.UUID) (common.ListRow, erro
 
 func (db *boxDatabaseSuccess) BoxListCounter(searchString string) (count int, err error) {
 	return 1, nil
+}
+
+func (db *boxDatabaseSuccess) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
+	return nil
+}
+
+func (db *boxDatabaseSuccess) ShelfListCounter(queryString string) (count int, err error) {
+	return 1, nil
+}
+
+func (db *boxDatabaseSuccess) ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error) {
+	return shelfRows, nil
 }
 
 func TestBoxHandlerDBErrors(t *testing.T) {

@@ -310,7 +310,7 @@ func (db *DB) InsertSampleItems() {
 		newItem := items.Item{
 			BasicInfo: common.BasicInfo{
 				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
-				Label:       gofakeit.ProductName(),
+				Label:       "item_" + gofakeit.ProductName(),
 				Description: gofakeit.Sentence(5),
 				Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
 				QRCode:      gofakeit.HipsterWord(),
@@ -329,13 +329,13 @@ func (db *DB) InsertSampleItems() {
 }
 
 func (db *DB) InsertSampleBoxes() {
-	gofakeit.Seed(SEED)
+	gofakeit.Seed(SEED + 1)
 
 	for i := 0; i < 10; i++ {
 		newBox := boxes.Box{
 			BasicInfo: common.BasicInfo{
 				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
-				Label:       gofakeit.ProductName(),
+				Label:       "box_" + gofakeit.ProductName(),
 				Description: gofakeit.Sentence(5),
 				Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
 			},
@@ -351,13 +351,13 @@ func (db *DB) InsertSampleBoxes() {
 }
 
 func (db *DB) InsertSampleShelves() {
-	gofakeit.Seed(SEED)
+	gofakeit.Seed(SEED + 2)
 
 	for i := 0; i < 10; i++ {
 		newShelf := &shelves.Shelf{
 			BasicInfo: common.BasicInfo{
 				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
-				Label:       gofakeit.ProductName(),
+				Label:       "shelf_" + gofakeit.ProductName(),
 				Description: gofakeit.Sentence(5),
 				Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
 			},

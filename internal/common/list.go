@@ -1,6 +1,7 @@
 package common
 
 import (
+	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"net/http"
 
@@ -116,4 +117,32 @@ func (row *ListRow) Map() map[string]any {
 		"AreaLabel":      row.AreaLabel,
 		"PreviewPicture": row.PreviewPicture,
 	}
+}
+
+// FilledRows returns ListRows with empty entries filled up to match limit.
+//
+// listRowsFunc is a DB function like "db.BoxListRows()" and will be called like this internally:
+//
+//	rows, err := listRowsFunc(searchString, limit, count)
+//
+// count - The total number of records found from the search query.
+func FilledRows(listRowsFunc func(query string, limit int, page int) ([]ListRow, error), searchString string, limit int, pageNr int, count int) ([]ListRow, error) {
+	boxes := make([]ListRow, limit)
+
+	// Fetch the Records from the Database and pack it into map
+	rows, err := listRowsFunc(searchString, limit, pageNr)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	for i, b := range rows {
+		boxes[i] = b
+	}
+	// Fill up empty rows to keep same table size
+	if count < limit {
+		for i := count; i < limit; i++ {
+			boxes[i] = ListRow{}
+		}
+	}
+	return boxes, nil
 }

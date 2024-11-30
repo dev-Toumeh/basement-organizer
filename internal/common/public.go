@@ -79,7 +79,7 @@ func ParsePicture(r *http.Request) string {
 		logg.Debug("picture filename:", header.Filename)
 	}
 	if err != nil {
-		logg.Err(err)
+		logg.Info(err)
 		return ""
 	}
 
