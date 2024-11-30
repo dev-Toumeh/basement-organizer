@@ -21,9 +21,10 @@ func Handle(route string, handler http.HandlerFunc) {
 		colorMsg := fmt.Sprintf("%s%s%s", logg.Yellow, msg, logg.Reset)
 		logg.Debug(colorMsg)
 		if r.Method == http.MethodPost {
-			r.ParseForm()
-			colorMsg := fmt.Sprintf("%sPostFormValue: %v%s", logg.Yellow, r.PostForm, logg.Reset)
-			logg.Debug(colorMsg)
+			// @TODO: Fix. Breaks some post requests because r.ParseForm is empty after this.
+			// r.ParseForm()
+			// colorMsg := fmt.Sprintf("%sPostFormValue: %v%s", logg.Yellow, r.PostForm, logg.Reset)
+			// logg.Debug(colorMsg)
 		}
 		handler.ServeHTTP(w, r)
 	})
