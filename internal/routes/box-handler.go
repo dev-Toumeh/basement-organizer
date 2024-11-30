@@ -570,6 +570,9 @@ func boxPageMove(thing string, db BoxDatabase) http.HandlerFunc {
 		data.SetFormID(thing + "-list")
 		data.SetFormHXTarget("#place-holder")
 
+		data.SetSearchInput(true)
+		data.SetSearchInputLabel("Search " + thing)
+
 		data.SetRowAction(true)
 		data.SetRowActionType("move")
 		data.SetRowActionHXTarget("#" + thing + "_id")
