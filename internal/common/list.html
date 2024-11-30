@@ -68,19 +68,19 @@
 
     {{ if .RowAction }}
         <!--Holds information for subsequent requests from this template.-->
-    <div id="additional-data-container">
-    {{ if eq .RowActionType "move" }}
-        {{ if $FormHXPost }}<input name="move" value="true" hidden>{{end}}
-        {{ if .AdditionalDataInputs }}
-            {{ range .AdditionalDataInputs }}
-                <label for="{{.Key}}" hidden>{{.Key}}</label>
-                <input name="{{.Key}}" value="{{.Value}}" readonly hidden>
+        <div id="additional-data-container">
+        {{ if eq .RowActionType "move" }}
+            {{ if $FormHXPost }}<input name="move" value="true" hidden>{{end}}
+            {{ if .AdditionalDataInputs }}
+                {{ range .AdditionalDataInputs }}
+                    <label for="{{.Key}}" hidden>{{.Key}}</label>
+                    <input name="{{.Key}}" value="{{.Value}}" readonly hidden>
+                {{ end }}
+            {{ else }}
+                Nothing selected to be moved.
             {{ end }}
-        {{ else }}
-            Nothing selected to be moved.
+            </div> 
         {{ end }}
-        </div> 
-    {{ end }}
     {{ end }}
 </form>
 
