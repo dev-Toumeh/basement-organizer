@@ -20,7 +20,7 @@ import (
 
 type BoxDatabase interface {
 	CreateBox(newBox *boxes.Box) (uuid.UUID, error)
-	MoveBoxToBox(id1 uuid.UUID, id2 uuid.UUID) error
+	MoveBoxToBox(box1 uuid.UUID, box2 uuid.UUID) error
 	UpdateBox(box boxes.Box) error
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (boxes.Box, error)
@@ -33,8 +33,8 @@ type BoxDatabase interface {
 func registerBoxRoutes(db *database.DB) {
 	// Box templates
 	Handle("/box", boxHandler(db))
-	Handle("/box/{id}/move", boxPageMove(db))
-	Handle("/box/{id}/move/{value}", boxMoveConfirm(db))
+	Handle("/box/{id}/moveto/box", boxPageMove("box", db))
+	Handle("/box/{id}/moveto/box/{value}", boxMoveConfirm("box", db))
 
 	// Box api
 	Handle("/api/v1/box", boxHandler(db))
@@ -502,74 +502,106 @@ func deleteBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	server.RedirectWithSuccessNotification(w, "/boxes", fmt.Sprintf("%s deleted", id))
 }
 
-// boxPageMove shows the page where client can choose where to move the box.
-func boxPageMove(db BoxDatabase) http.HandlerFunc {
+// shows the page where client can choose where to move the box.
+// thing = item / box / shelf / area
+func boxPageMove(thing string, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		errMsgForUser := "Can't move box"
+		data := common.InitData(r)
+
+		var err error
+		var count int
+
+		switch thing {
+		case "box":
+			count, err = db.BoxListCounter("")
+			if err != nil {
+				server.WriteInternalServerError("no box list counter", err, w, r)
+				return
+			}
+			data.SetCount(count)
+
+			var boxes []common.ListRow
+			if count > 0 {
+				boxes, err = filledBoxRows(db, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count)
+				if err != nil {
+					server.WriteInternalServerError("cant query "+thing+" please comeback later", err, w, r)
+				}
+			}
+			data.SetRows(boxes)
+
+		default:
+			server.WriteInternalServerError("can't move box to \""+thing+"\"", logg.NewError("can't move box to \""+thing+"\""), w, r)
+			return
+		}
+
+		errMsgForUser := "Can't move " + thing
 		id := server.ValidID(w, r, errMsgForUser)
 		if id.IsNil() {
 			return
 		}
-		data := common.InitData(r)
-		data.SetFormHXPost("/box/" + id.String() + "/move")
-		data.SetFormID("box-list")
+		data.SetFormHXPost("/" + thing + "/" + id.String() + "/moveto/" + thing)
+		data.SetFormID(thing + "-list")
 		data.SetFormHXTarget("#place-holder")
 
 		data.SetRowAction(true)
 		data.SetRowActionType("move")
-		data.SetRowActionHXTarget("#box_id")
+		data.SetRowActionHXTarget("#" + thing + "_id")
 		data.SetRowActionName("Move here")
-		data.SetRowActionHXPostWithID("/box/" + id.String() + "/move")
+		data.SetRowActionHXPostWithID("/" + thing + "/" + id.String() + "/moveto/" + thing)
 
-		count, err := db.BoxListCounter("")
-		if err != nil {
-			server.WriteInternalServerError("no box list counter", err, w, r)
-			return
-		}
-
-		data.SetCount(count)
 		data = common.Pagination2(data)
 		data.SetShowLimit(env.Config().ShowTableSize())
 
-		var boxes []common.ListRow
-		if count > 0 {
-			boxes, err = filledBoxRows(db, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count)
-			if err != nil {
-				server.WriteInternalServerError("cant query boxes please comeback later", err, w, r)
-			}
-		}
-		data.SetRows(boxes)
 		server.MustRender(w, r, templates.TEMPLATE_LIST, data.TypeMap)
 	}
 }
 
 // boxMoveConfirm handles data after a box move action is clicked from boxPageMove().
-func boxMoveConfirm(db BoxDatabase) http.HandlerFunc {
+// thing = item / box / shelf / area
+func boxMoveConfirm(thing string, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		outerboxID := r.PathValue("value")
-		boxID := uuid.FromStringOrNil(r.PathValue("id"))
-		err := db.MoveBoxToBox(boxID, uuid.FromStringOrNil(outerboxID))
-		if err != nil {
-			logg.Err(err)
-			server.WriteBadRequestError(`can't move "`+boxID.String()+`" to "`+outerboxID+`"`, err, w, r)
+		moveToThingID := r.PathValue("value")
+		thingID := uuid.FromStringOrNil(r.PathValue("id"))
+
+		var err1 error
+		var err2 error
+		var otherThingLabel string
+		var otherThingElementID string
+		var otherThingHref string
+		switch thing {
+		case "box":
+			err1 = db.MoveBoxToBox(thingID, uuid.FromStringOrNil(moveToThingID))
+			var outerbox boxes.Box
+			outerbox, err2 = db.BoxById(uuid.FromStringOrNil(moveToThingID))
+			if err2 == nil {
+				otherThingLabel = outerbox.Label
+				otherThingElementID = "outerbox-link"
+				otherThingHref = "/boxes/" + moveToThingID
+			}
+			break
+		default:
+			server.WriteInternalServerError("can't move box to \""+thing+"\"", logg.NewError("can't move box to \""+thing+"\""), w, r)
 			return
 		}
-
-		outerbox, err := db.BoxById(uuid.FromStringOrNil(outerboxID))
-		if err != nil {
-			server.WriteNotFoundError("can't find box "+outerboxID, err, w, r)
+		if err1 != nil {
+			logg.Err(err1)
+			server.WriteBadRequestError(`can't move "`+thingID.String()+`" to "`+moveToThingID+`"`, err1, w, r)
+			return
+		}
+		if err2 != nil {
+			server.WriteNotFoundError("can't find "+thing+" "+moveToThingID, err1, w, r)
 		}
 
-		inputOuterboxID := `<input hx-swap-oob="true" type="text" id="box_id" name="box_id" value="` + outerboxID + `" readonly>`
-		aOuterboxLabel := `
-			<a id="outerbox-link" hx-swap-oob="true" href="/boxes/` + outerboxID + `" 
+		inputThingID := `<input hx-swap-oob="true" type="text" id="` + thing + `_id" name="` + thing + `_id" value="` + moveToThingID + `" readonly>`
+		aThingLabel := `
+			<a id="` + otherThingElementID + `" hx-swap-oob="true" href="` + otherThingHref + `" 
 			class="clickable"
 			hx-boost="true"
-			style="">` + outerbox.Label + `</a>`
+			style="">` + otherThingLabel + `</a>`
 
-		server.TriggerSuccessNotification(w, `moved"`+boxID.String()+`" to "`+outerboxID+`"`)
-		server.WriteFprint(w, inputOuterboxID)
-		server.WriteFprint(w, aOuterboxLabel)
+		server.TriggerSuccessNotification(w, `moved"`+thingID.String()+`" to "`+moveToThingID+`"`)
+		server.WriteFprint(w, inputThingID)
+		server.WriteFprint(w, aThingLabel)
 		server.WriteFprint(w, `<div id="place-holder" hx-swap-oob="true"></div>`)
 	}
 }

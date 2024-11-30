@@ -57,7 +57,7 @@
             {{ end }}
             <input type="text" id="box_id" name="box_id" value="{{ .OuterBoxID }}" readonly>
             <button id="move-btn"
-                hx-post="/box/{{.ID}}/move"
+                hx-post="/box/{{.ID}}/moveto/box"
                 hx-target="#place-holder"
                 hx-push-url="false"
                 {{ if not .Edit }}disabled{{ end }}
