@@ -310,8 +310,8 @@ func moveBoxesToBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) serv
 	return notifications
 }
 
-// MoveBox moves a box to another box. For direct API calls.
-func MoveBox(db BoxDatabase) http.HandlerFunc {
+// MoveBoxAPI moves a box to another box. For direct API calls.
+func MoveBoxAPI(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := uuid.FromStringOrNil(r.PathValue("id"))
 		moveToBoxID := uuid.FromStringOrNil(r.PathValue("toid"))
