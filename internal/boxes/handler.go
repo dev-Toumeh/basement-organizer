@@ -226,7 +226,7 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	}
 
 	if server.WantsTemplateData(r) {
-		BoxesPage(db).ServeHTTP(w, r)
+		ListPage(db).ServeHTTP(w, r)
 		for _, id := range toDelete {
 			templates.RenderSuccessNotification(w, "Box deleted: "+id.String())
 		}

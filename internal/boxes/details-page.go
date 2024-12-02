@@ -11,8 +11,8 @@ import (
 	"net/http"
 )
 
-// BoxDetailsPage shows a page with details of a specific box.
-func BoxDetailsPage(db BoxDatabase) http.HandlerFunc {
+// DetailsPage shows a page with details of a specific box.
+func DetailsPage(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authenticated, _ := auth.Authenticated(r)
 		user, _ := auth.UserSessionData(r)

@@ -10,8 +10,8 @@ import (
 	"net/http"
 )
 
-// BoxesPage shows a page with a box list.
-func BoxesPage(db BoxDatabase) http.HandlerFunc {
+// ListPage shows a page with a box list.
+func ListPage(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authenticated, _ := auth.Authenticated(r)
 		user, _ := auth.UserSessionData(r)

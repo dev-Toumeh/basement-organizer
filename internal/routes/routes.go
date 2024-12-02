@@ -107,8 +107,8 @@ func registerBoxRoutes(db *database.DB) {
 	Handle("/api/v1/box/{id}/move/{toid}", boxes.MoveBox(db))
 
 	// Boxes templates
-	Handle("/boxes", boxes.BoxesPage(db))
-	Handle("/boxes/{id}", boxes.BoxDetailsPage(db))
+	Handle("/boxes", boxes.ListPage(db))
+	Handle("/boxes/{id}", boxes.DetailsPage(db))
 	Handle("/boxes/move", boxes.BoxesPageMove(db))
 	Handle("/boxes/moveto/box/{id}", boxes.MoveBoxesToBoxHandler(db))
 	Handle("/boxes-list", boxes.BoxesHandler(db))
