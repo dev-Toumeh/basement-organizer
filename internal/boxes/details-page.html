@@ -134,25 +134,25 @@
 >back</button>
 {{ else if .Edit }}
 <button hx-put="/box" 
-        hx-target="#box-{{.ID}}"
-        hx-swap="outerHTML"
+    hx-target="#box-{{.ID}}"
+    hx-swap="outerHTML"
 >Update box</button>
 <button hx-get="/box?id={{.ID}}"
-        hx-target="#box-{{.ID}}"
-        hx-swap="outerHTML"
+    hx-target="#box-{{.ID}}"
+    hx-swap="outerHTML"
 >cancel</button>
 {{ else }}
 <button hx-get="/box?id={{.ID}}&edit=true"
-        hx-target="#box-{{.ID}}"
-        hx-swap="outerHTML"
+    hx-target="#box-{{.ID}}"
+    hx-swap="outerHTML"
 >edit</button>
 {{ end }}
 
 {{ if not .Create }}
 <button hx-delete="/box?id={{.ID}}" 
-        hx-swap="outerHTML"
-        hx-target="#box-{{.ID}}"
-        hx-confirm="Are you sure?"
+    hx-swap="outerHTML"
+    hx-target="#box-{{.ID}}"
+    hx-confirm="Are you sure?"
 >delete</button>
 {{ end }}
 
