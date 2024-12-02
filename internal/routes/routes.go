@@ -97,10 +97,10 @@ func registerBoxRoutes(db *database.DB) {
 	// Box templates
 	Handle("/box", boxes.BoxHandler(db))
 	Handle("/box/{id}", boxes.DetailsPage(db))
-	Handle("/box/{id}/moveto/box", boxes.BoxPageMove("box", db))
-	Handle("/box/{id}/moveto/box/{value}", boxes.BoxMoveConfirm("box", db))
-	Handle("/box/{id}/moveto/shelf", boxes.BoxPageMove("shelf", db))
-	Handle("/box/{id}/moveto/shelf/{value}", boxes.BoxMoveConfirm("shelf", db))
+	Handle("/box/{id}/moveto/box", boxes.BoxMovePicker("box", db))
+	Handle("/box/{id}/moveto/box/{value}", boxes.BoxMovePickerConfirm("box", db))
+	Handle("/box/{id}/moveto/shelf", boxes.BoxMovePicker("shelf", db))
+	Handle("/box/{id}/moveto/shelf/{value}", boxes.BoxMovePickerConfirm("shelf", db))
 
 	// Box api
 	Handle("/api/v1/box", boxes.BoxHandler(db))
@@ -109,8 +109,8 @@ func registerBoxRoutes(db *database.DB) {
 
 	// Boxes templates
 	Handle("/boxes", boxes.ListPage(db))
-	Handle("/boxes/move", boxes.ListPageMove(db))
-	Handle("/boxes/moveto/box/{id}", boxes.MoveBoxesToBoxHandler(db))
+	Handle("/boxes/move", boxes.ListPageMoveToBoxPicker(db))
+	Handle("/boxes/moveto/box/{id}", boxes.ListPageMoveToBoxPickerConfirm(db))
 
 	// Boxes api
 	Handle("/api/v1/boxes", boxes.BoxesHandler(db))

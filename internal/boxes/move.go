@@ -14,7 +14,7 @@ import (
 
 // shows the page where client can choose where to move the box.
 // thing = item / box / shelf / area
-func BoxPageMove(thing string, db BoxDatabase) http.HandlerFunc {
+func BoxMovePicker(thing string, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := common.InitData(r)
 
@@ -91,7 +91,7 @@ func BoxPageMove(thing string, db BoxDatabase) http.HandlerFunc {
 
 // boxMoveConfirm handles data after a box move action is clicked from boxPageMove().
 // thing = item / box / shelf / area
-func BoxMoveConfirm(thing string, db BoxDatabase) http.HandlerFunc {
+func BoxMovePickerConfirm(thing string, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		moveToThingID := r.PathValue("value")
 		boxID := uuid.FromStringOrNil(r.PathValue("id"))
@@ -151,14 +151,6 @@ func BoxMoveConfirm(thing string, db BoxDatabase) http.HandlerFunc {
 	}
 }
 
-// BoxesPageMove shows the page where client can choose where to move the selected boxes from the boxes page.
-// func BoxesPageMove(db BoxDatabase) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		server.MustRender(w, r, "move-to", nil)
-// 		// server.WriteNotImplementedWarning("Move multiple boxes page", w, r)
-// 	}
-// }
-
 // MoveBox moves a box to another box. For direct API calls.
 func MoveBox(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -174,15 +166,15 @@ func MoveBox(db BoxDatabase) http.HandlerFunc {
 	}
 }
 
-func MoveBoxesToBoxHandler(db BoxDatabase) http.HandlerFunc {
+func ListPageMoveToBoxPickerConfirm(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		notifications := MoveBoxesToBox(w, r, db)
+		notifications := moveBoxesToBox(w, r, db)
 		params := common.ListPageParams(r)
 		server.RedirectWithNotifications(w, "/boxes"+params, notifications)
 	}
 }
 
-func MoveBoxesToBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) server.Notifications {
+func moveBoxesToBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) server.Notifications {
 	r.ParseForm()
 	moveToBoxID := server.ValidID(w, r, "can't move boxes invalid id")
 	if moveToBoxID == uuid.Nil {
@@ -212,13 +204,13 @@ func MoveBoxesToBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) serv
 
 func MoveBoxesToBoxAPI(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		notifications := MoveBoxesToBox(w, r, db)
+		notifications := moveBoxesToBox(w, r, db)
 		server.TriggerNotifications(w, notifications)
 	}
 }
 
-// ListPageMove handles list form for moving things.
-func ListPageMove(db BoxDatabase) http.HandlerFunc {
+// ListPageMoveToBoxPicker handles list form for moving things.
+func ListPageMoveToBoxPicker(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Uses POST so client can send long list
 		// of IDs of boxes inside PostForm body
