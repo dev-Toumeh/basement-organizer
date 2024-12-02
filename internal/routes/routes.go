@@ -96,6 +96,7 @@ func itemsRoutes2(db items.ItemDatabase) {
 func registerBoxRoutes(db *database.DB) {
 	// Box templates
 	Handle("/box", boxes.BoxHandler(db))
+	Handle("/box/{id}", boxes.DetailsPage(db))
 	Handle("/box/{id}/moveto/box", boxes.BoxPageMove("box", db))
 	Handle("/box/{id}/moveto/box/{value}", boxes.BoxMoveConfirm("box", db))
 	Handle("/box/{id}/moveto/shelf", boxes.BoxPageMove("shelf", db))
@@ -108,7 +109,6 @@ func registerBoxRoutes(db *database.DB) {
 
 	// Boxes templates
 	Handle("/boxes", boxes.ListPage(db))
-	Handle("/boxes/{id}", boxes.DetailsPage(db))
 	Handle("/boxes/move", boxes.ListPageMove(db))
 	Handle("/boxes/moveto/box/{id}", boxes.MoveBoxesToBoxHandler(db))
 	Handle("/boxes-list", boxes.BoxesHandler(db))

@@ -50,7 +50,7 @@
             {{ if eq .OuterBoxID.String "00000000-0000-0000-0000-000000000000" }}
                 <span id="outerbox-link">None</span>
             {{ else }}
-                <a id="outerbox-link" href="/boxes/{{.OuterBoxID}}" 
+                <a id="outerbox-link" href="/box/{{.OuterBoxID}}" 
                     class="clickable"
                     hx-boost="true"
                 >{{ .OuterBox.Label }}</a>
@@ -141,7 +141,7 @@
 
 {{ define "empty-list" }}
 <form id="inner-boxes-list"
-    hx-get="/boxes"
+    hx-get="/box"
     hx-push-url="true"
     hx-target="body"
     hx-swap="outerHTML"
@@ -185,7 +185,7 @@
 
 {{ define "innerboxes-list" }}
 <form id="inner-boxes-list"
-    hx-get="/boxes"
+    hx-get="/box"
     hx-push-url="true"
     hx-target="body"
     hx-swap="outerHTML"
@@ -236,7 +236,7 @@
 
 {{ define "item-list" }}
 <form id="item-list"
-    hx-get="/boxes"
+    hx-get="/box"
     hx-push-url="true"
     hx-target="body"
     hx-swap="outerHTML"

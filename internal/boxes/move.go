@@ -107,7 +107,7 @@ func BoxMoveConfirm(thing string, db BoxDatabase) http.HandlerFunc {
 			if err2 == nil {
 				otherThingLabel = outerbox.Label
 				otherThingElementID = "outerbox-link"
-				otherThingHref = "/boxes/" + moveToThingID
+				otherThingHref = "/box/" + moveToThingID
 			}
 			break
 		case "shelf":
