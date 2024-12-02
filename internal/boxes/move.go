@@ -151,64 +151,6 @@ func BoxMovePickerConfirm(thing string, db BoxDatabase) http.HandlerFunc {
 	}
 }
 
-// MoveBox moves a box to another box. For direct API calls.
-func MoveBox(db BoxDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id := uuid.FromStringOrNil(r.PathValue("id"))
-		moveToBoxID := uuid.FromStringOrNil(r.PathValue("toid"))
-		err := db.MoveBoxToBox(id, moveToBoxID)
-		if err != nil {
-			server.WriteBadRequestError("can't move box", err, w, r)
-			logg.Err(err)
-		} else {
-			w.WriteHeader(200)
-		}
-	}
-}
-
-func ListPageMoveToBoxPickerConfirm(db BoxDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		notifications := moveBoxesToBox(w, r, db)
-		params := common.ListPageParams(r)
-		server.RedirectWithNotifications(w, "/boxes"+params, notifications)
-	}
-}
-
-func moveBoxesToBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) server.Notifications {
-	r.ParseForm()
-	moveToBoxID := server.ValidID(w, r, "can't move boxes invalid id")
-	if moveToBoxID == uuid.Nil {
-		return server.Notifications{}
-	}
-
-	parseIDs := r.PostForm["id-to-be-moved"]
-	ids := make([]uuid.UUID, len(parseIDs))
-
-	logg.Debug(len(parseIDs))
-
-	notifications := server.Notifications{}
-	for i, v := range parseIDs {
-		logg.Debug(v)
-		id := uuid.FromStringOrNil(v)
-		ids[i] = id
-		err := db.MoveBoxToBox(id, moveToBoxID)
-		if err != nil {
-			notifications.AddError(fmt.Sprintf(`can't move "%s" to "%s"`, ids[i].String(), moveToBoxID.String()))
-			logg.Err(err)
-		} else {
-			notifications.AddSuccess(fmt.Sprintf(`moved "%s" to "%s"`, ids[i].String(), moveToBoxID.String()))
-		}
-	}
-	return notifications
-}
-
-func MoveBoxesToBoxAPI(db BoxDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		notifications := moveBoxesToBox(w, r, db)
-		server.TriggerNotifications(w, notifications)
-	}
-}
-
 // ListPageMoveToBoxPicker handles list form for moving things.
 func ListPageMoveToBoxPicker(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -330,5 +272,62 @@ func ListPageMoveToBoxPicker(db BoxDatabase) http.HandlerFunc {
 			server.WriteInternalServerError("can't render move page", err, w, r)
 			return
 		}
+	}
+}
+func ListPageMoveToBoxPickerConfirm(db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		notifications := moveBoxesToBox(w, r, db)
+		params := common.ListPageParams(r)
+		server.RedirectWithNotifications(w, "/boxes"+params, notifications)
+	}
+}
+
+func moveBoxesToBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) server.Notifications {
+	r.ParseForm()
+	moveToBoxID := server.ValidID(w, r, "can't move boxes invalid id")
+	if moveToBoxID == uuid.Nil {
+		return server.Notifications{}
+	}
+
+	parseIDs := r.PostForm["id-to-be-moved"]
+	ids := make([]uuid.UUID, len(parseIDs))
+
+	logg.Debug(len(parseIDs))
+
+	notifications := server.Notifications{}
+	for i, v := range parseIDs {
+		logg.Debug(v)
+		id := uuid.FromStringOrNil(v)
+		ids[i] = id
+		err := db.MoveBoxToBox(id, moveToBoxID)
+		if err != nil {
+			notifications.AddError(fmt.Sprintf(`can't move "%s" to "%s"`, ids[i].String(), moveToBoxID.String()))
+			logg.Err(err)
+		} else {
+			notifications.AddSuccess(fmt.Sprintf(`moved "%s" to "%s"`, ids[i].String(), moveToBoxID.String()))
+		}
+	}
+	return notifications
+}
+
+// MoveBox moves a box to another box. For direct API calls.
+func MoveBox(db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := uuid.FromStringOrNil(r.PathValue("id"))
+		moveToBoxID := uuid.FromStringOrNil(r.PathValue("toid"))
+		err := db.MoveBoxToBox(id, moveToBoxID)
+		if err != nil {
+			server.WriteBadRequestError("can't move box", err, w, r)
+			logg.Err(err)
+		} else {
+			w.WriteHeader(200)
+		}
+	}
+}
+
+func MoveBoxesToBoxAPI(db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		notifications := moveBoxesToBox(w, r, db)
+		server.TriggerNotifications(w, notifications)
 	}
 }
