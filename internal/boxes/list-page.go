@@ -67,6 +67,6 @@ func BoxesPage(db BoxDatabase) http.HandlerFunc {
 		listTmpl.Rows = boxes
 
 		maps.Copy(data, listTmpl.Map())
-		server.MustRender(w, r, templates.TEMPLATE_BOXES_PAGE, data)
+		server.MustRender(w, r, templates.TEMPLATE_BOXES_LIST_PAGE, data)
 	}
 }
