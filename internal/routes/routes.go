@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"basement/main/internal/auth"
+	"basement/main/internal/boxes"
 	"basement/main/internal/database"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
@@ -35,8 +36,8 @@ func RegisterRoutes(db *database.DB) {
 	authRoutes(db)
 	itemsRoutes(db)
 	itemsRoutes2(db)
-	shelvesRoutes(db)
 	registerBoxRoutes(db)
+	shelvesRoutes(db)
 	navigationRoutes()
 	experimentalRoutes(db)
 }
@@ -90,6 +91,32 @@ func itemsRoutes2(db items.ItemDatabase) {
 
 	// API's
 	http.Handle("/api/v1/create/item", items.ItemHandler(db))
+}
+
+func registerBoxRoutes(db *database.DB) {
+	// Box templates
+	Handle("/box", boxes.BoxHandler(db))
+	Handle("/box/{id}/moveto/box", boxes.BoxPageMove("box", db))
+	Handle("/box/{id}/moveto/box/{value}", boxes.BoxMoveConfirm("box", db))
+	Handle("/box/{id}/moveto/shelf", boxes.BoxPageMove("shelf", db))
+	Handle("/box/{id}/moveto/shelf/{value}", boxes.BoxMoveConfirm("shelf", db))
+
+	// Box api
+	Handle("/api/v1/box", boxes.BoxHandler(db))
+	Handle("/api/v1/box/{id}", boxes.BoxHandler(db))
+	Handle("/api/v1/box/{id}/move/{toid}", boxes.MoveBox(db))
+
+	// Boxes templates
+	Handle("/boxes", boxes.BoxesPage(db))
+	Handle("/boxes/{id}", boxes.BoxDetailsPage(db))
+	Handle("/boxes/move", boxes.BoxesPageMove(db))
+	Handle("/boxes/moveto/box/{id}", boxes.MoveBoxesToBoxHandler(db))
+	Handle("/boxes-list", boxes.BoxesHandler(db))
+
+	// Boxes api
+	Handle("/api/v1/boxes", boxes.BoxesHandler(db))
+	Handle("/api/v1/boxes/moveto/box/{id}", boxes.MoveBoxesToBoxAPI(db))
+	Handle("/get-boxes-move-page", boxes.GetMoveBoxesPage(db))
 }
 
 func shelvesRoutes(db shelves.ShelfDB) {

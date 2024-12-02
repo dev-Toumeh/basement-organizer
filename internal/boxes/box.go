@@ -13,6 +13,21 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
+type BoxDatabase interface {
+	CreateBox(newBox *Box) (uuid.UUID, error)
+	MoveBoxToBox(box1 uuid.UUID, box2 uuid.UUID) error
+	MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error
+	UpdateBox(box Box) error
+	DeleteBox(boxId uuid.UUID) error
+	BoxById(id uuid.UUID) (Box, error)
+	BoxIDs() ([]string, error) // @TODO: Change string to uuid.UUID
+	BoxListRows(query string, limit int, page int) ([]common.ListRow, error)
+	BoxListRowByID(id uuid.UUID) (common.ListRow, error)
+	BoxListCounter(searchString string) (count int, err error)
+	ShelfListCounter(queryString string) (count int, err error)
+	ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error)
+}
+
 type Box struct {
 	common.BasicInfo
 	OuterBoxID       uuid.UUID         `json:"outerboxid"`

@@ -1,7 +1,6 @@
-package routes
+package boxes
 
 import (
-	"basement/main/internal/boxes"
 	"basement/main/internal/common"
 	"basement/main/internal/env"
 	"basement/main/internal/logg"
@@ -39,12 +38,12 @@ const BOX_ID_INVALID_UUID_FORMAT string = "ac9c-54ce5855bf0b"
 // boxDatabaseError returns errors on every function.
 type boxDatabaseError struct{}
 
-func (db *boxDatabaseError) CreateBox(newBox *boxes.Box) (uuid.UUID, error) {
+func (db *boxDatabaseError) CreateBox(newBox *Box) (uuid.UUID, error) {
 	return uuid.Nil, errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) BoxById(id uuid.UUID) (boxes.Box, error) {
-	return boxes.Box{BasicInfo: common.BasicInfo{ID: uuid.Nil}}, errors.New("AAAAAAAA")
+func (db *boxDatabaseError) BoxById(id uuid.UUID) (Box, error) {
+	return Box{BasicInfo: common.BasicInfo{ID: uuid.Nil}}, errors.New("AAAAAAAA")
 }
 
 func (db *boxDatabaseError) BoxIDs() ([]string, error) {
@@ -55,8 +54,8 @@ func (db *boxDatabaseError) MoveBoxToBox(id1 uuid.UUID, id2 uuid.UUID) error {
 	return errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) BoxByField(field string, value string) (*boxes.Box, error) {
-	return &boxes.Box{}, errors.New("AAAAAAAA")
+func (db *boxDatabaseError) BoxByField(field string, value string) (*Box, error) {
+	return &Box{}, errors.New("AAAAAAAA")
 }
 
 func (db *boxDatabaseError) BoxExistById(id uuid.UUID) bool {
@@ -67,7 +66,7 @@ func (db *boxDatabaseError) ErrorExist() error {
 	return errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) UpdateBox(box boxes.Box) error {
+func (db *boxDatabaseError) UpdateBox(box Box) error {
 	return errors.New("AAAAA")
 }
 
@@ -102,12 +101,12 @@ func (db *boxDatabaseError) ShelfListRows(searchString string, limit int, pageNr
 // boxDatabaseSuccess never returns errors.
 type boxDatabaseSuccess struct{}
 
-func (db *boxDatabaseSuccess) CreateBox(newBox *boxes.Box) (uuid.UUID, error) {
+func (db *boxDatabaseSuccess) CreateBox(newBox *Box) (uuid.UUID, error) {
 	return uuid.Must(uuid.FromString(BOX_ID_VALID)), nil
 }
 
-func (db *boxDatabaseSuccess) BoxById(id uuid.UUID) (boxes.Box, error) {
-	return boxes.Box{BasicInfo: common.BasicInfo{ID: uuid.Must(uuid.FromString(BOX_ID_VALID))}}, nil
+func (db *boxDatabaseSuccess) BoxById(id uuid.UUID) (Box, error) {
+	return Box{BasicInfo: common.BasicInfo{ID: uuid.Must(uuid.FromString(BOX_ID_VALID))}}, nil
 }
 
 func (db *boxDatabaseSuccess) BoxIDs() ([]string, error) {
@@ -126,7 +125,7 @@ func (db *boxDatabaseSuccess) ErrorExist() error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) UpdateBox(box boxes.Box) error {
+func (db *boxDatabaseSuccess) UpdateBox(box Box) error {
 	return nil
 }
 
@@ -166,10 +165,10 @@ func TestBoxHandlerDBErrors(t *testing.T) {
 
 	// Add mux handler, without it r.PathValue("id") will not work.
 	mux := http.NewServeMux()
-	mux.Handle("/box", boxHandler(dbErr))
-	mux.Handle("/box/", boxHandler(dbErr))
-	mux.Handle("/api/v1/box/{id}", boxHandler(dbErr))
-	mux.Handle("/api/v1/box/", boxHandler(dbErr))
+	mux.Handle("/box", BoxHandler(dbErr))
+	mux.Handle("/box/", BoxHandler(dbErr))
+	mux.Handle("/api/v1/box/{id}", BoxHandler(dbErr))
+	mux.Handle("/api/v1/box/", BoxHandler(dbErr))
 
 	testCases := []struct {
 		name               string
@@ -222,10 +221,10 @@ func TestBoxHandlerInputErrors(t *testing.T) {
 
 	// Add mux handler, without it r.PathValue("id") will not work.
 	mux := http.NewServeMux()
-	mux.Handle("/box", boxHandler(&dbOk))
-	mux.Handle("/box/", boxHandler(&dbOk))
-	mux.Handle("/api/v1/box/{id}", boxHandler(&dbOk))
-	mux.Handle("/api/v1/box/", boxHandler(&dbOk))
+	mux.Handle("/box", BoxHandler(&dbOk))
+	mux.Handle("/box/", BoxHandler(&dbOk))
+	mux.Handle("/api/v1/box/{id}", BoxHandler(&dbOk))
+	mux.Handle("/api/v1/box/", BoxHandler(&dbOk))
 
 	testCases := []struct {
 		name               string
@@ -290,10 +289,10 @@ func TestBoxHandlerOK(t *testing.T) {
 
 	// Add mux handler, without it r.PathValue("id") will not work.
 	mux := http.NewServeMux()
-	mux.Handle("/box", boxHandler(&dbOk))
-	mux.Handle("/box/", boxHandler(&dbOk))
-	mux.Handle("/api/v1/box/{id}", boxHandler(&dbOk))
-	mux.Handle("/api/v1/box", boxHandler(&dbOk))
+	mux.Handle("/box", BoxHandler(&dbOk))
+	mux.Handle("/box/", BoxHandler(&dbOk))
+	mux.Handle("/api/v1/box/{id}", BoxHandler(&dbOk))
+	mux.Handle("/api/v1/box", BoxHandler(&dbOk))
 
 	testCases := []struct {
 		name               string
