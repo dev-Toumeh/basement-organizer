@@ -7,7 +7,6 @@ import (
 	"basement/main/internal/templates"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -142,8 +141,9 @@ func BoxesHandler(db BoxDatabase) http.HandlerFunc {
 					server.WriteNotFoundError("Can't find boxes", err, w, r)
 					return
 				}
-
 				server.WriteJSON(w, boxs)
+			} else {
+				listPage(db).ServeHTTP(w, r)
 			}
 			break
 
@@ -163,43 +163,29 @@ func BoxesHandler(db BoxDatabase) http.HandlerFunc {
 }
 
 func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
-	errMsgForUser := "Can't delete boxes"
 	r.ParseForm()
-	toDelete, err := common.ParseIDsFromFormWithKey(r.Form, "delete")
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, errMsgForUser)
-		logg.Err(err)
-	}
-	deleteErrorIds := []string{}
-	errOccurred := false
-	for _, deleteId := range toDelete {
-		err = nil
-		err = db.DeleteBox(deleteId)
+
+	parseIDs, _ := common.ParseIDsFromFormWithKey(r.Form, "delete")
+	r.FormValue("delete")
+
+	logg.Debug(len(parseIDs))
+
+	ids := make([]uuid.UUID, len(parseIDs))
+	notifications := server.Notifications{}
+	for i, v := range parseIDs {
+		logg.Debug("deleting " + v.String())
+		ids[i] = v
+		err := db.DeleteBox(v)
 		if err != nil {
-			errOccurred = true
-			deleteErrorIds = append(deleteErrorIds, deleteId.String())
-			logg.Errorf("%v: %v. %w", errMsgForUser, deleteId, err)
+			notifications.AddError(`can't delete: "` + v.String() + `"`)
+			logg.Err(err)
 		} else {
-			logg.Debug("Box deleted: ", deleteId)
+			notifications.AddSuccess(`delete: "` + v.String() + `"`)
 		}
-	}
-	if errOccurred {
-		errIds := strings.Join(deleteErrorIds, ",")
-		server.TriggerErrorNotification(w, errMsgForUser+errIds)
-		// @TODO: Update partial table, even if error happens.
-		return
 	}
 
-	if server.WantsTemplateData(r) {
-		ListPage(db).ServeHTTP(w, r)
-		for _, id := range toDelete {
-			templates.RenderSuccessNotification(w, "Box deleted: "+id.String())
-		}
-		return
-	}
-	fmt.Fprint(w, nil)
-	w.WriteHeader(http.StatusOK)
+	server.TriggerNotifications(w, notifications)
+	listPage(db).ServeHTTP(w, r)
 }
 
 // boxFromPostFormValue returns items.Box without references to inner boxes, outer box and items.

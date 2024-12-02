@@ -141,19 +141,26 @@ func CheckEditMode(r *http.Request) bool {
 //	toDeleteIDs := parseIDsFromFormWithKey(r.Form, "delete")
 func ParseIDsFromFormWithKey(form url.Values, key string) ([]uuid.UUID, error) {
 	ids := make([]uuid.UUID, 0)
+	// logg.Debug("FormValues length: " + strconv.Itoa(len(form)))
+	// i := 0
 	for k := range form {
-		// logg.Debugf("k: %v, v:%v", k, v)
-		if strings.Contains(k, fmt.Sprintf("%s:", key)) {
+		// logg.Debug("FormValue[" + strconv.Itoa(i) + "]: \"" + k + "\"")
+		if strings.Contains(k, key+":") {
+			// logg.Debug("\"" + k + "\"" + " contains " + "\"" + key + "\"")
 			idStr := strings.Split(k, fmt.Sprintf("%s:", key))
 			if len(idStr) != 2 {
 				return nil, logg.NewError(fmt.Sprintf("Wrong delete key value pair: '%v'", k))
 			}
+			// logg.Debug("clean value \"" + idStr[1] + "\"")
 			id, err := uuid.FromString(idStr[1])
 			if err != nil {
+				logg.Err(err)
 				return nil, logg.WrapErr(err)
 			}
 			ids = append(ids, id)
 		}
+		// i++
 	}
+	// logg.Debugf("clean ids: %v", ids)
 	return ids, nil
 }
