@@ -86,17 +86,6 @@ func RenderBoxListItem(w http.ResponseWriter, data *Box) {
 	templates.Render(w, templates.TEMPLATE_BOX_LIST_ROW, data)
 }
 
-func RenderBoxList(w http.ResponseWriter, boxes []*Box) {
-	var data any
-	if boxes == nil {
-		data = map[string]any{}
-	} else {
-		data = map[string][]*Box{"Boxes": boxes}
-	}
-	logg.Debug(data)
-	templates.Render(w, templates.TEMPLATE_BOX_LIST, data)
-}
-
 type boxPageTemplateData struct {
 	*BoxTemplateData
 	*templates.PageTemplate

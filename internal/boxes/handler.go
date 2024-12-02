@@ -2,12 +2,10 @@ package boxes
 
 import (
 	"basement/main/internal/common"
-	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
 	"fmt"
-	"maps"
 	"net/http"
 	"strings"
 
@@ -139,47 +137,15 @@ func BoxesHandler(db BoxDatabase) http.HandlerFunc {
 
 		case http.MethodGet:
 			if !server.WantsTemplateData(r) {
-				boxes, err := db.BoxListRows("", 5, 1)
+				boxs, err := db.BoxListRows("", 100, 1)
 				if err != nil {
-					server.WriteInternalServerError("cant query boxes", logg.Errorf("%w", err), w, r)
+					server.WriteNotFoundError("Can't find boxes", err, w, r)
 					return
 				}
-				server.WriteJSON(w, boxes)
-				return
-			}
 
-			boxs, err := db.BoxListRows("", 100, 1)
-			if err != nil {
-				server.WriteNotFoundError("Can't find boxes", err, w, r)
-				return
-			}
-			if server.WantsTemplateData(r) {
-				a := BoxListTemplateData{Boxes: boxs}
-				d := a.Map()
-				d["Move"] = true
-				for i := range d["Boxes"].([]map[string]any) {
-					d["Boxes"].([]map[string]any)[i]["Move"] = true
-
-				}
-				server.MustRender(w, r, templates.TEMPLATE_BOX_LIST, d)
-			} else {
 				server.WriteJSON(w, boxs)
 			}
 			break
-
-		case http.MethodPost:
-			query := r.PostFormValue("query")
-			logg.Debugf("search query: %s", query)
-			boxes, err := db.BoxListRows(query, 5, 1)
-			if err != nil {
-				server.WriteInternalServerError("cant query boxes", err, w, r)
-				return
-			}
-			err = renderBoxesListTemplate(w, r, db, boxes, query)
-			if err != nil {
-				server.WriteInternalServerError("cant render boxlist", err, w, r)
-				return
-			}
 
 		case http.MethodPut:
 			server.WriteNotImplementedWarning("Multiple boxes edit?", w, r)
@@ -258,26 +224,4 @@ func renderBoxTemplate(box *Box, w http.ResponseWriter, r *http.Request) {
 	}
 	b := BoxTemplateData{Box: box, Edit: edit}
 	server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS, b.Map())
-}
-
-func renderBoxesListTemplate(w http.ResponseWriter, r *http.Request, db BoxDatabase, boxes []common.ListRow, query string) error {
-	searchInput := items.NewSearchInputTemplate()
-	searchInput.SearchInputLabel = "Search boxes"
-	searchInput.SearchInputHxTarget = "#box-list"
-	searchInput.SearchInputHxPost = "/boxes-list"
-	searchInput.SearchInputValue = query
-	logg.Debugf("searchInput %v", searchInput.Map())
-	boxesMaps := make([]map[string]any, len(boxes))
-	for i := range boxes {
-		boxesMaps[i] = boxes[i].Map()
-	}
-	data := map[string]any{"Boxes": boxesMaps}
-	maps.Copy(data, searchInput.Map())
-	logg.Debug("renderBoxesListTemplate: Boxes=", len(data["Boxes"].([]map[string]any)))
-
-	err := templates.SafeRender(w, templates.TEMPLATE_BOX_LIST, data)
-	if err != nil {
-		return logg.Errorf("%w", err)
-	}
-	return nil
 }
