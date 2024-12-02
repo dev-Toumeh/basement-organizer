@@ -14,7 +14,15 @@
 
 {{ define "boxes-list-content"  }}
 <h1>Box list</h1>
-<button hx-post="/box" hx-target="#box-list-body" hx-swap="beforeend">Create box</button>
+<button hx-post="/box" 
+    hx-target="#list-body"
+    hx-swap="beforeend"
+>Create box (auto)</button>
+<button hx-get="/box/create"
+    hx-swap="outerHTML"
+    hx-push-url="true"
+    hx-target="body"
+>Create box (manual)</button>
 {{ template "list" . }}
 {{ end }}
 

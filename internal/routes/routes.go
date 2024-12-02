@@ -96,11 +96,16 @@ func itemsRoutes2(db items.ItemDatabase) {
 func registerBoxRoutes(db *database.DB) {
 	// Box templates
 	Handle("/box", boxes.BoxHandler(db))
+	Handle("/box/create", boxes.CreateHandler(db))
 	Handle("/box/{id}", boxes.DetailsPage(db))
-	Handle("/box/{id}/moveto/box", boxes.BoxMovePicker("box", db))
-	Handle("/box/{id}/moveto/box/{value}", boxes.BoxMovePickerConfirm("box", db))
-	Handle("/box/{id}/moveto/shelf", boxes.BoxMovePicker("shelf", db))
-	Handle("/box/{id}/moveto/shelf/{value}", boxes.BoxMovePickerConfirm("shelf", db))
+	Handle("/box/{id}/addto/box", boxes.BoxPicker("box", boxes.PICKER_TYPE_ADDTO, db))
+	Handle("/box/{id}/addto/box/{value}", boxes.BoxPickerConfirm("box", boxes.PICKER_TYPE_ADDTO, db))
+	Handle("/box/{id}/addto/shelf", boxes.BoxPicker("shelf", boxes.PICKER_TYPE_ADDTO, db))
+	Handle("/box/{id}/addto/shelf/{value}", boxes.BoxPickerConfirm("shelf", boxes.PICKER_TYPE_ADDTO, db))
+	Handle("/box/{id}/moveto/box", boxes.BoxPicker("box", boxes.PICKER_TYPE_MOVE, db))
+	Handle("/box/{id}/moveto/box/{value}", boxes.BoxPickerConfirm("box", boxes.PICKER_TYPE_MOVE, db))
+	Handle("/box/{id}/moveto/shelf", boxes.BoxPicker("shelf", boxes.PICKER_TYPE_MOVE, db))
+	Handle("/box/{id}/moveto/shelf/{value}", boxes.BoxPickerConfirm("shelf", boxes.PICKER_TYPE_MOVE, db))
 
 	// Box api
 	Handle("/api/v1/box", boxes.BoxHandler(db))

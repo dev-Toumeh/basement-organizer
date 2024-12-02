@@ -4,14 +4,7 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
-    {{ template "box-details-page-content" . }}
-</body>
-{{ template "close-html-tag" . }}
-{{end}} 
-
-
-{{ define "box-details-page-content"  }}
-<h1>Box details</h1>
+    <h1>Box details</h1>
     {{ if .NotFound }}
         <p>Box "{{.ID}}" doesn't exist.</p>
         <br>
@@ -24,7 +17,9 @@
         <h2>Inner Boxes</h2>
         {{ template "innerboxes-list" . }}
     {{ end }}
-{{ end }}
+</body>
+{{ template "close-html-tag" . }}
+{{end}} 
 
 
 {{ define "box-details" }}
@@ -34,16 +29,16 @@
     <div class="box-info-container">
         <div class="box-detail-info">
             <label for="id">ID:</label>
-            <input name="id" type="text" value="{{.ID}}" {{ if not .Edit}}disabled{{end}}>
+            <input name="id" type="text" value="{{.ID}}" readonly>
 
             <label for="label">Label:</label>
-            <input name="label" type="text" value="{{.Label}}" {{ if not .Edit}}disabled{{end}}>
+            <input name="label" type="text" value="{{.Label}}" {{ if not (or .Edit .Create) }}disabled{{end}}>
 
             <label for="description">Description:</label>
-            <input name="description" type="text" value="{{.Description}}" {{ if not .Edit}}disabled{{end}}>
+            <input name="description" type="text" value="{{.Description}}" {{ if not (or .Edit .Create)}}disabled{{end}}>
 
             <label for="qrcode">QRCode:</label>
-            <input type="text" id="qrcode" name="qrcode" value="{{ .QRCode }}" {{ if not .Edit}}disabled{{end}}>
+            <input type="text" id="qrcode" name="qrcode" value="{{ .QRCode }}" {{ if not (or .Edit .Create)}}disabled{{end}}>
             <br>
 
             <label for="box_id">Is inside box:</label>
@@ -56,12 +51,21 @@
                 >{{ .OuterBox.Label }}</a>
             {{ end }}
             <input type="text" id="box_id" name="box_id" value="{{ .OuterBoxID }}" readonly>
-            <button id="move-btn"
-                hx-post="/box/{{.ID}}/moveto/box"
-                hx-target="#place-holder"
-                hx-push-url="false"
-                {{ if not .Edit }}disabled{{ end }}
-            >Move to another box</button>
+            {{ if .Create }}
+                <button id="move-btn"
+                    hx-post="/box/{{.ID}}/addto/box"
+                    hx-target="#place-holder"
+                    hx-push-url="false"
+                    {{ if not (or .Edit .Create) }}disabled{{ end }}
+                >Add to another box</button>
+            {{ else }}
+                <button id="move-btn"
+                    hx-post="/box/{{.ID}}/moveto/box"
+                    hx-target="#place-holder"
+                    hx-push-url="false"
+                    {{ if not (or .Edit .Create) }}disabled{{ end }}
+                >Move to another box</button>
+            {{ end }}
             <br>
 
             <label for="shelf_id">Is inside shelf:</label>
@@ -74,12 +78,21 @@
                 >{{ .ShelfID }}</a>
             {{ end }}
             <input type="text" id="shelf_id" name="shelf_id" value="{{ .ShelfID }}" readonly>
-            <button id="move-btn"
-                hx-post="/box/{{.ID}}/moveto/shelf"
-                hx-target="#place-holder"
-                hx-push-url="false"
-                {{ if not .Edit }}disabled{{ end }}
-            >Move to shelf</button>
+            {{ if .Create }}
+                <button id="move-btn"
+                    hx-post="/box/{{.ID}}/addto/shelf"
+                    hx-target="#place-holder"
+                    hx-push-url="false"
+                    {{ if not (or .Edit .Create) }}disabled{{ end }}
+                >Add to shelf</button>
+            {{ else }}
+                <button id="move-btn"
+                    hx-post="/box/{{.ID}}/moveto/shelf"
+                    hx-target="#place-holder"
+                    hx-push-url="false"
+                    {{ if not (or .Edit .Create) }}disabled{{ end }}
+                >Move to shelf</button>
+            {{ end }}
             <br>
         </div>
 
@@ -112,8 +125,14 @@
 {{ end }}
 
 
-
-{{ if .Edit }}
+{{ if .Create }}
+<button hx-post="/box/create" 
+    >Create box</button>
+<button hx-get="/boxes" 
+    hx-target="body"
+    hx-push-url="true"
+>back</button>
+{{ else if .Edit }}
 <button hx-put="/box" 
         hx-target="#box-{{.ID}}"
         hx-swap="outerHTML"
@@ -129,11 +148,13 @@
 >edit</button>
 {{ end }}
 
+{{ if not .Create }}
 <button hx-delete="/box?id={{.ID}}" 
         hx-swap="outerHTML"
         hx-target="#box-{{.ID}}"
         hx-confirm="Are you sure?"
 >delete</button>
+{{ end }}
 
 </form>
 {{end}}

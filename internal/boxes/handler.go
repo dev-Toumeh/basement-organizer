@@ -1,6 +1,7 @@
 package boxes
 
 import (
+	"basement/main/internal/auth"
 	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
@@ -127,6 +128,66 @@ func deleteBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		return
 	}
 	server.RedirectWithSuccessNotification(w, "/boxes", fmt.Sprintf("%s deleted", id))
+}
+
+// CreateHandler
+//
+//	GET = create new box page
+//	POST = submit new box from create box page
+func CreateHandler(db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			createPage(db).ServeHTTP(w, r)
+			break
+		case http.MethodPost:
+			createBoxFrom(w, r, db)
+			break
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			w.Header().Add("Allowed", http.MethodGet)
+			w.Header().Add("Allowed", http.MethodPost)
+		}
+	}
+}
+
+// createPage renders a page with initial box details to create a new box. No box is created yet in the backend.
+func createPage(db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authenticated, _ := auth.Authenticated(r)
+		user, _ := auth.UserSessionData(r)
+
+		box := NewBox()
+		data := BoxPageTemplateData()
+		data.Box = &box
+
+		data.Title = fmt.Sprintf("Box - %s", box.Label)
+		data.Authenticated = authenticated
+		data.User = user
+		data.Create = true
+
+		dataForTemplate := data.Map()
+
+		dataForTemplate["ListRows"] = templates.SliceToSliceMaps(box.Items)
+
+		server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, dataForTemplate)
+	}
+}
+
+// createBoxFrom creates a box from an existing one.
+func createBoxFrom(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
+	id := server.ValidID(w, r, "can't create new box")
+	if id == uuid.Nil {
+		return
+	}
+	box := boxFromPostFormValue(id, r)
+	logg.Debug("create box: ", box)
+	id, err := db.CreateBox(&box)
+	if err != nil {
+		server.WriteNotFoundError("error while creating the box", err, w, r)
+		return
+	}
+	server.RedirectWithSuccessNotification(w, "/boxes", "Created new box: "+box.Label)
 }
 
 // BoxesHandler handles read and delete for multiple boxes.

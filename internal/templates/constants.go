@@ -13,7 +13,6 @@ const (
 	TEMPLATE_BOXES_LIST_PAGE            string = "boxes-list-page"            // internal/boxes/list-page.html
 	TEMPLATE_BOX_DETAILS                string = "box-details"                // internal/boxes/details-page.html
 	TEMPLATE_BOX_DETAILS_PAGE           string = "box-details-page"           // internal/boxes/details-page.html
-	TEMPLATE_BOX_DETAILS_PAGE_CONTENT   string = "box-details-page-content"   // internal/boxes/details-page.html
 	TEMPLATE_BOX_LIST_ROW               string = "box-list-row"               // internal/boxes/box-list-row.html
 	TEMPLATE_CLOSE_HTML_TAG             string = "close-html-tag"             // internal/routes/page.html
 	TEMPLATE_DEFAULT_STYLE              string = "default-style"              // internal/routes/settings-page.html

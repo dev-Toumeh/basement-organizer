@@ -60,13 +60,15 @@ type ShelfCoordinates struct {
 
 type BoxTemplateData struct {
 	*Box
-	Edit bool
+	Edit   bool
+	Create bool
 }
 
 func (tmpl BoxTemplateData) Map() map[string]any {
 	data := make(map[string]any, 0)
 	maps.Copy(data, tmpl.Box.Map())
 	data["Edit"] = tmpl.Edit
+	data["Create"] = tmpl.Create
 	return data
 }
 

@@ -153,3 +153,12 @@ func ListPageParams(r *http.Request) string {
 	page := "page=" + r.FormValue("return:page")
 	return "?" + query + "&" + limit + "&" + page
 }
+
+func PickerInputElements(iID string, iValue string, aID string, aHref string, aLabel string) string {
+	input := `<input hx-swap-oob="true" type="text" id="` + iID + `_id" name="` + iID + `_id" value="` + iValue + `" readonly>`
+	a := ` <a id="` + aID + `" hx-swap-oob="true" href="` + aHref + `" 
+			class="clickable"
+			hx-boost="true"
+			style="">` + aLabel + `</a>`
+	return input + a
+}
