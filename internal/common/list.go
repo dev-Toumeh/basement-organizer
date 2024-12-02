@@ -146,3 +146,10 @@ func FilledRows(listRowsFunc func(query string, limit int, page int) ([]ListRow,
 	}
 	return boxes, nil
 }
+
+func ListPageParams(r *http.Request) string {
+	query := "query=" + r.FormValue("return:query")
+	limit := "limit=" + r.FormValue("return:limit")
+	page := "page=" + r.FormValue("return:page")
+	return "?" + query + "&" + limit + "&" + page
+}
