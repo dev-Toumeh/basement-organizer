@@ -150,12 +150,12 @@ func BoxMoveConfirm(thing string, db BoxDatabase) http.HandlerFunc {
 }
 
 // BoxesPageMove shows the page where client can choose where to move the selected boxes from the boxes page.
-func BoxesPageMove(db BoxDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		server.MustRender(w, r, "move-to", nil)
-		// server.WriteNotImplementedWarning("Move multiple boxes page", w, r)
-	}
-}
+// func BoxesPageMove(db BoxDatabase) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		server.MustRender(w, r, "move-to", nil)
+// 		// server.WriteNotImplementedWarning("Move multiple boxes page", w, r)
+// 	}
+// }
 
 // MoveBox moves a box to another box. For direct API calls.
 func MoveBox(db BoxDatabase) http.HandlerFunc {
@@ -215,8 +215,8 @@ func MoveBoxesToBoxAPI(db BoxDatabase) http.HandlerFunc {
 	}
 }
 
-// GetMoveBoxesPage handles list form for moving things.
-func GetMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
+// ListPageMove handles list form for moving things.
+func ListPageMove(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Uses POST so client can send long list
 		// of IDs of boxes inside PostForm body
@@ -275,7 +275,7 @@ func GetMoveBoxesPage(db BoxDatabase) http.HandlerFunc {
 
 		listTmpl := common.ListTemplate{
 			FormID:       "list-move",
-			FormHXPost:   "/get-boxes-move-page",
+			FormHXPost:   "/boxes/move",
 			FormHXTarget: "this",
 			RowHXGet:     "/boxes",
 			ShowLimit:    env.Config().ShowTableSize(),

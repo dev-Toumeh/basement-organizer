@@ -109,14 +109,13 @@ func registerBoxRoutes(db *database.DB) {
 	// Boxes templates
 	Handle("/boxes", boxes.ListPage(db))
 	Handle("/boxes/{id}", boxes.DetailsPage(db))
-	Handle("/boxes/move", boxes.BoxesPageMove(db))
+	Handle("/boxes/move", boxes.ListPageMove(db))
 	Handle("/boxes/moveto/box/{id}", boxes.MoveBoxesToBoxHandler(db))
 	Handle("/boxes-list", boxes.BoxesHandler(db))
 
 	// Boxes api
 	Handle("/api/v1/boxes", boxes.BoxesHandler(db))
 	Handle("/api/v1/boxes/moveto/box/{id}", boxes.MoveBoxesToBoxAPI(db))
-	Handle("/get-boxes-move-page", boxes.GetMoveBoxesPage(db))
 }
 
 func shelvesRoutes(db shelves.ShelfDB) {
