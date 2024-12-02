@@ -23,6 +23,7 @@ func BoxPageMove(thing string, db BoxDatabase) http.HandlerFunc {
 
 		switch thing {
 		case "box":
+			data.SetRowHXGet("/box")
 			count, err = db.BoxListCounter("")
 			if err != nil {
 				server.WriteInternalServerError("no box list counter", err, w, r)
@@ -40,6 +41,7 @@ func BoxPageMove(thing string, db BoxDatabase) http.HandlerFunc {
 			data.SetRows(boxes)
 
 		case "shelf":
+			data.SetRowHXGet("/shelves")
 			count, err = db.ShelfListCounter("")
 			if err != nil {
 				server.WriteInternalServerError("no shelf list counter", err, w, r)
