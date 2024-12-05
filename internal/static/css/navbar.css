@@ -60,9 +60,37 @@ nav {
   transition: all color 0.4s;
 }
 
+.nav_link .icon-settings {
+  background-color: #57a6a1;
+  transition: all color 0.4s;
+}
+
 .nav_link:hover {
   color: rgba(255, 255, 255, 1);
 }
+
+.nav_link .icon-settings:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.icon-settings {
+  mask: url("/static/settings_24dp_5F6368_FILL0_wght400_GRAD0_opsz24.svg") no-repeat center;
+  mask-size: cover;
+  background-color: #57a6a1;
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  width: var(--navbar-font-size);
+  height: var(--navbar-font-size);
 }
 
 .hamburger {
