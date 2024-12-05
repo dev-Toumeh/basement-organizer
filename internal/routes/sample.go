@@ -38,12 +38,14 @@ func SamplePage(w http.ResponseWriter, r *http.Request) {
 
 func handleSampleListTemplate(db *database.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		boxes, _ := db.BoxFuzzyFinder("", 10, 1)
+		// rows := []common.ListRow{{ID: database.BOX_VALID_UUID_1, Label: "THING 1"}}
+		boxes, _ := db.BoxFuzzyFinder("", 3, 1)
 		// boxes, _ := db.BoxFuzzyFinder(uuid.FromStringOrNil("17973d34-1942-4a15-bcba-80ddca1b29fc"))
 
 		tmpl := common.ListTemplate{
 			// FormHXGet: "/items",
 			// RowHXGet:  "/api/v1/read/item",
+			FormID:    "my-custom-list-template",
 			RowHXGet:  "/api/v1/box",
 			Rows:      boxes,
 			RowAction: true,
@@ -54,7 +56,7 @@ func handleSampleListTemplate(db *database.DB) http.HandlerFunc {
 				{Key: "id-to-be-moved", Value: "1f73d774-8bd5-4246-940f-ef9abd1c480e"},
 			},
 			// AdditionalDataInputValues: []string{"1f73d774-8bd5-4246-940f-ef9abd1c480e"},
-			RowActionName: "move to",
+			RowActionName: "Create notification with this id",
 			// RowActionHXPost:   "/api/v1/boxes/moveto/box",
 			// RowActionHXPost:   "/api/v1/boxes?query=b",
 			// RowActionHXPost:   "/api/v1/implement-me",
@@ -78,7 +80,7 @@ func handleReturnSelectedInput(db *database.DB) http.HandlerFunc {
 		if r.Method == http.MethodPost {
 			id := r.PathValue("id")
 			hidden := r.PostFormValue("hidden")
-			server.MustRender(w, r, "selected-input", map[string]string{"Name": "select", "Value": id, "Hidden": hidden})
+			server.MustRender(w, r, templates.TEMPLATE_SELECTED_INPUT, map[string]string{"Name": "select", "Value": id, "Hidden": hidden})
 		} else {
 			return
 		}
@@ -91,9 +93,9 @@ func handleReturnSelectedInputAsNotification(db *database.DB) http.HandlerFunc {
 			id := r.PathValue("id")
 			hidden := r.PostFormValue("hidden")
 			s := server.Notifications{}
-			s.Add("id="+id+"\nhidden="+hidden, "", 1000000)
+			s.Add("id="+id+"\nhidden="+hidden, "", 1000)
 			server.TriggerNotifications(w, s)
-			server.MustRender(w, r, "selected-input", map[string]string{"Name": "select", "Value": id, "Hidden": hidden})
+			server.MustRender(w, r, templates.TEMPLATE_SELECTED_INPUT, map[string]string{"Name": "select", "Value": id, "Hidden": hidden})
 		} else {
 			w.Header().Add("Allowed", http.MethodPost)
 			w.WriteHeader(http.StatusMethodNotAllowed)

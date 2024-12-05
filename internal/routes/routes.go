@@ -165,6 +165,9 @@ func experimentalRoutes(db *database.DB) {
 	Handle("/notification-warning", func(w http.ResponseWriter, r *http.Request) {
 		templates.RenderWarningNotification(w, "warning")
 	})
+	Handle("/notification-error", func(w http.ResponseWriter, r *http.Request) {
+		templates.RenderErrorNotification(w, "error")
+	})
 	Handle("/templates/list", handleSampleListTemplate(db))
 	Handle("/samples/return-selected-row-as-input/{id}", handleReturnSelectedInput(db))
 	Handle("/samples/notification/{id}", handleReturnSelectedInputAsNotification(db))

@@ -196,6 +196,10 @@ input[type=submit]:disabled {
   content: "\200b";
 }
 
+.outline {
+    outline: 1px #000 dashed;
+}
+
 :root {
   --lighter: 10%;
   --darker: -10%;

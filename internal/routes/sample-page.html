@@ -4,58 +4,55 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
+    <div class="scrollable-content">
     {{ template "sample-page-body" . }}
+    </div>
 </body>
 {{ template "close-html-tag" . }}
 {{end}}
 
 {{ define "sample-page-body" }}
-<div id="main-container">
+<div>Body Text inside div</div>
+
+<h1>H1 Header</h1>
+<div style="display:flex">
+    <p>Paragraph text</p>
     <div>Body Text inside div</div>
+</div>
+<h2>H2 Header</h2>
+<h3>H3 Header</h3>
+<h4>H4 Header</h4>
+<h5>H5 Header</h5>
+<h6>H6 Header</h6>
 
-    <h1>H1 Header</h1>
-    <div style="display:flex">
-        <p>Paragraph text</p>
-        <div>Body Text inside div</div>
-    </div>
-    <h2>H2 Header</h2>
-    <h3>H3 Header</h3>
-    <h4>H4 Header</h4>
-    <h5>H5 Header</h5>
-    <h6>H6 Header</h6>
+<button hx-get="/notification-success" type="button" hx-swap="none">Backend: RenderSuccessNotification()</button>
+<button hx-get="/notification-warning" type="button" hx-swap="none">Backend: RenderWarningNotification()</button>
+<button hx-get="/notification-error" type="button" hx-swap="none">Backend: RenderErrorNotification()</button>
+<br>
+<button hx-on:click="createAndShowNotification('success', 'success', 1000)">JS: createAndShowNotification()</button>
+<button hx-on:click="createAndShowNotification('warning', 'warning', 1000)">JS: createAndShowNotification()<</button>
+<button hx-on:click="createAndShowNotification('error', 'error', 1000)">JS: createAndShowNotification()<</button>
 
-    <button 
-        hx-get="/notification-success"
-        type="button"
-        hx-swap="none"
-    >success</button>
+<div class="update-placeholder"></div>
 
-    <button 
-        hx-get="/notification-warning"
-        type="button"
-        hx-swap="none"
-    >warning</button>
-    <div class="update-placeholder"></div>
+<hr>
+<button hx-get="/boxes" hx-target="#boxid-list" hx-swap="innerHTML">hx-get="/boxes"</button>
+<div class="outline">IDs:
+    <div id="boxid-list" >hx-get="/boxes" target</div>
+</div>
+<hr>
 
-    <hr>
-    <button hx-get="/boxes" hx-target="#boxid-list" hx-swap="innerHTML">BoxIDs()</button>
-    <div>IDs:
-        <div id="boxid-list" ></div>
-    </div>
-    <hr>
+<h2>Box list</h2>
+<button hx-post="/box" hx-target="#box-list-body" hx-swap="beforeend">Create box</button>
+<button hx-post="/api/v1/box" hx-target="#box-list-body" hx-swap="beforeend">Create box API</button>
+<button hx-get="/box" hx-target="#detailed-box">Get box</button>
+<button hx-get="/templates/list" hx-target="#detailed-box">Get my-custom-list-template</button>
+{{ template "list" . }}
+<div id="detailed-box" ></div>
 
-    <h2>Box list</h2>
-    <button hx-post="/box" hx-target="#box-list-body" hx-swap="beforeend">Create box</button>
-    <button hx-post="/api/v1/box" hx-target="#box-list-body" hx-swap="beforeend">Create box API</button>
-    <button hx-get="/box" hx-target="#detailed-box">Get box</button>
-    <button hx-get="/templates/list" hx-target="#detailed-box">Get list template</button>
-    {{ template "box-list" . }}
-    <div id="detailed-box" ></div>
-
-    <div>
-        mytarget
-        <div id="mytarget"></div>
-    </div>
+<div>
+    mytarget
+    <div id="mytarget"></div>
 </div>
 {{end}}
 
