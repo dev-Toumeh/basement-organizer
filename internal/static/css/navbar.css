@@ -65,6 +65,10 @@ nav {
   transition: all color 0.4s;
 }
 
+.nav_link.dev {
+  color: #c56f0f;
+}
+
 .nav_link:hover {
   color: rgba(255, 255, 255, 1);
 }

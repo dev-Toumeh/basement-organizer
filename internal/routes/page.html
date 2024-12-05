@@ -52,12 +52,16 @@
               <li class="nav_item"><a class="nav_link" href="/boxes">Boxes</a></li>
               <li class="nav_item"><a class="nav_link" href="/shelves">Shelves</a></li>
               <li class="nav_item"><a class="nav_link" href="/areas">Areas</a></li>
+                {{ if .EnvDevelopment }}
+                    <li class="nav_item">
+                        <a class="nav_link dev" href="/sample-page" hx-swap="innerHTML show:html:top" >Samples</a>
+                    </li>
+                {{ end }}
               <li class="nav_item">
                   <a class="nav_link" href="/settings">
                       <span class="icon-settings"></span>
                   </a>
               </li>
-              <li class="nav_item"><a class="nav_link" href="/sample-page" hx-swap="innerHTML show:html:top" >S</a></li>
             {{end}}
         </ul>
     </nav>
