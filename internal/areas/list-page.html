@@ -1,0 +1,28 @@
+{{ define "areas-list-page" }}
+{{ template "open-html-tag" . }} 
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    <div class="scrollable-content">
+    {{ template "areas-list-content" . }}
+    </div>
+</body>
+{{ template "close-html-tag" . }}
+{{end}} 
+
+
+{{ define "areas-list-content"  }}
+<h1>Area list</h1>
+<button hx-post="/area" 
+    hx-target="#list-body"
+    hx-swap="beforeend"
+>Create area (auto)</button>
+<button hx-get="/area/create"
+    hx-swap="outerHTML"
+    hx-push-url="true"
+    hx-target="body"
+>Create area (manual)</button>
+{{ template "list" . }}
+{{ end }}
+

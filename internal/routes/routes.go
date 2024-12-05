@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 
+	"basement/main/internal/areas"
 	"basement/main/internal/auth"
 	"basement/main/internal/boxes"
 	"basement/main/internal/database"
@@ -38,6 +39,7 @@ func RegisterRoutes(db *database.DB) {
 	itemsRoutes2(db)
 	registerBoxRoutes(db)
 	shelvesRoutes(db)
+	areasRoutes(db)
 	navigationRoutes()
 	experimentalRoutes(db)
 }
@@ -135,6 +137,12 @@ func shelvesRoutes(db shelves.ShelfDB) {
 	Handle("/api/v1/delete/shelf", shelves.ShelfHandler(db))
 	Handle("/api/v1/update/shelf", shelves.ShelfHandler(db))
 	Handle("/api/v1/delete/shelves", shelves.DeleteShelves(db))
+}
+
+func areasRoutes(db *database.DB) {
+	Handle("/area", areas.AreaHandler(db))
+	Handle("/area/create", areas.AreaHandler(db))
+	Handle("/areas", areas.AreasHandler(db))
 }
 
 var testStyle = templates.DEBUG_STYLE
