@@ -3,7 +3,9 @@
 {{ template "head" . }}
 <body>
     {{ template "navbar" . }}
+    <div class="scrollable-content">
     {{ template "settings-page-content" . }}
+    </div>
     {{ template "extra-js" .}}
 </body>
 {{ template "close-html-tag" . }}
