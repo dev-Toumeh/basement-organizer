@@ -196,6 +196,10 @@ input[type=submit]:disabled {
   content: "\200b";
 }
 
+.highlight-nav {
+  outline-style: auto;
+}
+
 .outline {
     outline: 1px #000 dashed;
 }

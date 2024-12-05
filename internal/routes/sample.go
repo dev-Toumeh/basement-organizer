@@ -17,6 +17,7 @@ func SamplePage(w http.ResponseWriter, r *http.Request) {
 	user, _ := auth.UserSessionData(r)
 	data := templates.NewPageTemplate()
 	data.Title = "Sample Page"
+	data.RequestOrigin = "Samples"
 	data.Authenticated = authenticated
 	data.User = user
 

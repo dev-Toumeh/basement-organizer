@@ -15,7 +15,8 @@ func SettingsPage(w http.ResponseWriter, r *http.Request) {
 	}
 	username, _ := auth.UserSessionData(r)
 	data := templates.NewPageTemplate()
-	data.Title = "Setting"
+	data.Title = "Settings"
+	data.RequestOrigin = "Settings"
 	data.Authenticated = authenticated
 	data.User = username
 
