@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/areas"
 	"basement/main/internal/boxes"
 	"basement/main/internal/common"
 	"basement/main/internal/items"
@@ -26,6 +27,13 @@ var SHELF_VALID_UUID_3 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3
 var SHELF_VALID_UUID_4 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174004"))
 var SHELF_VALID_UUID_5 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174005"))
 var SHELF_VALID_UUID_6 uuid.UUID = uuid.Must(uuid.FromString("323e4567-e89b-12d3-a456-426614174006"))
+
+var AREA_VALID_UUID_1 uuid.UUID = uuid.Must(uuid.FromString("523e4567-e89b-12d3-a456-426614174001"))
+var AREA_VALID_UUID_2 uuid.UUID = uuid.Must(uuid.FromString("523e4567-e89b-12d3-a456-426614174002"))
+var AREA_VALID_UUID_3 uuid.UUID = uuid.Must(uuid.FromString("523e4567-e89b-12d3-a456-426614174003"))
+var AREA_VALID_UUID_4 uuid.UUID = uuid.Must(uuid.FromString("523e4567-e89b-12d3-a456-426614174004"))
+var AREA_VALID_UUID_5 uuid.UUID = uuid.Must(uuid.FromString("523e4567-e89b-12d3-a456-426614174005"))
+var AREA_VALID_UUID_6 uuid.UUID = uuid.Must(uuid.FromString("523e4567-e89b-12d3-a456-426614174006"))
 
 var ITEM_VALID_UUID uuid.UUID = uuid.Must(uuid.FromString("433e4567-e89b-12d3-a456-426614174000"))
 var VALID_UUID_NOT_EXISTING uuid.UUID = uuid.Must(uuid.FromString("033e4567-e89b-12d3-a456-426614174000"))
@@ -336,6 +344,121 @@ func resetShelves() {
 
 		BasicInfo: common.BasicInfo{
 			ID:    SHELF_VALID_UUID_6,
+			Label: "BBB",
+		},
+	}
+}
+
+var AREA_1 = &areas.Area{
+	BasicInfo: common.BasicInfo{
+		ID:             AREA_VALID_UUID_1,
+		Label:          "Test Area",
+		Description:    "A shelf for testing",
+		Picture:        VALID_BASE64_PNG,
+		PreviewPicture: "",
+		QRCode:         "testqrcode",
+	},
+}
+
+var AREA_2 = &areas.Area{
+	BasicInfo: common.BasicInfo{
+		ID:             AREA_VALID_UUID_2,
+		Label:          "Test Area 2",
+		Description:    "A shelf for testing",
+		Picture:        VALID_BASE64_PNG,
+		PreviewPicture: "",
+		QRCode:         "testqrcode",
+	},
+}
+
+var AREA_3 = &areas.Area{
+	BasicInfo: common.BasicInfo{
+		ID:             AREA_VALID_UUID_3,
+		Label:          "Test Area 3",
+		Description:    "A shelf for testing",
+		Picture:        VALID_BASE64_PNG,
+		PreviewPicture: "",
+		QRCode:         "",
+	},
+}
+
+var AREA_4 = &areas.Area{
+	BasicInfo: common.BasicInfo{
+		ID:    AREA_VALID_UUID_4,
+		Label: "A Area",
+	},
+}
+
+var AREA_5 = &areas.Area{
+	BasicInfo: common.BasicInfo{
+		ID:    AREA_VALID_UUID_5,
+		Label: "AA Area",
+	},
+}
+
+var AREA_6 = &areas.Area{
+	BasicInfo: common.BasicInfo{
+		ID:    AREA_VALID_UUID_6,
+		Label: "BBB",
+	},
+}
+
+func testAreas() []areas.Area {
+	return []areas.Area{*AREA_1, *AREA_2, *AREA_3, *AREA_4, *AREA_5, *AREA_6}
+}
+
+func resetAreas() {
+	AREA_1 = &areas.Area{
+		BasicInfo: common.BasicInfo{
+			ID:             AREA_VALID_UUID_1,
+			Label:          "Test Area",
+			Description:    "An area for testing",
+			Picture:        VALID_BASE64_PNG,
+			PreviewPicture: "",
+			QRCode:         "",
+		},
+	}
+
+	AREA_2 = &areas.Area{
+		BasicInfo: common.BasicInfo{
+			ID:             AREA_VALID_UUID_2,
+			Label:          "Test Area 2",
+			Description:    "An area for testing",
+			Picture:        VALID_BASE64_PNG,
+			PreviewPicture: "",
+			QRCode:         "testqrcode",
+		},
+	}
+
+	AREA_3 = &areas.Area{
+		BasicInfo: common.BasicInfo{
+			ID:             AREA_VALID_UUID_3,
+			Label:          "Test   Area 3",
+			Description:    "An area for testing",
+			Picture:        VALID_BASE64_PNG,
+			PreviewPicture: "",
+			QRCode:         "",
+		},
+	}
+
+	AREA_4 = &areas.Area{
+		BasicInfo: common.BasicInfo{
+			ID:    AREA_VALID_UUID_4,
+			Label: "keyword A",
+		},
+	}
+
+	AREA_5 = &areas.Area{
+		BasicInfo: common.BasicInfo{
+			ID:    AREA_VALID_UUID_5,
+			Label: "keyword Area AA",
+		},
+	}
+
+	AREA_6 = &areas.Area{
+
+		BasicInfo: common.BasicInfo{
+			ID:    AREA_VALID_UUID_6,
 			Label: "BBB",
 		},
 	}

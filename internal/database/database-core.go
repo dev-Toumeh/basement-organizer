@@ -31,6 +31,7 @@ var virtualTables = &map[string]string{
 	"item_fts":  CREATE_ITEM_TABLE_STMT_FTS,
 	"box_fts":   CREATE_BOX_TABLE_STMT_FTS,
 	"shelf_fts": CREATE_SHELF_TABLE_STMT_FTS,
+	"area_fts":  CREATE_AREA_TABLE_STMT_FTS,
 }
 
 var triggers = &map[string]string{
@@ -43,6 +44,9 @@ var triggers = &map[string]string{
 	"shelf_fts_trigger_insert": CREATE_SHELF_INSERT_TRIGGER,
 	"shelf_fts_trigger_update": CREATE_SHELF_UPDATE_TRIGGER,
 	"shelf_fts_trigger_delete": CREATE_SHELF_DELETE_TRIGGER,
+	"area_fts_trigger_insert":  CREATE_AREA_INSERT_TRIGGER,
+	"area_fts_trigger_update":  CREATE_AREA_UPDATE_TRIGGER,
+	"area_fts_trigger_delete":  CREATE_AREA_DELETE_TRIGGER,
 }
 
 type DB struct {
@@ -104,10 +108,11 @@ func (db *DB) createTable(statements map[string]string) {
 	for tableName, createStatement := range statements {
 		row, err := db.Sql.Exec(createStatement)
 		if err != nil {
-			logg.Fatalf("Failed to create table %s: %v", tableName, err)
+			logg.Fatalf("Failed to create table \"%s\"\nSQL statement:\n\"%s\"\n%v", tableName, createStatement, err)
 		}
 		numEffectedRows, err := row.RowsAffected()
 		if err != nil {
+			logg.Debug("SQL statement: " + createStatement)
 			logg.Fatalf("Failed to check the number of effected rows while creating the %s table: %v ", tableName, err)
 		}
 		if numEffectedRows != 0 {

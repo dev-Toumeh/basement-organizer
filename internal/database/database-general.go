@@ -10,7 +10,7 @@ import (
 )
 
 // Exists checks existence of entity (item, box, shelf, area).
-// Returns error if other internal errors happen.
+// Returns error only if other internal errors happen.
 func (db *DB) Exists(entityType string, id uuid.UUID) (bool, error) {
 	err1 := ValidTable(entityType)
 	err2 := ValidVirtualTable(entityType)
@@ -136,6 +136,37 @@ func (db *DB) MoveTo(table string, id uuid.UUID, toTable string, toTableID uuid.
 	return nil
 }
 
+// allListRowsFrom returns all items/boxes/shelves/etc from FTS tables item_fts, box_fts, shelf_fts, area_fts.
+func (db *DB) allListRowsFrom(listRowsTable string) (listRows []common.ListRow, err error) {
+	err = ValidVirtualTable(listRowsTable)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	stmt := " SELECT " + ALL_FTS_COLS + " FROM " + listRowsTable + ";"
+
+	rows, err := db.Sql.Query(stmt)
+	if err != nil {
+		return nil, logg.Errorf("%s %w", stmt, err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var sqlrow SQLListRow
+
+		err = rows.Scan(sqlrow.RowsToScan()...)
+		if err != nil {
+			return nil, logg.WrapErr(err)
+		}
+		lrow, err := sqlrow.ToListRow()
+		if err != nil {
+			return nil, logg.WrapErr(err)
+		}
+		listRows = append(listRows, *lrow)
+	}
+	return listRows, nil
+}
+
 // innerListRowsFrom returns all items/boxes/shelves/etc belonging to another box, shelf or area.
 //
 // Example:
@@ -171,10 +202,7 @@ func (db *DB) innerListRowsFrom(belongsToTable string, belongsToTableID uuid.UUI
 
 	var listRows []*common.ListRow
 
-	stmt := fmt.Sprintf(`
-	SELECT id, label, box_id, box_label, shelf_id, shelf_label, area_id, area_label
-	FROM %s	
-	WHERE %s_id = ?;`, listRowsTable, belongsToTable)
+	stmt := "SELECT " + ALL_FTS_COLS + " FROM " + listRowsTable + "	WHERE " + belongsToTable + "_id = ?;"
 
 	rows, err := db.Sql.Query(stmt, belongsToTableID.String())
 	if err != nil {
@@ -184,9 +212,7 @@ func (db *DB) innerListRowsFrom(belongsToTable string, belongsToTableID uuid.UUI
 	for rows.Next() {
 		var sqlrow SQLListRow
 
-		err = rows.Scan(
-			&sqlrow.ID, &sqlrow.Label, &sqlrow.BoxID, &sqlrow.BoxLabel, &sqlrow.ShelfID, &sqlrow.ShelfLabel, &sqlrow.AreaID, &sqlrow.AreaLabel,
-		)
+		err = rows.Scan(sqlrow.RowsToScan()...)
 		if err != nil {
 			return nil, logg.WrapErr(err)
 		}

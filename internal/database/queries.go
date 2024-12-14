@@ -265,5 +265,41 @@ const (
 		"END;"
 
 	// Area
-	CREATE_AREA_TABLE_STMT = "CREATE TABLE IF NOT EXISTS area (" + ALL_BASIC_INFO_COLS + ");"
+	ALL_AREA_COLS = ALL_BASIC_INFO_COLS
+
+	CREATE_AREA_TABLE_STMT = "CREATE TABLE IF NOT EXISTS area (" + ALL_AREA_COLS + ");"
+
+	CREATE_AREA_TABLE_STMT_FTS = "CREATE VIRTUAL TABLE IF NOT EXISTS area_fts USING fts5(" +
+		CREATE_FTS_BLOCK + "," +
+		"tokenize = 'unicode61'" +
+		");"
+
+	CREATE_AREA_INSERT_TRIGGER = `CREATE TRIGGER IF NOT EXISTS area_ai BEFORE INSERT ON area
+	BEGIN
+	    INSERT INTO area_fts(` +
+		FTS_ID + "," +
+		FTS_LABEL + "," +
+		FTS_DESCRIPTION + "," +
+		FTS_PREVIEW_PICTURE + ")" +
+		`VALUES (` +
+		"	new." + FTS_ID + "," +
+		"	new." + FTS_LABEL + "," +
+		"	new." + FTS_DESCRIPTION + "," +
+		"	new." + FTS_PREVIEW_PICTURE +
+		");" +
+		"END;"
+
+	CREATE_AREA_UPDATE_TRIGGER = `CREATE TRIGGER IF NOT EXISTS area_au BEFORE UPDATE ON area
+	BEGIN
+		UPDATE area_fts SET ` +
+		FTS_LABEL + " = new." + FTS_LABEL + "," +
+		FTS_DESCRIPTION + " = new." + FTS_DESCRIPTION + "," +
+		FTS_PREVIEW_PICTURE + " = new." + FTS_PREVIEW_PICTURE + " " +
+		"WHERE " + BASIC_INFO_ID + "= new." + BASIC_INFO_ID + ";" +
+		"END;"
+
+	CREATE_AREA_DELETE_TRIGGER = "CREATE TRIGGER IF NOT EXISTS area_ad BEFORE DELETE ON area " +
+		"BEGIN " +
+		"	DELETE FROM area_fts WHERE " + FTS_ID + " = old." + FTS_ID + ";" +
+		"END;"
 )

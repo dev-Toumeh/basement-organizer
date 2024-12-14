@@ -1,6 +1,7 @@
 package database
 
 import (
+	"basement/main/internal/areas"
 	"basement/main/internal/boxes"
 	"basement/main/internal/common"
 	"basement/main/internal/items"
@@ -364,6 +365,28 @@ func (db *DB) InsertSampleShelves() {
 		}
 
 		err := db.CreateShelf(newShelf)
+		if err != nil {
+			logg.Errf("error while adding dummyData %v", err)
+			return
+		}
+	}
+	return
+}
+
+func (db *DB) InsertSampleAreas() {
+	gofakeit.Seed(SEED + 3)
+
+	for i := 0; i < 3; i++ {
+		newArea := areas.Area{
+			BasicInfo: common.BasicInfo{
+				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
+				Label:       "area_" + gofakeit.ProductName(),
+				Description: gofakeit.Sentence(5),
+				Picture:     ByteToBase64String(gofakeit.ImagePng((i+1)*10, (10-i)*10)),
+			},
+		}
+
+		_, err := db.CreateArea(newArea)
 		if err != nil {
 			logg.Errf("error while adding dummyData %v", err)
 			return

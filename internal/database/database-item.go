@@ -110,13 +110,14 @@ func (s *SQLItem) ToItem() (*items.Item, error) {
 type SQLListRow struct {
 	ID             sql.NullString
 	Label          sql.NullString
+	Description    sql.NullString
+	PreviewPicture sql.NullString
 	BoxID          sql.NullString
 	BoxLabel       sql.NullString
 	ShelfID        sql.NullString
 	ShelfLabel     sql.NullString
 	AreaID         sql.NullString
 	AreaLabel      sql.NullString
-	PreviewPicture sql.NullString
 }
 
 func (s SQLListRow) ToListRow() (*common.ListRow, error) {
@@ -128,15 +129,22 @@ func (s SQLListRow) ToListRow() (*common.ListRow, error) {
 	return &common.ListRow{
 		ID:             id,
 		Label:          ifNullString(s.Label),
+		Description:    ifNullString(s.Description),
+		PreviewPicture: ifNullString(s.PreviewPicture),
 		BoxID:          ifNullUUID(s.BoxID),
 		BoxLabel:       ifNullString(s.BoxLabel),
 		ShelfID:        ifNullUUID(s.ShelfID),
 		ShelfLabel:     ifNullString(s.ShelfLabel),
 		AreaID:         ifNullUUID(s.AreaID),
 		AreaLabel:      ifNullString(s.AreaLabel),
-		PreviewPicture: ifNullString(s.PreviewPicture),
 	}, nil
 
+}
+
+func (s *SQLListRow) RowsToScan() []any {
+	return []any{
+		&s.ID, &s.Label, &s.Description, &s.PreviewPicture, &s.BoxID, &s.BoxLabel, &s.ShelfID, &s.ShelfLabel, &s.AreaID, &s.AreaLabel,
+	}
 }
 
 // Create New Item Record

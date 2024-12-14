@@ -96,6 +96,7 @@ func (tmpl ListTemplate) Render(w http.ResponseWriter) error {
 type ListRow struct {
 	ID             uuid.UUID
 	Label          string
+	Description    string
 	BoxID          uuid.UUID
 	BoxLabel       string
 	ShelfID        uuid.UUID
@@ -109,6 +110,7 @@ func (row *ListRow) Map() map[string]any {
 	return map[string]interface{}{
 		"ID":             row.ID,
 		"Label":          row.Label,
+		"Description":    row.Description,
 		"BoxID":          row.BoxID,
 		"BoxLabel":       row.BoxLabel,
 		"ShelfID":        row.ShelfID,
