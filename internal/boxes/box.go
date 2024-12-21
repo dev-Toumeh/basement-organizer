@@ -20,7 +20,7 @@ type BoxDatabase interface {
 	UpdateBox(box Box) error
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (Box, error)
-	BoxIDs() ([]string, error) // @TODO: Change string to uuid.UUID
+	BoxIDs() ([]uuid.UUID, error)
 	BoxListRows(searchQuery string, limit int, page int) ([]common.ListRow, error)
 	BoxListRowByID(id uuid.UUID) (common.ListRow, error)
 	BoxListCounter(searchQuery string) (count int, err error)

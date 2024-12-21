@@ -7,7 +7,6 @@ import (
 	"errors"
 	"os"
 
-	"github.com/gofrs/uuid/v5"
 	_ "modernc.org/sqlite"
 )
 
@@ -148,16 +147,16 @@ func (db *DB) insertDummyData() {
 	if err != nil {
 		logg.WrapErr(err)
 	}
-	db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[0]), uuid.FromStringOrNil(boxIDs[0]))
-	db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[1]), uuid.FromStringOrNil(boxIDs[0]))
-	db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[2]), uuid.FromStringOrNil(boxIDs[0]))
-	db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[3]), uuid.FromStringOrNil(boxIDs[1]))
-	db.MoveItemToBox(uuid.FromStringOrNil(itemIDs[4]), uuid.FromStringOrNil(boxIDs[1]))
-	db.MoveItemToShelf(uuid.FromStringOrNil(itemIDs[5]), shelfRows[0].ID)
-	db.MoveItemToShelf(uuid.FromStringOrNil(itemIDs[6]), shelfRows[0].ID)
-	db.MoveBoxToShelf(uuid.FromStringOrNil(boxIDs[0]), shelfRows[1].ID)
-	db.MoveBoxToShelf(uuid.FromStringOrNil(boxIDs[2]), shelfRows[1].ID)
-	db.MoveBoxToBox(uuid.FromStringOrNil(boxIDs[3]), uuid.FromStringOrNil(boxIDs[5]))
-	db.MoveBoxToBox(uuid.FromStringOrNil(boxIDs[3]), uuid.FromStringOrNil(boxIDs[5]))
-	db.MoveBoxToBox(uuid.FromStringOrNil(boxIDs[5]), uuid.FromStringOrNil(boxIDs[6]))
+	db.MoveItemToBox(itemIDs[0], boxIDs[0])
+	db.MoveItemToBox(itemIDs[1], boxIDs[0])
+	db.MoveItemToBox(itemIDs[2], boxIDs[0])
+	db.MoveItemToBox(itemIDs[3], boxIDs[1])
+	db.MoveItemToBox(itemIDs[4], boxIDs[1])
+	db.MoveItemToShelf(itemIDs[5], shelfRows[0].ID)
+	db.MoveItemToShelf(itemIDs[6], shelfRows[0].ID)
+	db.MoveBoxToShelf(boxIDs[0], shelfRows[1].ID)
+	db.MoveBoxToShelf(boxIDs[2], shelfRows[1].ID)
+	db.MoveBoxToBox(boxIDs[3], boxIDs[5])
+	db.MoveBoxToBox(boxIDs[3], boxIDs[5])
+	db.MoveBoxToBox(boxIDs[5], boxIDs[6])
 }

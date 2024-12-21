@@ -255,16 +255,15 @@ func (db *DB) ItemListRowByID(id uuid.UUID) (*common.ListRow, error) {
 }
 
 // return items id's in array from type string
-func (db *DB) ItemIDs() ([]string, error) {
+func (db *DB) ItemIDs() (ids []uuid.UUID, err error) {
 	query := "SELECT id FROM item;"
 	rows, err := db.Sql.Query(query)
 	if err != nil {
 		log.Printf("Error querying item records: %v", err)
-		return []string{}, err
+		return ids, err
 	}
 	defer rows.Close()
 
-	var ids []string
 	for rows.Next() {
 		var idStr string
 		err := rows.Scan(&idStr)
@@ -272,7 +271,7 @@ func (db *DB) ItemIDs() ([]string, error) {
 			log.Printf("Error scanning item record: %v", err)
 			continue
 		}
-		ids = append(ids, idStr)
+		ids = append(ids, uuid.FromStringOrNil(idStr))
 	}
 
 	if err := rows.Err(); err != nil {

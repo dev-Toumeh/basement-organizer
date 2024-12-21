@@ -130,7 +130,7 @@ func TestBoxIDs(t *testing.T) {
 	EmptyTestDatabase()
 	resetTestBoxes()
 
-	expectedIDs := []string{BOX_1.ID.String(), BOX_2.ID.String(), BOX_3.ID.String(), BOX_4.ID.String()}
+	expectedIDs := []uuid.UUID{BOX_1.ID, BOX_2.ID, BOX_3.ID, BOX_4.ID}
 
 	// Insert test boxes into the database
 	for _, testBox := range testBoxes() {

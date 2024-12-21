@@ -46,7 +46,7 @@ func (db *boxDatabaseError) BoxById(id uuid.UUID) (Box, error) {
 	return Box{BasicInfo: common.BasicInfo{ID: uuid.Nil}}, errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) BoxIDs() ([]string, error) {
+func (db *boxDatabaseError) BoxIDs() ([]uuid.UUID, error) {
 	return nil, errors.New("AAAAAAAA")
 }
 
@@ -109,8 +109,8 @@ func (db *boxDatabaseSuccess) BoxById(id uuid.UUID) (Box, error) {
 	return Box{BasicInfo: common.BasicInfo{ID: uuid.Must(uuid.FromString(BOX_ID_VALID))}}, nil
 }
 
-func (db *boxDatabaseSuccess) BoxIDs() ([]string, error) {
-	return []string{"id1", "id2", "id3"}, nil
+func (db *boxDatabaseSuccess) BoxIDs() ([]uuid.UUID, error) {
+	return []uuid.UUID{uuid.FromStringOrNil(BOX_ID_VALID)}, nil
 }
 
 func (db *boxDatabaseSuccess) MoveBoxToBox(id1 uuid.UUID, id2 uuid.UUID) error {

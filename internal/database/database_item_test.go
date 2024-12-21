@@ -120,7 +120,7 @@ func TestItemIDs(t *testing.T) {
 
 	idMap := make(map[string]bool)
 	for _, id := range ids {
-		idMap[id] = true
+		idMap[id.String()] = true
 	}
 	for _, item := range items {
 		assert.Equal(t, true, idMap[item.ID.String()])
