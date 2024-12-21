@@ -124,6 +124,11 @@ input[type="submit"] {
   color: blue;
 }
 
+button.dev,
+input[type="submit"].dev {
+  background-color: var(--dev-item-color);
+}
+
 /**[hx-get]:hover,*/
 /**[hx-post]:hover,*/
 /**[hx-put]:hover,*/
@@ -224,6 +229,8 @@ input[type=submit]:disabled {
   --selected: hsl(var(--selected-hue), var(--base-saturation), var(--selected-lightness));
   --selected-lighter: hsl(var(--selected-hue), var(--base-saturation), calc(var(--selected-lightness) + var(--lighter)));
   --selected-darker: hsl(var(--selected-hue), var(--base-saturation), calc(var(--selected-lightness) + var(--darker)));
+
+  --dev-item-color: #e65c00;
 }
 
 
