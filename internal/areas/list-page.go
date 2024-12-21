@@ -6,6 +6,7 @@ import (
 	"basement/main/internal/env"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
+	"maps"
 	"net/http"
 )
 
@@ -37,6 +38,35 @@ func listPage(db AreaDatabase) http.HandlerFunc {
 		listTmpl.SearchInputLabel = "Search areas"
 		listTmpl.SearchInputValue = searchString
 
-		server.MustRender(w, r, "areas-list-page", data)
+		count, err := db.AreaListCounter(searchString)
+		if err != nil {
+			server.WriteInternalServerError("cant query areas", err, w, r)
+			return
+		}
+
+		// pagination
+		pageNr := common.ParsePageNumber(r)
+		limit := common.ParseLimit(r)
+		data = common.Pagination(data, count, limit, pageNr)
+		listTmpl.Pagination = true
+		listTmpl.CurrentPageNumber = data["PageNumber"].(int)
+		listTmpl.Limit = limit
+		listTmpl.PaginationButtons = data["Pages"].([]common.PaginationButton)
+
+		// box-list-row to fill box-list template
+		var rows []common.ListRow
+
+		// rows found
+		if count > 0 {
+			rows, err = common.FilledRows(db.AreaListRows, searchString, limit, pageNr, count)
+			if err != nil {
+				server.WriteInternalServerError("cant query areas", err, w, r)
+				return
+			}
+		}
+		listTmpl.Rows = rows
+
+		maps.Copy(data, listTmpl.Map())
+		server.MustRender(w, r, templates.TEMPLATE_AREAS_LIST_PAGE, data)
 	}
 }
