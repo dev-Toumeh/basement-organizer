@@ -21,11 +21,11 @@ type BoxDatabase interface {
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (Box, error)
 	BoxIDs() ([]string, error) // @TODO: Change string to uuid.UUID
-	BoxListRows(query string, limit int, page int) ([]common.ListRow, error)
+	BoxListRows(searchQuery string, limit int, page int) ([]common.ListRow, error)
 	BoxListRowByID(id uuid.UUID) (common.ListRow, error)
-	BoxListCounter(searchString string) (count int, err error)
-	ShelfListCounter(queryString string) (count int, err error)
-	ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error)
+	BoxListCounter(searchQuery string) (count int, err error)
+	ShelfListCounter(searchQuery string) (count int, err error)
+	ShelfListRows(searchQuery string, limit int, page int) (shelfRows []common.ListRow, err error)
 }
 
 type Box struct {

@@ -6,7 +6,6 @@ import (
 	"basement/main/internal/shelves"
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -271,57 +270,10 @@ func (db *DB) MoveShelfToArea(shelfID uuid.UUID, toAreaID uuid.UUID) error {
 // ShelfListRows retrieves shelves by label.
 // If the query is empty or contains only spaces, it returns default results.
 func (db *DB) ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error) {
-	if pageNr == 0 {
-		panic("offset starts at 1, can't be 0")
-	}
-
-	offset := (pageNr - 1) * limit
-	query := `
-		SELECT
-			id, label, area_id, area_label, preview_picture
-		FROM shelf_fts
-		ORDER BY label ASC
-		LIMIT ? OFFSET ?;`
-
-	args := []interface{}{limit, offset}
-
-	if strings.TrimSpace(searchString) != "" {
-		query = `
-		SELECT 
-			id, label, area_id, area_label, preview_picture
-		FROM shelf_fts
-		WHERE label MATCH ?
-		ORDER BY label ASC
-		LIMIT ? OFFSET ?;`
-		args = []interface{}{searchString + "*", limit, offset}
-	}
-
-	rows, err := db.Sql.Query(query, args...)
+	shelfRows, err = db.listRowsPaginatedFrom("shelf_fts", searchString, limit, pageNr)
 	if err != nil {
-		return []common.ListRow{}, fmt.Errorf("error while fetching shelves from shelf_fts: %w", err)
+		return shelfRows, logg.WrapErr(err)
 	}
-	defer rows.Close()
-
-	var sqlShelfListRow SQLListRow
-
-	for rows.Next() {
-		err := rows.Scan(
-			&sqlShelfListRow.ID,
-			&sqlShelfListRow.Label,
-			&sqlShelfListRow.AreaID,
-			&sqlShelfListRow.AreaLabel,
-			&sqlShelfListRow.PreviewPicture,
-		)
-		if err != nil {
-			return []common.ListRow{}, fmt.Errorf("error while scanning the Shelf row: %w", err)
-		}
-		shelfRow, err := sqlShelfListRow.ToListRow()
-		if err != nil {
-			return []common.ListRow{}, fmt.Errorf("error while converting to ListRow: %w", err)
-		}
-		shelfRows = append(shelfRows, *shelfRow)
-	}
-
 	return shelfRows, nil
 }
 

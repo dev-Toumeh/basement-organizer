@@ -192,8 +192,8 @@ func (db *DB) insertNewArea(area areas.Area) (uuid.UUID, error) {
 
 // AreaListRows retrieves virtual areas by label.
 // If the query is empty or contains only spaces, it returns default results.
-func (db *DB) AreaListRows(searchString string, limit int, pageN int) (listRows []common.ListRow, err error) {
-	listRows, err = db.allListRowsFrom("area")
+func (db *DB) AreaListRows(searchQuery string, limit int, page int) (listRows []common.ListRow, err error) {
+	listRows, err = db.listRowsPaginatedFrom("area_fts", searchQuery, limit, page)
 	if err != nil {
 		return listRows, logg.WrapErr(err)
 	}
