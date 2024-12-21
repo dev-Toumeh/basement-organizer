@@ -42,7 +42,7 @@ const (
 	TEMPLATE_LIST_TABLE                 string = "list-table"                 // internal/common/list.html
 	TEMPLATE_LOGIN_FORM                 string = "login-form"                 // internal/auth/login.html
 	TEMPLATE_LOGIN_PAGE                 string = "login-page"                 // internal/auth/login.html
-	TEMPLATE_NAVBAR                     string = "navbar"                     // internal/templates/page.html
+	TEMPLATE_NAVBAR                     string = "navbar"                     // internal/common/navbar.html
 	TEMPLATE_NOTIFICATION_CONTAINER     string = "notification-container"     // internal/templates/page.html
 	TEMPLATE_OOB_NOTIFICATION           string = "oob-notification"           // internal/templates/page.html
 	TEMPLATE_OPEN_HTML_TAG              string = "open-html-tag"              // internal/templates/page.html
