@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/go-playground/assert/v2"
+	"github.com/gofrs/uuid/v5"
 )
 
 func TestCreateNewArea(t *testing.T) {
@@ -85,7 +86,7 @@ func TestAreaIDs(t *testing.T) {
 	EmptyTestDatabase()
 	resetAreas()
 
-	expectedIDs := []string{AREA_1.ID.String(), AREA_2.ID.String(), AREA_3.ID.String(), AREA_4.ID.String()}
+	expectedIDs := []uuid.UUID{AREA_1.ID, AREA_2.ID, AREA_3.ID, AREA_4.ID}
 
 	// Insert test boxes into the database
 	for _, testArea := range testAreas() {

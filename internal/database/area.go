@@ -64,8 +64,7 @@ func (db *DB) AreaExists(id uuid.UUID) bool {
 }
 
 // AreaIDs returns IDs of all areas.
-func (db *DB) AreaIDs() ([]string, error) {
-	ids := []string{}
+func (db *DB) AreaIDs() (ids []uuid.UUID, err error) {
 	sqlStatement := `SELECT id FROM area`
 	rows, err := db.Sql.Query(sqlStatement)
 	if err != nil {
@@ -75,9 +74,9 @@ func (db *DB) AreaIDs() ([]string, error) {
 		var idStr string
 		err := rows.Scan(&idStr)
 		if err != nil {
-			return []string{}, logg.Errorf("Error scanning Area ids: %v", err)
+			return ids, logg.Errorf("Error scanning Area ids: %v", err)
 		}
-		ids = append(ids, idStr)
+		ids = append(ids, uuid.FromStringOrNil(idStr))
 	}
 
 	return ids, nil
