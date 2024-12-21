@@ -18,7 +18,10 @@ type SQLBox struct {
 	AreaID     sql.NullString
 }
 
-// RowsToScan returns list of pointers for Scan() method.
+// RowsToScan returns list of pointers for *sql.Rows.Scan() method.
+//
+//	// example usage:
+//	rows.Scan(listRow.RowsToScan()...)
 func (b *SQLBox) RowsToScan() []any {
 	s := append(b.SQLBasicInfo.RowsToScan(), &b.OuterBoxID, &b.ShelfID, &b.AreaID)
 	return s

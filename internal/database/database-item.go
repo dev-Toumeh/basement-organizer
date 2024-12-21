@@ -31,7 +31,10 @@ func (s SQLBasicInfo) Vals() []string {
 	return []string{s.ID.String, s.Label.String, s.Description.String, s.Picture.String, s.PreviewPicture.String, s.QRCode.String}
 }
 
-// RowsToScan returns list of pointers for Scan() method.
+// RowsToScan returns list of pointers for *sql.Rows.Scan() method.
+//
+//	// example usage:
+//	rows.Scan(listRow.RowsToScan()...)
 func (s *SQLBasicInfo) RowsToScan() []any {
 	return []any{&s.ID, &s.Label, &s.Description, &s.Picture, &s.PreviewPicture, &s.QRCode}
 }
@@ -141,6 +144,10 @@ func (s SQLListRow) ToListRow() (*common.ListRow, error) {
 
 }
 
+// RowsToScan returns list of pointers for *sql.Rows.Scan() method.
+//
+//	// example usage:
+//	rows.Scan(listRow.RowsToScan()...)
 func (s *SQLListRow) RowsToScan() []any {
 	return []any{
 		&s.ID, &s.Label, &s.Description, &s.PreviewPicture, &s.BoxID, &s.BoxLabel, &s.ShelfID, &s.ShelfLabel, &s.AreaID, &s.AreaLabel,
