@@ -5,6 +5,7 @@ import (
 	"basement/main/internal/logg"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -164,6 +165,68 @@ func (db *DB) allListRowsFrom(listRowsTable string) (listRows []common.ListRow, 
 		}
 		listRows = append(listRows, *lrow)
 	}
+	return listRows, nil
+}
+
+// listRowsPaginatedFrom Handles paginated retrieval of rows from a virtual table with optional search filtering.
+//
+// listRowsTable must be valid fts table (item_fts, box_fts, shelf_fts, area_fts).
+//
+// Empty searchQuery will return all rows.
+//
+// Panics if page or limit is zero, both must be at least 1.
+func (db *DB) listRowsPaginatedFrom(listRowsTable string, searchQuery string, limit int, page int) (listRows []common.ListRow, err error) {
+	if page == 0 {
+		panic("offset starts at 1, can't be 0")
+	}
+	if limit == 0 {
+		panic("limit starts at 1, can't be 0")
+	}
+
+	err = ValidVirtualTable(listRowsTable)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	offset := (page - 1) * limit
+
+	var stmt string
+	var rows *sql.Rows
+
+	if strings.TrimSpace(searchQuery) != "" {
+		stmt = "" +
+			"SELECT " + ALL_FTS_COLS + " " +
+			"FROM " + listRowsTable + " " +
+			"WHERE label MATCH ?" + " " +
+			"LIMIT ? OFFSET ?;"
+		rows, err = db.Sql.Query(stmt, searchQuery+"*", limit, offset)
+	} else {
+		stmt = "" +
+			"SELECT " + ALL_FTS_COLS + " " +
+			"FROM " + listRowsTable + " " +
+			"LIMIT ? OFFSET ?;"
+		rows, err = db.Sql.Query(stmt, limit, offset)
+	}
+	defer rows.Close()
+
+	if err != nil {
+		return []common.ListRow{}, fmt.Errorf("error while fetching rows from %s: %w", listRowsTable, err)
+	}
+
+	var sqlListRow SQLListRow
+
+	for rows.Next() {
+		err := rows.Scan(sqlListRow.RowsToScan()...)
+		if err != nil {
+			return []common.ListRow{}, fmt.Errorf("error while scanning %s row: %w", listRowsTable, err)
+		}
+		shelfRow, err := sqlListRow.ToListRow()
+		if err != nil {
+			return []common.ListRow{}, fmt.Errorf("error while converting a %s row to ListRow: %w", listRowsTable, err)
+		}
+		listRows = append(listRows, *shelfRow)
+	}
+
 	return listRows, nil
 }
 
