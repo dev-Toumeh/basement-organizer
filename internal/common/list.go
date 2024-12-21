@@ -42,6 +42,8 @@ type ListTemplate struct {
 	RowActionHXTarget                 string // hx-target="{{$RowActionHXTarget}}" in action button
 
 	AdditionalDataInputs []DataInput // Used for query params or POST body values for new requests from this template.
+
+	AlternativeView bool // Displays Alternative View button. (unused currently).
 }
 
 func (tmpl ListTemplate) Map() map[string]any {
@@ -70,6 +72,7 @@ func (tmpl ListTemplate) Map() map[string]any {
 		"RowActionHXTarget":                 tmpl.RowActionHXTarget,
 		"PlaceHolder":                       tmpl.PlaceHolder,
 		"AdditionalDataInputs":              tmpl.AdditionalDataInputs,
+		"AlternativeView":                   tmpl.AlternativeView,
 	}
 }
 

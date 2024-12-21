@@ -34,9 +34,13 @@
         >
         <!--uncomment to enable request from enter key-->
         <!--<input type="submit" name="" value="" hidden>-->
-        <button type="button" hx-get="/api/v1/implement-me">Alternative View</button>
     {{ end }}
     {{ $CurrentPageNumber := .CurrentPageNumber}}
+
+    <!--Currently unused. Placeholder button for future functionality like showing shelf compartments instead of table.-->
+    {{ if .AlternativeView }}
+        <button type="button" hx-get="/api/v1/implement-me">Alternative View</button>
+    {{ end }}
 
     {{ if .Pagination }}
     <div>
