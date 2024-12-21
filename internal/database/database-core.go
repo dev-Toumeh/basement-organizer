@@ -69,7 +69,7 @@ func (db *DB) Connect() {
 
 	// add dummy data
 	if !db.fileExist && env.Development() {
-		db.insirtDummyData()
+		db.insertDummyData()
 	}
 }
 
@@ -132,7 +132,7 @@ func (db *DB) ErrorNotEmpty() error {
 	// return logg.WrapErrWithSkip(ErrNotEmpty, 2)  @TODO (Alex) fix it so we can use it without colors
 }
 
-func (db *DB) insirtDummyData() {
+func (db *DB) insertDummyData() {
 	db.InsertSampleItems()
 	db.InsertSampleBoxes()
 	db.InsertSampleShelves()
