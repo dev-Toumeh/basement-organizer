@@ -135,6 +135,7 @@ func (db *DB) insertDummyData() {
 	db.InsertSampleItems()
 	db.InsertSampleBoxes()
 	db.InsertSampleShelves()
+	db.InsertSampleAreas()
 	itemIDs, err := db.ItemIDs()
 	if err != nil {
 		logg.WrapErr(err)
