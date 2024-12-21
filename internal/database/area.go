@@ -13,7 +13,10 @@ type SQLArea struct {
 	SQLBasicInfo
 }
 
-// RowsToScan returns list of pointers for Scan() method.
+// RowsToScan returns list of pointers for *sql.Rows.Scan() method.
+//
+//	// example usage:
+//	rows.Scan(listRow.RowsToScan()...)
 func (b *SQLArea) RowsToScan() []any {
 	return b.SQLBasicInfo.RowsToScan()
 }
