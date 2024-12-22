@@ -468,3 +468,33 @@ func (db *DB) MoveItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
 	}
 	return nil
 }
+
+// ItemListRows retrieves items by label.
+// If the query is empty or contains only spaces, it returns default results.
+func (db *DB) ItemListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error) {
+	shelfRows, err = db.listRowsPaginatedFrom("item_fts", searchString, limit, pageNr)
+	if err != nil {
+		return shelfRows, logg.WrapErr(err)
+	}
+	return shelfRows, nil
+}
+
+// ShelfCounter returns the count of rows in the shelf_fts table that match
+// the specified queryString.
+// If queryString is empty, it returns the count of all rows in the table.
+func (db *DB) ItemListCounter(queryString string) (count int, err error) {
+	countQuery := `SELECT COUNT(*) FROM item_fts;`
+
+	if queryString != "" {
+		countQuery = fmt.Sprintf(`
+			SELECT COUNT(*)
+			FROM item_fts
+      WHERE label MATCH '%s*' `, queryString)
+	}
+
+	err = db.Sql.QueryRow(countQuery).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("error while fetching the number of Items from the Database: %v", err)
+	}
+	return count, nil
+}

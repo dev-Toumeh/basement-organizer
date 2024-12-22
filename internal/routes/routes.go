@@ -63,7 +63,6 @@ func itemsRoutes(db items.ItemDatabase) {
 		db.InsertSampleItems()
 		templates.RenderSuccessNotification(w, "dummy items has been added")
 	})
-	Handle("/items-pagination", items.ItemPaginationHandler(db))
 
 	Handle("/delete-item", items.DeleteItemHandler(db))
 	Handle("/move-item", moveItem)
@@ -78,7 +77,6 @@ func itemsRoutes(db items.ItemDatabase) {
 	Handle("/api/v1/read/item/{id}", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
 	}))
-	Handle("/api/v1/search/item", items.SearchItemHandler(db))
 	Handle("/api/v1/update/item", items.UpdateItemHandler(db))
 	Handle("/api/v1/move/item", items.MoveItemHandler(db))
 	Handle("/api/v1/delete/item", items.DeleteItemHandler(db))

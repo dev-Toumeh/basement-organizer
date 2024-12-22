@@ -38,9 +38,8 @@ type ItemDatabase interface {
 	MoveItemToBox(itemID uuid.UUID, boxID uuid.UUID) error
 
 	// search functions
-	ItemFuzzyFinder(query string) ([]common.ListRow, error)
-	ItemFuzzyFinderWithPagination(query string, limit, offset int) ([]common.ListRow, error)
-	NumOfItemRecords(searchString string) (int, error)
+	ItemListCounter(queryString string) (count int, err error)
+	ItemListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error)
 }
 
 const (
