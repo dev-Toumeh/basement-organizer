@@ -13,7 +13,10 @@ type SQLArea struct {
 	SQLBasicInfo
 }
 
-// RowsToScan returns list of pointers for Scan() method.
+// RowsToScan returns list of pointers for *sql.Rows.Scan() method.
+//
+//	// example usage:
+//	rows.Scan(listRow.RowsToScan()...)
 func (b *SQLArea) RowsToScan() []any {
 	return b.SQLBasicInfo.RowsToScan()
 }
@@ -61,8 +64,7 @@ func (db *DB) AreaExists(id uuid.UUID) bool {
 }
 
 // AreaIDs returns IDs of all areas.
-func (db *DB) AreaIDs() ([]string, error) {
-	ids := []string{}
+func (db *DB) AreaIDs() (ids []uuid.UUID, err error) {
 	sqlStatement := `SELECT id FROM area`
 	rows, err := db.Sql.Query(sqlStatement)
 	if err != nil {
@@ -72,9 +74,9 @@ func (db *DB) AreaIDs() ([]string, error) {
 		var idStr string
 		err := rows.Scan(&idStr)
 		if err != nil {
-			return []string{}, logg.Errorf("Error scanning Area ids: %v", err)
+			return ids, logg.Errorf("Error scanning Area ids: %v", err)
 		}
-		ids = append(ids, idStr)
+		ids = append(ids, uuid.FromStringOrNil(idStr))
 	}
 
 	return ids, nil
@@ -189,8 +191,8 @@ func (db *DB) insertNewArea(area areas.Area) (uuid.UUID, error) {
 
 // AreaListRows retrieves virtual areas by label.
 // If the query is empty or contains only spaces, it returns default results.
-func (db *DB) AreaListRows(searchString string, limit int, pageN int) (listRows []common.ListRow, err error) {
-	listRows, err = db.allListRowsFrom("area")
+func (db *DB) AreaListRows(searchQuery string, limit int, page int) (listRows []common.ListRow, err error) {
+	listRows, err = db.listRowsPaginatedFrom("area_fts", searchQuery, limit, page)
 	if err != nil {
 		return listRows, logg.WrapErr(err)
 	}

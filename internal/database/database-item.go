@@ -31,7 +31,10 @@ func (s SQLBasicInfo) Vals() []string {
 	return []string{s.ID.String, s.Label.String, s.Description.String, s.Picture.String, s.PreviewPicture.String, s.QRCode.String}
 }
 
-// RowsToScan returns list of pointers for Scan() method.
+// RowsToScan returns list of pointers for *sql.Rows.Scan() method.
+//
+//	// example usage:
+//	rows.Scan(listRow.RowsToScan()...)
 func (s *SQLBasicInfo) RowsToScan() []any {
 	return []any{&s.ID, &s.Label, &s.Description, &s.Picture, &s.PreviewPicture, &s.QRCode}
 }
@@ -141,6 +144,10 @@ func (s SQLListRow) ToListRow() (*common.ListRow, error) {
 
 }
 
+// RowsToScan returns list of pointers for *sql.Rows.Scan() method.
+//
+//	// example usage:
+//	rows.Scan(listRow.RowsToScan()...)
 func (s *SQLListRow) RowsToScan() []any {
 	return []any{
 		&s.ID, &s.Label, &s.Description, &s.PreviewPicture, &s.BoxID, &s.BoxLabel, &s.ShelfID, &s.ShelfLabel, &s.AreaID, &s.AreaLabel,
@@ -248,16 +255,15 @@ func (db *DB) ItemListRowByID(id uuid.UUID) (*common.ListRow, error) {
 }
 
 // return items id's in array from type string
-func (db *DB) ItemIDs() ([]string, error) {
+func (db *DB) ItemIDs() (ids []uuid.UUID, err error) {
 	query := "SELECT id FROM item;"
 	rows, err := db.Sql.Query(query)
 	if err != nil {
 		log.Printf("Error querying item records: %v", err)
-		return []string{}, err
+		return ids, err
 	}
 	defer rows.Close()
 
-	var ids []string
 	for rows.Next() {
 		var idStr string
 		err := rows.Scan(&idStr)
@@ -265,7 +271,7 @@ func (db *DB) ItemIDs() ([]string, error) {
 			log.Printf("Error scanning item record: %v", err)
 			continue
 		}
-		ids = append(ids, idStr)
+		ids = append(ids, uuid.FromStringOrNil(idStr))
 	}
 
 	if err := rows.Err(); err != nil {

@@ -6,9 +6,6 @@ import (
 	"net/http"
 )
 
-type AreaDatabase interface {
-}
-
 func AreaHandler(db AreaDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

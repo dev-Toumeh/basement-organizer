@@ -114,10 +114,24 @@
 
 
 {{ if .EnvDevelopment }}
-<div style="outline:solid;font-size:0.7rem" class="background-diagonal-stripes">
+<button hx-get="/api/v1/box/{{.ID}}"
+    hx-target="next p" 
+    hx-on:click="document.getElementById('box-api-dev-info').style.display=''"
+    class="dev"
+>box API info</button>
+
+<div id="box-api-dev-info" 
+    style="outline:solid;font-size:0.7rem;display:none" 
+    class="background-diagonal-stripes">
+
+    <button type="button"
+        hx-on:click="this.parentElement.style.display='none'"
+        class="dev"
+    >close API info</button>
+
     <div>Development info</div>
     <div>API data: /api/v1/box/{{.ID}}</div>
-    <p hx-trigger="load" hx-get="/api/v1/box/{{.ID}}" style="overflow:scroll"></p>
+    <p style="overflow:scroll"></p>
     <div>preview picture
         <img class="detail" src="data:image/png;base64,{{ .PreviewPicture }}">
     </div>

@@ -6,7 +6,6 @@ import (
 	"basement/main/internal/logg"
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -18,7 +17,10 @@ type SQLBox struct {
 	AreaID     sql.NullString
 }
 
-// RowsToScan returns list of pointers for Scan() method.
+// RowsToScan returns list of pointers for *sql.Rows.Scan() method.
+//
+//	// example usage:
+//	rows.Scan(listRow.RowsToScan()...)
 func (b *SQLBox) RowsToScan() []any {
 	s := append(b.SQLBasicInfo.RowsToScan(), &b.OuterBoxID, &b.ShelfID, &b.AreaID)
 	return s
@@ -76,8 +78,7 @@ func (db *DB) BoxExist(field string, value string) bool {
 }
 
 // BoxIDs returns IDs of all boxes.
-func (db *DB) BoxIDs() ([]string, error) {
-	ids := []string{}
+func (db *DB) BoxIDs() (ids []uuid.UUID, err error) {
 	sqlStatement := `SELECT id FROM BOX`
 	rows, err := db.Sql.Query(sqlStatement)
 	if err != nil {
@@ -87,9 +88,9 @@ func (db *DB) BoxIDs() ([]string, error) {
 		var idStr string
 		err := rows.Scan(&idStr)
 		if err != nil {
-			return []string{}, logg.Errorf("Error scanning Box ids: %v", err)
+			return ids, logg.Errorf("Error scanning Box ids: %v", err)
 		}
-		ids = append(ids, idStr)
+		ids = append(ids, uuid.FromStringOrNil(idStr))
 	}
 
 	return ids, nil
@@ -259,59 +260,12 @@ func (db *DB) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
 
 // BoxListRows retrieves virtual boxes by label.
 // If the query is empty or contains only spaces, it returns default results.
-func (db *DB) BoxListRows(searchString string, limit int, pageN int) (virtualBoxes []common.ListRow, err error) {
-	if pageN == 0 {
-		panic("offset starts at 1, can't be 0")
-	}
-
-	pageN = (pageN - 1) * limit
-	query := `
-		SELECT
-			id, label, box_id, box_label, preview_picture
-		FROM box_fts AS b_fts
-		ORDER BY label ASC
-		LIMIT ? OFFSET ?;`
-
-	args := []interface{}{limit, pageN}
-
-	if strings.TrimSpace(searchString) != "" {
-		query = `
-		SELECT 
-			id, label, box_id, box_label, preview_picture
-		FROM box_fts
-		WHERE label MATCH ?
-		ORDER BY label ASC
-		LIMIT ? OFFSET ?;`
-		args = []interface{}{searchString + "*", limit, pageN}
-	}
-
-	rows, err := db.Sql.Query(query, args...)
+func (db *DB) BoxListRows(searchQuery string, limit int, page int) (listRows []common.ListRow, err error) {
+	listRows, err = db.listRowsPaginatedFrom("box_fts", searchQuery, limit, page)
 	if err != nil {
-		return []common.ListRow{}, logg.Errorf("error while fetching the virtualBox from box_fts: %w", err)
+		return listRows, logg.WrapErr(err)
 	}
-	defer rows.Close()
-
-	var sqlBoxListRow SQLListRow
-
-	for rows.Next() {
-		err := rows.Scan(
-			&sqlBoxListRow.ID,
-			&sqlBoxListRow.Label,
-			&sqlBoxListRow.BoxID,
-			&sqlBoxListRow.BoxLabel,
-			&sqlBoxListRow.PreviewPicture,
-		)
-		if err != nil {
-			return []common.ListRow{}, logg.Errorf("error while assigning the Data to the Virtualbox struct %w", err)
-		}
-		vBox, err := sqlBoxListRow.ToListRow()
-		if err != nil {
-			return []common.ListRow{}, logg.WrapErr(err)
-		}
-		virtualBoxes = append(virtualBoxes, *vBox)
-	}
-
-	return virtualBoxes, nil
+	return listRows, nil
 }
 
 // Get the virtual Box based on his ID

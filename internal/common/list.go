@@ -3,6 +3,7 @@ package common
 import (
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
+	"fmt"
 	"net/http"
 
 	"github.com/gofrs/uuid/v5"
@@ -41,6 +42,8 @@ type ListTemplate struct {
 	RowActionHXTarget                 string // hx-target="{{$RowActionHXTarget}}" in action button
 
 	AdditionalDataInputs []DataInput // Used for query params or POST body values for new requests from this template.
+
+	AlternativeView bool // Displays Alternative View button. (unused currently).
 }
 
 func (tmpl ListTemplate) Map() map[string]any {
@@ -69,6 +72,7 @@ func (tmpl ListTemplate) Map() map[string]any {
 		"RowActionHXTarget":                 tmpl.RowActionHXTarget,
 		"PlaceHolder":                       tmpl.PlaceHolder,
 		"AdditionalDataInputs":              tmpl.AdditionalDataInputs,
+		"AlternativeView":                   tmpl.AlternativeView,
 	}
 }
 
@@ -129,7 +133,7 @@ func (row *ListRow) Map() map[string]any {
 //
 // count - The total number of records found from the search query.
 func FilledRows(listRowsFunc func(query string, limit int, page int) ([]ListRow, error), searchString string, limit int, pageNr int, count int) ([]ListRow, error) {
-	boxes := make([]ListRow, limit)
+	filledRows := make([]ListRow, limit)
 
 	// Fetch the Records from the Database and pack it into map
 	rows, err := listRowsFunc(searchString, limit, pageNr)
@@ -137,16 +141,20 @@ func FilledRows(listRowsFunc func(query string, limit int, page int) ([]ListRow,
 		return nil, logg.WrapErr(err)
 	}
 
+	if len(rows) > limit {
+		return nil, logg.NewError(fmt.Sprintf("found rows (%d) is greater than limit (%d)", len(rows), limit))
+	}
+
 	for i, b := range rows {
-		boxes[i] = b
+		filledRows[i] = b
 	}
 	// Fill up empty rows to keep same table size
 	if count < limit {
 		for i := count; i < limit; i++ {
-			boxes[i] = ListRow{}
+			filledRows[i] = ListRow{}
 		}
 	}
-	return boxes, nil
+	return filledRows, nil
 }
 
 func ListPageParams(r *http.Request) string {

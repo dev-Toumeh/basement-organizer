@@ -27,7 +27,7 @@ type ItemDatabase interface {
 	ItemByField(field string, value string) (Item, error)
 	ItemListRowByID(id uuid.UUID) (*common.ListRow, error)
 	ItemById(id uuid.UUID) (Item, error)
-	ItemIDs() ([]string, error)
+	ItemIDs() ([]uuid.UUID, error)
 	ItemExist(field string, value string) bool
 	Items() ([][]string, error)
 	UpdateItem(ctx context.Context, item Item) error
