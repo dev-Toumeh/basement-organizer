@@ -172,7 +172,7 @@ func BoxPickerConfirm(thing string, pickerType int, db BoxDatabase) http.Handler
 			return
 		}
 		if err2 != nil {
-			server.WriteNotFoundError("can't find "+thing+" "+moveToThingID, err1, w, r)
+			server.WriteNotFoundError("can't find "+thing+" "+moveToThingID, err2, w, r)
 		}
 
 		inputElements := common.PickerInputElements(thing, moveToThingID, otherThingElementID, otherThingHref, otherThingLabel)

@@ -38,8 +38,27 @@
             <label for="qrcode">QRCode:</label>
             <input type="text" id="qrcode" name="qrcode" value="{{ .QRCode }}">
 
-            <label for="box_id">Box Id:</label>
-            <input type="text" name="box_id" value="{{ .BoxID }}">
+            <div id="box-target">
+              <label for="box_id">Put inside of Box:</label></br>
+              {{ if eq .BoxID.String "00000000-0000-0000-0000-000000000000" }}
+                  <span id="outerbox-link">None</span>
+              {{ else }}
+                  <a id="outerbox-link" href="/box/{{.BoxID}}" 
+                      class="clickable"
+                      hx-boost="true"
+                      hidden
+                  >{{ .OuterBox.Label }}</a>
+              {{ end }}
+                <input type="text" id="box_id" name="box_id" value="{{ .BoxID }}" hidden>
+                <button 
+                  hx-post="/box/{{.ID}}/addto/box"
+                  hx-target="#place-holder"
+                  hx-swap="innerHTML"
+                  hx-push-url="false"
+                  type="button"
+                  >Add Box
+                </button>
+            </div>
 
             <div id="shelf-target">
                 <label for="shelf_id">Put inside of Shelf:</label> </br>
@@ -54,8 +73,18 @@
                 </button>
             </div>
 
-            <label for="area_id">Area Id:</label>
-            <input type="text"  name="area_id" value="{{ .AreaID }}">
+            <div id="area-target">
+                <label for="area_id">Put inside of Area:</label> </br>
+                <input type="text" name="area_id" value="empty" disabled>
+                <button 
+                  hx-get="/api/v1/implement-me"
+                  hx-target="#place-holder"
+                  hx-swap="innerHTML"
+                  hx-push-url="false"
+                  type="button"
+                  >Add to Area
+                </button>
+            </div>
         </div>
 
         <div id="image-preview-{{ .ID }}" class="box-detail-picture">
