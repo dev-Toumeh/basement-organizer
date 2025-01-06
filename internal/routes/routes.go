@@ -178,8 +178,6 @@ func areaRoutes(db *database.DB) {
 
 	// Multiple areas
 	Handle("/areas", areas.AreasHandler(db))
-	// Handle("/areas/moveto/{thing}", areas.ListPageMovePicker(db))
-	// Handle("/areas/moveto/{thing}/{id}", areas.ListPageMovePickerConfirm(db))
 
 	// API
 	Handle("/api/v1/area/{id}", areas.AreaHandler(db))
