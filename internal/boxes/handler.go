@@ -77,7 +77,7 @@ func createBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 			return
 		}
 		box.RowHXGet = "/box"
-		server.MustRender(w, r, "list-row", box)
+		server.MustRender(w, r, templates.TEMPLATE_LIST_ROW, box)
 	} else {
 		server.WriteJSON(w, id)
 	}

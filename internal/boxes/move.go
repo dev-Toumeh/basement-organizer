@@ -44,7 +44,7 @@ func BoxPicker(pickerType int, db BoxDatabase) http.HandlerFunc {
 
 			var boxes []common.ListRow
 			if count > 0 {
-				boxes, err = common.FilledRows(db.BoxListRows, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count)
+				boxes, err = common.FilledRows(db.BoxListRows, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count, common.ListRowTemplateOptions{})
 				if err != nil {
 					server.WriteInternalServerError("cant query "+thing+" please comeback later", err, w, r)
 				}
@@ -62,7 +62,7 @@ func BoxPicker(pickerType int, db BoxDatabase) http.HandlerFunc {
 
 			var shelves []common.ListRow
 			if count > 0 {
-				shelves, err = common.FilledRows(db.ShelfListRows, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count)
+				shelves, err = common.FilledRows(db.ShelfListRows, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count, common.ListRowTemplateOptions{})
 				if err != nil {
 					server.WriteInternalServerError("cant query "+thing+" please comeback later", err, w, r)
 				}

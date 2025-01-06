@@ -42,14 +42,25 @@ func handleSampleListTemplate(db *database.DB) http.HandlerFunc {
 		// rows := []common.ListRow{{ID: database.BOX_VALID_UUID_1, Label: "THING 1"}}
 		boxes, _ := db.BoxFuzzyFinder("", 3, 1)
 		// boxes, _ := db.BoxFuzzyFinder(uuid.FromStringOrNil("17973d34-1942-4a15-bcba-80ddca1b29fc"))
+		boxesWithOpts := common.AddRowOptionsToListRows(boxes,
+			common.ListRowTemplateOptions{
+				RowHXGet:      "/api/v1/box",
+				RowAction:     true,
+				RowActionName: "Create notification with this id",
+				// RowActionHXPost:   "/api/v1/boxes/moveto/box",
+				// RowActionHXPost:   "/api/v1/boxes?query=b",
+				// RowActionHXPost:   "/api/v1/implement-me",
+				// RowActionHXPostWithID: "/samples/return-selected-row-as-input",
+				RowActionHXPostWithID: "/samples/notification",
+				// RowActionHXPostWithIDAsQueryParam: "/samples/return-selected-row-as-input",
+				RowActionHXTarget: "#mytarget",
+			})
 
 		tmpl := common.ListTemplate{
 			// FormHXGet: "/items",
 			// RowHXGet:  "/api/v1/read/item",
 			FormID:    "my-custom-list-template",
-			RowHXGet:  "/api/v1/box",
-			Rows:      boxes,
-			RowAction: true,
+			Rows:      boxesWithOpts,
 			ShowLimit: env.Config().ShowTableSize(),
 			// DataInputName:   "id-to-be-moved",
 			AdditionalDataInputs: []common.DataInput{
@@ -57,14 +68,6 @@ func handleSampleListTemplate(db *database.DB) http.HandlerFunc {
 				{Key: "id-to-be-moved", Value: "1f73d774-8bd5-4246-940f-ef9abd1c480e"},
 			},
 			// AdditionalDataInputValues: []string{"1f73d774-8bd5-4246-940f-ef9abd1c480e"},
-			RowActionName: "Create notification with this id",
-			// RowActionHXPost:   "/api/v1/boxes/moveto/box",
-			// RowActionHXPost:   "/api/v1/boxes?query=b",
-			// RowActionHXPost:   "/api/v1/implement-me",
-			// RowActionHXPostWithID: "/samples/return-selected-row-as-input",
-			RowActionHXPostWithID: "/samples/notification",
-			// RowActionHXPostWithIDAsQueryParam: "/samples/return-selected-row-as-input",
-			RowActionHXTarget: "#mytarget",
 		}
 
 		err := tmpl.Render(w)

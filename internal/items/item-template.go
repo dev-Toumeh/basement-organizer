@@ -28,7 +28,6 @@ func PageTemplate(db ItemDatabase) http.HandlerFunc {
 		// list template
 		listTmpl := common.ListTemplate{
 			FormHXGet: "/items",
-			RowHXGet:  "/items",
 			ShowLimit: env.Config().ShowTableSize(),
 		}
 

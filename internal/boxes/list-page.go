@@ -26,10 +26,10 @@ func listPage(db BoxDatabase) http.HandlerFunc {
 
 		// list template
 		listTmpl := common.ListTemplate{
-			FormHXGet:   "/boxes",
-			RowHXGet:    "/box",
-			PlaceHolder: true,
-			ShowLimit:   env.Config().ShowTableSize(),
+			FormHXGet:     "/boxes",
+			PlaceHolder:   true,
+			ShowLimit:     env.Config().ShowTableSize(),
+			RequestOrigin: common.ParseOrigin(r),
 		}
 
 		// search-input template
@@ -58,7 +58,7 @@ func listPage(db BoxDatabase) http.HandlerFunc {
 
 		// Boxes found
 		if count > 0 {
-			boxes, err = common.FilledRows(db.BoxListRows, searchString, limit, pageNr, count)
+			boxes, err = common.FilledRows(db.BoxListRows, searchString, limit, pageNr, count, common.ListRowTemplateOptions{RowHXGet: "/box"})
 			if err != nil {
 				server.WriteInternalServerError("cant query boxes", err, w, r)
 				return

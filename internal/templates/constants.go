@@ -39,6 +39,7 @@ const (
 	TEMPLATE_ITEM_PAGE_TEMPLATE         string = "item-page-template"         // internal/items/items-page2.html
 	TEMPLATE_LIST                       string = "list"                       // internal/common/list.html
 	TEMPLATE_LIST_BUTTONS               string = "list-buttons"               // internal/common/list.html
+	TEMPLATE_LIST_ROW                   string = "list-row"                   // internal/common/list-row.html
 	TEMPLATE_LIST_TABLE                 string = "list-table"                 // internal/common/list.html
 	TEMPLATE_LOGIN_FORM                 string = "login-form"                 // internal/auth/login.html
 	TEMPLATE_LOGIN_PAGE                 string = "login-page"                 // internal/auth/login.html

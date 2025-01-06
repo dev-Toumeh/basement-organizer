@@ -149,6 +149,25 @@ func ParseLimit(r *http.Request) int {
 	return limit
 }
 
+func ParseOrigin(r *http.Request) (origin string) {
+	p := r.URL.Path
+	switch {
+	case strings.Contains(p, "/items"):
+		origin = "Items"
+		break
+	case strings.Contains(p, "/boxes"):
+		origin = "Boxes"
+		break
+	case strings.Contains(p, "/shelves"):
+		origin = "Shelves"
+		break
+	case strings.Contains(p, "/areas"):
+		origin = "Areas"
+		break
+	}
+	return origin
+}
+
 func Pagination2(data Data) Data {
 	count := data.GetCount()
 	limit := data.GetLimit()
