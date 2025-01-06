@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
@@ -148,7 +147,7 @@ func DeleteShelves(db ShelfDB) http.HandlerFunc {
 
 		errMsgForUser := "Can't delete the Shelves please try again later"
 		r.ParseForm()
-		toDelete, err := common.ParseIDsFromFormWithKey(r.Form, "delete")
+		toDelete, err := server.ParseIDsFromFormWithKey(r.Form, "delete")
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, errMsgForUser)
