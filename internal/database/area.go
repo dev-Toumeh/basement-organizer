@@ -119,10 +119,9 @@ func (db *DB) UpdateArea(area areas.Area) error {
 func (db *DB) DeleteArea(areaId uuid.UUID) error {
 	id := areaId.String()
 
-	// check if area is not Empty
 	areaExist := db.AreaExists(areaId)
-	if areaExist {
-		return logg.Errorf(`the area with id="` + id + `" is not empty`)
+	if !areaExist {
+		return logg.Errorf(`the area with id="` + id + `" doesn't exist`)
 	}
 
 	err := db.deleteFrom("area", areaId)

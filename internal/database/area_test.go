@@ -158,7 +158,7 @@ func TestDeleteArea(t *testing.T) {
 	var err error
 
 	err = dbTest.DeleteArea(AREA_1.ID)
-	assert.NotEqual(t, err, nil)
+	assert.Equal(t, err, nil)
 }
 
 func TestAreaListRowByID(t *testing.T) {
