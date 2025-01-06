@@ -1,7 +1,9 @@
 package common
 
 import (
+	"basement/main/internal/env"
 	"basement/main/internal/logg"
+	"basement/main/internal/server"
 	"basement/main/internal/templates"
 	"fmt"
 	"net/http"
@@ -171,4 +173,171 @@ func PickerInputElements(iID string, iValue string, aID string, aHref string, aL
 			hx-boost="true"
 			style="">` + aLabel + `</a>`
 	return input + a
+}
+
+type Database interface {
+	BoxListCounter(searchQuery string) (count int, err error)
+	ShelfListCounter(searchQuery string) (count int, err error)
+	BoxListRows(searchQuery string, limit int, page int) ([]ListRow, error)
+	ShelfListRows(searchQuery string, limit int, page int) (shelfRows []ListRow, err error)
+}
+
+func ListPageMovePicker(db Database) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Uses POST so client can send long list
+		// of IDs of boxes inside PostForm body
+		if r.Method != http.MethodPost {
+			w.Header().Add("Allow", http.MethodPost)
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			fmt.Fprint(w, "Method:'", r.Method, "' not allowed")
+			return
+		}
+
+		moveTo := r.PathValue("thing")
+
+		// Request doesn't come from this move template.
+		isRequestFromMovePage := r.FormValue("move") != ""
+
+		var toMove []uuid.UUID
+		if isRequestFromMovePage { // IDs are stored as "id-to-be-moved":UUID
+			ids := r.PostForm["id-to-be-moved"]
+			toMove = make([]uuid.UUID, len(ids))
+			for i, id := range ids {
+				toMove[i] = uuid.FromStringOrNil(id)
+			}
+		} else { // IDs are stored as "move:UUID"
+			var err error
+			toMove, err = server.ParseIDsFromFormWithKey(r.Form, "move")
+			if err != nil {
+				server.WriteInternalServerError(fmt.Sprintf("can't move boxes %v", toMove), err, w, r)
+				return
+			}
+			if len(toMove) == 0 {
+				server.WriteBadRequestError("No box selected to move", nil, w, r)
+				return
+			}
+		}
+
+		searchString := SearchString(r)
+		pageNr := ParsePageNumber(r)
+		limit := ParseLimit(r)
+
+		additionalData := make([]DataInput, len(toMove))
+		for i, id := range toMove {
+			additionalData[i] = DataInput{Key: "id-to-be-moved", Value: id.String()}
+		}
+		if isRequestFromMovePage {
+			// Store values to return to the original page where the move was requested.
+			additionalData = append(additionalData,
+				DataInput{Key: "return:page", Value: r.FormValue("return:page")},
+				DataInput{Key: "return:limit", Value: r.FormValue("return:limit")},
+				DataInput{Key: "return:query", Value: r.FormValue("return:query")},
+			)
+		} else {
+			additionalData = append(additionalData,
+				DataInput{Key: "return:page", Value: pageNr},
+				DataInput{Key: "return:limit", Value: limit},
+				DataInput{Key: "return:query", Value: searchString},
+			)
+		}
+
+		listTmpl := ListTemplate{
+			FormID:       "list-move",
+			FormHXPost:   "/boxes/moveto/" + moveTo,
+			FormHXTarget: "this",
+			// RowHXGet:     "/boxes",
+			ShowLimit: env.Config().ShowTableSize(),
+
+			RowAction:             true,
+			RowActionName:         "Move here",
+			RowActionHXPostWithID: "/boxes/moveto/" + moveTo,
+			RowActionHXTarget:     "#list-move",
+			AdditionalDataInputs:  additionalData,
+			// I added those extra variables (Naseem)
+			PlaceHolder:   false,
+			RowActionType: "move",
+		}
+		logg.Debug("move to: " + moveTo)
+
+		// search-input template
+		// Clear search when move template is requested the first time.
+		if !isRequestFromMovePage {
+			searchString = ""
+		}
+		listTmpl.SearchInput = true
+		listTmpl.SearchInputLabel = "Search " + moveTo
+		listTmpl.SearchInputValue = searchString
+
+		// pagination
+		listTmpl.Pagination = true
+
+		var page int
+		// Show first page when move template is requested the first time.
+		if isRequestFromMovePage {
+			page = pageNr
+		} else {
+			page = 1
+		}
+		listTmpl.Limit = limit
+
+		var count int
+		var err error
+		switch moveTo {
+		case "box":
+			listTmpl.RowHXGet = "/boxes"
+			count, err = db.BoxListCounter(searchString)
+			break
+
+		case "shelf":
+			listTmpl.RowHXGet = "/shelves"
+			count, err = db.ShelfListCounter(searchString)
+			break
+
+		case "area":
+			server.WriteNotImplementedWarning("area", w, r)
+			return
+		}
+
+		if err != nil {
+			server.WriteInternalServerError("can't query "+moveTo, err, w, r)
+			return
+		}
+
+		// box rows
+		var rows []ListRow
+		// if there are search results
+		if count > 0 {
+			switch moveTo {
+			case "box":
+				rows, err = FilledRows(db.BoxListRows, searchString, limit, page, count)
+				break
+			case "shelf":
+				rows, err = FilledRows(db.ShelfListRows, searchString, limit, page, count)
+				break
+			}
+
+			if err != nil {
+				server.WriteInternalServerError("can't query "+moveTo, err, w, r)
+				return
+			}
+		}
+
+		data := Pagination(map[string]any{}, count, limit, page)
+		listTmpl.PaginationButtons = data["Pages"].([]PaginationButton)
+		listTmpl.Rows = rows
+		err = listTmpl.Render(w)
+		if err != nil {
+			server.WriteInternalServerError("can't render move page", err, w, r)
+			return
+		}
+	}
+}
+
+func ListPageMovePickerConfirm(DBMoveToThing func(thing1 uuid.UUID, thing2 uuid.UUID) error, redirectURL string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var notifications server.Notifications
+		notifications = server.MoveThingToThing(w, r, DBMoveToThing)
+		params := ListPageParams(r)
+		server.RedirectWithNotifications(w, redirectURL+params, notifications)
+	}
 }

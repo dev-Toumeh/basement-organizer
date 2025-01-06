@@ -200,3 +200,30 @@ func DeleteThingsFromList(w http.ResponseWriter, r *http.Request, deleteFunc fun
 	listPageHandler.ServeHTTP(w, r)
 }
 
+func MoveThingToThing(w http.ResponseWriter, r *http.Request, moveFunc func(id1 uuid.UUID, id2 uuid.UUID) error) Notifications {
+	r.ParseForm()
+	moveToBoxID := ValidID(w, r, "can't move things invalid id")
+	if moveToBoxID == uuid.Nil {
+		return Notifications{}
+	}
+
+	parseIDs := r.PostForm["id-to-be-moved"]
+	ids := make([]uuid.UUID, len(parseIDs))
+
+	logg.Debug(len(parseIDs))
+
+	notifications := Notifications{}
+	for i, v := range parseIDs {
+		logg.Debug(v)
+		id := uuid.FromStringOrNil(v)
+		ids[i] = id
+		err := moveFunc(id, moveToBoxID)
+		if err != nil {
+			notifications.AddError("can't move \"" + ids[i].String() + "\" to \"" + moveToBoxID.String() + "\"")
+			logg.Err(err)
+		} else {
+			notifications.AddSuccess("moved \"" + ids[i].String() + "\" to \"" + moveToBoxID.String() + "\"")
+		}
+	}
+	return notifications
+}

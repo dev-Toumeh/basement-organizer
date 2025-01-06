@@ -8,12 +8,15 @@ import (
 	"basement/main/internal/areas"
 	"basement/main/internal/auth"
 	"basement/main/internal/boxes"
+	"basement/main/internal/common"
 	"basement/main/internal/database"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/shelves"
 	"basement/main/internal/templates"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 func Handle(route string, handler http.HandlerFunc) {
@@ -37,7 +40,7 @@ func RegisterRoutes(db *database.DB) {
 	authRoutes(db)
 	itemsRoutes(db)
 	itemsRoutes2(db)
-	registerBoxRoutes(db)
+	boxesRoutes(db)
 	shelvesRoutes(db)
 	areasRoutes(db)
 	navigationRoutes()
@@ -95,33 +98,61 @@ func itemsRoutes2(db items.ItemDatabase) {
 	http.Handle("/api/v1/create/item", items.ItemHandler(db))
 }
 
-func registerBoxRoutes(db *database.DB) {
+func boxesRoutes(db *database.DB) {
 	// Box templates
 	Handle("/box", boxes.BoxHandler(db))
 	Handle("/box/create", boxes.CreateHandler(db))
 	Handle("/box/{id}", boxes.DetailsPage(db))
-	Handle("/box/{id}/addto/box", boxes.BoxPicker("box", boxes.PICKER_TYPE_ADDTO, db))
-	Handle("/box/{id}/addto/box/{value}", boxes.BoxPickerConfirm("box", boxes.PICKER_TYPE_ADDTO, db))
-	Handle("/box/{id}/addto/shelf", boxes.BoxPicker("shelf", boxes.PICKER_TYPE_ADDTO, db))
-	Handle("/box/{id}/addto/shelf/{value}", boxes.BoxPickerConfirm("shelf", boxes.PICKER_TYPE_ADDTO, db))
-	Handle("/box/{id}/moveto/box", boxes.BoxPicker("box", boxes.PICKER_TYPE_MOVE, db))
-	Handle("/box/{id}/moveto/box/{value}", boxes.BoxPickerConfirm("box", boxes.PICKER_TYPE_MOVE, db))
-	Handle("/box/{id}/moveto/shelf", boxes.BoxPicker("shelf", boxes.PICKER_TYPE_MOVE, db))
-	Handle("/box/{id}/moveto/shelf/{value}", boxes.BoxPickerConfirm("shelf", boxes.PICKER_TYPE_MOVE, db))
+	Handle("/box/{id}/addto/{thing}", boxes.BoxPicker(boxes.PICKER_TYPE_ADDTO, db))
+	Handle("/box/{id}/addto/{thing}/{thingid}", boxes.BoxPickerConfirm(boxes.PICKER_TYPE_ADDTO, db))
+	Handle("/box/{id}/moveto/{thing}", boxes.BoxPicker(boxes.PICKER_TYPE_MOVE, db))
+	Handle("/box/{id}/moveto/{thing}/{thingid}", boxes.BoxPickerConfirm(boxes.PICKER_TYPE_MOVE, db))
 
 	// Box api
 	Handle("/api/v1/box", boxes.BoxHandler(db))
 	Handle("/api/v1/box/{id}", boxes.BoxHandler(db))
-	Handle("/api/v1/box/{id}/move/{toid}", boxes.MoveBoxAPI(db))
+	// Moves a box to another box.
+	Handle("/api/v1/box/{id}/move/{toid}", func(w http.ResponseWriter, r *http.Request) {
+		id := uuid.FromStringOrNil(r.PathValue("id"))
+		moveToBoxID := uuid.FromStringOrNil(r.PathValue("toid"))
+		err := db.MoveBoxToBox(id, moveToBoxID)
+		if err != nil {
+			server.WriteBadRequestError("can't move box", err, w, r)
+			logg.Err(err)
+		} else {
+			w.WriteHeader(200)
+		}
+	})
 
 	// Boxes templates
 	Handle("/boxes", boxes.BoxesHandler(db))
-	Handle("/boxes/move", boxes.ListPageMoveToBoxPicker(db))
-	Handle("/boxes/moveto/box/{id}", boxes.ListPageMoveToBoxPickerConfirm(db))
+	Handle("/boxes/moveto/{thing}", common.ListPageMovePicker(db))
+	Handle("/boxes/moveto/box/{id}", func(w http.ResponseWriter, r *http.Request) {
+		common.ListPageMovePickerConfirm(db.MoveBoxToBox, "/boxes").ServeHTTP(w, r)
+	})
+
+	Handle("/boxes/moveto/shelf/{id}", func(w http.ResponseWriter, r *http.Request) {
+		common.ListPageMovePickerConfirm(db.MoveBoxToShelf, "/boxes").ServeHTTP(w, r)
+	})
 
 	// Boxes api
 	Handle("/api/v1/boxes", boxes.BoxesHandler(db))
-	Handle("/api/v1/boxes/moveto/box/{id}", boxes.MoveBoxesToBoxAPI(db))
+	Handle("/api/v1/boxes/moveto/{thing}/{id}", func(w http.ResponseWriter, r *http.Request) {
+		var notifications server.Notifications
+
+		switch r.PathValue("thing") {
+		case "box":
+			notifications = server.MoveThingToThing(w, r, db.MoveBoxToBox)
+			break
+		case "shelf":
+			notifications = server.MoveThingToThing(w, r, db.MoveBoxToShelf)
+			break
+			// case "area":
+			// 	notifications = server.MoveThingToThing(w, r, db.MoveBoxToArea)
+			// 	break
+		}
+		server.TriggerNotifications(w, notifications)
+	})
 }
 
 func shelvesRoutes(db shelves.ShelfDB) {
