@@ -8,6 +8,8 @@ package templates
 const (
 	TEMPLATE_AREAS_LIST_CONTENT         string = "areas-list-content"         // internal/boxes/list-page.html
 	TEMPLATE_AREAS_LIST_PAGE            string = "areas-list-page"            // internal/boxes/list-page.html
+	TEMPLATE_AREA_DETAILS               string = "area-details"               // internal/boxes/details-page.html
+	TEMPLATE_AREA_DETAILS_PAGE          string = "area-details-page"          // internal/boxes/details-page.html
 	TEMPLATE_ATEST_STYLE                string = "atest-style"                // internal/routes/sample-page.html
 	TEMPLATE_AUTH_PAGE                  string = "auth-page"                  // internal/routes/auth-page.html
 	TEMPLATE_AUTH_PAGE_BODY             string = "auth-page-body"             // internal/routes/auth-page.html

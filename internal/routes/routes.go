@@ -42,7 +42,7 @@ func RegisterRoutes(db *database.DB) {
 	itemsRoutes2(db)
 	boxesRoutes(db)
 	shelvesRoutes(db)
-	areasRoutes(db)
+	areaRoutes(db)
 	navigationRoutes()
 	experimentalRoutes(db)
 }
@@ -170,10 +170,21 @@ func shelvesRoutes(db shelves.ShelfDB) {
 	Handle("/api/v1/delete/shelves", shelves.DeleteShelves(db))
 }
 
-func areasRoutes(db *database.DB) {
-	Handle("/area", areas.AreaHandler(db))
-	Handle("/area/create", areas.AreaHandler(db))
+func areaRoutes(db *database.DB) {
+	// Single area
+	Handle("/area/{id}", areas.AreaHandler(db))
+	Handle("/area", areas.CreateHandler(db))
+	Handle("/area/create", areas.CreateHandler(db))
+
+	// Multiple areas
 	Handle("/areas", areas.AreasHandler(db))
+	// Handle("/areas/moveto/{thing}", areas.ListPageMovePicker(db))
+	// Handle("/areas/moveto/{thing}/{id}", areas.ListPageMovePickerConfirm(db))
+
+	// API
+	Handle("/api/v1/area/{id}", areas.AreaHandler(db))
+	Handle("/api/v1/area/create", areas.CreateHandler(db))
+	Handle("/api/v1/areas", areas.AreasHandler(db))
 }
 
 var testStyle = templates.DEBUG_STYLE
