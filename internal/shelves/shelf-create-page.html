@@ -14,13 +14,13 @@
 
 <h1>Add new Shelf</h1>
 <form id="shelf-create"
-    class="box-container"
+    class="container"
     hx-encoding="multipart/form-data"
     hx-post="/api/v1/create/shelf"
     hx-target="body"
     hx-swap="innerHTML">
-    <div class="box-info-container">
-        <div class="box-detail-info">
+    <div class="info-container">
+        <div class="detail-info">
             <input type="hidden" name="id" value="{{ .ID }}">
 
             <label for="label">Label:</label>
@@ -49,7 +49,7 @@
 
         </div>
 
-        <div id="image-preview-{{ .ID }}" class="box-detail-picture">
+        <div id="image-preview-{{ .ID }}" class="detail-picture">
             {{ if .Picture }}
             <label for="picture">Picture:</label>
             <img class="detail" src="data:image/png;base64,{{ .Picture }}" alt="{{ .Label }}">
