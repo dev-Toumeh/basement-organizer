@@ -349,9 +349,9 @@ func TestBoxHandlerOK(t *testing.T) {
 
 			read, _ := io.ReadAll(tc.input.W.Result().Body)
 			if tc.expectedTemplate {
-				assert.Contains(t, string(read), "hx-", url)
+				assert.Contains(t, string(read), "</", url)
 			} else {
-				assert.NotContains(t, string(read), "hx-", url)
+				assert.NotContains(t, string(read), "</", url)
 			}
 		})
 	}

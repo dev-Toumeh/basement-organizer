@@ -169,3 +169,34 @@ func ParseIDsFromFormWithKey(form url.Values, key string) ([]uuid.UUID, error) {
 	// logg.Debugf("clean ids: %v", ids)
 	return ids, nil
 }
+
+func DeleteThingsFromList(w http.ResponseWriter, r *http.Request, deleteFunc func(id uuid.UUID) error, listPageHandler http.Handler) {
+	r.ParseForm()
+
+	parseIDs, _ := ParseIDsFromFormWithKey(r.Form, "delete")
+	r.FormValue("delete")
+
+	logg.Debug(len(parseIDs))
+
+	ids := make([]uuid.UUID, len(parseIDs))
+	notifications := Notifications{}
+	if len(parseIDs) != 0 {
+		for i, v := range parseIDs {
+			logg.Debug("deleting " + v.String())
+			ids[i] = v
+			err := deleteFunc(v)
+			if err != nil {
+				notifications.AddError(`can't delete: "` + v.String() + `"`)
+				logg.Err(err)
+			} else {
+				notifications.AddSuccess(`delete: "` + v.String() + `"`)
+			}
+		}
+	} else {
+		notifications.AddWarning("Nothing selected to delete")
+	}
+
+	TriggerNotifications(w, notifications)
+	listPageHandler.ServeHTTP(w, r)
+}
+

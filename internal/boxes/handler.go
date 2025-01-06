@@ -76,7 +76,8 @@ func createBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 			server.WriteNotFoundError("error while fetching the box based on Id", err, w, r)
 			return
 		}
-		server.MustRender(w, r, templates.TEMPLATE_BOX_LIST_ROW, box.Map())
+		box.RowHXGet = "/box"
+		server.MustRender(w, r, "list-row", box)
 	} else {
 		server.WriteJSON(w, id)
 	}
@@ -224,39 +225,13 @@ func BoxesHandler(db BoxDatabase) http.HandlerFunc {
 }
 
 func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
-	r.ParseForm()
-
-	parseIDs, _ := common.ParseIDsFromFormWithKey(r.Form, "delete")
-	r.FormValue("delete")
-
-	logg.Debug(len(parseIDs))
-
-	ids := make([]uuid.UUID, len(parseIDs))
-	notifications := server.Notifications{}
-	for i, v := range parseIDs {
-		logg.Debug("deleting " + v.String())
-		ids[i] = v
-		err := db.DeleteBox(v)
-		if err != nil {
-			notifications.AddError(`can't delete: "` + v.String() + `"`)
-			logg.Err(err)
-		} else {
-			notifications.AddSuccess(`delete: "` + v.String() + `"`)
-		}
-	}
-
-	server.TriggerNotifications(w, notifications)
-	listPage(db).ServeHTTP(w, r)
+	server.DeleteThingsFromList(w, r, db.DeleteBox, listPage(db))
 }
 
 // boxFromPostFormValue returns items.Box without references to inner boxes, outer box and items.
 func boxFromPostFormValue(id uuid.UUID, r *http.Request) Box {
 	box := Box{}
-	box.ID = id
-	box.Label = r.PostFormValue("label")
-	box.Description = r.PostFormValue("description")
-	box.Picture = common.ParsePicture(r)
-	box.QRCode = r.PostFormValue("qrcode")
+	box.BasicInfo = common.BasicInfoFromPostFormValue(id, r)
 	box.OuterBoxID = uuid.FromStringOrNil(r.PostFormValue("box_id"))
 	box.ShelfID = uuid.FromStringOrNil(r.PostFormValue("shelf_id"))
 	box.AreaID = uuid.FromStringOrNil(r.PostFormValue("area_id"))
