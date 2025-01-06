@@ -337,3 +337,8 @@ function handleMoveItems(event) {
 
     console.log(selectedIds);
 }
+
+function triggerPaginationClickEvent(formID, page) {
+    document.getElementById(formID + '-current-page').value = page;
+    htmx.trigger("#" + formID, "paginationclick");
+}

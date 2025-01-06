@@ -23,7 +23,7 @@
         hx-swap="outerHTML"
         hx-push-url="true"
     {{ end }}
-    hx-trigger="keyup changed delay:500ms from:#{{$FormID}}-search-bar, keyup changed delay:500ms from:#{{$FormID}}-limit, click from:#pagination"
+    hx-trigger="keyup changed delay:500ms from:#{{$FormID}}-search-bar, keyup changed delay:500ms from:#{{$FormID}}-limit, paginationclick"
 >
     {{ if .SearchInput }}
         <label for="{{$FormID}}-search-bar">{{ .SearchInputLabel }}</label>
@@ -55,8 +55,9 @@
             <input id="{{$FormID}}-current-page" type="text" name="page" 
                 value="{{$CurrentPageNumber}}" hidden>
             {{ range $i, $e := .PaginationButtons }}
+                <!--Custom paginationclick event triggers form request-->
                 <button type="button"
-                    hx-on:click="document.getElementById('{{$FormID}}-current-page').value = {{.PageNumber}}"
+                    hx-on:click="triggerPaginationClickEvent('{{$FormID}}','{{.PageNumber}}')"
                     {{if .Selected}}class="selected"{{end}}
                     {{if .Disabled}}disabled{{end}}
                 >{{.PageNumber}}</button>
