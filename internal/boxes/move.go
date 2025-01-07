@@ -44,6 +44,7 @@ func BoxPicker(pickerType int, db BoxDatabase) http.HandlerFunc {
 			post = "/box/" + id.String() + "/moveto/" + thing
 			actionName = "Move here"
 		}
+		rowActionType := "move"
 
 		var err error
 		var count int
@@ -58,14 +59,22 @@ func BoxPicker(pickerType int, db BoxDatabase) http.HandlerFunc {
 			}
 			data.SetCount(count)
 
-			var boxes []common.ListRow
+			var rows []common.ListRow
 			if count > 0 {
-				boxes, err = common.FilledRows(db.BoxListRows, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count, common.ListRowTemplateOptions{})
+				rowOptions := common.ListRowTemplateOptions{
+					RowHXGet:              "/box",
+					RowAction:             true,
+					RowActionType:         rowActionType,
+					RowActionHXTarget:     "#" + thing + "_id",
+					RowActionName:         actionName,
+					RowActionHXPostWithID: post,
+				}
+				rows, err = common.FilledRows(db.BoxListRows, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count, rowOptions)
 				if err != nil {
 					server.WriteInternalServerError("cant query "+thing+" please comeback later", err, w, r)
 				}
 			}
-			data.SetRows(boxes)
+			data.SetRows(rows)
 
 		case "shelf":
 			data.SetRowHXGet("/shelves")
@@ -76,14 +85,22 @@ func BoxPicker(pickerType int, db BoxDatabase) http.HandlerFunc {
 			}
 			data.SetCount(count)
 
-			var shelves []common.ListRow
+			var rows []common.ListRow
 			if count > 0 {
-				shelves, err = common.FilledRows(db.ShelfListRows, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count, common.ListRowTemplateOptions{})
+				rowOptions := common.ListRowTemplateOptions{
+					RowHXGet:              "/shelves",
+					RowAction:             true,
+					RowActionType:         rowActionType,
+					RowActionHXTarget:     "#" + thing + "_id",
+					RowActionName:         actionName,
+					RowActionHXPostWithID: post,
+				}
+				rows, err = common.FilledRows(db.ShelfListRows, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count, rowOptions)
 				if err != nil {
 					server.WriteInternalServerError("cant query "+thing+" please comeback later", err, w, r)
 				}
 			}
-			data.SetRows(shelves)
+			data.SetRows(rows)
 			break
 
 		case "area":
@@ -100,7 +117,7 @@ func BoxPicker(pickerType int, db BoxDatabase) http.HandlerFunc {
 				rowOptions := common.ListRowTemplateOptions{
 					RowHXGet:              "/area",
 					RowAction:             true,
-					RowActionType:         "addto",
+					RowActionType:         rowActionType,
 					RowActionHXTarget:     "#" + thing + "_id",
 					RowActionName:         actionName,
 					RowActionHXPostWithID: post,
@@ -123,16 +140,13 @@ func BoxPicker(pickerType int, db BoxDatabase) http.HandlerFunc {
 
 		data.SetFormHXPost(post)
 		data.SetFormID(thing + "-list")
-		data.SetFormHXTarget("#place-holder")
+		data.SetFormHXTarget("#" + thing + "-list")
 
 		data.SetSearchInput(true)
 		data.SetSearchInputLabel("Search " + thing)
 
 		data.SetRowAction(true)
-		data.SetRowActionType("move")
-		data.SetRowActionHXTarget("#" + thing + "_id")
 		data.SetRowActionName(actionName)
-		data.SetRowActionHXPostWithID(post)
 
 		server.MustRender(w, r, templates.TEMPLATE_LIST, data.TypeMap)
 	}
