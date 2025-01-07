@@ -17,6 +17,7 @@ type BoxDatabase interface {
 	CreateBox(newBox *Box) (uuid.UUID, error)
 	MoveBoxToBox(box1 uuid.UUID, box2 uuid.UUID) error
 	MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error
+	MoveBoxToArea(boxID uuid.UUID, toAreaID uuid.UUID) error
 	UpdateBox(box Box) error
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (Box, error)
@@ -26,6 +27,8 @@ type BoxDatabase interface {
 	BoxListCounter(searchQuery string) (count int, err error)
 	ShelfListCounter(searchQuery string) (count int, err error)
 	ShelfListRows(searchQuery string, limit int, page int) (shelfRows []common.ListRow, err error)
+	AreaListCounter(searchQuery string) (count int, err error)
+	AreaListRows(searchQuery string, limit int, page int) (rows []common.ListRow, err error)
 }
 
 type Box struct {

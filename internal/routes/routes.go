@@ -130,9 +130,11 @@ func boxesRoutes(db *database.DB) {
 	Handle("/boxes/moveto/box/{id}", func(w http.ResponseWriter, r *http.Request) {
 		common.ListPageMovePickerConfirm(db.MoveBoxToBox, "/boxes").ServeHTTP(w, r)
 	})
-
 	Handle("/boxes/moveto/shelf/{id}", func(w http.ResponseWriter, r *http.Request) {
 		common.ListPageMovePickerConfirm(db.MoveBoxToShelf, "/boxes").ServeHTTP(w, r)
+	})
+	Handle("/boxes/moveto/area/{id}", func(w http.ResponseWriter, r *http.Request) {
+		common.ListPageMovePickerConfirm(db.MoveBoxToArea, "/boxes").ServeHTTP(w, r)
 	})
 
 	// Boxes api

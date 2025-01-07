@@ -26,8 +26,24 @@ const (
 //	PICKER_TYPE_MOVE: Current box is already created. Will use execute a move operation.
 func BoxPicker(pickerType int, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		data := common.InitData(r)
 		thing := r.PathValue("thing")
+		errMsgForUser := "Can't move " + thing
+		id := server.ValidID(w, r, errMsgForUser)
+		if id.IsNil() {
+			return
+		}
+
+		var post string
+		var actionName string
+		if pickerType == PICKER_TYPE_ADDTO {
+			post = "/box/" + id.String() + "/addto/" + thing
+			actionName = "Add to"
+		} else if pickerType == PICKER_TYPE_MOVE {
+			post = "/box/" + id.String() + "/moveto/" + thing
+			actionName = "Move here"
+		}
 
 		var err error
 		var count int
@@ -70,6 +86,33 @@ func BoxPicker(pickerType int, db BoxDatabase) http.HandlerFunc {
 			data.SetRows(shelves)
 			break
 
+		case "area":
+			data.SetRowHXGet("/area")
+			count, err = db.AreaListCounter("")
+			if err != nil {
+				server.WriteInternalServerError("no area list counter", err, w, r)
+				return
+			}
+			data.SetCount(count)
+
+			var rows []common.ListRow
+			if count > 0 {
+				rowOptions := common.ListRowTemplateOptions{
+					RowHXGet:              "/area",
+					RowAction:             true,
+					RowActionType:         "addto",
+					RowActionHXTarget:     "#" + thing + "_id",
+					RowActionName:         actionName,
+					RowActionHXPostWithID: post,
+				}
+				rows, err = common.FilledRows(db.AreaListRows, data.GetSearchInputValue(), data.GetLimit(), data.GetPageNumber(), count, rowOptions)
+				if err != nil {
+					server.WriteInternalServerError("cant query "+thing+" please comeback later", err, w, r)
+				}
+			}
+			data.SetRows(rows)
+			break
+
 		default:
 			server.WriteInternalServerError("can't move box to \""+thing+"\"", logg.NewError("can't move box to \""+thing+"\""), w, r)
 			return
@@ -78,21 +121,6 @@ func BoxPicker(pickerType int, db BoxDatabase) http.HandlerFunc {
 		data = common.Pagination2(data)
 		data.SetShowLimit(env.Config().ShowTableSize())
 
-		errMsgForUser := "Can't move " + thing
-		id := server.ValidID(w, r, errMsgForUser)
-		if id.IsNil() {
-			return
-		}
-
-		var post string
-		var actionName string
-		if pickerType == PICKER_TYPE_ADDTO {
-			post = "/box/" + id.String() + "/addto/" + thing
-			actionName = "Add to"
-		} else if pickerType == PICKER_TYPE_MOVE {
-			post = "/box/" + id.String() + "/moveto/" + thing
-			actionName = "Move here"
-		}
 		data.SetFormHXPost(post)
 		data.SetFormID(thing + "-list")
 		data.SetFormHXTarget("#place-holder")
@@ -162,6 +190,16 @@ func BoxPickerConfirm(pickerType int, db BoxDatabase) http.HandlerFunc {
 			}
 			break
 		case "area":
+			if pickerType == PICKER_TYPE_ADDTO {
+				err1 = nil
+			} else if pickerType == PICKER_TYPE_MOVE {
+				err1 = db.MoveBoxToArea(boxID, uuid.FromStringOrNil(moveToThingID))
+			}
+			if err1 == nil {
+				otherThingLabel = moveToThingID
+				otherThingElementID = "area-link"
+				otherThingHref = "/area/" + moveToThingID
+			}
 			break
 		default:
 			server.WriteInternalServerError("can't move box to \""+thing+"\"", logg.NewError("can't move box to \""+thing+"\""), w, r)

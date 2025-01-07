@@ -258,6 +258,18 @@ func (db *DB) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
 	return nil
 }
 
+// MoveBoxToShelf moves box to a shelf.
+// To move box out of a shelf set
+//
+//	toShelfID = uuid.Nil
+func (db *DB) MoveBoxToArea(boxID uuid.UUID, toAreaID uuid.UUID) error {
+	err := db.MoveTo("box", boxID, "area", toAreaID)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	return nil
+}
+
 // BoxListRows retrieves virtual boxes by label.
 // If the query is empty or contains only spaces, it returns default results.
 func (db *DB) BoxListRows(searchQuery string, limit int, page int) (listRows []common.ListRow, err error) {

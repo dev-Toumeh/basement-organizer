@@ -147,8 +147,10 @@ func PickerInputElements(iID string, iValue string, aID string, aHref string, aL
 type Database interface {
 	BoxListCounter(searchQuery string) (count int, err error)
 	ShelfListCounter(searchQuery string) (count int, err error)
+	AreaListCounter(searchQuery string) (count int, err error)
 	BoxListRows(searchQuery string, limit int, page int) ([]ListRow, error)
 	ShelfListRows(searchQuery string, limit int, page int) (shelfRows []ListRow, err error)
+	AreaListRows(searchQuery string, limit int, page int) (areaRows []ListRow, err error)
 }
 
 func ListPageMovePicker(db Database) http.HandlerFunc {
@@ -264,8 +266,9 @@ func ListPageMovePicker(db Database) http.HandlerFunc {
 			break
 
 		case "area":
-			server.WriteNotImplementedWarning("area", w, r)
-			return
+			rowHXGet = "/areas"
+			count, err = db.AreaListCounter(searchString)
+			break
 		}
 
 		if err != nil {
@@ -291,6 +294,9 @@ func ListPageMovePicker(db Database) http.HandlerFunc {
 				break
 			case "shelf":
 				rows, err = FilledRows(db.ShelfListRows, searchString, limit, page, count, rowOptions)
+				break
+			case "area":
+				rows, err = FilledRows(db.AreaListRows, searchString, limit, page, count, rowOptions)
 				break
 			}
 

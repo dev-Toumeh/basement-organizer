@@ -96,6 +96,34 @@
                 >Move to shelf</button>
             {{ end }}
             <br>
+
+            <label for="area_id">Is inside area:</label>
+            {{ if eq .AreaID.String "00000000-0000-0000-0000-000000000000" }}
+                <span id="area-link">None</span>
+            {{ else }}
+                <a id="area-link" href="/area/{{.AreaID}}" 
+                    class="clickable"
+                    hx-boost="true"
+                >{{ .AreaID }}</a>
+            {{ end }}
+            <input type="text" id="area_id" name="area_id" value="{{ .AreaID }}" readonly>
+            {{ if .Create }}
+                <button id="move-btn"
+                    hx-post="/box/{{.ID}}/addto/area"
+                    hx-target="#place-holder"
+                    hx-push-url="false"
+                    {{ if not (or .Edit .Create) }}disabled{{ end }}
+                >Add to area</button>
+            {{ else }}
+                <button id="move-btn"
+                    hx-post="/box/{{.ID}}/moveto/area"
+                    hx-target="#place-holder"
+                    hx-push-url="false"
+                    {{ if not (or .Edit .Create) }}disabled{{ end }}
+                >Move to area</button>
+            {{ end }}
+            <br>
+
         </div>
 
         <div id="image-preview-{{ .ID }}" class="detail-picture">
