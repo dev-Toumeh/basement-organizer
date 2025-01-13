@@ -66,7 +66,7 @@ func (db *boxDatabaseError) ErrorExist() error {
 	return errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) UpdateBox(box Box) error {
+func (db *boxDatabaseError) UpdateBox(box Box, updatePicture bool) error {
 	return errors.New("AAAAA")
 }
 
@@ -137,7 +137,7 @@ func (db *boxDatabaseSuccess) ErrorExist() error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) UpdateBox(box Box) error {
+func (db *boxDatabaseSuccess) UpdateBox(box Box, updatePicture bool) error {
 	return nil
 }
 

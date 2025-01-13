@@ -2,6 +2,7 @@ package areas
 
 import (
 	"basement/main/internal/common"
+	"basement/main/internal/server"
 	"basement/main/internal/templates"
 	"net/http"
 
@@ -10,7 +11,7 @@ import (
 
 type AreaDatabase interface {
 	CreateArea(newArea Area) (uuid.UUID, error)
-	UpdateArea(area Area) error
+	UpdateArea(area Area, ignorePicture bool) error
 	DeleteArea(id uuid.UUID) error
 	AreaById(id uuid.UUID) (Area, error)
 	AreaIDs() ([]uuid.UUID, error)
@@ -46,8 +47,8 @@ func NewAreaDetailsPageData() (data AreaDetailsPageData) {
 	return data
 }
 
-func areaFromPostFormValue(id uuid.UUID, r *http.Request) Area {
-	area := Area{}
-	area.BasicInfo = common.BasicInfoFromPostFormValue(id, r)
-	return area
+func areaFromPostFormValue(id uuid.UUID, r *http.Request) (area Area, ignorePicture bool) {
+	ignorePicture = server.ParseIgnorePicture(r)
+	area.BasicInfo = common.BasicInfoFromPostFormValue(id, r, ignorePicture)
+	return area, ignorePicture
 }

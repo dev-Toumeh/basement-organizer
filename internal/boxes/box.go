@@ -2,6 +2,7 @@ package boxes
 
 import (
 	"basement/main/internal/common"
+	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
@@ -18,7 +19,7 @@ type BoxDatabase interface {
 	MoveBoxToBox(box1 uuid.UUID, box2 uuid.UUID) error
 	MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error
 	MoveBoxToArea(boxID uuid.UUID, toAreaID uuid.UUID) error
-	UpdateBox(box Box) error
+	UpdateBox(box Box, ignorePicture bool) error
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (Box, error)
 	BoxIDs() ([]uuid.UUID, error)
@@ -151,9 +152,15 @@ func (b *Box) MarshalJSON() ([]byte, error) {
 func (b Box) String() string {
 	// @TODO: Shorteing picture to now blow up logs with base64 encoding.
 	// A little dirty but is ok for now.
-	shortenPicture := true
+	var shortenPicture bool
+	if env.Development() {
+		shortenPicture = true
+	} else {
+		shortenPicture = false
+	}
 	if shortenPicture {
 		b.Picture = shortenPictureForLogs(b.Picture)
+		b.PreviewPicture = shortenPictureForLogs(b.PreviewPicture)
 		if b.OuterBox != nil {
 			b.OuterBox.PreviewPicture = shortenPictureForLogs(b.OuterBox.PreviewPicture)
 		}

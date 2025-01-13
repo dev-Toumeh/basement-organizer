@@ -73,8 +73,8 @@ func updateArea(w http.ResponseWriter, r *http.Request, db AreaDatabase) {
 		return
 	}
 
-	area := areaFromPostFormValue(id, r)
-	err := db.UpdateArea(area)
+	area, ignorePicture := areaFromPostFormValue(id, r)
+	err := db.UpdateArea(area, ignorePicture)
 	if err != nil {
 		server.WriteNotFoundError(errMsgForUser, err, w, r)
 		return
@@ -159,7 +159,7 @@ func createPage(db AreaDatabase) http.HandlerFunc {
 
 // createAreaWithID creates an area from an existing one.
 func createAreaWithID(w http.ResponseWriter, r *http.Request, db AreaDatabase, id uuid.UUID) {
-	area := areaFromPostFormValue(id, r)
+	area, _ := areaFromPostFormValue(id, r)
 	logg.Debug("create area: ", area)
 	id, err := db.CreateArea(area)
 	if err != nil {

@@ -126,20 +126,8 @@
 
         </div>
 
-        <div id="image-preview-{{ .ID }}" class="detail-picture">
-            {{ if .Picture }}
-            <label for="picture">Picture:</label>
-            <img class="detail" src="data:image/png;base64,{{ .Picture }}" alt="{{ .Label }}">
-            {{ else }}
-            <p>No image available</p>
-            {{ end }}
-
-            {{ if .Edit }}
-            <input type="file" id="picture-{{ .ID }}" name="picture" accept="image/*" >
-            {{ else }}
-            <input type="file" id="picture-{{ .ID }}" name="picture" accept="image/*" disabled>
-            {{ end }}
-        </div>
+        {{ $imagePreview := map "ID" .ID "Label" .Label "Edit" .Edit "Create" .Create "Picture" .Picture }}
+        {{ template "details-image-preview" $imagePreview.Map }}
     </div>  
 
 

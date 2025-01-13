@@ -1,6 +1,7 @@
 package common
 
 import (
+	"basement/main/internal/logg"
 	"fmt"
 	"net/http"
 	"time"
@@ -43,12 +44,16 @@ func (b BasicInfo) MakeLabelWithTime(label string) BasicInfo {
 	return b
 }
 
-func BasicInfoFromPostFormValue(id uuid.UUID, r *http.Request) BasicInfo {
+func BasicInfoFromPostFormValue(id uuid.UUID, r *http.Request, ignorePicture bool) BasicInfo {
 	info := BasicInfo{}
 	info.ID = id
 	info.Label = r.PostFormValue("label")
 	info.Description = r.PostFormValue("description")
-	info.Picture = ParsePicture(r)
+	logg.Debugf("ignorePicture=%v", ignorePicture)
+	if !ignorePicture {
+		info.Picture = ParsePicture(r)
+	}
+
 	info.QRCode = r.PostFormValue("qrcode")
 	return info
 }

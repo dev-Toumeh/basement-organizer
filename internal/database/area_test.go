@@ -126,7 +126,7 @@ func TestUpdateArea(t *testing.T) {
 	assert.NotEqual(t, oldDescr, testArea.Description)
 	assert.NotEqual(t, oldLabel, testArea.Label)
 
-	err = dbTest.UpdateArea(*testArea)
+	err = dbTest.UpdateArea(*testArea, false)
 	assert.Equal(t, err, nil)
 
 	// Retrieve the updated area from the database

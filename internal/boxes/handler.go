@@ -90,8 +90,10 @@ func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		return
 	}
 
-	box := boxFromPostFormValue(id, r)
-	err := db.UpdateBox(box)
+	var err error
+	box, ignorePicture := boxFromPostFormValue(id, r)
+	err = db.UpdateBox(box, ignorePicture)
+
 	if err != nil {
 		server.WriteNotFoundError(errMsgForUser, err, w, r)
 		return
@@ -181,7 +183,7 @@ func createBoxFrom(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	if id == uuid.Nil {
 		return
 	}
-	box := boxFromPostFormValue(id, r)
+	box, _ := boxFromPostFormValue(id, r)
 	logg.Debug("create box: ", box)
 	id, err := db.CreateBox(&box)
 	if err != nil {
@@ -229,13 +231,13 @@ func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 }
 
 // boxFromPostFormValue returns items.Box without references to inner boxes, outer box and items.
-func boxFromPostFormValue(id uuid.UUID, r *http.Request) Box {
-	box := Box{}
-	box.BasicInfo = common.BasicInfoFromPostFormValue(id, r)
+func boxFromPostFormValue(id uuid.UUID, r *http.Request) (box Box, ignorePicture bool) {
+	ignorePicture = server.ParseIgnorePicture(r)
+	box.BasicInfo = common.BasicInfoFromPostFormValue(id, r, ignorePicture)
 	box.OuterBoxID = uuid.FromStringOrNil(r.PostFormValue("box_id"))
 	box.ShelfID = uuid.FromStringOrNil(r.PostFormValue("shelf_id"))
 	box.AreaID = uuid.FromStringOrNil(r.PostFormValue("area_id"))
-	return box
+	return box, ignorePicture
 }
 
 func renderBoxTemplate(box *Box, w http.ResponseWriter, r *http.Request) {

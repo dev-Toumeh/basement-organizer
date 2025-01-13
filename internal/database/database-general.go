@@ -137,6 +137,28 @@ func (db *DB) MoveTo(table string, id uuid.UUID, toTable string, toTableID uuid.
 	return nil
 }
 
+// listRowByID returns item/box/shelf/area from FTS tables item_fts, box_fts, shelf_fts, area_fts.
+func (db *DB) listRowByID(listRowsTable string, id uuid.UUID) (row common.ListRow, err error) {
+	err = ValidVirtualTable(listRowsTable)
+	if err != nil {
+		return row, logg.WrapErr(err)
+	}
+
+	stmt := "" +
+		"SELECT " + ALL_FTS_COLS + " " +
+		"FROM " + listRowsTable + " " +
+		"WHERE id = ?"
+	qrow := db.Sql.QueryRow(stmt, id.String())
+
+	sqlListRow := SQLListRow{}
+	err = qrow.Scan(sqlListRow.RowsToScan()...)
+	if err != nil {
+		return row, fmt.Errorf("error while scanning %s row: %w", listRowsTable, err)
+	}
+	r, err := sqlListRow.ToListRow()
+	return *r, err
+}
+
 // allListRowsFrom returns all items/boxes/shelves/etc from FTS tables item_fts, box_fts, shelf_fts, area_fts.
 func (db *DB) allListRowsFrom(listRowsTable string) (listRows []common.ListRow, err error) {
 	err = ValidVirtualTable(listRowsTable)
