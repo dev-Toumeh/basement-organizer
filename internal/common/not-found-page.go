@@ -14,7 +14,7 @@ func Handle404NotFoundPage(w http.ResponseWriter, r *http.Request) {
 	// Render full page
 	if server.WantsTemplateData(r) && r.Referer() == "" {
 		w.WriteHeader(http.StatusNotFound)
-		logg.Infof("%s: %s", msg, logg.NewError("page does not exist"))
+		logg.Infof("%s: %s", msg, logg.NewError(msg))
 
 		tmpl := templates.NewPageTemplate()
 		tmpl.Title = "Page not found"
@@ -23,7 +23,7 @@ func Handle404NotFoundPage(w http.ResponseWriter, r *http.Request) {
 		tmpl.PageText = msg
 		templates.Render(w, templates.TEMPLATE_NOT_FOUND_PAGE, tmpl)
 	} else {
-		server.WriteNotFoundError(msg, logg.NewError("page does not exist"), w, r)
+		server.WriteNotFoundError(msg, logg.NewError(msg), w, r)
 	}
 	return
 }
