@@ -127,3 +127,10 @@ func CheckEditMode(r *http.Request) bool {
 
 	return false
 }
+
+func ShortenPictureForLogs(picture string) string {
+	if len(picture) < 4 {
+		return ""
+	}
+	return picture[0:3] + "...(shortened)"
+}

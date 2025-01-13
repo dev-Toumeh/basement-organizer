@@ -116,7 +116,7 @@ func FilledRows(listRowsFunc func(query string, limit int, page int) ([]ListRow,
 		filledRows[i].ListRowTemplateOptions = listRowOptions
 	}
 
-	logg.Debugf("filled rows: %v", filledRows[0])
+	logg.Debugf("filled rows[0]: %v", filledRows[0])
 
 	// Fill up empty rows to keep same table size
 	if count < limit {

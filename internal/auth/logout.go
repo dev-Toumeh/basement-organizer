@@ -3,7 +3,6 @@ package auth
 import (
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
-	"basement/main/internal/templates"
 	"fmt"
 	"net/http"
 )
@@ -13,8 +12,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	authenticated, ok := session.Values["authenticated"].(bool)
 	if !ok || !authenticated {
 		logg.Debugf("LogloutHandler - ok: %v authenticated: %v", ok, authenticated)
-		w.WriteHeader(http.StatusBadRequest)
-		templates.RenderErrorNotification(w, "logout failed")
+		server.WriteBadRequestError("logout failed", logg.NewError("logout failed"), w, r)
 		return
 	}
 	session.Values["authenticated"] = false
@@ -22,7 +20,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	logg.Info("LogoutHandler logged out")
 
 	username, _ := UserSessionData(r)
-	server.RedirectWithSuccessNotification(w, "/", fmt.Sprintf("Good bye %s", username))
+	server.RedirectWithSuccessNotification(w, "/login", fmt.Sprintf("Good bye %s", username))
 
 	w.WriteHeader(http.StatusNoContent)
 	fmt.Fprint(w, "logged out")

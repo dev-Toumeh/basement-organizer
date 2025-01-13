@@ -69,7 +69,7 @@ func updateUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 		return
 	}
 
-	server.RedirectWithSuccessNotification(w, "/", fmt.Sprintf("the user %s was updated successfully", newUser.Username))
+	server.RedirectWithSuccessNotification(w, "/settings", fmt.Sprintf("the user %s was updated successfully", newUser.Username))
 	logg.Debugf("User %s updated successfully:", newUser.Username)
 	return
 }

@@ -4,7 +4,9 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
-    {{ template "page-content" . }}
+    <div class="scrollable-content">
+        {{ template "page-content" . }}
+    </div>
 </body>
 {{ template "close-html-tag" . }}
 {{end}} 
@@ -44,9 +46,7 @@
 {{ end }}
 
 {{ define "page-content"  }}
-<div id="main-container">
-    {{ template "notification-container" . }}
-</div>
+    {{ .PageText }}
 {{end}}
 
 {{ define "oob-notification" }} 

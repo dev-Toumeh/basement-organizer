@@ -1,6 +1,10 @@
 package common
 
 import (
+	"basement/main/internal/env"
+	"basement/main/internal/logg"
+	"encoding/json"
+	"fmt"
 	"maps"
 
 	"github.com/gofrs/uuid/v5"
@@ -37,6 +41,20 @@ func (row *ListRow) Map() map[string]any {
 	}
 	maps.Copy(row.ListRowTemplateOptions.Map(), m)
 	return m
+}
+
+func (row ListRow) String() string {
+	if env.Development() {
+		row.PreviewPicture = ShortenPictureForLogs(row.PreviewPicture)
+	}
+
+	data, err := json.Marshal(row)
+	if err != nil {
+		logg.Err("Can't JSON box to string:", err)
+		return ""
+	}
+	s := fmt.Sprintf("%s", data)
+	return s
 }
 
 func AddRowOptionsToListRows(rows []ListRow, opts ListRowTemplateOptions) []ListRow {

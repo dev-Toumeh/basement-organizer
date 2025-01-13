@@ -37,14 +37,26 @@ func Handle(route string, handler http.HandlerFunc) {
 
 func RegisterRoutes(db *database.DB) {
 	staticRoutes()
+	navigationRoutes()
 	authRoutes(db)
 	itemsRoutes(db)
 	itemsRoutes2(db)
 	boxesRoutes(db)
 	shelvesRoutes(db)
 	areaRoutes(db)
-	navigationRoutes()
 	experimentalRoutes(db)
+}
+
+func staticRoutes() {
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
+	Handle("/", common.Handle404NotFoundPage)
+	Handle("/auth", AuthPage)
+}
+
+func navigationRoutes() {
+	Handle("/settings", SettingsPage)
+	Handle("/sample-page", SamplePage)
+	Handle("/personal-page", PersonalPage)
 }
 
 func authRoutes(db auth.AuthDatabase) {
@@ -149,6 +161,7 @@ func boxesRoutes(db *database.DB) {
 		case "shelf":
 			notifications = server.MoveThingToThing(w, r, db.MoveBoxToShelf)
 			break
+			//  @TODO
 			// case "area":
 			// 	notifications = server.MoveThingToThing(w, r, db.MoveBoxToArea)
 			// 	break
@@ -187,26 +200,6 @@ func areaRoutes(db *database.DB) {
 	Handle("/api/v1/areas", areas.AreasHandler(db))
 }
 
-var testStyle = templates.DEBUG_STYLE
-
-func SwitchDebugStyle(w http.ResponseWriter, r *http.Request) {
-	if testStyle {
-		templates.InitTemplates("")
-		templates.RedefineFromOtherTemplateDefinition("style", templates.InternalTemplate(), "style-debug", templates.InternalTemplate())
-		templates.Render(w, templates.TEMPLATE_STYLE, nil)
-	} else {
-		templates.InitTemplates("")
-		templates.RedefineTemplateDefinition(templates.InternalTemplate(), "style", "<style></style>")
-		templates.Render(w, templates.TEMPLATE_STYLE, nil)
-	}
-	testStyle = !testStyle
-}
-
-func staticRoutes() {
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
-	Handle("/", AuthPage)
-}
-
 func experimentalRoutes(db *database.DB) {
 	Handle("/switch-debug-style", SwitchDebugStyle)
 	Handle("/notification-success", func(w http.ResponseWriter, r *http.Request) {
@@ -223,9 +216,17 @@ func experimentalRoutes(db *database.DB) {
 	Handle("/samples/notification/{id}", handleReturnSelectedInputAsNotification(db))
 }
 
-func navigationRoutes() {
+var testStyle = templates.DEBUG_STYLE
 
-	Handle("/settings", SettingsPage)
-	Handle("/sample-page", SamplePage)
-	Handle("/personal-page", PersonalPage)
+func SwitchDebugStyle(w http.ResponseWriter, r *http.Request) {
+	if testStyle {
+		templates.InitTemplates("")
+		templates.RedefineFromOtherTemplateDefinition("style", templates.InternalTemplate(), "style-debug", templates.InternalTemplate())
+		templates.Render(w, templates.TEMPLATE_STYLE, nil)
+	} else {
+		templates.InitTemplates("")
+		templates.RedefineTemplateDefinition(templates.InternalTemplate(), "style", "<style></style>")
+		templates.Render(w, templates.TEMPLATE_STYLE, nil)
+	}
+	testStyle = !testStyle
 }

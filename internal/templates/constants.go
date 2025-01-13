@@ -20,6 +20,7 @@ const (
 	TEMPLATE_BOX_LIST_ROW               string = "box-list-row"               // internal/boxes/box-list-row.html
 	TEMPLATE_CLOSE_HTML_TAG             string = "close-html-tag"             // internal/templates/page.html
 	TEMPLATE_DEFAULT_STYLE              string = "default-style"              // internal/templates/page.html
+	TEMPLATE_DETAILS_IMAGE_PREVIEW      string = "details-image-preview"      // internal/common/details-image-preview.html
 	TEMPLATE_EMPTY_LIST                 string = "empty-list"                 // internal/boxes/details-page.html
 	TEMPLATE_EXTRA_JS                   string = "extra-js"                   // internal/routes/settings-page.html
 	TEMPLATE_HEAD                       string = "head"                       // internal/templates/page.html
@@ -47,6 +48,7 @@ const (
 	TEMPLATE_LOGIN_PAGE                 string = "login-page"                 // internal/auth/login.html
 	TEMPLATE_NAVBAR                     string = "navbar"                     // internal/common/navbar.html
 	TEMPLATE_NOTIFICATION_CONTAINER     string = "notification-container"     // internal/templates/page.html
+	TEMPLATE_NOT_FOUND_PAGE             string = "not-found-page"             // internal/common/not-found-page.html
 	TEMPLATE_OOB_NOTIFICATION           string = "oob-notification"           // internal/templates/page.html
 	TEMPLATE_OPEN_HTML_TAG              string = "open-html-tag"              // internal/templates/page.html
 	TEMPLATE_PAGE                       string = "page"                       // internal/templates/page.html

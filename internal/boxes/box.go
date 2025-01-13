@@ -159,16 +159,16 @@ func (b Box) String() string {
 		shortenPicture = false
 	}
 	if shortenPicture {
-		b.Picture = shortenPictureForLogs(b.Picture)
-		b.PreviewPicture = shortenPictureForLogs(b.PreviewPicture)
+		b.Picture = common.ShortenPictureForLogs(b.Picture)
+		b.PreviewPicture = common.ShortenPictureForLogs(b.PreviewPicture)
 		if b.OuterBox != nil {
-			b.OuterBox.PreviewPicture = shortenPictureForLogs(b.OuterBox.PreviewPicture)
+			b.OuterBox.PreviewPicture = common.ShortenPictureForLogs(b.OuterBox.PreviewPicture)
 		}
 		for i := range b.InnerBoxes {
-			b.InnerBoxes[i].PreviewPicture = shortenPictureForLogs(b.InnerBoxes[i].PreviewPicture)
+			b.InnerBoxes[i].PreviewPicture = common.ShortenPictureForLogs(b.InnerBoxes[i].PreviewPicture)
 		}
 		for i := range b.Items {
-			b.Items[i].PreviewPicture = shortenPictureForLogs(b.Items[i].PreviewPicture)
+			b.Items[i].PreviewPicture = common.ShortenPictureForLogs(b.Items[i].PreviewPicture)
 		}
 	}
 
@@ -179,11 +179,4 @@ func (b Box) String() string {
 	}
 	s := fmt.Sprintf("%s", data)
 	return s
-}
-
-func shortenPictureForLogs(picture string) string {
-	if len(picture) < 4 {
-		return ""
-	}
-	return picture[0:3] + "...(shortened)"
 }
