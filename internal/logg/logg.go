@@ -18,17 +18,19 @@ const (
 	Reset  = "\033[0m"
 	Red    = "\033[38;5;9m"
 	Green  = "\033[38;5;10m"
-	Yellow = "\033[38;5;11m"
+	Yellow = "\033[38;5;226m"
 	blue   = "\033[38;5;117m"
+	Gray   = "\033[38;5;245m"
 	bggrey = "\033[48;5;243m"
 	bgred  = "\033[48;5;217m"
 )
 
 var logger = log.New(os.Stdout, "", log.Ltime|log.Lshortfile)
-var errorLogger = log.New(os.Stderr, Red+"ERROR:\t"+blue, log.Ltime|log.Lshortfile)
-var fatalLogger = log.New(os.Stderr, Red+"FATAL:\t"+blue, log.Ltime|log.Lshortfile)
-var debugLogger = log.New(os.Stdout, Green+"DEBUG:\t"+blue, log.Ltime|log.Lshortfile)
-var infoLogger = log.New(os.Stderr, Yellow+"INFO:\t"+blue, log.Ltime|log.Lshortfile)
+var errorLogger = log.New(os.Stderr, Red+"ERROR:\t"+Gray, log.Ltime|log.Lshortfile)
+var fatalLogger = log.New(os.Stderr, Red+"FATAL:\t"+Gray, log.Ltime|log.Lshortfile)
+var debugLogger = log.New(os.Stdout, Green+"DEBUG:\t"+Gray, log.Ltime|log.Lshortfile)
+var infoLogger = log.New(os.Stderr, blue+"INFO:\t"+Gray, log.Ltime|log.Lshortfile)
+var warningLogger = log.New(os.Stdout, Yellow+"WARNING:\t"+Yellow, log.Ltime|log.Lshortfile)
 
 var debugLoggerEnabled = false
 var infoLoggerEnabled = false
@@ -57,6 +59,31 @@ func Info(v ...any) {
 		return
 	}
 	Alog(infoLogger, 3, "%s", v...)
+}
+
+// Warning is for logs like "there is an Error that need to be fixed but not a crucial one".
+func Warning(v ...any) {
+	Alog(warningLogger, 3, "%s", v...)
+}
+
+// Warningf is for logs like "there is an Error that needs to be fixed but is not a crucial one".
+func Warningf(format string, v ...any) {
+	// Check if the last argument is an error
+	var err error
+	if len(v) > 0 {
+		if e, ok := v[len(v)-1].(error); ok {
+			err = e
+			v = v[:len(v)-1] // Remove the error from arguments
+		}
+	}
+
+	// Log the formatted message
+	Alog(warningLogger, 3, format, v...)
+
+	// Log the error at the end if present
+	if err != nil {
+		Alog(warningLogger, 3, "Error: %s", err.Error())
+	}
 }
 
 // Infof is for logs like "server started".
