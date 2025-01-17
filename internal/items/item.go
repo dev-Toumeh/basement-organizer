@@ -10,11 +10,14 @@ import (
 
 type Item struct {
 	common.BasicInfo
-	Quantity int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
-	Weight   string    `json:"weight"      validate:"omitempty,numeric"`
-	BoxID    uuid.UUID `json:"box_id"`
-	ShelfID  uuid.UUID `json:"shelf_id"`
-	AreaID   uuid.UUID `json:"area_id"`
+	Quantity   int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
+	Weight     string    `json:"weight"      validate:"omitempty,numeric"`
+	BoxID      uuid.UUID `json:"box_id"`
+	BoxLabel   string    `json:"box_label"`
+	ShelfID    uuid.UUID `json:"shelf_id"`
+	ShelfLabel string    `json:"shelf_label"`
+	AreaID     uuid.UUID `json:"area_id"`
+	AreaLabel  string    `json:"area_label"`
 }
 
 func (i Item) String() string {
@@ -26,7 +29,7 @@ type ItemDatabase interface {
 	CreateNewItem(newItem Item) error
 	ItemByField(field string, value string) (Item, error)
 	ItemListRowByID(id uuid.UUID) (*common.ListRow, error)
-	ItemById(id uuid.UUID) (Item, error)
+	ItemById(id uuid.UUID) (*Item, error)
 	ItemIDs() ([]uuid.UUID, error)
 	ItemExist(field string, value string) bool
 	Items() ([][]string, error)
@@ -68,9 +71,12 @@ func (s *Item) Map() map[string]interface{} {
 		"Description":    s.Description,
 		"Picture":        s.Picture,
 		"PreviewPicture": s.PreviewPicture,
-		"BoxID":          uuid.Nil,
-		"ShelfID":        uuid.Nil,
-		"AreaID":         uuid.Nil,
+		"BoxID":          s.BoxID,
+		"BoxLabel":       s.BoxLabel,
+		"ShelfID":        s.ShelfID,
+		"ShelfLabel":     s.ShelfLabel,
+		"AreaID":         s.AreaID,
+		"AreaLabel":      s.AreaLabel,
 	}
 
 	return shelfMap

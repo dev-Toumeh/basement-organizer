@@ -102,10 +102,13 @@ func itemsRoutes(db items.ItemDatabase) {
 
 func itemsRoutes2(db items.ItemDatabase) {
 	Handle("/items", items.PageTemplate(db))
+	Handle("/items/{id}", items.DetailsTemplate(db))
 	Handle("/items/create", items.CreateTemplate())
 
 	// API's
 	http.Handle("/api/v1/create/item", items.ItemHandler(db))
+	http.Handle("/api/v1/delete/item/{id}", items.ItemHandler(db))
+	http.Handle("/api/v1/update/item/{id}", items.ItemHandler(db))
 }
 
 func boxesRoutes(db *database.DB) {

@@ -43,5 +43,3 @@ func (tmpl *SearchInputTemplate) Map() map[string]any {
 		"SearchInputValue":    tmpl.SearchInputValue,
 	}
 }
-
-// update the item based on ID

@@ -209,8 +209,9 @@ func (db *DB) ItemExist(field string, value string) bool {
 }
 
 // Item returns new Item struct if id matches.
-func (db *DB) ItemById(id uuid.UUID) (items.Item, error) {
-	return db.ItemByField("id", id.String())
+func (db *DB) ItemById(id uuid.UUID) (*items.Item, error) {
+	item, error := db.ItemByField("id", id.String())
+	return &item, error
 }
 
 // ListItemById returns a single item with less information suitable for a list row.
@@ -219,8 +220,8 @@ func (db *DB) ItemListRowByID(id uuid.UUID) (*common.ListRow, error) {
 		SELECT 
             i.id, i.label, i.preview_picture,
             b.id, b.label,
-			s.id, s.label,
-			a.id, a.label
+            s.id, s.label,
+            a.id, a.label
         FROM 
             item AS i
         LEFT JOIN 
@@ -374,6 +375,7 @@ func (db *DB) Items() ([][]string, error) {
 	return itemsArray, nil
 }
 
+// @TO_DELETE
 // this is dynamic function but not ready
 // am not really convinced from repeating the process every time i want to retrieve the data,
 func (db *DB) ItemExperement(query string, refs []interface{}) {
@@ -498,3 +500,12 @@ func (db *DB) ItemListCounter(queryString string) (count int, err error) {
 	}
 	return count, nil
 }
+
+//
+// func (db *DB) ItemExtraInfo(id uuid.UUID) (shelfRows []common.ListRow, err error) {
+//
+//   stmt := "" + "SELECT " + ALL_FTS_COLS + " " + "FROM item_fts WHERE id = " + id + " ;"
+//   rows, err := db.Sql.Query(stmt)
+//   item := SQLListRow{}
+// 	defer rows.Close()
+// }

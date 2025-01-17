@@ -2,9 +2,12 @@ package common
 
 import (
 	"basement/main/internal/auth"
+	"basement/main/internal/logg"
 	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 // Data structure definition
@@ -28,6 +31,20 @@ func InitData(r *http.Request) (data Data) {
 	data.SetSearchInputValue(SearchString(r))
 	data.SetLimit(ParseLimit(r))
 
+	user, _ := auth.UserSessionData(r)
+	authenticated, _ := auth.Authenticated(r)
+	data.SetUser(user)
+	data.SetAuthenticated(authenticated)
+
+	return data
+}
+
+// init main Data for non Paginated Templates
+func InitData2(r *http.Request) (data *Data) {
+	data = &Data{
+		TypeMap: make(map[string]any),
+	}
+	data.SetEdit(CheckEditMode(r))
 	user, _ := auth.UserSessionData(r)
 	authenticated, _ := auth.Authenticated(r)
 	data.SetUser(user)
@@ -62,11 +79,11 @@ func (data *Data) SetUser(value string) {
 	data.TypeMap["User"] = value
 }
 
-func (data *Data) GetUser() (string, error) {
+func (data *Data) GetUser() string {
 	if val, exists := data.TypeMap["User"]; exists {
-		return val.(string), nil
+		return val.(string)
 	}
-	return "", errors.New("key 'User' does not exist")
+	return ""
 }
 
 func (data *Data) SetDebug(value bool) {
@@ -448,4 +465,113 @@ func (data *Data) GetOriginRequest() string {
 		return val.(string)
 	}
 	return ""
+}
+
+// assigns a map[string]interface{} to the “Item” key
+func (data *Data) SetItem(value map[string]interface{}) {
+	data.TypeMap["Item"] = value
+}
+
+// retrieves Item value for the template
+func (data *Data) GetItem() map[string]interface{} {
+	if raw, exists := data.TypeMap["Item"]; exists {
+		if val, ok := raw.(map[string]interface{}); ok {
+			return val
+		}
+	}
+	return nil
+}
+
+// Set the Edit state
+func (data *Data) SetEdit(value bool) {
+	data.TypeMap["Edit"] = value
+}
+
+// Get the Edit state
+func (data *Data) GetEdit() bool {
+	if raw, exists := data.TypeMap["Edit"]; exists {
+		if val, ok := raw.(bool); ok {
+			return val
+		}
+	}
+	return false
+}
+
+// Get the Edit state
+func (data *Data) GetTypeMap() map[string]interface{} {
+	return data.TypeMap
+}
+
+// check if the Box is available while previewing the Item
+func (data *Data) IsBoxAvailable() bool {
+	item := data.GetItem()
+	if item == nil {
+		logg.Infof("Item is not set. Please set an Item before checking if the Box is available.")
+		return false
+	}
+
+	boxID, exists := item["BoxID"]
+	if !exists {
+		logg.Infof("BoxID key is missing in the Item.")
+		return false
+	}
+
+	if uuidValue, ok := boxID.(uuid.UUID); ok {
+		if uuidValue == uuid.Nil {
+			logg.Infof("BoxID is uuid.Nil.")
+			return false
+		}
+		return true
+	}
+
+	// If BoxID is a string, parse it as a UUID
+	if boxIDStr, ok := boxID.(string); ok {
+		parsedUUID, err := uuid.FromString(boxIDStr)
+		if err != nil || parsedUUID == uuid.Nil {
+			logg.Infof("BoxID is either invalid or uuid.Nil.")
+			return false
+		}
+		return true
+	}
+
+	// If BoxID is of an unexpected type
+	logg.Infof("BoxID is of an unsupported type.")
+	return false
+}
+
+// check if the Shelf is available while previewing the Item
+func (data *Data) IsShelfAvailable() bool {
+	item := data.GetItem()
+	if item == nil {
+		logg.Warning("Item is not set. Please set an Item before checking if the Shelf is available.")
+		return false
+	}
+
+	ShelfID, exists := item["ShelfID"]
+	if !exists {
+		logg.Warning("BoxID key is missing in the Item.")
+		return false
+	}
+
+	if uuidValue, ok := ShelfID.(uuid.UUID); ok {
+		if uuidValue == uuid.Nil {
+			logg.Warning("ShelfID is uuid.Nil.")
+			return false
+		}
+		return true
+	}
+
+	// If ShelfID is a string, parse it as a UUID
+	if shelfIDStr, ok := ShelfID.(string); ok {
+		parsedUUID, err := uuid.FromString(shelfIDStr)
+		if err != nil || parsedUUID == uuid.Nil {
+			logg.Warning("ShelfID is either invalid or uuid.Nil.")
+			return false
+		}
+		return true
+	}
+
+	// If ShelfID is of an unexpected type
+	logg.Warning("ShelfID is of an unsupported type.")
+	return false
 }

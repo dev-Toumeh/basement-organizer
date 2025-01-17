@@ -9,6 +9,9 @@ import (
 	"basement/main/internal/templates"
 	"maps"
 	"net/http"
+
+	"github.com/gofrs/uuid/v5"
+	// "github.com/gofrs/uuid/v5"
 )
 
 // Render shelf Root page where you can search the available Shelves
@@ -70,26 +73,6 @@ func getTemplateData(r *http.Request, db ItemDatabase, w http.ResponseWriter) co
 	return data
 }
 
-// Render Shelf Details Template where you can preview the shelf and update the relevant Data
-func DetailsTemplate(db ItemDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		errMsgForUser := "the requested item doesn't exist"
-
-		data := common.InitData(r)
-		id := server.ValidID(w, r, errMsgForUser)
-		if id.IsNil() {
-			return
-		}
-
-		// item, err := db.ItemById(id)
-		// if err != nil {
-		// 	server.TriggerErrorNotification(w, errMsgForUser)
-		// }
-
-		templates.Render(w, "shelf-details-page", data)
-	}
-}
-
 // filledItemRows returns ListRows of Items with empty entries filled up to match limit.
 // count - The total number of records found from the search query.
 func filledItemRows(db ItemDatabase, data common.Data) ([]common.ListRow, error) {
@@ -109,4 +92,46 @@ func filledItemRows(db ItemDatabase, data common.Data) ([]common.ListRow, error)
 		itemsMaps[i] = common.ListRow{}
 	}
 	return itemsMaps, nil
+}
+
+func DetailsTemplate(db ItemDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		errMsgForUser := "the requested Shelf doesn't exist"
+
+		data := common.InitData2(r)
+		id := server.ValidID(w, r, errMsgForUser)
+		if id.IsNil() {
+			return
+		}
+		item, err := db.ItemById(id)
+		if err != nil {
+			server.WriteInternalServerError("can't query items please comeback later", err, w, r)
+		}
+
+		if item.BoxID != uuid.Nil || item.AreaID != uuid.Nil || item.ShelfID != uuid.Nil {
+			item_fts, err := db.ItemListRowByID(item.ID)
+			if err != nil {
+				logg.Warningf("An Error accrue while fetching item Extra Info", err)
+			}
+			if item_fts.BoxLabel != "" {
+				item.BoxLabel = item_fts.BoxLabel
+			}
+			if item_fts.ShelfLabel != "" {
+				item.ShelfLabel = item_fts.ShelfLabel
+			}
+			if item_fts.AreaLabel != "" {
+				item.AreaLabel = item_fts.AreaLabel
+			}
+		}
+		// funcMap := template.FuncMap{
+		// 	"GetTypeMap": func() map[string]any { return data.GetTypeMap() },
+		// }
+
+		data.SetItem(item.Map())
+		err = templates.Render(w, "item-details-template", data)
+		if err != nil {
+			logg.Warningf("An Error accrue while fetching item Extra Info", err)
+		}
+	}
 }

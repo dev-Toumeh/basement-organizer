@@ -1,0 +1,153 @@
+{{ define "item-details-template" }}
+{{ template "open-html-tag" .}}
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    {{ template "item-details" . }}
+</body>
+{{ template "close-html-tag" .}}
+{{ end }}
+
+{{ define "item-details" }}
+ {{ $Edit := .GetEdit }}
+ {{ $typeMap := .GetTypeMap }}
+ {{ $item := index $typeMap "Item" }}
+
+{{ if $Edit }}
+<h1>Update Item</h1>
+{{ else }}
+<h1>Preview Item</h1>
+{{ end }}
+<form id="item-create"
+    class="box-container"
+    hx-encoding="multipart/form-data"
+    hx-post="/api/v1/create/item"
+    hx-target="body"
+    hx-swap="innerHTML">
+    <div class="box-info-container">
+        <div class="box-detail-info">
+            <input type="hidden" name="id" value="{{ index $item "ID" }}" >
+
+            <label for="label">Label:</label>
+            <input name="label" type="text" value="{{  index $item "Label" }}"
+                 {{ if not $Edit }}readonly{{ end }}>
+
+            <label for="description">Description:</label>
+            <input name="description" type="text" value="{{ index $item "Description" }}"
+                 {{ if not $Edit }}readonly{{ end }}>
+
+            <label for="height">Quantity:</label>
+            <input name="height" type="number" step="any" value="{{ index $item "Height" }}"
+                 {{ if not $Edit }}readonly{{ end }}>
+
+            <label for="width">Weight:</label>
+            <input name="width" type="number" step="any" value="{{ index $item "Width" }}"
+                 {{ if not $Edit }}readonly{{ end }}>
+
+            <label for="qrcode">QRCode:</label>
+            <input type="text" id="qrcode" name="qrcode" value="{{ index $item "QRCode" }}"
+                 {{ if not $Edit }}readonly{{ end }}>
+
+            <div id="box-target">
+              <label for="box_id">Is inside of Box:</label></br>
+              {{ if .IsBoxAvailable }}
+
+                      <a id="outerbox-link" href="/box/{{ index $item "BoxID" }}" 
+                          class="clickable"
+                          hx-boost="true"
+                      >{{ index $item "BoxLabel" }}</a>
+                  {{ if $Edit }}
+                      <input type="text" id="box_id" name="box_id" value="{{ index $item "BoxID" }}" hidden>
+                      <button 
+                        hx-post="/box/{{ index $item "BoxID" }}/addto/box"
+                        hx-target="#place-holder"
+                        hx-swap="innerHTML"
+                        hx-push-url="false"
+                        type="button"
+                        >Add to Another Box
+                      </button>
+                  {{ end }}
+              {{ else }}
+                  <span id="outerbox-link">None</span>
+                  {{ if $Edit }}
+                      <input type="text" id="box_id" name="box_id" value="{{ index $item "BoxID" }}" hidden>
+                      <button 
+                        hx-post="/box/{{ index $item "ID" }}/addto/box"
+                        hx-target="#place-holder"
+                        hx-swap="innerHTML"
+                        hx-push-url="false"
+                        type="button"
+                        >Add to Box
+                      </button>
+                  {{ end }}
+              {{ end }}
+            </div>
+            <div id="shelf-target">
+                <label for="shelf_id">Is inside of Shelf</label></br>
+              {{ if .IsShelfAvailable }}
+                  <input type="text" name="shelf_id" value="{{ index $item "ShelfID" }}" hidden>
+                  <input type="text" name="label" value="{{ index $item "ShelfLabel" }}" {{ if not $Edit }}readonly{{ end }}>
+              {{ if $Edit }}
+                      <button
+                       hx-target="#place-holder"
+                       hx-post="/shelves/add-list"
+                       hx-push-url="false">
+                       Add to another Shelf
+                      </button>
+                      <div id="place-holder" hx-swap-oob="true"></div>
+                  {{ end }}
+              {{ else }}
+                  <span id="outerbox-link">None</span>
+                  {{ if $Edit }}
+                        <input type="text" name="shelf_id" value="empty" >
+                        <button 
+                          hx-post="/shelves/add-list"
+                          hx-target="#place-holder"
+                          hx-swap="innerHTML"
+                          hx-push-url="false"
+                          type="button"
+                          >Add to Shelf
+                        </button>
+                  {{ end }}
+              {{ end }}
+            </div>
+            <div id="area-target">
+                <label for="area_id">Is inside of Area:</label> </br>
+                <input type="text" name="area_id" value="empty" disabled>
+                {{ if $Edit }}
+                <button 
+                  hx-get="/api/v1/implement-me"
+                  hx-target="#place-holder"
+                  hx-swap="innerHTML"
+                  hx-push-url="false"
+                  type="button"
+                  >Add to Area
+                </button>
+                {{ end }}
+            </div>
+        </div>
+        <div id="image-preview-{{ index $item "ID" }}" class="box-detail-picture">
+            {{ if index $item "Picture" }}
+            <label for="picture">Picture:</label>
+            <img class="detail" src="data:image/png;base64,{{ index $item "Picture" }}" alt="{{ index $item "Label" }}">
+            {{ else }}
+            <p>No image available</p>
+            {{ end }}
+            <input type="file" id="picture-{{ index $item "ID" }}" name="picture" accept="image/*" >
+        </div>
+    </div>
+    
+    {{ if $Edit }}
+      <button hx-get="{{ index $item "ID" }}?edit=true" hx-target="body" hx-swap="innerHTML">Update</button>
+      <button type="button" onclick="window.history.back();">Cancel</button>
+    {{ else }}
+      <button hx-get="{{ index $item "ID" }}?edit=true" hx-push-url="true" hx-target="body" hx-swap="innerHTML">Edit</button>
+      <button hx-get="{{ index $item "ID" }}?edit=true" hx-target="body" hx-swap="innerHTML">Delete</button>
+    {{ end }}
+</form>
+<div id="place-holder"></div>
+{{ end }}
+
+
+

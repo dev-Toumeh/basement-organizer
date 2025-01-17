@@ -137,6 +137,17 @@ func Render(w io.Writer, name string, data any) error {
 	return nil
 }
 
+// RenderWithFuncs applies data and custom functions to a template and writes the result to the writer.
+func RenderWithFuncs(w io.Writer, name string, data any, funcMap template.FuncMap) error {
+	tmpl := internalTemplate.Funcs(funcMap)
+	err := tmpl.ExecuteTemplate(w, name, data)
+	if err != nil {
+		return logg.Errorf("Can't render template %w", err)
+	}
+
+	return nil
+}
+
 // Mapable is used for rendering templates.
 // It is more convenient than using only structs.
 // You can check if keys are available without gettings errors during runtime.
