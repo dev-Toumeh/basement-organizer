@@ -8,9 +8,7 @@ import (
 	"log"
 	"maps"
 	"net/http"
-	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -130,37 +128,9 @@ func CheckEditMode(r *http.Request) bool {
 	return false
 }
 
-// parseIDsFromFormWithKey parses r.Form by searching all HTML input elements that start with `key` name and returns a list of valid uuid.UUIDs
-//
-// `r.ParseForm()` must be called before using this function!
-//
-// Example:
-//
-//	// search for all ID values that start with "delete:" key
-//	// like "delete:f47ac10b-58cc-0372-8567-0e02b2c3d479"
-//	toDeleteIDs := parseIDsFromFormWithKey(r.Form, "delete")
-func ParseIDsFromFormWithKey(form url.Values, key string) ([]uuid.UUID, error) {
-	ids := make([]uuid.UUID, 0)
-	// logg.Debug("FormValues length: " + strconv.Itoa(len(form)))
-	// i := 0
-	for k := range form {
-		// logg.Debug("FormValue[" + strconv.Itoa(i) + "]: \"" + k + "\"")
-		if strings.Contains(k, key+":") {
-			// logg.Debug("\"" + k + "\"" + " contains " + "\"" + key + "\"")
-			idStr := strings.Split(k, fmt.Sprintf("%s:", key))
-			if len(idStr) != 2 {
-				return nil, logg.NewError(fmt.Sprintf("Wrong delete key value pair: '%v'", k))
-			}
-			// logg.Debug("clean value \"" + idStr[1] + "\"")
-			id, err := uuid.FromString(idStr[1])
-			if err != nil {
-				logg.Err(err)
-				return nil, logg.WrapErr(err)
-			}
-			ids = append(ids, id)
-		}
-		// i++
+func ShortenPictureForLogs(picture string) string {
+	if len(picture) < 4 {
+		return ""
 	}
-	// logg.Debugf("clean ids: %v", ids)
-	return ids, nil
+	return picture[0:3] + "...(shortened)"
 }

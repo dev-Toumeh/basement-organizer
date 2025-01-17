@@ -4,7 +4,9 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
-    {{ template "page-content" . }}
+    <div class="scrollable-content">
+        {{ template "page-content" . }}
+    </div>
 </body>
 {{ template "close-html-tag" . }}
 {{end}} 
@@ -16,6 +18,7 @@
 <!--HTMX from local sources-->
 <script src="/static/js/htmx.min.js"></script>
 <script src="/static/js/custom-functions.js"></script>
+<script src="/static/js/picture.js"></script>
 {{end}}
 
 {{ define "head" }}
@@ -43,9 +46,7 @@
 {{ end }}
 
 {{ define "page-content"  }}
-<div id="main-container">
-    {{ template "notification-container" . }}
-</div>
+    {{ .PageText }}
 {{end}}
 
 {{ define "oob-notification" }} 

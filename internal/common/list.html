@@ -16,14 +16,14 @@
 
     {{ if .FormHXTarget }}
         hx-target="{{ .FormHXTarget }}"
-        hx-swap="innerHTML"
+        hx-swap="outerHTML"
         hx-push-url="false"
     {{ else }}
         hx-target="body"
         hx-swap="outerHTML"
         hx-push-url="true"
     {{ end }}
-    hx-trigger="keyup changed delay:500ms from:#{{$FormID}}-search-bar, keyup changed delay:500ms from:#{{$FormID}}-limit, click from:#pagination"
+    hx-trigger="keyup changed delay:500ms from:#{{$FormID}}-search-bar, keyup changed delay:500ms from:#{{$FormID}}-limit, paginationclick"
 >
     {{ if .SearchInput }}
         <label for="{{$FormID}}-search-bar">{{ .SearchInputLabel }}</label>
@@ -43,8 +43,6 @@
     {{ end }}
 
     {{ if .Pagination }}
-    <div>
-    </div>
         <div id="pagination">
             <input id="{{$FormID}}-limit" type="number" name="limit" 
                 value="{{ if .Limit}}{{.Limit}}{{else}}5{{end}}"
@@ -55,8 +53,9 @@
             <input id="{{$FormID}}-current-page" type="text" name="page" 
                 value="{{$CurrentPageNumber}}" hidden>
             {{ range $i, $e := .PaginationButtons }}
+                <!--Custom paginationclick event triggers form request-->
                 <button type="button"
-                    hx-on:click="document.getElementById('{{$FormID}}-current-page').value = {{.PageNumber}}"
+                    hx-on:click="triggerPaginationClickEvent('{{$FormID}}','{{.PageNumber}}')"
                     {{if .Selected}}class="selected"{{end}}
                     {{if .Disabled}}disabled{{end}}
                 >{{.PageNumber}}</button>
@@ -97,18 +96,20 @@
 
 
 {{ define "list-table" }}
-<table class="box-list">
+<table class="list">
 <thead>
     <tr>
         <th>Label</th>
-        <th>Box</th>
-        <th>Shelf</th>
-        <th>Area</th>
+        <th>In Box</th>
+        <th>In Shelf</th>
+        <th>In Area</th>
         <th style="width: 10%">Image</th>
         {{ if .RowAction }}
         <th style="width: 10%">{{.RowActionName}}</th>
         {{ else }}
-        <th style="width: 10%">Move</th>
+            {{ if not .HideMoveCol }}
+                <th style="width: 10%">Move</th>
+            {{ end }}
         <th style="width: 10%">Delete</th>
         {{ end }}
     </tr>
@@ -119,77 +120,9 @@
         <tr id="empty-list-row">
             <td colspan="7" style="text-align:center">No Entries</td>  
         </tr>
-    {{ else }} <!--not empty-->
-
-    {{ $RowHXGet := .RowHXGet }}
-    {{ $RowAction := .RowAction }}
-    {{ $RowActionHXPost := .RowActionHXPost }}
-    {{ $RowActionHXPostWithID := .RowActionHXPostWithID }}
-    {{ $RowActionHXPostWithIDAsQueryParam := .RowActionHXPostWithIDAsQueryParam }}
-    {{ $RowActionName := .RowActionName }}
-    {{ $RowActionHXTarget := .RowActionHXTarget }}
-
-    {{ range .Rows }}
-        {{ $empty := false }}
-        {{ if eq .ID.String "00000000-0000-0000-0000-000000000000" }} {{ $empty = true }} {{ end }}
-
-
-        {{ if $empty }}
-            <tr id="list-row-{{.ID}}">
-                <td colspan="7" style="text-align:center">
-                    <span class="empty">empty<img class="preview" style="opacity:0"></span>
-                </td>  
-            </tr>
-        {{ else }}
-            <tr id="list-row-{{.ID}}">
-                <td hx-get="{{$RowHXGet}}/{{.ID}}"
-                        hx-push-url="true"
-                        hx-target="body"
-                        class="clickable"
-                    >{{.Label}}</td>
-                <td>{{.BoxLabel}}</td> 
-                <td>{{.ShelfLabel}}</td>
-                <td>{{.AreaLabel}}</td>
-                <td style="text-align: center;">
-                    <img class="preview" 
-                        src="data:image/png;base64,{{.PreviewPicture}}" 
-                        {{if .PreviewPicture}}alt="{{.Label}}"{{end}}
-                    >
-                </td>
-                {{ if not $RowAction}}
-                <td style="text-align: center;">
-                    <label for="move:{{.ID}}"></label>
-                    <input id="move:{{.ID}}" type="checkbox" name="move:{{.ID}}"></td>
-                <td style="text-align: center;">
-                    <label for="delete:{{.ID}}"></label>
-                    <input id="delete:{{.ID}}" type="checkbox" name="delete:{{.ID}}"></td>
-                {{ else }}
-                <td style="text-align: center;">
-                    <!--hidden inputs with "name=id-to-be-moved" are generated in box-list template
-                        inside div<id="additional-data-container"> to track IDs that were selected to be moved -->
-                    <button 
-                        {{ if $RowActionHXPostWithID }}
-                            hx-post="{{ $RowActionHXPostWithID }}/{{.ID}}"
-                        {{ else if $RowActionHXPostWithIDAsQueryParam }}
-                            hx-post="{{ $RowActionHXPostWithIDAsQueryParam }}?id={{.ID}}"
-                        {{ else }}
-                            hx-post="{{ $RowActionHXPost }}"
-                        {{ end }}
-                        hx-include="#additional-data-container"
-                        hx-push-url="false"
-                        {{ if $RowActionHXTarget }}
-                            hx-target="{{$RowActionHXTarget}}"
-                            hx-swap="innerHTML"
-                        {{ else }}
-                            hx-swap="none"
-                        {{ end }}
-                    >{{ $RowActionName }}</button>
-                </td>
-                {{ end }}
-            </tr>
-        {{ end }}
-    {{ end }} <!--range rows -->
-{{ end }} <!--if not .Rows -->
+    {{ else }}
+        {{ range .Rows }} {{ template "list-row" . }} {{ end }}
+    {{ end }}
 </tbody>
 </table>
 {{ end }}
@@ -239,7 +172,7 @@
             hx-push-url="false"
         >Delete</button>
         <button
-            hx-post="/boxes/move"
+            hx-post="/boxes/moveto/box"
             type="button"
             hx-swap="innerHTML"
             hx-push-url="false"
@@ -252,21 +185,33 @@
             hx-include=":checked"
         >Move to Box</button>
         <button 
-            hx-get="/template/item-form"
+            hx-post="/boxes/moveto/shelf"
             type="button"
             hx-swap="innerHTML"
-            hx-target="#level-two"
             hx-push-url="false"
+            {{ if .MoveButtonHXTarget }}
+                hx-target="{{.MoveButtonHXTarget}}"
+            {{ else }}
+                hx-target="#place-holder"
+                hx-swap="outerHTML"
+            {{ end }}
+            hx-include=":checked"
         >Move to Shelf</button>
         <button 
-            hx-post="/template/item-dummy"
+            hx-post="/boxes/moveto/area"
             type="button"
-            hx-swap="none"
-            hx-target="#level-two"
+            hx-swap="innerHTML"
             hx-push-url="false"
+            {{ if .MoveButtonHXTarget }}
+                hx-target="{{.MoveButtonHXTarget}}"
+            {{ else }}
+                hx-target="#place-holder"
+                hx-swap="outerHTML"
+            {{ end }}
+            hx-include=":checked"
         >Move to Area</button>
 
-    {{ else if eq .RequestOrigin "shelves" }}
+    {{ else if eq .RequestOrigin "Shelves" }}
         <button 
             hx-delete="/api/v1/delete/shelves"
             hx-swap="outerHTML"
@@ -280,8 +225,9 @@
 
     {{ else if eq .RequestOrigin "Areas" }}
         <button 
-            hx-delete="/delete-area"
-            hx-target="#area-container"
+            hx-delete="/areas"
+            hx-target="#list"
+            hx-select="#list"
             hx-swap="outerHTML"
             hx-push-url="false"
         >Delete</button>

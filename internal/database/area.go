@@ -4,6 +4,7 @@ import (
 	"basement/main/internal/areas"
 	"basement/main/internal/common"
 	"basement/main/internal/logg"
+	"database/sql"
 	"fmt"
 
 	"github.com/gofrs/uuid/v5"
@@ -83,24 +84,29 @@ func (db *DB) AreaIDs() (ids []uuid.UUID, err error) {
 }
 
 // update area data
-func (db *DB) UpdateArea(area areas.Area) error {
+func (db *DB) UpdateArea(area areas.Area, ignorePicture bool) error {
 	exist := db.AreaExists(area.ID)
 	if !exist {
 		return logg.Errorf("the area does not exist")
 	}
 
 	var err error
-	area.PreviewPicture, err = ResizePNG(area.Picture, 50)
-	if err != nil {
-		logg.Errorf("Error while resizing picture of area '%s' to create a preview picture %w", area.Label, err)
+	var stmt string
+	var result sql.Result
+	if ignorePicture {
+		stmt = "UPDATE area SET label = ?, description = ?, qrcode = ? WHERE id = ?"
+		result, err = db.Sql.Exec(stmt, area.Label, area.Description, area.QRCode, area.ID)
+	} else {
+		area.PreviewPicture, err = ResizePNG(area.Picture, 50)
+		if err != nil {
+			logg.Errorf("Error while resizing picture of area '%s' to create a preview picture %w", area.Label, err)
+		}
+		stmt = "UPDATE area SET label = ?, description = ?, picture = ?, preview_picture = ?, qrcode = ? WHERE id = ?"
+		result, err = db.Sql.Exec(stmt, area.Label, area.Description, area.Picture, area.PreviewPicture, area.QRCode, area.ID)
 	}
 
-	// ALL_AREA_COLS
-	sqlStatement := "UPDATE area SET label = ?, description = ?, picture = ?, preview_picture = ?, qrcode = ? WHERE id = ?"
-	result, err := db.Sql.Exec(sqlStatement, area.Label, area.Description, area.Picture, area.PreviewPicture, area.QRCode, area.ID)
-
 	if err != nil {
-		return logg.Errorf("something wrong happened while running the area update query:\n\"%s\" %w", sqlStatement, err)
+		return logg.Errorf("something wrong happened while running the area update query:\n\"%s\" %w", stmt, err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
@@ -119,10 +125,9 @@ func (db *DB) UpdateArea(area areas.Area) error {
 func (db *DB) DeleteArea(areaId uuid.UUID) error {
 	id := areaId.String()
 
-	// check if area is not Empty
 	areaExist := db.AreaExists(areaId)
-	if areaExist {
-		return logg.Errorf(`the area with id="` + id + `" is not empty`)
+	if !areaExist {
+		return logg.Errorf(`the area with id="` + id + `" doesn't exist`)
 	}
 
 	err := db.deleteFrom("area", areaId)

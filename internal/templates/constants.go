@@ -8,6 +8,8 @@ package templates
 const (
 	TEMPLATE_AREAS_LIST_CONTENT         string = "areas-list-content"         // internal/boxes/list-page.html
 	TEMPLATE_AREAS_LIST_PAGE            string = "areas-list-page"            // internal/boxes/list-page.html
+	TEMPLATE_AREA_DETAILS               string = "area-details"               // internal/boxes/details-page.html
+	TEMPLATE_AREA_DETAILS_PAGE          string = "area-details-page"          // internal/boxes/details-page.html
 	TEMPLATE_ATEST_STYLE                string = "atest-style"                // internal/routes/sample-page.html
 	TEMPLATE_AUTH_PAGE                  string = "auth-page"                  // internal/routes/auth-page.html
 	TEMPLATE_AUTH_PAGE_BODY             string = "auth-page-body"             // internal/routes/auth-page.html
@@ -18,6 +20,7 @@ const (
 	TEMPLATE_BOX_LIST_ROW               string = "box-list-row"               // internal/boxes/box-list-row.html
 	TEMPLATE_CLOSE_HTML_TAG             string = "close-html-tag"             // internal/templates/page.html
 	TEMPLATE_DEFAULT_STYLE              string = "default-style"              // internal/templates/page.html
+	TEMPLATE_DETAILS_IMAGE_PREVIEW      string = "details-image-preview"      // internal/common/details-image-preview.html
 	TEMPLATE_EMPTY_LIST                 string = "empty-list"                 // internal/boxes/details-page.html
 	TEMPLATE_EXTRA_JS                   string = "extra-js"                   // internal/routes/settings-page.html
 	TEMPLATE_HEAD                       string = "head"                       // internal/templates/page.html
@@ -39,11 +42,13 @@ const (
 	TEMPLATE_ITEM_PAGE_TEMPLATE         string = "item-page-template"         // internal/items/items-page2.html
 	TEMPLATE_LIST                       string = "list"                       // internal/common/list.html
 	TEMPLATE_LIST_BUTTONS               string = "list-buttons"               // internal/common/list.html
+	TEMPLATE_LIST_ROW                   string = "list-row"                   // internal/common/list-row.html
 	TEMPLATE_LIST_TABLE                 string = "list-table"                 // internal/common/list.html
 	TEMPLATE_LOGIN_FORM                 string = "login-form"                 // internal/auth/login.html
 	TEMPLATE_LOGIN_PAGE                 string = "login-page"                 // internal/auth/login.html
 	TEMPLATE_NAVBAR                     string = "navbar"                     // internal/common/navbar.html
 	TEMPLATE_NOTIFICATION_CONTAINER     string = "notification-container"     // internal/templates/page.html
+	TEMPLATE_NOT_FOUND_PAGE             string = "not-found-page"             // internal/common/not-found-page.html
 	TEMPLATE_OOB_NOTIFICATION           string = "oob-notification"           // internal/templates/page.html
 	TEMPLATE_OPEN_HTML_TAG              string = "open-html-tag"              // internal/templates/page.html
 	TEMPLATE_PAGE                       string = "page"                       // internal/templates/page.html

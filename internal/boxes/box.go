@@ -2,6 +2,7 @@ package boxes
 
 import (
 	"basement/main/internal/common"
+	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
@@ -17,7 +18,8 @@ type BoxDatabase interface {
 	CreateBox(newBox *Box) (uuid.UUID, error)
 	MoveBoxToBox(box1 uuid.UUID, box2 uuid.UUID) error
 	MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error
-	UpdateBox(box Box) error
+	MoveBoxToArea(boxID uuid.UUID, toAreaID uuid.UUID) error
+	UpdateBox(box Box, ignorePicture bool) error
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (Box, error)
 	BoxIDs() ([]uuid.UUID, error)
@@ -26,6 +28,8 @@ type BoxDatabase interface {
 	BoxListCounter(searchQuery string) (count int, err error)
 	ShelfListCounter(searchQuery string) (count int, err error)
 	ShelfListRows(searchQuery string, limit int, page int) (shelfRows []common.ListRow, err error)
+	AreaListCounter(searchQuery string) (count int, err error)
+	AreaListRows(searchQuery string, limit int, page int) (rows []common.ListRow, err error)
 }
 
 type Box struct {
@@ -148,17 +152,23 @@ func (b *Box) MarshalJSON() ([]byte, error) {
 func (b Box) String() string {
 	// @TODO: Shorteing picture to now blow up logs with base64 encoding.
 	// A little dirty but is ok for now.
-	shortenPicture := true
+	var shortenPicture bool
+	if env.Development() {
+		shortenPicture = true
+	} else {
+		shortenPicture = false
+	}
 	if shortenPicture {
-		b.Picture = shortenPictureForLogs(b.Picture)
+		b.Picture = common.ShortenPictureForLogs(b.Picture)
+		b.PreviewPicture = common.ShortenPictureForLogs(b.PreviewPicture)
 		if b.OuterBox != nil {
-			b.OuterBox.PreviewPicture = shortenPictureForLogs(b.OuterBox.PreviewPicture)
+			b.OuterBox.PreviewPicture = common.ShortenPictureForLogs(b.OuterBox.PreviewPicture)
 		}
 		for i := range b.InnerBoxes {
-			b.InnerBoxes[i].PreviewPicture = shortenPictureForLogs(b.InnerBoxes[i].PreviewPicture)
+			b.InnerBoxes[i].PreviewPicture = common.ShortenPictureForLogs(b.InnerBoxes[i].PreviewPicture)
 		}
 		for i := range b.Items {
-			b.Items[i].PreviewPicture = shortenPictureForLogs(b.Items[i].PreviewPicture)
+			b.Items[i].PreviewPicture = common.ShortenPictureForLogs(b.Items[i].PreviewPicture)
 		}
 	}
 
@@ -169,11 +179,4 @@ func (b Box) String() string {
 	}
 	s := fmt.Sprintf("%s", data)
 	return s
-}
-
-func shortenPictureForLogs(picture string) string {
-	if len(picture) < 4 {
-		return ""
-	}
-	return picture[0:3] + "...(shortened)"
 }

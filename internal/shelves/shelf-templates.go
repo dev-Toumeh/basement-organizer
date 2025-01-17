@@ -18,7 +18,8 @@ func PageTemplate(db ShelfDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := getTemplateData(r, db, w)
 		data.SetPlaceHolder(true)
-		data.SetRequestOrigin("shelves")
+		data.SetEnvDevelopment(env.Development())
+		data.SetRequestOrigin("Shelves")
 		server.MustRender(w, r, "shelves-page", data.TypeMap)
 	}
 }

@@ -52,10 +52,10 @@ func TestVirtualBoxUpdate(t *testing.T) {
 	}
 
 	testbox.Label = "new testbox label"
-	dbTest.UpdateBox(*testbox)
+	dbTest.UpdateBox(*testbox, true)
 
 	outerBox.Label = "new outerbox label"
-	dbTest.UpdateBox(*outerBox)
+	dbTest.UpdateBox(*outerBox, true)
 
 	// Get the box_fts to check if the outerbox_label  was updated
 	afterUpdate, err := dbTest.BoxListRowByID(testbox.ID)
@@ -65,6 +65,48 @@ func TestVirtualBoxUpdate(t *testing.T) {
 
 	assert.Equal(t, afterUpdate.BoxLabel, outerBox.Label)
 	assert.Equal(t, afterUpdate.Label, testbox.Label)
+}
+
+func TestVirtualBoxUpdateIgnorePicture(t *testing.T) {
+	EmptyTestDatabase()
+	resetTestBoxes()
+
+	testbox := BOX_1
+	outerBox := BOX_2
+	testbox.OuterBoxID = BOX_2.ID
+
+	// Create the outerbox
+	_, err := dbTest.CreateBox(outerBox)
+	if err != nil {
+		t.Fatalf("Failed to create outer box: %v", err)
+	}
+
+	// Create the testBox
+	_, err = dbTest.CreateBox(testbox)
+	if err != nil {
+		t.Fatalf("Failed to create outer box while checking the BoxTriger: %v", err)
+	}
+
+	beforeUpdate, err := dbTest.BoxListRowByID(testbox.ID)
+	assert.NotEqual(t, beforeUpdate.PreviewPicture, "")
+
+	testbox.Label = "new testbox label"
+	testbox.Picture = ""
+	dbTest.UpdateBox(*testbox, true)
+
+	outerBox.Label = "new outerbox label"
+	outerBox.Picture = ""
+	dbTest.UpdateBox(*outerBox, true)
+
+	// Get the box_fts to check if the outerbox_label  was updated
+	afterUpdate, err := dbTest.BoxListRowByID(testbox.ID)
+	if err != nil {
+		t.Fatalf("Failed to fetch the testbox while checking the BoxTriger: %v", err)
+	}
+
+	assert.Equal(t, afterUpdate.BoxLabel, outerBox.Label)
+	assert.Equal(t, afterUpdate.Label, testbox.Label)
+	assert.Equal(t, afterUpdate.PreviewPicture, beforeUpdate.PreviewPicture)
 }
 
 func TestVirtualBoxDelete(t *testing.T) {

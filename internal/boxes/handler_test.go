@@ -66,7 +66,7 @@ func (db *boxDatabaseError) ErrorExist() error {
 	return errors.New("AAAAAAAA")
 }
 
-func (db *boxDatabaseError) UpdateBox(box Box) error {
+func (db *boxDatabaseError) UpdateBox(box Box, updatePicture bool) error {
 	return errors.New("AAAAA")
 }
 
@@ -90,12 +90,24 @@ func (db *boxDatabaseError) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID)
 	return errors.New("AAAAAAAA")
 }
 
+func (db *boxDatabaseError) MoveBoxToArea(boxID uuid.UUID, toAreaID uuid.UUID) error {
+	return errors.New("AAAAAAAA")
+}
+
 func (db *boxDatabaseError) ShelfListCounter(queryString string) (count int, err error) {
 	return 0, errors.New("AAAAAAAA")
 }
 
 func (db *boxDatabaseError) ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error) {
 	return shelfRows, errors.New("AAAAAAAA")
+}
+
+func (db *boxDatabaseError) AreaListCounter(searchQuery string) (count int, err error) {
+	return 0, errors.New("AAAAAAAA")
+}
+
+func (db *boxDatabaseError) AreaListRows(searchQuery string, limit int, pageNr int) (rows []common.ListRow, err error) {
+	return rows, errors.New("AAAAAAAA")
 }
 
 // boxDatabaseSuccess never returns errors.
@@ -125,7 +137,7 @@ func (db *boxDatabaseSuccess) ErrorExist() error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) UpdateBox(box Box) error {
+func (db *boxDatabaseSuccess) UpdateBox(box Box, updatePicture bool) error {
 	return nil
 }
 
@@ -149,12 +161,24 @@ func (db *boxDatabaseSuccess) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUI
 	return nil
 }
 
+func (db *boxDatabaseSuccess) MoveBoxToArea(boxID uuid.UUID, toAreaID uuid.UUID) error {
+	return nil
+}
+
 func (db *boxDatabaseSuccess) ShelfListCounter(queryString string) (count int, err error) {
 	return 1, nil
 }
 
 func (db *boxDatabaseSuccess) ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error) {
 	return shelfRows, nil
+}
+
+func (db *boxDatabaseSuccess) AreaListCounter(searchQuery string) (count int, err error) {
+	return 1, nil
+}
+
+func (db *boxDatabaseSuccess) AreaListRows(searchQuery string, limit int, pageNr int) (rows []common.ListRow, err error) {
+	return rows, nil
 }
 
 func TestBoxHandlerDBErrors(t *testing.T) {
@@ -349,9 +373,9 @@ func TestBoxHandlerOK(t *testing.T) {
 
 			read, _ := io.ReadAll(tc.input.W.Result().Body)
 			if tc.expectedTemplate {
-				assert.Contains(t, string(read), "hx-", url)
+				assert.Contains(t, string(read), "</", url)
 			} else {
-				assert.NotContains(t, string(read), "hx-", url)
+				assert.NotContains(t, string(read), "</", url)
 			}
 		})
 	}

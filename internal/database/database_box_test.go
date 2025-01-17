@@ -170,7 +170,7 @@ func TestBoxUpdate(t *testing.T) {
 	assert.NotEqual(t, oldDescr, testBox.Description)
 	assert.NotEqual(t, oldLabel, testBox.Label)
 
-	err = dbTest.UpdateBox(*testBox)
+	err = dbTest.UpdateBox(*testBox, false)
 	if err != nil {
 		t.Fatalf("error while updating the box: %v", err)
 	}
@@ -190,6 +190,92 @@ func TestBoxUpdate(t *testing.T) {
 
 	assert.NotEqual(t, oldLabel, updatedBox.Label)
 	assert.NotEqual(t, oldDescr, updatedBox.Description)
+
+	EmptyTestDatabase()
+}
+
+func TestBoxUpdateIgnorePicture(t *testing.T) {
+	EmptyTestDatabase()
+	resetTestBoxes()
+
+	testBox := BOX_1
+	testBox.PreviewPicture = VALID_BASE64_PREVIEW_PNG
+	_, err := dbTest.insertNewBox(testBox)
+	if err != nil {
+		t.Fatalf("error while inserting the box: %v", err)
+	}
+
+	oldLabel := testBox.Label
+	oldDescr := testBox.Description
+	oldPicture := testBox.Picture
+	oldPreviewPicture := testBox.PreviewPicture
+
+	testBox.Description = "updated"
+	testBox.Label = "updated"
+	testBox.Picture = ""
+	testBox.PreviewPicture = ""
+	assert.NotEqual(t, oldDescr, testBox.Description)
+	assert.NotEqual(t, oldLabel, testBox.Label)
+	assert.NotEqual(t, oldPicture, testBox.Picture)
+	assert.NotEqual(t, oldPreviewPicture, testBox.PreviewPicture)
+
+	err = dbTest.UpdateBox(*testBox, true)
+	if err != nil {
+		t.Fatalf("error while updating the box: %v", err)
+	}
+
+	// Retrieve the updated box from the database
+	updatedBox, err := dbTest.BoxById(testBox.ID)
+	if err != nil {
+		t.Fatalf("error while retrieving the updated box: %v", err)
+	}
+
+	// Assert that the box was updated correctly (using individual asserts)
+	assert.Equal(t, testBox.Label, updatedBox.Label)
+	assert.Equal(t, testBox.Description, updatedBox.Description)
+	assert.Equal(t, oldPicture, updatedBox.Picture)
+	assert.Equal(t, oldPreviewPicture, updatedBox.PreviewPicture)
+	assert.Equal(t, testBox.QRCode, updatedBox.QRCode)
+	assert.Equal(t, testBox.OuterBoxID, updatedBox.OuterBoxID)
+
+	assert.NotEqual(t, oldLabel, updatedBox.Label)
+	assert.NotEqual(t, oldDescr, updatedBox.Description)
+
+	EmptyTestDatabase()
+}
+
+func TestBoxUpdateRemovePicture(t *testing.T) {
+	EmptyTestDatabase()
+	resetTestBoxes()
+
+	testBox := BOX_1
+	_, err := dbTest.insertNewBox(testBox)
+	if err != nil {
+		t.Fatalf("error while inserting the box: %v", err)
+	}
+
+	oldPicture := testBox.Picture
+	oldPreviewPicture := testBox.PreviewPicture
+
+	testBox.Picture = ""
+	testBox.PreviewPicture = ""
+	assert.NotEqual(t, oldPicture, testBox.Picture)
+	assert.NotEqual(t, oldPreviewPicture, testBox.PreviewPicture)
+
+	err = dbTest.UpdateBox(*testBox, false)
+	if err != nil {
+		t.Fatalf("error while updating the box: %v", err)
+	}
+
+	// Retrieve the updated box from the database
+	updatedBox, err := dbTest.BoxById(testBox.ID)
+	if err != nil {
+		t.Fatalf("error while retrieving the updated box: %v", err)
+	}
+
+	// Assert that the box was updated correctly (using individual asserts)
+	assert.Equal(t, "", updatedBox.Picture)
+	assert.Equal(t, "", updatedBox.PreviewPicture)
 
 	EmptyTestDatabase()
 }
@@ -214,7 +300,7 @@ func TestBoxUpdateShelf(t *testing.T) {
 	assert.Equal(t, err, nil)
 	box.ShelfID = SHELF_2.ID
 
-	dbTest.UpdateBox(*box)
+	dbTest.UpdateBox(*box, true)
 	boxrow, err = dbTest.BoxListRowByID(box.ID)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, boxrow.ShelfID, SHELF_2.ID)

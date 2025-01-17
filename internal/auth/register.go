@@ -144,7 +144,7 @@ func registerUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 			return
 		}
 
-		server.RedirectWithSuccessNotification(w, "/", fmt.Sprintf("the user %s was created successfully", newUser.Username))
+		server.RedirectWithSuccessNotification(w, "/login", fmt.Sprintf("the user %s was created successfully", newUser.Username))
 		logg.Debugf("User %s registered successfully:", newUser.Username)
 		return
 	}

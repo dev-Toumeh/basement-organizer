@@ -1,7 +1,9 @@
 package common
 
 import (
+	"basement/main/internal/logg"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/gofrs/uuid/v5"
@@ -40,4 +42,18 @@ func (b BasicInfo) MakeLabelWithTime(label string) BasicInfo {
 	t := time.Now().Format("2006-01-02_15_04_05")
 	b.Label = fmt.Sprintf("%s_%s", label, t)
 	return b
+}
+
+func BasicInfoFromPostFormValue(id uuid.UUID, r *http.Request, ignorePicture bool) BasicInfo {
+	info := BasicInfo{}
+	info.ID = id
+	info.Label = r.PostFormValue("label")
+	info.Description = r.PostFormValue("description")
+	logg.Debugf("ignorePicture=%v", ignorePicture)
+	if !ignorePicture {
+		info.Picture = ParsePicture(r)
+	}
+
+	info.QRCode = r.PostFormValue("qrcode")
+	return info
 }

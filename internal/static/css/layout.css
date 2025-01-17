@@ -102,7 +102,7 @@ input[readonly] {
   overflow: overlay;
 }
 
-.box-container {
+.container {
   background: aliceblue;
   border: solid;
 }

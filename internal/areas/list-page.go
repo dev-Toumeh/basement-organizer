@@ -26,10 +26,11 @@ func listPage(db AreaDatabase) http.HandlerFunc {
 
 		// list template
 		listTmpl := common.ListTemplate{
-			FormHXGet:   "/areas",
-			RowHXGet:    "/area",
-			PlaceHolder: true,
-			ShowLimit:   env.Config().ShowTableSize(),
+			FormHXGet:     "/areas",
+			PlaceHolder:   true,
+			ShowLimit:     env.Config().ShowTableSize(),
+			HideMoveCol:   true,
+			RequestOrigin: common.ParseOrigin(r),
 		}
 
 		// search-input template
@@ -58,7 +59,11 @@ func listPage(db AreaDatabase) http.HandlerFunc {
 
 		// rows found
 		if count > 0 {
-			rows, err = common.FilledRows(db.AreaListRows, searchString, limit, pageNr, count)
+			rowTemplateOptions := common.ListRowTemplateOptions{
+				HideMoveCol: true,
+				RowHXGet:    "/area",
+			}
+			rows, err = common.FilledRows(db.AreaListRows, searchString, limit, pageNr, count, rowTemplateOptions)
 			if err != nil {
 				server.WriteInternalServerError("cant query areas", err, w, r)
 				return

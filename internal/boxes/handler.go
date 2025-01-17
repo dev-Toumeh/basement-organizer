@@ -76,7 +76,8 @@ func createBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 			server.WriteNotFoundError("error while fetching the box based on Id", err, w, r)
 			return
 		}
-		server.MustRender(w, r, templates.TEMPLATE_BOX_LIST_ROW, box.Map())
+		box.RowHXGet = "/box"
+		server.MustRender(w, r, templates.TEMPLATE_LIST_ROW, box)
 	} else {
 		server.WriteJSON(w, id)
 	}
@@ -89,8 +90,10 @@ func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		return
 	}
 
-	box := boxFromPostFormValue(id, r)
-	err := db.UpdateBox(box)
+	var err error
+	box, ignorePicture := boxFromPostFormValue(id, r)
+	err = db.UpdateBox(box, ignorePicture)
+
 	if err != nil {
 		server.WriteNotFoundError(errMsgForUser, err, w, r)
 		return
@@ -180,7 +183,7 @@ func createBoxFrom(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	if id == uuid.Nil {
 		return
 	}
-	box := boxFromPostFormValue(id, r)
+	box, _ := boxFromPostFormValue(id, r)
 	logg.Debug("create box: ", box)
 	id, err := db.CreateBox(&box)
 	if err != nil {
@@ -224,43 +227,17 @@ func BoxesHandler(db BoxDatabase) http.HandlerFunc {
 }
 
 func deleteBoxes(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
-	r.ParseForm()
-
-	parseIDs, _ := common.ParseIDsFromFormWithKey(r.Form, "delete")
-	r.FormValue("delete")
-
-	logg.Debug(len(parseIDs))
-
-	ids := make([]uuid.UUID, len(parseIDs))
-	notifications := server.Notifications{}
-	for i, v := range parseIDs {
-		logg.Debug("deleting " + v.String())
-		ids[i] = v
-		err := db.DeleteBox(v)
-		if err != nil {
-			notifications.AddError(`can't delete: "` + v.String() + `"`)
-			logg.Err(err)
-		} else {
-			notifications.AddSuccess(`delete: "` + v.String() + `"`)
-		}
-	}
-
-	server.TriggerNotifications(w, notifications)
-	listPage(db).ServeHTTP(w, r)
+	server.DeleteThingsFromList(w, r, db.DeleteBox, listPage(db))
 }
 
 // boxFromPostFormValue returns items.Box without references to inner boxes, outer box and items.
-func boxFromPostFormValue(id uuid.UUID, r *http.Request) Box {
-	box := Box{}
-	box.ID = id
-	box.Label = r.PostFormValue("label")
-	box.Description = r.PostFormValue("description")
-	box.Picture = common.ParsePicture(r)
-	box.QRCode = r.PostFormValue("qrcode")
+func boxFromPostFormValue(id uuid.UUID, r *http.Request) (box Box, ignorePicture bool) {
+	ignorePicture = server.ParseIgnorePicture(r)
+	box.BasicInfo = common.BasicInfoFromPostFormValue(id, r, ignorePicture)
 	box.OuterBoxID = uuid.FromStringOrNil(r.PostFormValue("box_id"))
 	box.ShelfID = uuid.FromStringOrNil(r.PostFormValue("shelf_id"))
 	box.AreaID = uuid.FromStringOrNil(r.PostFormValue("area_id"))
-	return box
+	return box, ignorePicture
 }
 
 func renderBoxTemplate(box *Box, w http.ResponseWriter, r *http.Request) {

@@ -97,20 +97,26 @@ func (db *DB) BoxIDs() (ids []uuid.UUID, err error) {
 }
 
 // update box data
-func (db *DB) UpdateBox(box boxes.Box) error {
+func (db *DB) UpdateBox(box boxes.Box, ignorePicture bool) error {
 	exist := db.BoxExistById(box.ID)
 	if !exist {
 		return logg.Errorf("the box does not exist")
 	}
 
 	var err error
-	box.PreviewPicture, err = ResizePNG(box.Picture, 50)
-	if err != nil {
-		logg.Errorf("Error while resizing picture of box '%s' to create a preview picture %w", box.Label, err)
+	var stmt string
+	var result sql.Result
+	if ignorePicture {
+		stmt = "UPDATE box SET label = ?, description = ?, qrcode = ?, shelf_id = ?, area_id = ? WHERE id = ?"
+		result, err = db.Sql.Exec(stmt, box.Label, box.Description, box.QRCode, box.ShelfID, box.AreaID, box.ID)
+	} else {
+		stmt = "UPDATE box SET label = ?, description = ?, picture = ?, preview_picture = ?, qrcode = ?, shelf_id = ?, area_id = ? WHERE id = ?"
+		box.PreviewPicture, err = ResizePNG(box.Picture, 50)
+		if err != nil {
+			logg.Errorf("Error while resizing picture of box '%s' to create a preview picture %w", box.Label, err)
+		}
+		result, err = db.Sql.Exec(stmt, box.Label, box.Description, box.Picture, box.PreviewPicture, box.QRCode, box.ShelfID, box.AreaID, box.ID)
 	}
-
-	sqlStatement := "UPDATE box SET label = ?, description = ?, picture = ?, preview_picture = ?, qrcode = ?, shelf_id = ?, area_id = ? WHERE id = ?"
-	result, err := db.Sql.Exec(sqlStatement, box.Label, box.Description, box.Picture, box.PreviewPicture, box.QRCode, box.ShelfID, box.AreaID, box.ID)
 
 	if err != nil {
 		return logg.Errorf("something wrong happened while runing the box update query: %w", err)
@@ -258,6 +264,18 @@ func (db *DB) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
 	return nil
 }
 
+// MoveBoxToShelf moves box to a shelf.
+// To move box out of a shelf set
+//
+//	toShelfID = uuid.Nil
+func (db *DB) MoveBoxToArea(boxID uuid.UUID, toAreaID uuid.UUID) error {
+	err := db.MoveTo("box", boxID, "area", toAreaID)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	return nil
+}
+
 // BoxListRows retrieves virtual boxes by label.
 // If the query is empty or contains only spaces, it returns default results.
 func (db *DB) BoxListRows(searchQuery string, limit int, page int) (listRows []common.ListRow, err error) {
@@ -270,42 +288,11 @@ func (db *DB) BoxListRows(searchQuery string, limit int, page int) (listRows []c
 
 // Get the virtual Box based on his ID
 func (db *DB) BoxListRowByID(id uuid.UUID) (common.ListRow, error) {
-	exists, err := db.VirtualBoxExist(id)
+	row, err := db.listRowByID("box_fts", id)
 	if err != nil {
-		return common.ListRow{}, logg.WrapErr(err)
+		return row, logg.WrapErr(err)
 	}
-	if !exists {
-		return common.ListRow{}, fmt.Errorf("the Box Id does not exsist in the virtual table")
-	}
-
-	query := fmt.Sprintf("SELECT id, label, box_id, box_label, shelf_id, shelf_label, area_id, area_label FROM box_fts WHERE id = ?")
-	row, err := db.Sql.Query(query, id.String())
-	if err != nil {
-		return common.ListRow{}, fmt.Errorf("error while fetching the virtual box: %w", err)
-	}
-
-	var sqlVertualBox SQLListRow
-	for row.Next() {
-		err := row.Scan(
-			&sqlVertualBox.ID,
-			&sqlVertualBox.Label,
-			&sqlVertualBox.BoxID,
-			&sqlVertualBox.BoxLabel,
-			&sqlVertualBox.ShelfID,
-			&sqlVertualBox.ShelfLabel,
-			&sqlVertualBox.AreaID,
-			&sqlVertualBox.AreaLabel,
-		)
-		if err != nil {
-			return common.ListRow{}, fmt.Errorf("error while assigning the Data to the Virtualbox struct : %w", err)
-		}
-	}
-
-	vBox, err := sqlVertualBox.ToListRow()
-	if err != nil {
-		return common.ListRow{}, err
-	}
-	return *vBox, nil
+	return row, nil
 }
 
 // returns the count of rows in the box_fts table that match the specified searchString.

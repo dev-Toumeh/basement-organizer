@@ -13,6 +13,7 @@ type PageTemplate struct {
 	NotFound       bool
 	RequestOrigin  string
 	EnvDevelopment bool
+	PageText       string
 }
 
 func (tmpl PageTemplate) Map() map[string]any {
@@ -24,6 +25,7 @@ func (tmpl PageTemplate) Map() map[string]any {
 		"NotFound":       tmpl.NotFound,
 		"RequestOrigin":  tmpl.RequestOrigin,
 		"EnvDevelopment": tmpl.EnvDevelopment,
+		"PageText":       tmpl.PageText,
 	}
 }
 
@@ -35,7 +37,7 @@ func NewPageTemplate() PageTemplate {
 		User:           "Default User",
 		Debug:          DEBUG_STYLE,
 		NotFound:       false,
-		RequestOrigin:  "Boxes",
+		RequestOrigin:  "",
 		EnvDevelopment: env.Development(),
 	}
 }

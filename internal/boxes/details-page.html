@@ -4,19 +4,21 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
-    <h1>Box details</h1>
-    {{ if .NotFound }}
-        <p>Box "{{.ID}}" doesn't exist.</p>
-        <br>
-        <p style="text-align: center">:^(</p>
-    {{ else }}
-        {{ template "box-details" . }}
-        <div id="place-holder"></div>
-        <h2>Items</h2>
-        {{ template "item-list" . }}
-        <h2>Inner Boxes</h2>
-        {{ template "innerboxes-list" . }}
-    {{ end }}
+    <div class="scrollable-content">
+        <h1>Box details</h1>
+        {{ if .NotFound }}
+            <p>Box "{{.ID}}" doesn't exist.</p>
+            <br>
+            <p style="text-align: center">:^(</p>
+        {{ else }}
+            {{ template "box-details" . }}
+            <div id="place-holder"></div>
+            <h2>Items</h2>
+            {{ template "item-list" . }}
+            <h2>Inner Boxes</h2>
+            {{ template "innerboxes-list" . }}
+        {{ end }}
+    </div>
 </body>
 {{ template "close-html-tag" . }}
 {{end}} 
@@ -24,10 +26,10 @@
 
 {{ define "box-details" }}
 <form id="box-{{.ID}}"
-    class="box-container"
+    class="container"
     hx-encoding="multipart/form-data">
-    <div class="box-info-container">
-        <div class="box-detail-info">
+    <div class="info-container">
+        <div class="detail-info">
             <label for="id">ID:</label>
             <input name="id" type="text" value="{{.ID}}" readonly>
 
@@ -94,22 +96,38 @@
                 >Move to shelf</button>
             {{ end }}
             <br>
+
+            <label for="area_id">Is inside area:</label>
+            {{ if eq .AreaID.String "00000000-0000-0000-0000-000000000000" }}
+                <span id="area-link">None</span>
+            {{ else }}
+                <a id="area-link" href="/area/{{.AreaID}}" 
+                    class="clickable"
+                    hx-boost="true"
+                >{{ .AreaID }}</a>
+            {{ end }}
+            <input type="text" id="area_id" name="area_id" value="{{ .AreaID }}" readonly>
+            {{ if .Create }}
+                <button id="move-btn"
+                    hx-post="/box/{{.ID}}/addto/area"
+                    hx-target="#place-holder"
+                    hx-push-url="false"
+                    {{ if not (or .Edit .Create) }}disabled{{ end }}
+                >Add to area</button>
+            {{ else }}
+                <button id="move-btn"
+                    hx-post="/box/{{.ID}}/moveto/area"
+                    hx-target="#place-holder"
+                    hx-push-url="false"
+                    {{ if not (or .Edit .Create) }}disabled{{ end }}
+                >Move to area</button>
+            {{ end }}
+            <br>
+
         </div>
 
-        <div id="image-preview-{{ .ID }}" class="box-detail-picture">
-            {{ if .Picture }}
-            <label for="picture">Picture:</label>
-            <img class="detail" src="data:image/png;base64,{{ .Picture }}" alt="{{ .Label }}">
-            {{ else }}
-            <p>No image available</p>
-            {{ end }}
-
-            {{ if .Edit }}
-            <input type="file" id="picture-{{ .ID }}" name="picture" accept="image/*" >
-            {{ else }}
-            <input type="file" id="picture-{{ .ID }}" name="picture" accept="image/*" disabled>
-            {{ end }}
-        </div>
+        {{ $imagePreview := map "ID" .ID "Label" .Label "Edit" .Edit "Create" .Create "Picture" .Picture }}
+        {{ template "details-image-preview" $imagePreview.Map }}
     </div>  
 
 
@@ -277,7 +295,7 @@
     hx-swap="outerHTML"
     hx-trigger="keyup changed delay:500ms from:#search-bar, keyup changed delay:500ms from:#item-limit"
 >
-    <table class="box-list">
+    <table class="list">
         <thead>
             <tr>
                 <th>Label</th>

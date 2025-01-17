@@ -61,7 +61,7 @@ func InitTemplates(directory string) error {
 
 // templateInlineMap is used inside a template directly.
 type templateInlineMap struct {
-	Map map[string]string
+	Map map[string]any
 }
 
 // newMap defines a template function "map" for inline definition of data to be passed to other templates.
@@ -72,14 +72,17 @@ type templateInlineMap struct {
 //
 //	// Pass variable to a template "another-template" with .Map()
 //	{{ template "another-template" $inlineMap.Map() }}
-func newMap(values ...string) (*templateInlineMap, error) {
+func newMap(values ...any) (*templateInlineMap, error) {
 	if len(values)%2 != 0 {
 		return nil, errors.New("missing keys or values")
 	}
 
-	m := make(map[string]string, 0)
+	m := make(map[string]any, 0)
 	for i := 0; i < len(values); i += 2 {
-		k := values[i]
+		k, ok := values[i].(string)
+		if !ok {
+			logg.Debug(values[i])
+		}
 		v := values[i+1]
 		m[k] = v
 	}
