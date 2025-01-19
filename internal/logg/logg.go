@@ -30,7 +30,7 @@ var errorLogger = log.New(os.Stderr, Red+"ERROR:\t"+Gray, log.Ltime|log.Lshortfi
 var fatalLogger = log.New(os.Stderr, Red+"FATAL:\t"+Gray, log.Ltime|log.Lshortfile)
 var debugLogger = log.New(os.Stdout, Green+"DEBUG:\t"+Gray, log.Ltime|log.Lshortfile)
 var infoLogger = log.New(os.Stderr, blue+"INFO:\t"+Gray, log.Ltime|log.Lshortfile)
-var warningLogger = log.New(os.Stdout, Yellow+"WARNING:\t"+Yellow, log.Ltime|log.Lshortfile)
+var warningLogger = log.New(os.Stdout, Yellow+"WARN:\t"+Yellow, log.Ltime|log.Lshortfile)
 
 var debugLoggerEnabled = false
 var infoLoggerEnabled = false

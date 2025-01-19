@@ -21,13 +21,15 @@ func getTemplateData(r *http.Request, db ShelfDB, w http.ResponseWriter) common.
 	data.SetSearchInput(true)
 	data.SetSearchInputLabel("Search Shelves")
 	data.SetFormHXGet("/shelves")
-	data.SetRowHXGet("/shelves")
+	data.SetRowHXGet("/shelf")
 	data.SetShowLimit(env.Config().ShowTableSize())
 	data.SetCount(count)
 
 	data = common.Pagination2(data)
 	var shelves []common.ListRow
 	if count > 0 {
+
+		data.SetListRowTemplateOptions(common.ListRowTemplateOptions{RowHXGet: "shelf"})
 		shelves, err = filledShelfRows(db, data)
 		if err != nil {
 			server.WriteInternalServerError("cant query shelves please comeback later", err, w, r)
@@ -50,6 +52,7 @@ func filledShelfRows(db ShelfDB, data common.Data) ([]common.ListRow, error) {
 
 	for i, box := range shelves {
 		shelvesMaps[i] = box
+		shelvesMaps[i].ListRowTemplateOptions = data.GetListRowTemplateOptions()
 	}
 
 	// If count is less than limit, add empty maps to reach the limit

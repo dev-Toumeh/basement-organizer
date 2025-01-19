@@ -72,18 +72,12 @@ func authRoutes(db auth.AuthDatabase) {
 
 func itemsRoutes(db items.ItemDatabase) {
 	Handle("/api/v1/implement-me", server.ImplementMeHandler)
-	Handle("/template/item-form", itemTemp)
-	Handle("/template/item-search", searchItemTemp)
 	Handle("/template/item-dummy", func(w http.ResponseWriter, r *http.Request) {
 		db.InsertSampleItems()
 		templates.RenderSuccessNotification(w, "dummy items has been added")
 	})
 
 	Handle("/delete-item", items.DeleteItemHandler(db))
-	Handle("/move-item", moveItem)
-	Handle("/item", items.ReadItemHandler(db, func(w io.Writer, data any) {
-		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
-	}))
 	Handle("/items-ids", items.ReadItemsHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEMS_CONTAINER, data)
 	}))
@@ -102,7 +96,7 @@ func itemsRoutes(db items.ItemDatabase) {
 
 func itemsRoutes2(db items.ItemDatabase) {
 	Handle("/items", items.PageTemplate(db))
-	Handle("/items/{id}", items.DetailsTemplate(db))
+	Handle("/item/{id}", items.DetailsTemplate(db))
 	Handle("/items/create", items.CreateTemplate())
 
 	// API's
@@ -174,8 +168,8 @@ func boxesRoutes(db *database.DB) {
 func shelvesRoutes(db shelves.ShelfDB) {
 	//Template
 	Handle("/shelves", shelves.PageTemplate(db))
-	Handle("/shelves/create", shelves.CreateTemplate())
-	Handle("/shelves/{id}", shelves.DetailsTemplate(db))
+	Handle("/shelf/create", shelves.CreateTemplate())
+	Handle("/shelf/{id}", shelves.DetailsTemplate(db))
 	Handle("/shelves/add-list", shelves.AddListTemplate(db))
 	Handle("/shelves/add-input/{id}", shelves.AddInputTemplate(db))
 

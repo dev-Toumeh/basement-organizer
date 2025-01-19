@@ -69,12 +69,12 @@
                 hx-swap="outerHTML"
         >Update</button>
         <button type="button"
-                hx-get="/shelves/{{ .ID }}"
+                hx-get="/shelf/{{ .ID }}"
                 hx-target="body"
                 hx-confirm="Are you sure?"
         >Cancel</button>
     {{ else }}
-        <button hx-get="/shelves/{{ .ID }}?edit=true"
+        <button hx-get="/shelf/{{ .ID }}?edit=true"
                 hx-target="body"
                 hx-swap="innerHTML"
         >Edit</button>

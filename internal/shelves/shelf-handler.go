@@ -109,7 +109,7 @@ func updateShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
 		templates.RenderErrorNotification(w, "Error while updating the shelf, please try again later")
 		return
 	}
-	url := fmt.Sprintf("/shelves/update?id=%s", shelf.ID.String())
+	url := "/shelf/" + shelf.ID.String()
 	server.RedirectWithSuccessNotification(w, url, "Shelf updated successfully")
 }
 
