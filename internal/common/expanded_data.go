@@ -520,7 +520,6 @@ func (data *Data) IsBoxAvailable() bool {
 
 	if uuidValue, ok := boxID.(uuid.UUID); ok {
 		if uuidValue == uuid.Nil {
-			logg.Infof("BoxID is uuid.Nil.")
 			return false
 		}
 		return true
@@ -576,6 +575,43 @@ func (data *Data) IsShelfAvailable() bool {
 	logg.Warning("ShelfID is of an unsupported type.")
 	return false
 }
+
+// check if the Area is available while previewing the Item
+func (data *Data) IsAreaAvailable() bool {
+	item := data.GetItem()
+	if item == nil {
+		logg.Warning("Item is not set. Please set an Item before checking if the Area is available.")
+		return false
+	}
+
+	AreaID, exists := item["AreaID"]
+	if !exists {
+		logg.Warning("AreaID key is missing in the Item.")
+		return false
+	}
+
+	if uuidValue, ok := AreaID.(uuid.UUID); ok {
+		if uuidValue == uuid.Nil {
+			return false
+		}
+		return true
+	}
+
+	// If AreaID is a string, parse it as a UUID
+	if AreaIDStr, ok := AreaID.(string); ok {
+		parsedUUID, err := uuid.FromString(AreaIDStr)
+		if err != nil || parsedUUID == uuid.Nil {
+			logg.Warning("AreaID is either invalid or uuid.Nil.")
+			return false
+		}
+		return true
+	}
+
+	// If AreaID is of an unexpected type
+	logg.Warning("AreaID is of an unsupported type.")
+	return false
+}
+
 // SetListRowTemplateOptions sets the ListRowTemplateOptions in the TypeMap.
 func (data *Data) SetListRowTemplateOptions(value ListRowTemplateOptions) {
 	data.TypeMap["ListRowTemplateOptions"] = value.Map()

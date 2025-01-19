@@ -45,6 +45,9 @@ func RegisterRoutes(db *database.DB) {
 	shelvesRoutes(db)
 	areaRoutes(db)
 	experimentalRoutes(db)
+
+	Handle("/addto/{thing}", AddTo(db))
+	Handle("/element/{thing}/{thingid}", Element(db))
 }
 
 func staticRoutes() {
