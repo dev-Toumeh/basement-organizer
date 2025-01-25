@@ -65,6 +65,7 @@ func (data *Data) GetTitle() (string, error) {
 }
 
 func (data *Data) SetAuthenticated(value bool) {
+	data.Authenticated = value
 	data.TypeMap["Authenticated"] = value
 }
 
@@ -109,6 +110,7 @@ func (data *Data) GetNotFound() (bool, error) {
 }
 
 func (data *Data) SetEnvDevelopment(value bool) {
+	data.EnvDevelopment = value
 	data.TypeMap["EnvDevelopment"] = value
 }
 
@@ -518,7 +520,6 @@ func (data *Data) IsBoxAvailable() bool {
 
 	if uuidValue, ok := boxID.(uuid.UUID); ok {
 		if uuidValue == uuid.Nil {
-			logg.Infof("BoxID is uuid.Nil.")
 			return false
 		}
 		return true
@@ -549,13 +550,12 @@ func (data *Data) IsShelfAvailable() bool {
 
 	ShelfID, exists := item["ShelfID"]
 	if !exists {
-		logg.Warning("BoxID key is missing in the Item.")
+		logg.Warning("ShelfID key is missing in the Item.")
 		return false
 	}
 
 	if uuidValue, ok := ShelfID.(uuid.UUID); ok {
 		if uuidValue == uuid.Nil {
-			logg.Warning("ShelfID is uuid.Nil.")
 			return false
 		}
 		return true
@@ -574,4 +574,65 @@ func (data *Data) IsShelfAvailable() bool {
 	// If ShelfID is of an unexpected type
 	logg.Warning("ShelfID is of an unsupported type.")
 	return false
+}
+
+// check if the Area is available while previewing the Item
+func (data *Data) IsAreaAvailable() bool {
+	item := data.GetItem()
+	if item == nil {
+		logg.Warning("Item is not set. Please set an Item before checking if the Area is available.")
+		return false
+	}
+
+	AreaID, exists := item["AreaID"]
+	if !exists {
+		logg.Warning("AreaID key is missing in the Item.")
+		return false
+	}
+
+	if uuidValue, ok := AreaID.(uuid.UUID); ok {
+		if uuidValue == uuid.Nil {
+			return false
+		}
+		return true
+	}
+
+	// If AreaID is a string, parse it as a UUID
+	if AreaIDStr, ok := AreaID.(string); ok {
+		parsedUUID, err := uuid.FromString(AreaIDStr)
+		if err != nil || parsedUUID == uuid.Nil {
+			logg.Warning("AreaID is either invalid or uuid.Nil.")
+			return false
+		}
+		return true
+	}
+
+	// If AreaID is of an unexpected type
+	logg.Warning("AreaID is of an unsupported type.")
+	return false
+}
+
+// SetListRowTemplateOptions sets the ListRowTemplateOptions in the TypeMap.
+func (data *Data) SetListRowTemplateOptions(value ListRowTemplateOptions) {
+	data.TypeMap["ListRowTemplateOptions"] = value.Map()
+}
+
+// GetListRowTemplateOptions retrieves the ListRowTemplateOptions from the TypeMap.
+func (data *Data) GetListRowTemplateOptions() ListRowTemplateOptions {
+	if val, exists := data.TypeMap["ListRowTemplateOptions"]; exists {
+		if optionsMap, ok := val.(map[string]interface{}); ok {
+			return ListRowTemplateOptions{
+				RowHXGet:                          optionsMap["RowHXGet"].(string),
+				RowAction:                         optionsMap["RowAction"].(bool),
+				RowActionType:                     optionsMap["RowActionType"].(string),
+				RowActionHXPost:                   optionsMap["RowActionHXPost"].(string),
+				RowActionHXPostWithID:             optionsMap["RowActionHXPostWithID"].(string),
+				RowActionHXPostWithIDAsQueryParam: optionsMap["RowActionHXPostWithIDAsQueryParam"].(string),
+				RowActionName:                     optionsMap["RowActionName"].(string),
+				RowActionHXTarget:                 optionsMap["RowActionHXTarget"].(string),
+				HideMoveCol:                       optionsMap["HideMoveCol"].(bool),
+			}
+		}
+	}
+	return ListRowTemplateOptions{}
 }

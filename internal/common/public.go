@@ -9,6 +9,7 @@ import (
 	"maps"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -133,4 +134,12 @@ func ShortenPictureForLogs(picture string) string {
 		return ""
 	}
 	return picture[0:3] + "...(shortened)"
+}
+
+// CapitalizeFirstLetter converts the first letter of a string to uppercase.
+func ToUpper(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return strings.ToUpper(string(s[0])) + s[1:]
 }

@@ -14,13 +14,14 @@ import (
 	// "github.com/gofrs/uuid/v5"
 )
 
-// Render shelf Root page where you can search the available Shelves
+// Render Item Root page where you can search the available Items
 func PageTemplate(db ItemDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := getTemplateData(r, db, w)
+		data.SetEnvDevelopment(env.Development())
 		data.SetPlaceHolder(true)
 		data.SetRequestOrigin("Items")
-		server.MustRender(w, r, "items-page", data.TypeMap)
+		server.MustRender(w, r, "item-page-template", data.TypeMap)
 	}
 }
 
@@ -63,6 +64,7 @@ func getTemplateData(r *http.Request, db ItemDatabase, w http.ResponseWriter) co
 	data = common.Pagination2(data)
 	var items []common.ListRow
 	if count > 0 {
+		data.SetListRowTemplateOptions(common.ListRowTemplateOptions{RowHXGet: "item"})
 		items, err = filledItemRows(db, data)
 		if err != nil {
 			server.WriteInternalServerError("can't query items please comeback later", err, w, r)
@@ -85,6 +87,7 @@ func filledItemRows(db ItemDatabase, data common.Data) ([]common.ListRow, error)
 
 	for i, item := range items {
 		itemsMaps[i] = item
+		itemsMaps[i].ListRowTemplateOptions = data.GetListRowTemplateOptions()
 	}
 
 	// If count is less than limit, add empty maps to reach the limit
@@ -100,6 +103,7 @@ func DetailsTemplate(db ItemDatabase) http.HandlerFunc {
 		errMsgForUser := "the requested Shelf doesn't exist"
 
 		data := common.InitData2(r)
+		data.SetEnvDevelopment(env.Development())
 		id := server.ValidID(w, r, errMsgForUser)
 		if id.IsNil() {
 			return
@@ -124,9 +128,6 @@ func DetailsTemplate(db ItemDatabase) http.HandlerFunc {
 				item.AreaLabel = item_fts.AreaLabel
 			}
 		}
-		// funcMap := template.FuncMap{
-		// 	"GetTypeMap": func() map[string]any { return data.GetTypeMap() },
-		// }
 
 		data.SetItem(item.Map())
 		err = templates.Render(w, "item-details-template", data)
