@@ -66,6 +66,21 @@ func DetailsTemplate(db ShelfDB) http.HandlerFunc {
 		page.Authenticated = authenticated
 		page.User = user
 
+		var notifications server.Notifications
+		shelf.InnerBoxesList, err = common.ListTemplateInnerThingsFrom(common.THING_BOX, common.THING_SHELF, w, r)
+		if err != nil {
+			notifications.AddError("could not load inner boxes")
+		}
+
+		shelf.InnerItemsList, err = common.ListTemplateInnerThingsFrom(common.THING_ITEM, common.THING_SHELF, w, r)
+		if err != nil {
+			notifications.AddError("could not load inner items")
+		}
+
+		if len(notifications.ServerNotificationEvents) > 0 {
+			server.TriggerNotifications(w, notifications)
+		}
+
 		maps := []map[string]any{
 			page.Map(),
 			shelf.Map(),

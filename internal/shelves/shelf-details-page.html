@@ -5,6 +5,10 @@
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
     {{ template "shelf-details" . }}
+    <h2>Items</h2>
+    {{ template "list" .InnerItemsList }}
+    <h2>Boxes</h2>
+    {{ template "list" .InnerBoxesList }}
 </body>
 {{ template "close-html-tag" .}}
 {{ end }}

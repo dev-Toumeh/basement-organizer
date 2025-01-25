@@ -9,14 +9,16 @@ import (
 
 type Shelf struct {
 	common.BasicInfo
-	Items  []*common.ListRow `json:"items"`
-	Boxes  []*common.ListRow `json:"boxes"`
-	Height float32
-	Width  float32
-	Depth  float32
-	Rows   int
-	Cols   int
-	AreaId uuid.UUID
+	Items          []*common.ListRow `json:"items"`
+	Boxes          []*common.ListRow `json:"boxes"`
+	InnerItemsList common.ListTemplate
+	InnerBoxesList common.ListTemplate
+	Height         float32
+	Width          float32
+	Depth          float32
+	Rows           int
+	Cols           int
+	AreaId         uuid.UUID
 }
 
 type ShelfListRow struct {
@@ -74,6 +76,8 @@ func (s *Shelf) Map() map[string]interface{} {
 		"Depth":          s.Depth,
 		"Rows":           s.Rows,
 		"Cols":           s.Cols,
+		"InnerItemsList": s.InnerItemsList,
+		"InnerBoxesList": s.InnerBoxesList,
 	}
 
 	return shelfMap

@@ -451,7 +451,7 @@ func ListTemplateInnerThingsFrom(innerThings int, from int, w http.ResponseWrite
 		}
 		listTmpl.Rows = rows
 		listTmpl.AddRowOptions(ListRowTemplateOptions{
-			RowHXGet: "/items",
+			RowHXGet: "/item",
 		})
 		break
 
@@ -555,7 +555,7 @@ func ListTemplateInnerThingsFrom(innerThings int, from int, w http.ResponseWrite
 		}
 		listTmpl.Rows = rows
 		listTmpl.AddRowOptions(ListRowTemplateOptions{
-			RowHXGet: "/shelves",
+			RowHXGet: "/shelf",
 		})
 		break
 	}

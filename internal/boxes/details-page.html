@@ -74,7 +74,7 @@
             {{ if eq .ShelfID.String "00000000-0000-0000-0000-000000000000" }}
                 <span id="shelf-link">None</span>
             {{ else }}
-                <a id="shelf-link" href="/shelves/{{.ShelfID}}" 
+                <a id="shelf-link" href="/shelf/{{.ShelfID}}" 
                     class="clickable"
                     hx-boost="true"
                 >{{ .ShelfID }}</a>
