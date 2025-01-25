@@ -2,6 +2,7 @@ package boxes
 
 import (
 	"basement/main/internal/auth"
+	"basement/main/internal/common"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
@@ -10,6 +11,33 @@ import (
 	"maps"
 	"net/http"
 )
+
+type boxDetailsPageTemplate struct {
+	templates.PageTemplate
+	Box
+	Edit           bool
+	Create         bool
+	InnerItemsList common.ListTemplate
+	InnerBoxesList common.ListTemplate
+}
+
+// BoxDetailsPageTemplateData returns struct needed for "templates.TEMPLATE_BOX_DETAILS_PAGE" with default values.
+func BoxDetailsPageTemplateData() boxDetailsPageTemplate {
+	pageTmpl := templates.NewPageTemplate()
+	boxTmpl := boxDetailsPageTemplate{
+		PageTemplate: pageTmpl,
+	}
+	return boxTmpl
+}
+
+func (tmpl boxDetailsPageTemplate) Map() map[string]any {
+	data := make(map[string]any, 0)
+	maps.Copy(data, tmpl.PageTemplate.Map())
+	maps.Copy(data, tmpl.Box.Map())
+	data["Edit"] = tmpl.Edit
+	data["Create"] = tmpl.Create
+	return data
+}
 
 // DetailsPage shows a page with details of a specific box.
 func DetailsPage(db BoxDatabase) http.HandlerFunc {
@@ -30,24 +58,93 @@ func DetailsPage(db BoxDatabase) http.HandlerFunc {
 			notFound = true
 		}
 		box.ID = id
-		data := BoxPageTemplateData()
-		data.Box = &box
-
-		data.Title = fmt.Sprintf("Box - %s", box.Label)
-		data.Authenticated = authenticated
-		data.User = user
-		data.NotFound = notFound
+		logg.Debug("area id" + box.AreaID.String())
+		tmpl := BoxDetailsPageTemplateData()
+		tmpl.Box = box
+		tmpl.Title = fmt.Sprintf("Box - %s", box.Label)
+		tmpl.Authenticated = authenticated
+		tmpl.User = user
+		tmpl.NotFound = notFound
 
 		searchInput := items.NewSearchInputTemplate()
 		searchInput.SearchInputLabel = "Search boxes"
 		searchInput.SearchInputHxTarget = "#box-list"
 		searchInput.SearchInputHxPost = "/boxes"
 
-		dataForTemplate := data.Map()
-		maps.Copy(dataForTemplate, searchInput.Map())
+		// innerBoxes := common.ListTemplate{
+		// 	FormID:        "inner-boxes",
+		// 	FormHXGet:     "/boxes",
+		// 	Rows:          box.InnerBoxes,
+		// 	RequestOrigin: "Boxes",
+		// 	FormHXTarget:  "#inner-boxes",
+		// 	// PlaceHolder:   true,
+		// }
+		// innerBoxes.AddRowOptions(common.ListRowTemplateOptions{
+		// 	RowHXGet: "/box",
+		// })
 
-		dataForTemplate["ListRows"] = templates.SliceToSliceMaps(box.Items)
+		var notifications server.Notifications
+		tmpl.InnerBoxesList, err = common.ListTemplateInnerThingsFrom(common.THING_BOX, common.THING_BOX, w, r)
+		if err != nil {
+			notifications.AddError("could not load inner boxes")
+		}
 
-		server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, dataForTemplate)
+		tmpl.InnerItemsList, err = common.ListTemplateInnerThingsFrom(common.THING_ITEM, common.THING_BOX, w, r)
+		if err != nil {
+			notifications.AddError("could not load inner items")
+		}
+
+		// server.TriggerNotifications(w, )
+
+		// tmpl.InnerBoxesList.FormID = "inner-boxes"
+		// tmpl.InnerBoxesList.FormHXGet = "/boxes"
+		// tmpl.InnerBoxesList.Rows = box.InnerBoxes
+		// tmpl.InnerBoxesList.RequestOrigin = "Boxes"
+		// tmpl.InnerBoxesList.FormHXTarget = "#inner-boxes"
+
+		// tmpl.InnerBoxesList.AddRowOptions(common.ListRowTemplateOptions{
+		// 	RowHXGet: "/box",
+		// })
+		// if err != nil {
+		// 	logg.Err(err)
+		// 	return
+		// }
+		// listTmpl.FormID = "innerboxes"
+		// tmpl.InnerBoxesList = innerBoxes
+
+		// innerItems := common.ListTemplate{
+		// 	FormID:        "inner-items",
+		// 	Rows:          box.Items,
+		// 	RequestOrigin: "Items",
+		// }
+		// innerItems.AddRowOptions(common.ListRowTemplateOptions{
+		// 	RowHXGet: "/items",
+		// })
+		// tmpl.InnerItemsList = innerItems
+		if len(notifications.ServerNotificationEvents) > 0 {
+			server.TriggerNotifications(w, notifications)
+		}
+		server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, tmpl)
+	}
+}
+
+func RenderBoxDetailsForm(db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		box, err := readBoxFromRequest(w, r, db)
+		if err != nil {
+			server.WriteNotFoundError("box not found", err, w, r)
+			return
+		}
+
+		editParam := r.FormValue("edit")
+		edit := false
+		if editParam == "true" {
+			edit = true
+		}
+		b := boxDetailsPageTemplate{Box: box, Edit: edit}
+		opts := common.ListRowTemplateOptions{RowHXGet: "box"}
+		common.AddRowOptionsToListRows2(b.Box.InnerBoxes, opts)
+
+		server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS, b.Map())
 	}
 }

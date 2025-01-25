@@ -458,3 +458,36 @@ func TestMoveBoxToShelf(t *testing.T) {
 	err = dbTest.MoveBoxToShelf(BOX_1.ID, VALID_UUID_NOT_EXISTING)
 	assert.NotEqual(t, err, nil)
 }
+
+func TestMoveBoxToArea(t *testing.T) {
+	EmptyTestDatabase()
+	resetTestBoxes()
+	resetShelves()
+	dbTest.CreateBox(BOX_1)
+	dbTest.CreateArea(*AREA_1)
+	fetchedBox, _ := dbTest.BoxById(BOX_1.ID)
+	// fetchedArea, _ := dbTest.AreaById(AREA_1.ID)
+	assert.Equal(t, fetchedBox.AreaID, uuid.Nil)
+	// assert.Equal(t, fetchedArea.Boxes, nil)
+
+	// Move in
+	err := dbTest.MoveBoxToArea(BOX_1.ID, AREA_1.ID)
+	assert.Equal(t, err, nil)
+	fetchedBox, _ = dbTest.BoxById(BOX_1.ID)
+	// fetchedArea, _ = dbTest.Area(*AREA_1.ID)
+	assert.Equal(t, fetchedBox.AreaID, AREA_1.ID)
+	// assert.NotEqual(t, fetchedArea.Boxes, nil)
+	// assert.Equal(t, fetchedArea.Boxes[0].ID, BOX_1.ID)
+
+	// Move out
+	err = dbTest.MoveBoxToArea(BOX_1.ID, uuid.Nil)
+	assert.Equal(t, err, nil)
+	fetchedBox, _ = dbTest.BoxById(BOX_1.ID)
+	// fetchedArea, _ = dbTest.Area(*AREA_1.ID)
+	assert.Equal(t, fetchedBox.AreaID, uuid.Nil)
+	// assert.Equal(t, fetchedArea.Boxes, nil)
+
+	// Move non existent ID
+	err = dbTest.MoveBoxToArea(BOX_1.ID, VALID_UUID_NOT_EXISTING)
+	assert.NotEqual(t, err, nil)
+}

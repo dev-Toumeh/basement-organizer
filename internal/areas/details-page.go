@@ -2,11 +2,29 @@ package areas
 
 import (
 	"basement/main/internal/auth"
+	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
+	"basement/main/internal/templates"
 	"fmt"
 	"net/http"
 )
+
+type AreaDetailsPageData struct {
+	templates.PageTemplate
+	Area
+	InnerItemsList   common.ListTemplate
+	InnerBoxesList   common.ListTemplate
+	InnerShelvesList common.ListTemplate
+	Edit             bool
+	Create           bool
+}
+
+// NewAreaDetailsPageData returns struct needed for "templates.TEMPLATE_area_DETAILS_PAGE" with default values.
+func NewAreaDetailsPageData() (data AreaDetailsPageData) {
+	data.PageTemplate = templates.NewPageTemplate()
+	return data
+}
 
 // DetailsPage shows a page with details of a specific area.
 func DetailsPage(db AreaDatabase) http.HandlerFunc {
@@ -41,6 +59,13 @@ func DetailsPage(db AreaDatabase) http.HandlerFunc {
 		if editParam == "true" {
 			data.Edit = true
 		}
+
+		data.InnerItemsList, err = common.ListTemplateInnerThingsFrom(common.THING_ITEM, common.THING_AREA, w, r)
+		data.InnerBoxesList, err = common.ListTemplateInnerThingsFrom(common.THING_BOX, common.THING_AREA, w, r)
+		data.InnerShelvesList, err = common.ListTemplateInnerThingsFrom(common.THING_SHELF, common.THING_AREA, w, r)
+		logg.Debugf("inner boxes %v", data.InnerBoxesList.Rows)
+
+		// {{ template "list" .InnerBoxesList }}
 
 		server.MustRender(w, r, "area-details-page", data)
 	}

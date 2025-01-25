@@ -26,7 +26,7 @@ type ListRow struct {
 	ListRowTemplateOptions
 }
 
-func (row *ListRow) Map() map[string]any {
+func (row ListRow) Map() map[string]any {
 	m := map[string]interface{}{
 		"ID":             row.ID,
 		"Label":          row.Label,
@@ -62,6 +62,12 @@ func AddRowOptionsToListRows(rows []ListRow, opts ListRowTemplateOptions) []List
 		rows[i].ListRowTemplateOptions = opts
 	}
 	return rows
+}
+
+func AddRowOptionsToListRows2(rows []ListRow, opts ListRowTemplateOptions) {
+	for i := range rows {
+		rows[i].ListRowTemplateOptions = opts
+	}
 }
 
 type ListRowTemplateOptions struct {

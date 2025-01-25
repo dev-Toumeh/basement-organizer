@@ -14,7 +14,7 @@ const DATABASE_FILE_PATH = "./internal/database/sqlite-database.db"
 
 var ErrExist = errors.New("already exists")
 var ErrNotExist = errors.New("does not exist")
-var ErrNotEmpty = errors.New("already exists")
+var ErrNotEmpty = errors.New("not empty")
 var ErrNotImplemented = errors.New("is not implemented")
 
 // add statement to create new table
@@ -148,6 +148,10 @@ func (db *DB) insertDummyData() {
 	if err != nil {
 		logg.WrapErr(err)
 	}
+	areaIDs, err := db.AreaIDs()
+	if err != nil {
+		logg.WrapErr(err)
+	}
 	db.MoveItemToBox(itemIDs[0], boxIDs[0])
 	db.MoveItemToBox(itemIDs[1], boxIDs[0])
 	db.MoveItemToBox(itemIDs[2], boxIDs[0])
@@ -160,4 +164,10 @@ func (db *DB) insertDummyData() {
 	db.MoveBoxToBox(boxIDs[3], boxIDs[5])
 	db.MoveBoxToBox(boxIDs[3], boxIDs[5])
 	db.MoveBoxToBox(boxIDs[5], boxIDs[6])
+	db.MoveItemToArea(itemIDs[0], areaIDs[0])
+	db.MoveBoxToArea(boxIDs[0], areaIDs[0])
+	db.MoveShelfToArea(shelfRows[1].ID, areaIDs[0])
+	db.MoveShelfToArea(shelfRows[2].ID, areaIDs[0])
+	// db.MoveShelfToArea(shelfRows[3].ID, areaIDs[0])
+	// db.MoveShelfToArea(shelfRows[4].ID, areaIDs[0])
 }

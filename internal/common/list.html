@@ -135,11 +135,19 @@
 
 
 {{ define "list-buttons"}}
+{{ $FormID := "list" }}
+{{ if .FormID }} {{ $FormID = .FormID}} {{ end }}
 <div id="actions">
     {{ if eq .RequestOrigin "Items" }}
         <button 
-            hx-delete="/delete-item"
-            hx-target="#item-list"
+            {{ if .HXDelete }}
+                hx-delete="{{.HXDelete}}"
+                hx-target="#{{$FormID}}"
+                hx-select="#{{$FormID}}"
+            {{ else }}
+                hx-delete="/boxes"
+                hx-target="#item-list"
+            {{ end }}
             hx-swap="innerHTML"
             hx-push-url="false"
         >Delete</button>
@@ -166,9 +174,14 @@
         >Move to Area</button>
 
     {{ else if eq .RequestOrigin "Boxes" }}
-        <button hx-delete="/boxes"
-            hx-target="#list"
-            hx-select="#list"
+        <button
+            {{ if .HXDelete }}
+                hx-delete="{{.HXDelete}}"
+            {{ else }}
+                hx-delete="/boxes"
+            {{ end }}
+            hx-target="#{{$FormID}}"
+            hx-select="#{{$FormID}}"
             hx-push-url="false"
         >Delete</button>
         <button
@@ -213,8 +226,13 @@
 
     {{ else if eq .RequestOrigin "Shelves" }}
         <button 
-            hx-delete="/api/v1/delete/shelves"
-            hx-swap="outerHTML"
+            {{ if .HXDelete }}
+                hx-delete="{{.HXDelete}}"
+            {{ else }}
+                hx-delete="/api/v1/delete/shelves"
+            {{ end }}
+            hx-target="#{{$FormID}}"
+            hx-select="#{{$FormID}}"
             hx-push-url="false"
         >Delete</button>
         <button 

@@ -252,7 +252,7 @@ func (db *DB) DeleteShelf(id uuid.UUID) (label string, err error) {
 		return label, logg.WrapErr(err)
 	}
 	if shelf.Items != nil || shelf.Boxes != nil {
-		return shelf.Label, db.ErrorNotEmpty()
+		return shelf.Label, logg.WrapErr(db.ErrorNotEmpty())
 	}
 	err = db.deleteFrom("shelf", id)
 	if err != nil {
@@ -261,10 +261,29 @@ func (db *DB) DeleteShelf(id uuid.UUID) (label string, err error) {
 	return shelf.Label, nil
 }
 
+func (db *DB) DeleteShelf2(id uuid.UUID) error {
+	shelf, err := db.Shelf(id)
+	if err != nil {
+		logg.WrapErr(err)
+	}
+	if shelf.Items != nil || shelf.Boxes != nil {
+		return logg.WrapErr(db.ErrorNotEmpty())
+	}
+	err = db.deleteFrom("shelf", id)
+	if err != nil {
+		logg.WrapErr(err)
+	}
+	return nil
+}
+
 // MoveShelfToArea moves shelf to an area.
 // To move out of an area set "toAreaID = uuid.Nil".
 func (db *DB) MoveShelfToArea(shelfID uuid.UUID, toAreaID uuid.UUID) error {
-	return logg.WrapErr(ErrNotImplemented)
+	err := db.moveTo("shelf", shelfID, "area", toAreaID)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	return nil
 }
 
 // ShelfListRows retrieves shelves by label.
@@ -293,6 +312,22 @@ func (db *DB) ShelfListCounter(queryString string) (count int, err error) {
 	err = db.Sql.QueryRow(countQuery).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("error while fetching the number of shelves from the database: %v", err)
+	}
+	return count, nil
+}
+
+// returns the count of rows in the box_fts table that match the specified searchString.
+// If queryString is empty, it returns the count of all rows in the table.
+func (db *DB) InnerShelfInTableListCounter(searchString string, inTable string, inTableID uuid.UUID) (count int, err error) {
+	countQuery := `SELECT COUNT(*) FROM shelf_fts WHERE ` + inTable + `_id = ?;`
+
+	if searchString != "" {
+		countQuery = ` SELECT COUNT(*) FROM shelf_fts WHERE label MATCH '` + searchString + `*' AND ` + inTable + `_id = ?`
+	}
+
+	err = db.Sql.QueryRow(countQuery, inTableID.String()).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("error while fetching the number of shelf from the database: %v", err)
 	}
 	return count, nil
 }

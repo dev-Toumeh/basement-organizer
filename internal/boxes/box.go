@@ -3,13 +3,10 @@ package boxes
 import (
 	"basement/main/internal/common"
 	"basement/main/internal/env"
-	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
 	"encoding/json"
 	"fmt"
-	"maps"
-	"net/http"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -25,6 +22,7 @@ type BoxDatabase interface {
 	BoxIDs() ([]uuid.UUID, error)
 	BoxListRows(searchQuery string, limit int, page int) ([]common.ListRow, error)
 	BoxListRowByID(id uuid.UUID) (common.ListRow, error)
+	// InnerListRowsFrom2(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string) ([]common.ListRow, error)
 	BoxListCounter(searchQuery string) (count int, err error)
 	ShelfListCounter(searchQuery string) (count int, err error)
 	ShelfListRows(searchQuery string, limit int, page int) (shelfRows []common.ListRow, err error)
@@ -34,10 +32,10 @@ type BoxDatabase interface {
 
 type Box struct {
 	common.BasicInfo
-	OuterBoxID       uuid.UUID         `json:"outerboxid"`
-	Items            []*common.ListRow `json:"items"`
-	InnerBoxes       []*common.ListRow `json:"innerboxes"`
-	OuterBox         *common.ListRow   `json:"outerbox"`
+	OuterBoxID       uuid.UUID        `json:"outerboxid"`
+	Items            []common.ListRow `json:"items"`
+	InnerBoxes       []common.ListRow `json:"innerboxes"`
+	OuterBox         *common.ListRow  `json:"outerbox"`
 	ShelfID          uuid.UUID
 	AreaID           uuid.UUID
 	ShelfCoordinates *ShelfCoordinates `json:"shelfcoordinates"`
@@ -62,69 +60,31 @@ type ShelfCoordinates struct {
 	Col     int       `json:"col"`
 }
 
-type BoxTemplateData struct {
-	*Box
-	Edit   bool
-	Create bool
-}
+// type BoxTemplateData struct {
+// 	Box
+// 	Edit   bool
+// 	Create bool
+// }
+//
+// func (tmpl BoxTemplateData) Map() map[string]any {
+// 	data := make(map[string]any, 0)
+// 	maps.Copy(data, tmpl.Box.Map())
+// 	data["Edit"] = tmpl.Edit
+// 	data["Create"] = tmpl.Create
+// 	return data
+// }
 
-func (tmpl BoxTemplateData) Map() map[string]any {
-	data := make(map[string]any, 0)
-	maps.Copy(data, tmpl.Box.Map())
-	data["Edit"] = tmpl.Edit
-	data["Create"] = tmpl.Create
-	return data
-}
-
-type BoxListTemplateData struct {
-	Boxes []common.ListRow
-}
-
-func (tmpl BoxListTemplateData) Map() map[string]any {
-	data := make([]map[string]any, 0)
-	for i := range tmpl.Boxes {
-		data = append(data, tmpl.Boxes[i].Map())
-	}
-	return map[string]any{"Boxes": data}
-}
-
-func RenderBoxListItem(w http.ResponseWriter, data *Box) {
-	templates.Render(w, templates.TEMPLATE_BOX_LIST_ROW, data)
-}
-
-type boxPageTemplateData struct {
-	*BoxTemplateData
-	*templates.PageTemplate
-}
-
-// BoxPageTemplateData returns struct needed for "templates.TEMPLATE_BOX_DETAILS_PAGE" with default values.
-func BoxPageTemplateData() *boxPageTemplateData {
-	pageTmpl := templates.NewPageTemplate()
-	boxTmpl := BoxTemplateData{}
-	data := boxPageTemplateData{
-		BoxTemplateData: &boxTmpl,
-		PageTemplate:    &pageTmpl,
-	}
-	return &data
-}
-
-func (tmpl *boxPageTemplateData) Map() map[string]any {
-	data := make(map[string]any, 0)
-	maps.Copy(data, tmpl.BoxTemplateData.Map())
-	maps.Copy(data, tmpl.PageTemplate.Map())
-	return data
-}
-
-type BoxC struct {
-	Id          uuid.UUID    `json:"id"`
-	Label       string       `json:"label"       validate:"required,lte=128"`
-	Description string       `json:"description" validate:"omitempty,lte=256"`
-	Picture     string       `json:"picture"     validate:"omitempty,base64"`
-	QRCode      string       `json:"qrcode"      validate:"omitempty,alphanumunicode"`
-	Items       []items.Item `json:"items"`
-	InnerBoxes  []Box        `json:"innerboxes"`
-	OuterBox    Box          `json:"outerbox" `
-}
+// type BoxListTemplateData struct {
+// 	Boxes []common.ListRow
+// }
+//
+// func (tmpl BoxListTemplateData) Map() map[string]any {
+// 	data := make([]map[string]any, 0)
+// 	for i := range tmpl.Boxes {
+// 		data = append(data, tmpl.Boxes[i].Map())
+// 	}
+// 	return map[string]any{"Boxes": data}
+// }
 
 // NewBox returns an empty box with a new uuid.
 func NewBox() Box {
@@ -135,12 +95,12 @@ func NewBox() Box {
 func (b *Box) MarshalJSON() ([]byte, error) {
 	c := Box{}
 	for _, item := range b.Items {
-		it := *item
-		c.Items = append(c.Items, &common.ListRow{ID: it.ID, Label: it.Label, PreviewPicture: it.PreviewPicture})
+		it := item
+		c.Items = append(c.Items, common.ListRow{ID: it.ID, Label: it.Label, PreviewPicture: it.PreviewPicture})
 	}
 
 	for _, innerb := range b.InnerBoxes {
-		c.InnerBoxes = append(c.InnerBoxes, &common.ListRow{BoxID: innerb.BoxID, Label: innerb.Label, PreviewPicture: innerb.PreviewPicture})
+		c.InnerBoxes = append(c.InnerBoxes, common.ListRow{BoxID: innerb.BoxID, Label: innerb.Label, PreviewPicture: innerb.PreviewPicture})
 	}
 
 	// if b.OuterBox != nil {

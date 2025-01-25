@@ -11,11 +11,19 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
+type MoveButton struct {
+	Text     string
+	HXPost   string
+	HXTarget string
+}
+
 type ListTemplate struct {
 	FormID       string // Unique ID to distinguish between multiple ListTemplate forms.
 	FormHXGet    string // Replaces form. Is triggered by search input and pagination buttons. "/boxes, /shelves, ..."
 	FormHXPost   string // Replaces form. Is triggered by search input and pagination buttons. "/boxes, /shelves, ..."
 	FormHXTarget string // Changes the element which the response will replace.
+
+	HXDelete string // Delete item URL.
 
 	SearchInput      bool   // Show search input
 	SearchInputLabel string // Label of input
@@ -43,6 +51,7 @@ type ListTemplate struct {
 	AlternativeView bool // Displays Alternative View button. (unused currently).
 	RequestOrigin   string
 	HideMoveCol     bool
+	MoveButtons     []MoveButton
 }
 
 func (tmpl ListTemplate) Map() map[string]any {
@@ -51,6 +60,7 @@ func (tmpl ListTemplate) Map() map[string]any {
 		"FormHXGet":            tmpl.FormHXGet,
 		"FormHXPost":           tmpl.FormHXPost,
 		"FormHXTarget":         tmpl.FormHXTarget,
+		"HXDelete":             tmpl.HXDelete,
 		"SearchInput":          tmpl.SearchInput,
 		"SearchInputLabel":     tmpl.SearchInputLabel,
 		"SearchInputValue":     tmpl.SearchInputValue,
@@ -68,7 +78,18 @@ func (tmpl ListTemplate) Map() map[string]any {
 		"AlternativeView":      tmpl.AlternativeView,
 		"RequestOrigin":        tmpl.RequestOrigin,
 		"HideMoveCol":          tmpl.HideMoveCol,
+		"MoveButtons":          tmpl.MoveButtons,
 	}
+}
+
+func (tmpl ListTemplate) AddRowOptions(opts ListRowTemplateOptions) {
+	for i := range tmpl.Rows {
+		tmpl.Rows[i].ListRowTemplateOptions = opts
+	}
+}
+
+func (tmpl ListTemplate) AddMoveButton(text string, hxPOST string) {
+	tmpl.MoveButtons = append(tmpl.MoveButtons, MoveButton{HXPost: hxPOST, Text: text})
 }
 
 type PaginationButton struct {
@@ -143,7 +164,7 @@ func PickerInputElements(iID string, iValue string, aID string, aHref string, aL
 	return input + a
 }
 
-// Database implements partial thing Database (BoxDatabase, ...) interface.
+// Database implements common Database functions across different things.
 type Database interface {
 	BoxListCounter(searchQuery string) (count int, err error)
 	ShelfListCounter(searchQuery string) (count int, err error)
@@ -151,6 +172,55 @@ type Database interface {
 	BoxListRows(searchQuery string, limit int, page int) ([]ListRow, error)
 	ShelfListRows(searchQuery string, limit int, page int) (shelfRows []ListRow, err error)
 	AreaListRows(searchQuery string, limit int, page int) (areaRows []ListRow, err error)
+	InnerListRowsFrom2(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string) ([]ListRow, error)
+	InnerListRowsPaginatedFrom(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string, searchQuery string, limit int, page int) (listRows []ListRow, err error)
+	InnerBoxInBoxListCounter(searchString string, inTable string, inTableID uuid.UUID) (count int, err error)
+	InnerShelfInTableListCounter(searchString string, inTable string, inTableID uuid.UUID) (count int, err error)
+	InnerThingInTableListCounter(searchString string, thing int, inTable string, inTableID uuid.UUID) (count int, err error)
+	DeleteItem(itemID uuid.UUID) error
+	DeleteBox(boxID uuid.UUID) error
+	DeleteShelf(id uuid.UUID) (label string, err error)
+	DeleteShelf2(id uuid.UUID) error
+	DeleteArea(areaID uuid.UUID) error
+}
+
+const (
+	THING_ITEM = iota
+	THING_BOX
+	THING_SHELF
+	THING_AREA
+)
+
+func ValidThing(thing string) int {
+	switch thing {
+	case "item":
+		return THING_ITEM
+	case "box":
+		return THING_BOX
+	case "shelf":
+		return THING_SHELF
+	case "area":
+		return THING_AREA
+	default:
+		logg.Errorf(`thing "%s" is not valid, using THING_ITEM="%i"`, thing, THING_ITEM)
+		return THING_ITEM
+	}
+}
+
+func ValidThingString(thing int) string {
+	switch thing {
+	case THING_ITEM:
+		return "item"
+	case THING_BOX:
+		return "box"
+	case THING_SHELF:
+		return "shelf"
+	case THING_AREA:
+		return "area"
+	default:
+		logg.Errorf(`thing "%i" is not valid, using "item"`, thing)
+		return "item"
+	}
 }
 
 func ListPageMovePicker(db Database) http.HandlerFunc {
@@ -324,4 +394,236 @@ func ListPageMovePickerConfirm(DBMoveToThing func(thing1 uuid.UUID, thing2 uuid.
 		params := ListPageParams(r)
 		server.RedirectWithNotifications(w, redirectURL+params, notifications)
 	}
+}
+
+// THING_ITEM, THING_BOX, THING_SHELF, THING_AREA
+func ListTemplateInnerThingsFrom(innerThings int, from int, w http.ResponseWriter, r *http.Request) (listTmpl ListTemplate, err error) {
+	id := server.ValidID(w, r, "")
+	if id == uuid.Nil {
+		return listTmpl, logg.NewError("invalid id")
+	}
+
+	fromTable := ValidThingString(from)
+
+	switch innerThings {
+	case THING_ITEM:
+		listTmpl = ListTemplate{
+			FormID:        "inner-items",
+			FormHXGet:     "/" + fromTable + "/" + id.String() + "/innerItems",
+			FormHXTarget:  "#inner-items",
+			PlaceHolder:   true,
+			ShowLimit:     env.Config().ShowTableSize(),
+			HXDelete:      "/" + fromTable + "/" + id.String() + "/innerItems",
+			RequestOrigin: "Items",
+		}
+
+		// search-input template
+		searchString := SearchString(r)
+		listTmpl.SearchInput = true
+		listTmpl.SearchInputLabel = "Search items"
+		listTmpl.SearchInputValue = searchString
+
+		// pagination
+		var count int
+		count, err = commonDB.InnerThingInTableListCounter(searchString, THING_ITEM, fromTable, id)
+		if err != nil {
+			return listTmpl, err
+		}
+		pageNr := ParsePageNumber(r)
+		limit := ParseLimit(r)
+		data := map[string]any{}
+		data = Pagination(data, count, limit, pageNr)
+		listTmpl.Pagination = true
+		listTmpl.CurrentPageNumber = data["PageNumber"].(int)
+		listTmpl.Limit = limit
+		listTmpl.PaginationButtons = data["Pages"].([]PaginationButton)
+
+		var rows []ListRow
+
+		if count > 0 {
+			// rows, err = commonDB.InnerListRowsFrom2(fromTable, id, "item_fts")
+			rows, err = commonDB.InnerListRowsPaginatedFrom(fromTable+"_fts", id, "item", searchString, limit, pageNr)
+
+			if err != nil {
+				server.WriteInternalServerError("cant query items", err, w, r)
+				return
+			}
+		}
+		listTmpl.Rows = rows
+		listTmpl.AddRowOptions(ListRowTemplateOptions{
+			RowHXGet: "/items",
+		})
+		break
+
+	case THING_BOX:
+		listTmpl = ListTemplate{
+			FormID:       "inner-boxes",
+			FormHXGet:    "/" + fromTable + "/" + id.String() + "/innerBoxes",
+			FormHXTarget: "#inner-boxes",
+			PlaceHolder:  true,
+			ShowLimit:    env.Config().ShowTableSize(),
+			HXDelete:     "/" + fromTable + "/" + id.String() + "/innerBoxes",
+
+			RequestOrigin: "Boxes",
+		}
+		// listTmpl.MoveButtons = append(listTmpl.MoveButtons, MoveButton{HXPost:  "/boxes/moveto/box", Text: "move to box"})
+		// listTmpl.MoveButtons = append(listTmpl.MoveButtons, MoveButton{HXPost:  "/boxes/moveto/shelf", Text: "move to shelf"})
+		// listTmpl.MoveButtons = append(listTmpl.MoveButtons, MoveButton{HXPost:  "/boxes/moveto/area", Text: "move to area"})
+
+		// search-input template
+		searchString := SearchString(r)
+		listTmpl.SearchInput = true
+		listTmpl.SearchInputLabel = "Search boxes"
+		listTmpl.SearchInputValue = searchString
+
+		// pagination
+		var count int
+		count, err = commonDB.InnerThingInTableListCounter(searchString, THING_BOX, fromTable, id)
+		if err != nil {
+			return listTmpl, err
+		}
+		pageNr := ParsePageNumber(r)
+		limit := ParseLimit(r)
+		data := map[string]any{}
+		data = Pagination(data, count, limit, pageNr)
+		listTmpl.Pagination = true
+		listTmpl.CurrentPageNumber = data["PageNumber"].(int)
+		listTmpl.Limit = limit
+		listTmpl.PaginationButtons = data["Pages"].([]PaginationButton)
+
+		var rows []ListRow
+
+		if count > 0 {
+			// boxes, err = FilledRows(boxDB.BoxListRows, searchString, limit, pageNr, count, ListRowTemplateOptions{RowHXGet: "/box"})
+			// logg.Debug("commonDB.InnerListRowsFrom2(" + fromTable + ", id, " + fromTable + "_fts)")
+			// boxes, err = commonDB.InnerListRowsFrom2(fromTable, id, "box_fts")
+			rows, err = commonDB.InnerListRowsPaginatedFrom(fromTable+"_fts", id, "box", searchString, limit, pageNr)
+
+			if err != nil {
+				server.WriteInternalServerError("cant query boxes", err, w, r)
+				return
+			}
+		}
+		listTmpl.Rows = rows
+		listTmpl.AddRowOptions(ListRowTemplateOptions{
+			RowHXGet: "/box",
+		})
+		break
+
+	case THING_SHELF:
+		listTmpl = ListTemplate{
+			FormID:        "inner-shelves",
+			FormHXGet:     "/" + fromTable + "/" + id.String() + "/innerShelves",
+			FormHXTarget:  "#inner-shelves",
+			PlaceHolder:   false,
+			ShowLimit:     env.Config().ShowTableSize(),
+			HXDelete:      "/" + fromTable + "/" + id.String() + "/innerShelves",
+			RequestOrigin: "Shelves",
+		}
+
+		// search-input template
+		searchString := SearchString(r)
+		listTmpl.SearchInput = true
+		listTmpl.SearchInputLabel = "Search shelves"
+		listTmpl.SearchInputValue = searchString
+
+		// pagination
+		var count int
+		// count, err = commonDB.InnerShelfInTableListCounter(searchString, fromTable, id)
+		count, err = commonDB.InnerThingInTableListCounter(searchString, THING_SHELF, fromTable, id)
+		if err != nil {
+			return listTmpl, err
+		}
+		pageNr := ParsePageNumber(r)
+		limit := ParseLimit(r)
+		data := map[string]any{}
+		data = Pagination(data, count, limit, pageNr)
+		listTmpl.Pagination = true
+		listTmpl.CurrentPageNumber = data["PageNumber"].(int)
+		listTmpl.Limit = limit
+		listTmpl.PaginationButtons = data["Pages"].([]PaginationButton)
+
+		var rows []ListRow
+		// rows, err = commonDB.InnerListRowsFrom2(fromTable, id, "shelf_fts")
+
+		if count > 0 {
+			rows, err = commonDB.InnerListRowsPaginatedFrom(fromTable+"_fts", id, "shelf", searchString, limit, pageNr)
+			if err != nil {
+				server.WriteInternalServerError("cant query shelfs", err, w, r)
+				return
+			}
+		}
+		listTmpl.Rows = rows
+		listTmpl.AddRowOptions(ListRowTemplateOptions{
+			RowHXGet: "/shelves",
+		})
+		break
+	}
+
+	return listTmpl, err
+}
+
+// Generates inner list template for get and delete requests.
+// innerThings
+func HandleListTemplateInnerThingsData(innerThings int, from int) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			const errMsgForUser = "Can't find box"
+
+			tmpl, err := ListTemplateInnerThingsFrom(innerThings, from, w, r)
+			if err != nil {
+				server.WriteNotFoundError(errMsgForUser, err, w, r)
+				return
+			}
+			server.MustRender(w, r, templates.TEMPLATE_LIST, tmpl)
+			break
+
+		case http.MethodPost:
+			break
+
+		case http.MethodDelete:
+			var deleteFunc func(id uuid.UUID) error
+
+			switch innerThings {
+			case THING_ITEM:
+				deleteFunc = commonDB.DeleteItem
+				break
+			case THING_BOX:
+				deleteFunc = commonDB.DeleteBox
+				break
+			case THING_SHELF:
+				deleteFunc = commonDB.DeleteShelf2
+				break
+			case THING_AREA:
+				deleteFunc = commonDB.DeleteArea
+				break
+			}
+
+			server.DeleteThingsFromList(w, r, deleteFunc,
+				func(w http.ResponseWriter, r *http.Request) {
+					tmpl, _ := ListTemplateInnerThingsFrom(innerThings, from, w, r)
+					server.MustRender(w, r, templates.TEMPLATE_LIST, tmpl)
+				})
+			return
+
+		case http.MethodPut:
+			break
+
+		default:
+			// Other methods are not allowed.
+			w.Header().Add("Allow", http.MethodGet)
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			fmt.Fprint(w, "Method:'", r.Method, "' not allowed")
+		}
+	}
+}
+
+var commonDB Database
+
+// RegisterDBInstance sets db instance for internal package usage.
+// Is used for public functions that depend on the DB without the need to pass the instance as a parameter.
+func RegisterDBInstance(db Database) {
+	commonDB = db
+	logg.Debug("commonDB in common package registered")
 }

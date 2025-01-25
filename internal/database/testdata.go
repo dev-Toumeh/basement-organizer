@@ -353,7 +353,7 @@ var AREA_1 = &areas.Area{
 	BasicInfo: common.BasicInfo{
 		ID:             AREA_VALID_UUID_1,
 		Label:          "Test Area",
-		Description:    "A shelf for testing",
+		Description:    "An area for testing",
 		Picture:        VALID_BASE64_PNG,
 		PreviewPicture: "",
 		QRCode:         "testqrcode",
@@ -364,7 +364,7 @@ var AREA_2 = &areas.Area{
 	BasicInfo: common.BasicInfo{
 		ID:             AREA_VALID_UUID_2,
 		Label:          "Test Area 2",
-		Description:    "A shelf for testing",
+		Description:    "An area for testing",
 		Picture:        VALID_BASE64_PNG,
 		PreviewPicture: "",
 		QRCode:         "testqrcode",
@@ -375,7 +375,7 @@ var AREA_3 = &areas.Area{
 	BasicInfo: common.BasicInfo{
 		ID:             AREA_VALID_UUID_3,
 		Label:          "Test Area 3",
-		Description:    "A shelf for testing",
+		Description:    "An area for testing",
 		Picture:        VALID_BASE64_PNG,
 		PreviewPicture: "",
 		QRCode:         "",

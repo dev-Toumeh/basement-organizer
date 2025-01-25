@@ -144,6 +144,27 @@ func (s SQLListRow) ToListRow() (*common.ListRow, error) {
 
 }
 
+func (s SQLListRow) ToListRow2() (row common.ListRow, err error) {
+	id, err := uuid.FromString(s.ID.String)
+	if err != nil {
+		return row, logg.WrapErr(err)
+	}
+
+	return common.ListRow{
+		ID:             id,
+		Label:          ifNullString(s.Label),
+		Description:    ifNullString(s.Description),
+		PreviewPicture: ifNullString(s.PreviewPicture),
+		BoxID:          ifNullUUID(s.BoxID),
+		BoxLabel:       ifNullString(s.BoxLabel),
+		ShelfID:        ifNullUUID(s.ShelfID),
+		ShelfLabel:     ifNullString(s.ShelfLabel),
+		AreaID:         ifNullUUID(s.AreaID),
+		AreaLabel:      ifNullString(s.AreaLabel),
+	}, nil
+
+}
+
 // RowsToScan returns list of pointers for *sql.Rows.Scan() method.
 //
 //	// example usage:
@@ -249,7 +270,7 @@ func (db *DB) ItemListRowByID(id uuid.UUID) (*common.ListRow, error) {
 	if env.Development() {
 		b := bytes.Buffer{}
 		server.WriteJSON(&b, itemRow)
-		logg.Debugf("virtual item: %v", b.String())
+		logg.Debugf("virtual item: %v", itemRow.String())
 	}
 
 	return itemRow, nil
@@ -452,7 +473,7 @@ func (db *DB) DeleteItems(itemIds []uuid.UUID) error {
 //
 //	id2 = uuid.Nil
 func (db *DB) MoveItemToBox(id1 uuid.UUID, id2 uuid.UUID) error {
-	err := db.MoveTo("item", id1, "box", id2)
+	err := db.moveTo("item", id1, "box", id2)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
@@ -464,7 +485,19 @@ func (db *DB) MoveItemToBox(id1 uuid.UUID, id2 uuid.UUID) error {
 //
 //	toShelfID = uuid.Nil
 func (db *DB) MoveItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
-	err := db.MoveTo("item", itemID, "shelf", toShelfID)
+	err := db.moveTo("item", itemID, "shelf", toShelfID)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	return nil
+}
+
+// MoveItemToArea moves item to a shelf.
+// To move item out of a shelf set
+//
+//	toShelfID = uuid.Nil
+func (db *DB) MoveItemToArea(itemID uuid.UUID, toAreaID uuid.UUID) error {
+	err := db.moveTo("item", itemID, "area", toAreaID)
 	if err != nil {
 		return logg.WrapErr(err)
 	}

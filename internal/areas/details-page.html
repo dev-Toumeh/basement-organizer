@@ -12,6 +12,12 @@
             <p style="text-align: center">:^(</p>
         {{ else }}
             {{ template "area-details" . }}
+            <h2>items</h2>
+            {{ template "list" .InnerItemsList }}
+            <h2>boxes</h2>
+            {{ template "list" .InnerBoxesList }}
+            <h2>shelves</h2>
+            {{ template "list" .InnerShelvesList }}
             <div id="place-holder"></div>
         {{ end }}
      </div>

@@ -14,9 +14,9 @@
             {{ template "box-details" . }}
             <div id="place-holder"></div>
             <h2>Items</h2>
-            {{ template "item-list" . }}
+            {{ template "list" .InnerItemsList }}
             <h2>Inner Boxes</h2>
-            {{ template "innerboxes-list" . }}
+            {{ template "list" .InnerBoxesList }}
         {{ end }}
     </div>
 </body>
@@ -165,23 +165,23 @@
     hx-push-url="true"
 >back</button>
 {{ else if .Edit }}
-<button hx-put="/box" 
+<button hx-put="/box/{{.ID}}" 
     hx-target="#box-{{.ID}}"
     hx-swap="outerHTML"
 >Update box</button>
-<button hx-get="/box?id={{.ID}}"
+<button hx-get="/box/{{.ID}}/boxDetailsForm"
     hx-target="#box-{{.ID}}"
     hx-swap="outerHTML"
 >cancel</button>
 {{ else }}
-<button hx-get="/box?id={{.ID}}&edit=true"
+<button hx-get="/box/{{.ID}}/boxDetailsForm?edit=true"
     hx-target="#box-{{.ID}}"
     hx-swap="outerHTML"
 >edit</button>
 {{ end }}
 
 {{ if not .Create }}
-<button hx-delete="/box?id={{.ID}}" 
+<button hx-delete="/box/{{.ID}}" 
     hx-swap="outerHTML"
     hx-target="#box-{{.ID}}"
     hx-confirm="Are you sure?"
@@ -190,194 +190,3 @@
 
 </form>
 {{end}}
-
-
-{{ define "empty-list" }}
-<form id="inner-boxes-list"
-    hx-get="/box"
-    hx-push-url="true"
-    hx-target="body"
-    hx-swap="outerHTML"
-    hx-trigger="keyup changed delay:500ms from:#search-bar, keyup changed delay:500ms from:#item-limit"
->
-    <table class="box-list">
-        <thead>
-            <tr>
-                <th>Label</th>
-                <th>Box</th>
-                <th>Shelf</th>
-                <th>Area</th>
-                <th style="width: 10%">Image</th>
-                <th style="width: 10%">Move</th>
-                {{ if not .Move }}
-                <th style="width: 10%">Delete</th>
-                {{ end }}
-            </tr>
-        </thead> 
-        <tbody id="box-list-body">
-            <tr id="box-list-row-{{.ID}}">
-                <td colspan="7" style="text-align:center">No Entries</td>  
-            </tr>
-        </tbody>
-    </table>
-    <div >
-        <button hx-delete="/boxes"
-            hx-target="#box-list"
-            hx-select="#box-list"
-            hx-push-url="true"
-            disabled
-        >delete</button>
-        <button type="button" 
-            hx-get="/boxes/move"
-            disabled
-        >move</button>
-    </div>
-</form>
-{{ end }}
-
-
-{{ define "innerboxes-list" }}
-<form id="inner-boxes-list"
-    hx-get="/box"
-    hx-push-url="true"
-    hx-target="body"
-    hx-swap="outerHTML"
-    hx-trigger="keyup changed delay:500ms from:#search-bar, keyup changed delay:500ms from:#item-limit"
->
-    <table class="box-list">
-        <thead>
-            <tr>
-                <th>Label</th>
-                <th>Box</th>
-                <th>Shelf</th>
-                <th>Area</th>
-                <th style="width: 10%">Image</th>
-                <th style="width: 10%">Move</th>
-                {{ if not .Move }}
-                <th style="width: 10%">Delete</th>
-                {{ end }}
-            </tr>
-        </thead> 
-        <!--boxes are created directly by backend with template-->
-        <tbody id="box-list-body">
-        {{ if .InnerBoxes }}
-            {{ range .InnerBoxes }}
-            {{ template "box-list-row" . }}
-            {{ end }}
-        {{ else }}
-            <tr id="box-list-row-{{.ID}}">
-                <td colspan="7" style="text-align:center">No Entries</td>  
-            </tr>
-        {{ end }}
-        </tbody>
-    </table>
-    <div >
-        <button hx-delete="/boxes"
-            hx-target="#box-list"
-            hx-select="#box-list"
-            hx-push-url="true"
-        >delete</button>
-        <button type="button" 
-            hx-get="/boxes/move"
-        >move</button>
-    </div>
-</form>
-
-<div id="data-container" style="display: none;"></div> 
-{{ end }}
-
-
-{{ define "item-list" }}
-<form id="item-list"
-    hx-get="/box"
-    hx-push-url="true"
-    hx-target="body"
-    hx-swap="outerHTML"
-    hx-trigger="keyup changed delay:500ms from:#search-bar, keyup changed delay:500ms from:#item-limit"
->
-    <table class="list">
-        <thead>
-            <tr>
-                <th>Label</th>
-                <th>Box</th>
-                <th>Shelf</th>
-                <th>Area</th>
-                <th style="width: 10%">Image</th>
-                <th style="width: 10%">Move</th>
-                {{ if not .Move }}
-                <th style="width: 10%">Delete</th>
-                {{ end }}
-            </tr>
-        </thead> 
-        <!--boxes are created directly by backend with template-->
-        <tbody id="box-list-body">
-        {{ if .ListRows }}
-            {{ range .ListRows }}
-            {{ template "item-list-row" . }}
-            {{ end }}
-        {{ else }}
-            <tr id="empty-list-item">
-                <td colspan="7" style="text-align:center">No Entries</td>  
-            </tr>
-        {{ end }}
-        </tbody>
-    </table>
-    <div >
-        <button hx-delete="/boxes"
-            hx-target="#box-list"
-            hx-select="#box-list"
-            hx-push-url="true"
-        >delete</button>
-        <button type="button" 
-            hx-get="/boxes/move"
-        >move</button>
-    </div>
-</form>
-
-<div id="data-container" style="display: none;"></div> 
-{{ end }}
-
-
-{{ define "item-list-row" }}
-    {{ $empty := false }}
-    {{ if not . }}
-        {{ $empty = true }}
-    {{ end }}
-
-    {{ if $empty }}
-    <tr id="box-list-row-{{.ID}}">
-        <td colspan="7" style="text-align:center">
-            <span class="empty">empty<img class="preview" style="opacity:0"></span>
-        </td>  
-    </tr>
-    {{ else }}
-    <tr id="item-list-row-{{.ID}}">
-         <!--hx-get="/items/{{.ID}}"-->
-        <td
-            hx-get="/api/v1/read/item/{{.ID}}"
-            hx-push-url="true"
-            hx-target="#item-list"
-            class="clickable"
-        >{{.Label}}</td>
-        <td>{{.BoxLabel}}</td> 
-        <td>{{.ShelfLabel}}</td>
-        <td>{{.AreaLabel}}</td>
-        <td style="text-align: center;width:0;text-wrap: nowrap;">
-            <div>
-            <img class="preview" 
-                src="data:image/png;base64,{{.PreviewPicture}}" 
-                {{if .PreviewPicture}}alt="{{.Label}}"{{end}}
-            >
-            </div>
-        </td>
-        {{ if not .Move}}
-        <td style="text-align: center;"><input type="checkbox" name="move:{{.ID}}"></td>
-        <td style="text-align: center;"><input type="checkbox" name="delete:{{.ID}}"></td>
-        {{ else }}
-        <td style="text-align: center;">
-            <button type="">move here</button>
-        </td>
-        {{ end }}
-    </tr>
-    {{ end }}
-{{ end }}

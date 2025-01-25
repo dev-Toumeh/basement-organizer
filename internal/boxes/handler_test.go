@@ -34,28 +34,32 @@ const BOX_ID_NOT_FOUND string = "da2e3db6-fcf8-49c6-ac9c-54ce5855bf0b"
 const BOX_ID_INVALID_EMPTY string = ""
 const BOX_ID_INVALID_2 string = "aaaa"
 const BOX_ID_INVALID_UUID_FORMAT string = "ac9c-54ce5855bf0b"
+const ValidUUIDs = BOX_ID_VALID
+
+var ValidUUID = uuid.FromStringOrNil(BOX_ID_VALID)
+var ErrMock = errors.New("mock error")
 
 // boxDatabaseError returns errors on every function.
 type boxDatabaseError struct{}
 
 func (db *boxDatabaseError) CreateBox(newBox *Box) (uuid.UUID, error) {
-	return uuid.Nil, errors.New("AAAAAAAA")
+	return uuid.Nil, ErrMock
 }
 
 func (db *boxDatabaseError) BoxById(id uuid.UUID) (Box, error) {
-	return Box{BasicInfo: common.BasicInfo{ID: uuid.Nil}}, errors.New("AAAAAAAA")
+	return Box{BasicInfo: common.BasicInfo{ID: uuid.Nil}}, ErrMock
 }
 
 func (db *boxDatabaseError) BoxIDs() ([]uuid.UUID, error) {
-	return nil, errors.New("AAAAAAAA")
+	return nil, ErrMock
 }
 
 func (db *boxDatabaseError) MoveBoxToBox(id1 uuid.UUID, id2 uuid.UUID) error {
-	return errors.New("AAAAAAAA")
+	return ErrMock
 }
 
 func (db *boxDatabaseError) BoxByField(field string, value string) (*Box, error) {
-	return &Box{}, errors.New("AAAAAAAA")
+	return &Box{}, ErrMock
 }
 
 func (db *boxDatabaseError) BoxExistById(id uuid.UUID) bool {
@@ -63,7 +67,7 @@ func (db *boxDatabaseError) BoxExistById(id uuid.UUID) bool {
 }
 
 func (db *boxDatabaseError) ErrorExist() error {
-	return errors.New("AAAAAAAA")
+	return ErrMock
 }
 
 func (db *boxDatabaseError) UpdateBox(box Box, updatePicture bool) error {
@@ -75,11 +79,11 @@ func (db *boxDatabaseError) DeleteBox(boxId uuid.UUID) error {
 }
 
 func (db *boxDatabaseError) BoxListRows(query string, limit int, page int) ([]common.ListRow, error) {
-	return make([]common.ListRow, 0), errors.New("AAAAAAAA")
+	return make([]common.ListRow, 0), ErrMock
 }
 
 func (db *boxDatabaseError) BoxListRowByID(id uuid.UUID) (common.ListRow, error) {
-	return common.ListRow{}, errors.New("AAAAAAAA")
+	return common.ListRow{}, ErrMock
 }
 
 func (db *boxDatabaseError) BoxListCounter(searchString string) (count int, err error) {
@@ -87,27 +91,63 @@ func (db *boxDatabaseError) BoxListCounter(searchString string) (count int, err 
 }
 
 func (db *boxDatabaseError) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
-	return errors.New("AAAAAAAA")
+	return ErrMock
 }
 
 func (db *boxDatabaseError) MoveBoxToArea(boxID uuid.UUID, toAreaID uuid.UUID) error {
-	return errors.New("AAAAAAAA")
+	return ErrMock
 }
 
 func (db *boxDatabaseError) ShelfListCounter(queryString string) (count int, err error) {
-	return 0, errors.New("AAAAAAAA")
+	return 0, ErrMock
 }
 
 func (db *boxDatabaseError) ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error) {
-	return shelfRows, errors.New("AAAAAAAA")
+	return shelfRows, ErrMock
 }
 
 func (db *boxDatabaseError) AreaListCounter(searchQuery string) (count int, err error) {
-	return 0, errors.New("AAAAAAAA")
+	return 0, ErrMock
 }
 
 func (db *boxDatabaseError) AreaListRows(searchQuery string, limit int, pageNr int) (rows []common.ListRow, err error) {
-	return rows, errors.New("AAAAAAAA")
+	return rows, ErrMock
+}
+
+func (db *boxDatabaseError) InnerListRowsFrom2(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string) ([]common.ListRow, error) {
+	return nil, ErrMock
+}
+
+func (db *boxDatabaseError) DeleteItem(itemID uuid.UUID) error {
+	return ErrMock
+}
+
+func (db *boxDatabaseError) DeleteShelf(id uuid.UUID) (string, error) {
+	return "", ErrMock
+}
+
+func (db *boxDatabaseError) DeleteShelf2(id uuid.UUID) error {
+	return ErrMock
+}
+
+func (db *boxDatabaseError) DeleteArea(areaID uuid.UUID) error {
+	return ErrMock
+}
+
+func (db *boxDatabaseError) InnerBoxInBoxListCounter(searchString string, inTable string, inTableID uuid.UUID) (count int, err error) {
+	return 0, ErrMock
+}
+
+func (db *boxDatabaseError) InnerListRowsPaginatedFrom(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string, searchQuery string, limit int, page int) (listRows []common.ListRow, err error) {
+	return listRows, ErrMock
+}
+
+func (db *boxDatabaseError) InnerShelfInTableListCounter(searchString string, inTable string, inTableID uuid.UUID) (count int, err error) {
+	return 0, ErrMock
+}
+
+func (db *boxDatabaseError) InnerThingInTableListCounter(searchString string, thing int, inTable string, inTableID uuid.UUID) (count int, err error) {
+	return 0, ErrMock
 }
 
 // boxDatabaseSuccess never returns errors.
@@ -138,10 +178,6 @@ func (db *boxDatabaseSuccess) ErrorExist() error {
 }
 
 func (db *boxDatabaseSuccess) UpdateBox(box Box, updatePicture bool) error {
-	return nil
-}
-
-func (db *boxDatabaseSuccess) DeleteBox(boxId uuid.UUID) error {
 	return nil
 }
 
@@ -181,18 +217,60 @@ func (db *boxDatabaseSuccess) AreaListRows(searchQuery string, limit int, pageNr
 	return rows, nil
 }
 
+func (db *boxDatabaseSuccess) InnerListRowsFrom2(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string) ([]common.ListRow, error) {
+	return []common.ListRow{}, nil
+}
+
+func (db *boxDatabaseSuccess) DeleteItem(itemID uuid.UUID) error {
+	return nil
+}
+
+func (db *boxDatabaseSuccess) DeleteBox(boxId uuid.UUID) error {
+	return nil
+}
+
+func (db *boxDatabaseSuccess) DeleteShelf(id uuid.UUID) (string, error) {
+	return "ShelfLabel", nil
+}
+
+func (db *boxDatabaseSuccess) DeleteShelf2(id uuid.UUID) error {
+	return nil
+}
+
+func (db *boxDatabaseSuccess) DeleteArea(areaID uuid.UUID) error {
+	return nil
+}
+
+func (db *boxDatabaseSuccess) InnerBoxInBoxListCounter(searchString string, inTable string, inTableID uuid.UUID) (count int, err error) {
+	return 1, nil
+}
+
+func (db *boxDatabaseSuccess) InnerListRowsPaginatedFrom(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string, searchQuery string, limit int, page int) (listRows []common.ListRow, err error) {
+	return
+}
+
+func (db *boxDatabaseSuccess) InnerShelfInTableListCounter(searchString string, inTable string, inTableID uuid.UUID) (count int, err error) {
+	return
+}
+
+func (db *boxDatabaseSuccess) InnerThingInTableListCounter(searchString string, thing int, inTable string, inTableID uuid.UUID) (count int, err error) {
+	return
+}
+
 func TestBoxHandlerDBErrors(t *testing.T) {
 	// logg.EnableDebugLoggerS()
 	// defer logg.DisableDebugLoggerS()
 
-	dbErr := &boxDatabaseError{}
+	dbErr := boxDatabaseError{}
+	RegisterDBInstance(&dbErr)
+	common.RegisterDBInstance(&dbErr)
 
 	// Add mux handler, without it r.PathValue("id") will not work.
 	mux := http.NewServeMux()
-	mux.Handle("/box", BoxHandler(dbErr))
-	mux.Handle("/box/", BoxHandler(dbErr))
-	mux.Handle("/api/v1/box/{id}", BoxHandler(dbErr))
-	mux.Handle("/api/v1/box/", BoxHandler(dbErr))
+	mux.Handle("/box", BoxHandler(&dbErr))
+	mux.Handle("/box/", BoxHandler(&dbErr))
+	mux.Handle("/api/v1/box/{id}", BoxHandler(&dbErr))
+	mux.Handle("/api/v1/box/", BoxHandler(&dbErr))
 
 	testCases := []struct {
 		name               string
@@ -242,6 +320,8 @@ func TestBoxHandlerInputErrors(t *testing.T) {
 	// logg.EnableDebugLoggerS()
 
 	dbOk := boxDatabaseSuccess{}
+	RegisterDBInstance(&dbOk)
+	common.RegisterDBInstance(&dbOk)
 
 	// Add mux handler, without it r.PathValue("id") will not work.
 	mux := http.NewServeMux()
@@ -310,6 +390,8 @@ func TestBoxHandlerOK(t *testing.T) {
 	// logg.EnableDebugLoggerS()
 
 	dbOk := boxDatabaseSuccess{}
+	RegisterDBInstance(&dbOk)
+	common.RegisterDBInstance(&dbOk)
 
 	// Add mux handler, without it r.PathValue("id") will not work.
 	mux := http.NewServeMux()

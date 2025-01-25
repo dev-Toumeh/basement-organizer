@@ -77,16 +77,16 @@ func ValidVirtualTable(table string) error {
 	return nil
 }
 
-// MoveTo moves item/box/shelf to a box/shelf/area.
+// moveTo moves item/box/shelf to a box/shelf/area.
 //
 // Example move item to a box:
 //
-//	MoveTo("item", itemID, "box", boxID)
+//	moveTo("item", itemID, "box", boxID)
 //
 // To move things out set
 //
 //	toTableID = uuid.Nil
-func (db *DB) MoveTo(table string, id uuid.UUID, toTable string, toTableID uuid.UUID) error {
+func (db *DB) moveTo(table string, id uuid.UUID, toTable string, toTableID uuid.UUID) error {
 	if id == toTableID {
 		return logg.NewError(fmt.Sprintf(`can't move "%s" to itself. ID=%s`, table, id.String()))
 	}
@@ -181,11 +181,11 @@ func (db *DB) allListRowsFrom(listRowsTable string) (listRows []common.ListRow, 
 		if err != nil {
 			return nil, logg.WrapErr(err)
 		}
-		lrow, err := sqlrow.ToListRow()
+		lrow, err := sqlrow.ToListRow2()
 		if err != nil {
 			return nil, logg.WrapErr(err)
 		}
-		listRows = append(listRows, *lrow)
+		listRows = append(listRows, lrow)
 	}
 	return listRows, nil
 }
@@ -229,11 +229,11 @@ func (db *DB) listRowsPaginatedFrom(listRowsTable string, searchQuery string, li
 			"LIMIT ? OFFSET ?;"
 		rows, err = db.Sql.Query(stmt, limit, offset)
 	}
-	defer rows.Close()
 
 	if err != nil {
 		return []common.ListRow{}, fmt.Errorf("error while fetching rows from %s: %w", listRowsTable, err)
 	}
+	defer rows.Close()
 
 	var sqlListRow SQLListRow
 
@@ -245,6 +245,77 @@ func (db *DB) listRowsPaginatedFrom(listRowsTable string, searchQuery string, li
 		shelfRow, err := sqlListRow.ToListRow()
 		if err != nil {
 			return []common.ListRow{}, fmt.Errorf("error while converting a %s row to ListRow: %w", listRowsTable, err)
+		}
+		listRows = append(listRows, *shelfRow)
+	}
+
+	return listRows, nil
+}
+
+func (db *DB) InnerListRowsPaginatedFrom(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string, searchQuery string, limit int, page int) (listRows []common.ListRow, err error) {
+	if page == 0 {
+		panic("offset starts at 1, can't be 0")
+	}
+	if limit == 0 {
+		panic("limit starts at 1, can't be 0")
+	}
+
+	err = ValidVirtualTable(belongsToTable)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	switch belongsToTable {
+	// case "item_fts":
+	// 	belongsToTable = "item"
+	// 	break
+	case "box_fts":
+		belongsToTable = "box"
+		break
+	case "shelf_fts":
+		belongsToTable = "shelf"
+		break
+	case "area_fts":
+		belongsToTable = "area"
+		break
+	}
+
+	offset := (page - 1) * limit
+
+	var stmt string
+	var rows *sql.Rows
+
+	if strings.TrimSpace(searchQuery) != "" {
+		stmt = "" +
+			"SELECT " + ALL_FTS_COLS + " " +
+			"FROM " + listRowsTable + "_fts " +
+			"WHERE label MATCH ?" + " " + " AND " + belongsToTable + "_id = ? " +
+			"LIMIT ? OFFSET ?;"
+		rows, err = db.Sql.Query(stmt, searchQuery+"*", belongsToTableID.String(), limit, offset)
+	} else {
+		stmt = "" +
+			"SELECT " + ALL_FTS_COLS + " " +
+			"FROM " + listRowsTable + "_fts " +
+			"WHERE " + belongsToTable + "_id = ? " +
+			"LIMIT ? OFFSET ?;"
+		rows, err = db.Sql.Query(stmt, belongsToTableID.String(), limit, offset)
+	}
+
+	if err != nil {
+		return []common.ListRow{}, fmt.Errorf("error while fetching rows from %s: %w", belongsToTable, err)
+	}
+	defer rows.Close()
+
+	var sqlListRow SQLListRow
+
+	for rows.Next() {
+		err := rows.Scan(sqlListRow.RowsToScan()...)
+		if err != nil {
+			return []common.ListRow{}, fmt.Errorf("error while scanning %s row: %w", belongsToTable, err)
+		}
+		shelfRow, err := sqlListRow.ToListRow()
+		if err != nil {
+			return []common.ListRow{}, fmt.Errorf("error while converting a %s row to ListRow: %w", belongsToTable, err)
 		}
 		listRows = append(listRows, *shelfRow)
 	}
@@ -308,6 +379,87 @@ func (db *DB) innerListRowsFrom(belongsToTable string, belongsToTableID uuid.UUI
 		listRows = append(listRows, lrow)
 	}
 	return listRows, nil
+}
+
+// InnerListRowsFrom2 similar to innerListRowsFrom but public and returns returns ListRows without pointer.
+//
+// Returns all items/boxes/shelves/etc belonging to another box, shelf or area.
+//
+// Example:
+//
+//	// get all items that belongs to a shelf.
+//	innerListRowsFrom("shelf", shelf.ID, "item_fts")
+//
+// listRowsTable:
+//
+//	FROM "item_fts"
+//	FROM "box_ftx"
+//	...
+//
+// belongsToTable:
+//
+//	"item", "box", "shelf", ...
+//
+// belongsToTableID:
+//
+//	WHERE "item"_id = ID
+//	WHERE "box"_id = ID
+//	...
+func (db *DB) InnerListRowsFrom2(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string) ([]common.ListRow, error) {
+	err := ValidVirtualTable(listRowsTable)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	err = ValidTable(belongsToTable)
+	if err != nil {
+		return nil, logg.WrapErr(err)
+	}
+
+	var listRows []common.ListRow
+
+	stmt := "SELECT " + ALL_FTS_COLS + " FROM " + listRowsTable + "	WHERE " + belongsToTable + "_id = ?;"
+
+	rows, err := db.Sql.Query(stmt, belongsToTableID.String())
+	if err != nil {
+		return nil, logg.Errorf("%s %w", stmt, err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var sqlrow SQLListRow
+
+		err = rows.Scan(sqlrow.RowsToScan()...)
+		if err != nil {
+			return nil, logg.WrapErr(err)
+		}
+		lrow, err := sqlrow.ToListRow2()
+		if err != nil {
+			return nil, logg.WrapErr(err)
+		}
+		listRows = append(listRows, lrow)
+	}
+	return listRows, nil
+}
+
+// returns the count of rows in the box_fts table that match the specified searchString.
+// If queryString is empty, it returns the count of all rows in the table.
+
+// Example:
+//
+//	count, err = InnerThingInTableListCounter("box 1", THING_SHELF, fromTable, id)
+func (db *DB) InnerThingInTableListCounter(searchString string, thing int, inTable string, inTableID uuid.UUID) (count int, err error) {
+	validThing := common.ValidThingString(thing)
+	countQuery := `SELECT COUNT(*) FROM ` + validThing + `_fts WHERE ` + inTable + `_id = ?;`
+
+	if searchString != "" {
+		countQuery = ` SELECT COUNT(*) FROM ` + validThing + `_fts WHERE label MATCH '` + searchString + `*' AND ` + inTable + `_id = ?`
+	}
+
+	err = db.Sql.QueryRow(countQuery, inTableID.String()).Scan(&count)
+	if err != nil {
+		return 0, logg.Errorf("error while fetching the number of %s from the database: %v", validThing, err)
+	}
+	return count, nil
 }
 
 // Helper function to check for null strings and return empty if null

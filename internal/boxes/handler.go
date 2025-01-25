@@ -12,6 +12,15 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
+var boxDB BoxDatabase
+
+// RegisterDBInstance sets db instance for internal package usage.
+// Is used for public functions that depend on the DB without the need to pass the instance as a parameter.
+func RegisterDBInstance(db BoxDatabase) {
+	boxDB = db
+	logg.Debug("boxDB in boxes package registered")
+}
+
 // BoxHandler handles read, create, update and delete for single box.
 func BoxHandler(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -19,12 +28,7 @@ func BoxHandler(db BoxDatabase) http.HandlerFunc {
 		case http.MethodGet:
 			const errMsgForUser = "Can't find box"
 
-			id := server.ValidID(w, r, errMsgForUser)
-			if id.IsNil() {
-				return
-			}
-
-			box, err := db.BoxById(id)
+			box, err := readBoxFromRequest(w, r, db)
 			if err != nil {
 				server.WriteNotFoundError(errMsgForUser, err, w, r)
 				return
@@ -37,7 +41,7 @@ func BoxHandler(db BoxDatabase) http.HandlerFunc {
 			}
 
 			// Template writer
-			renderBoxTemplate(&box, w, r)
+			DetailsPage(db).ServeHTTP(w, r)
 			break
 
 		case http.MethodPost:
@@ -59,6 +63,22 @@ func BoxHandler(db BoxDatabase) http.HandlerFunc {
 			fmt.Fprint(w, "Method:'", r.Method, "' not allowed")
 		}
 	}
+}
+
+func readBoxFromRequest(w http.ResponseWriter, r *http.Request, db BoxDatabase) (box Box, err error) {
+	const errMsgForUser = "Can't find box"
+
+	id := server.ValidID(w, r, errMsgForUser)
+	if id.IsNil() {
+		return box, err
+	}
+
+	box, err = db.BoxById(id)
+	if err != nil {
+		return box, logg.WrapErr(err)
+		// server.WriteNotFoundError(errMsgForUser, err, w, r)
+	}
+	return box, err
 }
 
 func createBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
@@ -106,7 +126,7 @@ func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		return
 	}
 	if server.WantsTemplateData(r) {
-		boxTemplate := BoxTemplateData{Box: &box, Edit: false}
+		boxTemplate := boxDetailsPageTemplate{Box: box, Edit: false}
 		err := server.RenderWithSuccessNotification(w, r, templates.TEMPLATE_BOX_DETAILS, boxTemplate.Map(), fmt.Sprintf("Updated box: %v", boxTemplate.Label))
 		if err != nil {
 			server.WriteInternalServerError(errMsgForUser, err, w, r)
@@ -161,8 +181,8 @@ func createPage(db BoxDatabase) http.HandlerFunc {
 		user, _ := auth.UserSessionData(r)
 
 		box := NewBox()
-		data := BoxPageTemplateData()
-		data.Box = &box
+		data := BoxDetailsPageTemplateData()
+		data.Box = box
 
 		data.Title = fmt.Sprintf("Box - %s", box.Label)
 		data.Authenticated = authenticated
@@ -238,14 +258,4 @@ func boxFromPostFormValue(id uuid.UUID, r *http.Request) (box Box, ignorePicture
 	box.ShelfID = uuid.FromStringOrNil(r.PostFormValue("shelf_id"))
 	box.AreaID = uuid.FromStringOrNil(r.PostFormValue("area_id"))
 	return box, ignorePicture
-}
-
-func renderBoxTemplate(box *Box, w http.ResponseWriter, r *http.Request) {
-	editParam := r.FormValue("edit")
-	edit := false
-	if editParam == "true" {
-		edit = true
-	}
-	b := BoxTemplateData{Box: box, Edit: edit}
-	server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS, b.Map())
 }

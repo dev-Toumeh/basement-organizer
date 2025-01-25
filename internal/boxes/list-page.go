@@ -53,7 +53,6 @@ func listPage(db BoxDatabase) http.HandlerFunc {
 		listTmpl.Limit = limit
 		listTmpl.PaginationButtons = data["Pages"].([]common.PaginationButton)
 
-		// box-list-row to fill box-list template
 		var boxes []common.ListRow
 
 		// Boxes found

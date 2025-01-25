@@ -42,7 +42,7 @@ func (s *SQLBox) ToBox() (*boxes.Box, error) {
 	box.BasicInfo = info
 	box.OuterBoxID = ifNullUUID(s.OuterBoxID)
 	box.ShelfID = ifNullUUID(s.ShelfID)
-	box.ShelfID = ifNullUUID(s.ShelfID)
+	box.AreaID = ifNullUUID(s.AreaID)
 	return box, nil
 }
 
@@ -157,7 +157,7 @@ func (db *DB) DeleteBox(boxId uuid.UUID) error {
 func (db *DB) BoxById(id uuid.UUID) (boxes.Box, error) {
 	box := boxes.Box{}
 	if !db.BoxExistById(id) {
-		return box, logg.Errorf("box is not exist \n")
+		return box, logg.Errorf("box does not exist \n")
 	}
 	b, err := db.BoxByField("id", id.String())
 	if err != nil {
@@ -182,13 +182,13 @@ func (db *DB) BoxByField(field string, value string) (*boxes.Box, error) {
 		return nil, logg.WrapErr(err)
 	}
 
-	items, err := db.innerListRowsFrom("box", box.ID, "item_fts")
+	items, err := db.InnerListRowsFrom2("box", box.ID, "item_fts")
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
 	box.Items = items
 
-	boxes, err := db.innerListRowsFrom("box", box.ID, "box_fts")
+	boxes, err := db.InnerListRowsFrom2("box", box.ID, "box_fts")
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
@@ -245,7 +245,7 @@ func (db *DB) MoveBoxToBox(box1 uuid.UUID, box2 uuid.UUID) error {
 		return logg.NewError("can't move box1 (" + box1.String() + ") to box2 (" + box2.String() + "). box2 is already in box1 and they can't be inside eachother at the same time")
 	}
 
-	err := db.MoveTo("box", box1, "box", box2)
+	err := db.moveTo("box", box1, "box", box2)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
@@ -257,19 +257,19 @@ func (db *DB) MoveBoxToBox(box1 uuid.UUID, box2 uuid.UUID) error {
 //
 //	toShelfID = uuid.Nil
 func (db *DB) MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error {
-	err := db.MoveTo("box", boxID, "shelf", toShelfID)
+	err := db.moveTo("box", boxID, "shelf", toShelfID)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
 	return nil
 }
 
-// MoveBoxToShelf moves box to a shelf.
-// To move box out of a shelf set
+// MoveBoxToArea moves box to an area.
+// To move box out of an area set
 //
-//	toShelfID = uuid.Nil
+//	toAreaID = uuid.Nil
 func (db *DB) MoveBoxToArea(boxID uuid.UUID, toAreaID uuid.UUID) error {
-	err := db.MoveTo("box", boxID, "area", toAreaID)
+	err := db.moveTo("box", boxID, "area", toAreaID)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
@@ -295,6 +295,14 @@ func (db *DB) BoxListRowByID(id uuid.UUID) (common.ListRow, error) {
 	return row, nil
 }
 
+func (db *DB) InnerBoxListRows(id uuid.UUID) (listRows []common.ListRow, err error) {
+	listRows, err = db.InnerListRowsFrom2("box", id, "box_fts")
+	if err != nil {
+		return listRows, logg.WrapErr(err)
+	}
+	return listRows, nil
+}
+
 // returns the count of rows in the box_fts table that match the specified searchString.
 // If queryString is empty, it returns the count of all rows in the table.
 func (db *DB) BoxListCounter(searchString string) (count int, err error) {
@@ -305,6 +313,22 @@ func (db *DB) BoxListCounter(searchString string) (count int, err error) {
 	}
 
 	err = db.Sql.QueryRow(countQuery).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("error while fetching the number of box from the database: %v", err)
+	}
+	return count, nil
+}
+
+// returns the count of rows in the box_fts table that match the specified searchString.
+// If queryString is empty, it returns the count of all rows in the table.
+func (db *DB) InnerBoxInBoxListCounter(searchString string, inTable string, inTableID uuid.UUID) (count int, err error) {
+	countQuery := `SELECT COUNT(*) FROM box_fts WHERE ` + inTable + `_id = ?;`
+
+	if searchString != "" {
+		countQuery = ` SELECT COUNT(*) FROM box_fts WHERE label MATCH '` + searchString + `*' AND ` + inTable + `_id = ?`
+	}
+
+	err = db.Sql.QueryRow(countQuery, inTableID.String()).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("error while fetching the number of box from the database: %v", err)
 	}

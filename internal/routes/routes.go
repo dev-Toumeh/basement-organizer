@@ -36,6 +36,7 @@ func Handle(route string, handler http.HandlerFunc) {
 }
 
 func RegisterRoutes(db *database.DB) {
+	common.RegisterDBInstance(db)
 	staticRoutes()
 	navigationRoutes()
 	authRoutes(db)
@@ -112,10 +113,14 @@ func itemsRoutes2(db items.ItemDatabase) {
 }
 
 func boxesRoutes(db *database.DB) {
+	boxes.RegisterDBInstance(db)
 	// Box templates
-	Handle("/box", boxes.BoxHandler(db))
 	Handle("/box/create", boxes.CreateHandler(db))
-	Handle("/box/{id}", boxes.DetailsPage(db))
+	Handle("/box/{id}", boxes.BoxHandler(db))
+	Handle("/box/{id}/boxDetailsForm", boxes.RenderBoxDetailsForm(db))
+	Handle("/box/{id}/innerBoxes", common.HandleListTemplateInnerThingsData(common.THING_BOX, common.THING_BOX))
+	Handle("/box/{id}/innerItems", common.HandleListTemplateInnerThingsData(common.THING_ITEM, common.THING_BOX))
+
 	Handle("/box/{id}/addto/{thing}", boxes.BoxPicker(boxes.PICKER_TYPE_ADDTO, db))
 	Handle("/box/{id}/addto/{thing}/{thingid}", boxes.BoxPickerConfirm(boxes.PICKER_TYPE_ADDTO, db))
 	Handle("/box/{id}/moveto/{thing}", boxes.BoxPicker(boxes.PICKER_TYPE_MOVE, db))
@@ -179,6 +184,9 @@ func shelvesRoutes(db shelves.ShelfDB) {
 	Handle("/shelves/add-list", shelves.AddListTemplate(db))
 	Handle("/shelves/add-input/{id}", shelves.AddInputTemplate(db))
 
+	Handle("/shelf/{id}/innerItems", common.HandleListTemplateInnerThingsData(common.THING_ITEM, common.THING_SHELF))
+	Handle("/shelf/{id}/innerBoxes", common.HandleListTemplateInnerThingsData(common.THING_BOX, common.THING_SHELF))
+
 	// Api
 	http.HandleFunc("/api/v1/create/shelf", shelves.ShelfHandler(db))
 	Handle("/api/v1/delete/shelf", shelves.ShelfHandler(db))
@@ -191,6 +199,9 @@ func areaRoutes(db *database.DB) {
 	Handle("/area/{id}", areas.AreaHandler(db))
 	Handle("/area", areas.CreateHandler(db))
 	Handle("/area/create", areas.CreateHandler(db))
+	Handle("/area/{id}/innerItems", common.HandleListTemplateInnerThingsData(common.THING_ITEM, common.THING_AREA))
+	Handle("/area/{id}/innerBoxes", common.HandleListTemplateInnerThingsData(common.THING_BOX, common.THING_AREA))
+	Handle("/area/{id}/innerShelves", common.HandleListTemplateInnerThingsData(common.THING_SHELF, common.THING_AREA))
 
 	// Multiple areas
 	Handle("/areas", areas.AreasHandler(db))
