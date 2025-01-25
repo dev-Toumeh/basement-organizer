@@ -89,11 +89,12 @@
   margin: 0.5rem;
 }
 
-.detail-info {
+.detail-info, 
+.detail-info div {
   display: flex;
   flex-direction: column;
   /* width: 100%; */
-  flex-grow: 0.9;"
+  flex-grow: 0.9;
 }
 
 .detail-picture {
