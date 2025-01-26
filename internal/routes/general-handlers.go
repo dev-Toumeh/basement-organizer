@@ -16,20 +16,13 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-// shows the page where client can choose where to move the box.
-//
-// thing = "item" / "box" / "shelf" / "area"
+// Fetch the Object (Boxes/Shelves/Areas) List
+// this list will determined where to add the Object
 func AddTo(db *database.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		data := common.InitData(r)
 		thing := r.PathValue("thing")
-
-		errMsgForUser := "Can't move " + thing
-		id := server.ValidID(w, r, errMsgForUser)
-		if id.IsNil() {
-			return
-		}
 
 		var err error
 		var count int
@@ -140,9 +133,7 @@ func AddTo(db *database.DB) http.HandlerFunc {
 	}
 }
 
-// boxMoveConfirm handles data after a box move action is clicked from boxPageMove().
-//
-// thing = "item" / "box" / "shelf" / "area"
+// return the Chosen Object "item" / "box" / "shelf" / "area"
 func Element(db *database.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		thing := r.PathValue("thing")
@@ -200,7 +191,7 @@ func Element(db *database.DB) http.HandlerFunc {
 }
 
 func pickerInputElements(thing string, otherthingID string, aHref string, otherthingLabel string) string {
-	label := `<label for="` + thing + `_id">Is inside of ` + common.ToUpper(thing) + `</label></br>`
+	label := `<label for="` + thing + `_id">Is inside of ` + common.ToUpper(thing) + `</label>`
 	input := `<input  type="text"  name="` + thing + `_id" value="` + otherthingID + `" hidden>`
 	a := `<a href="` + aHref + `" class="clickable" hx-boost="true" style="">` + otherthingLabel + `</a>`
 	button := `<button id="move-btn" hx-target="#place-holder" hx-post="/addto/` + thing + `" hx-push-url="false"> Add to another ` + common.ToUpper(thing) + ` </button>`

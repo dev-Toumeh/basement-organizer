@@ -129,8 +129,8 @@ func DetailsTemplate(db ItemDatabase) http.HandlerFunc {
 			}
 		}
 
-		data.SetItem(item.Map())
-		err = templates.Render(w, "item-details-template", data)
+		data.SetDetailesData(item.Map())
+		err = templates.Render(w, "item-details-template", data.TypeMap)
 		if err != nil {
 			logg.Warningf("An Error accrue while fetching item Extra Info", err)
 		}

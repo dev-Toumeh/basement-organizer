@@ -469,9 +469,10 @@ func (data *Data) GetOriginRequest() string {
 	return ""
 }
 
-// assigns a map[string]interface{} to the “Item” key
-func (data *Data) SetItem(value map[string]interface{}) {
-	data.TypeMap["Item"] = value
+// Assign the thing data (ID, Label, etc..)to the dataTypeMap
+func (data *Data) SetDetailesData(value map[string]any) {
+	maps := []map[string]any{data.TypeMap, value}
+	data.TypeMap = MergeMaps(maps)
 }
 
 // retrieves Item value for the template

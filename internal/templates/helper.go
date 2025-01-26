@@ -13,6 +13,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 const (
@@ -64,6 +66,14 @@ type templateInlineMap struct {
 	Map map[string]any
 }
 
+// check if the id is available
+func IsIdAvailable(id uuid.UUID) bool {
+	if id == uuid.Nil {
+		return false
+	}
+	return true
+}
+
 // newMap defines a template function "map" for inline definition of data to be passed to other templates.
 //
 //	Example usage:
@@ -98,6 +108,7 @@ func (v *templateInlineMap) Set(key string, value string) string {
 func ParseDirectory(dirpath string) (*template.Template, []string, error) {
 	internalTemplate = template.New("main")
 	internalTemplate.Funcs(template.FuncMap{"map": newMap})
+	internalTemplate.Funcs(template.FuncMap{"IsIdAvailable": IsIdAvailable})
 	paths, err := allFilePathsInDirectory(dirpath)
 	if err != nil {
 		return nil, nil, err
