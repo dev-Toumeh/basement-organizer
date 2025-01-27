@@ -104,14 +104,15 @@ const (
     passwordhash TEXT);`
 
 	// Item
-	// ITEM_TABLE_NAME = "item"
-
-	ITEM_QUANTITY = "quantity"
-	ITEM_WEIGHT   = "weight"
-	ITEM_BOX_ID   = FTS_BOX_ID
-	ITEM_SHELF_ID = FTS_SHELF_ID
-	ITEM_AREA_ID  = FTS_AREA_ID
-	ALL_ITEM_COLS = "" +
+	ITEM_QUANTITY    = "quantity"
+	ITEM_WEIGHT      = "weight"
+	ITEM_BOX_ID      = FTS_BOX_ID
+	ITEM_BOX_LABEL   = FTS_BOX_LABEL
+	ITEM_SHELF_ID    = FTS_SHELF_ID
+	ITEM_SHELF_LABEL = FTS_SHELF_LABEL
+	ITEM_AREA_ID     = FTS_AREA_ID
+	ITEM_AREA_LABEL  = FTS_AREA_LABEL
+	ALL_ITEM_COLS    = "" +
 		ALL_BASIC_INFO_COLS + "," +
 		ITEM_QUANTITY + "," +
 		ITEM_WEIGHT + "," +

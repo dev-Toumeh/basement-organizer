@@ -66,6 +66,7 @@ func (db *DB) Connect() {
 	db.createTable(*virtualTables)
 	db.createTable(*triggers)
 
+	db.PrintItemRecords()
 	// add dummy data
 	if !db.fileExist && env.Development() {
 		db.insertDummyData()
@@ -118,56 +119,4 @@ func (db *DB) createTable(statements map[string]string) {
 			// logg.Debugf("Table '%s' created successfully\n", tableName)
 		}
 	}
-}
-
-// ErrorExist returns a predefined error indicating that the requested SQL data insertion failed
-func (db *DB) ErrorExist() error {
-	return logg.WrapErrWithSkip(ErrExist, 2)
-}
-
-// ErrorNotEmpty returns a predefined error indicating that the requested unit is not empty
-func (db *DB) ErrorNotEmpty() error {
-	return ErrNotEmpty
-	// return logg.WrapErrWithSkip(ErrNotEmpty, 2)  @TODO (Alex) fix it so we can use it without colors
-}
-
-func (db *DB) insertDummyData() {
-	db.InsertSampleItems()
-	db.InsertSampleBoxes()
-	db.InsertSampleShelves()
-	db.InsertSampleAreas()
-	itemIDs, err := db.ItemIDs()
-	if err != nil {
-		logg.WrapErr(err)
-	}
-	boxIDs, err := db.BoxIDs()
-	if err != nil {
-		logg.WrapErr(err)
-	}
-	shelfRows, _, err := db.ShelfListRowsPaginated(1, 3)
-	if err != nil {
-		logg.WrapErr(err)
-	}
-	areaIDs, err := db.AreaIDs()
-	if err != nil {
-		logg.WrapErr(err)
-	}
-	db.MoveItemToBox(itemIDs[0], boxIDs[0])
-	db.MoveItemToBox(itemIDs[1], boxIDs[0])
-	db.MoveItemToBox(itemIDs[2], boxIDs[0])
-	db.MoveItemToBox(itemIDs[3], boxIDs[1])
-	db.MoveItemToBox(itemIDs[4], boxIDs[1])
-	db.MoveItemToShelf(itemIDs[5], shelfRows[0].ID)
-	db.MoveItemToShelf(itemIDs[6], shelfRows[0].ID)
-	db.MoveBoxToShelf(boxIDs[0], shelfRows[1].ID)
-	db.MoveBoxToShelf(boxIDs[2], shelfRows[1].ID)
-	db.MoveBoxToBox(boxIDs[3], boxIDs[5])
-	db.MoveBoxToBox(boxIDs[3], boxIDs[5])
-	db.MoveBoxToBox(boxIDs[5], boxIDs[6])
-	db.MoveItemToArea(itemIDs[0], areaIDs[0])
-	db.MoveBoxToArea(boxIDs[0], areaIDs[0])
-	db.MoveShelfToArea(shelfRows[1].ID, areaIDs[0])
-	db.MoveShelfToArea(shelfRows[2].ID, areaIDs[0])
-	// db.MoveShelfToArea(shelfRows[3].ID, areaIDs[0])
-	// db.MoveShelfToArea(shelfRows[4].ID, areaIDs[0])
 }

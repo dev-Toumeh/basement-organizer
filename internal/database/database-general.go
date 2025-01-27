@@ -462,6 +462,17 @@ func (db *DB) InnerThingInTableListCounter(searchString string, thing int, inTab
 	return count, nil
 }
 
+// ErrorExist returns a predefined error indicating that the requested SQL data insertion failed
+func (db *DB) ErrorExist() error {
+	return logg.WrapErrWithSkip(ErrExist, 2)
+}
+
+// ErrorNotEmpty returns a predefined error indicating that the requested unit is not empty
+func (db *DB) ErrorNotEmpty() error {
+	return ErrNotEmpty
+	// return logg.WrapErrWithSkip(ErrNotEmpty, 2)  @TODO (Alex) fix it so we can use it without colors
+}
+
 // Helper function to check for null strings and return empty if null
 func ifNullString(sqlStr sql.NullString) string {
 	if sqlStr.Valid {
@@ -482,6 +493,14 @@ func ifNullFloat64(sqlFloat sql.NullFloat64) float64 {
 func ifNullInt(sqlInt sql.NullInt64) int {
 	if sqlInt.Valid {
 		return int(sqlInt.Int64)
+	}
+	return 0
+}
+
+// Helper function to check for null Int64 and return empty if null
+func ifNullInt64(input sql.NullInt64) int64 {
+	if input.Valid {
+		return input.Int64
 	}
 	return 0
 }

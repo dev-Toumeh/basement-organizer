@@ -2,7 +2,6 @@ package database
 
 import (
 	"basement/main/internal/common"
-	"context"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -51,7 +50,7 @@ func TestUpdateItem(t *testing.T) {
 	item.Label = "Updated Item Label"
 	item.Description = "Updated Description"
 
-	err = dbTest.UpdateItem(context.Background(), *item)
+	err = dbTest.UpdateItem(*item)
 	assert.Equal(t, err, nil)
 	retrievedItem, err := dbTest.ItemById(item.ID)
 	assert.Equal(t, err, nil)
@@ -187,4 +186,59 @@ func TestMoveItemToBox(t *testing.T) {
 
 	assert.Equal(t, retrievedItem.BoxID, uuid.Nil)
 	assert.Equal(t, len(retrievedBox.Items), 0)
+}
+
+func TestMoveItemToObject(t *testing.T) {
+	// Reset the test database and objects
+	EmptyTestDatabase()
+	resetTestItems()
+	resetAreas()
+	resetShelves()
+	resetTestBoxes()
+
+	area := AREA_1
+	shelf := SHELF_1
+	box := BOX_1
+	item := ITEM_1
+
+	// Insert objects into the database
+	_, err := dbTest.insertNewArea(*area)
+	assert.Equal(t, nil, err)
+	err = dbTest.CreateShelf(shelf)
+	assert.Equal(t, nil, err)
+	_, err = dbTest.insertNewBox(box)
+	assert.Equal(t, nil, err)
+	err = dbTest.insertNewItem(*item)
+	assert.Equal(t, nil, err)
+
+	// Move item to area
+	err = dbTest.MoveItemToObject(item.ID, area.ID, "area")
+	assert.Equal(t, nil, err)
+	retrievedItem, err := dbTest.ItemById(item.ID)
+	assert.Equal(t, nil, err)
+
+	assert.Equal(t, area.ID, retrievedItem.AreaID)
+	assert.Equal(t, area.Label, retrievedItem.AreaLabel)
+
+	// Move item to shelf
+	err = dbTest.MoveItemToObject(item.ID, shelf.ID, "shelf")
+	assert.Equal(t, nil, err)
+	retrievedItem, err = dbTest.ItemById(item.ID)
+	assert.Equal(t, nil, err)
+
+	assert.Equal(t, shelf.ID, retrievedItem.ShelfID)
+	assert.Equal(t, shelf.Label, retrievedItem.ShelfLabel)
+
+	// Move item to box
+	err = dbTest.MoveItemToObject(item.ID, box.ID, "box")
+	assert.Equal(t, nil, err)
+	retrievedItem, err = dbTest.ItemById(item.ID)
+	assert.Equal(t, nil, err)
+
+	assert.Equal(t, box.ID, retrievedItem.BoxID)
+	assert.Equal(t, box.Label, retrievedItem.BoxLabel)
+
+	// Test invalid object type
+	err = dbTest.MoveItemToObject(item.ID, box.ID, "invalid")
+	assert.NotEqual(t, nil, err)
 }

@@ -7,9 +7,7 @@ import (
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"bytes"
-	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -75,39 +73,22 @@ func (i SQLItem) String() string {
 
 // this function used inside of BoxByField to convert the sql Item struct into normal struct
 func (s *SQLItem) ToItem() (*items.Item, error) {
-	// var err error
 	info, err := s.SQLBasicInfo.ToBasicInfo()
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
-	item := &items.Item{BasicInfo: info}
 
-	// Convert and assign the ID
-	if s.BoxID.Valid {
-		item.BoxID, err = uuid.FromString(s.BoxID.String)
-		if err != nil {
-			return nil, logg.Errorf("Error parsing UUID for box ID: '%v' %w", s.BoxID, err)
-		}
-	} else {
-		return nil, logg.NewError(fmt.Sprintf("box ID is required but was null in item '%v'", s))
-	}
-
-	if s.Quantity.Valid {
-		item.Quantity = s.Quantity.Int64
-	} else {
-		item.Quantity = 1
-	}
-
-	if s.Weight.Valid {
-		item.Weight = s.Weight.String
-	} else {
-		item.Weight = ""
-	}
-
-	item.ShelfID = ifNullUUID(s.ShelfID)
-	item.AreaID = ifNullUUID(s.AreaID)
-
-	return item, nil
+	return &items.Item{
+		BasicInfo:  info,
+		Quantity:   ifNullInt64(s.Quantity),
+		Weight:     ifNullString(s.Weight),
+		BoxID:      ifNullUUID(s.BoxID),
+		BoxLabel:   ifNullString(s.BoxLabel),
+		ShelfID:    ifNullUUID(s.ShelfID),
+		ShelfLabel: ifNullString(s.ShelfLabel),
+		AreaID:     ifNullUUID(s.AreaID),
+		AreaLabel:  ifNullString(s.AreaLabel),
+	}, nil
 }
 
 type SQLListRow struct {
@@ -198,13 +179,25 @@ func (db *DB) ItemByField(field string, value string) (items.Item, error) {
 		return items.Item{}, logg.WrapErr(sql.ErrNoRows)
 	}
 
-	query := fmt.Sprintf(`SELECT 
-		id, label, description, picture, preview_picture, quantity, weight, qrcode, box_id, shelf_id, area_id
-	FROM item WHERE %s = ?;`, field)
+	query := fmt.Sprintf(`
+        SELECT 
+          i.id, i.label, i.description, i.picture, i.preview_picture, i.quantity, i.weight, i.qrcode, 
+          COALESCE(i.box_id, '') AS box_id, COALESCE(b.label, '') AS box_label, COALESCE(i.shelf_id, '') AS shelf_id, 
+          COALESCE(s.label, '') AS shelf_label, COALESCE(i.area_id, '') AS area_id, COALESCE(a.label, '') AS area_label
+        FROM item as i
+        LEFT JOIN box as b ON i.box_id = b.id
+        LEFT JOIN shelf as s ON i.shelf_id = s.id
+        LEFT JOIN area as a ON i.area_id = a.id
+        WHERE i.%s = ?;
+      `, field)
+
 	row := db.Sql.QueryRow(query, value)
 
 	sqlItem := &SQLItem{}
-	err := row.Scan(&sqlItem.ID, &sqlItem.Label, &sqlItem.Description, &sqlItem.Picture, &sqlItem.PreviewPicture, &sqlItem.Quantity, &sqlItem.Weight, &sqlItem.QRCode, &sqlItem.BoxID, &sqlItem.ShelfID, &sqlItem.AreaID)
+	err := row.Scan(
+		&sqlItem.ID, &sqlItem.Label, &sqlItem.Description, &sqlItem.Picture, &sqlItem.PreviewPicture,
+		&sqlItem.Quantity, &sqlItem.Weight, &sqlItem.QRCode, &sqlItem.BoxID, &sqlItem.BoxLabel,
+		&sqlItem.ShelfID, &sqlItem.ShelfLabel, &sqlItem.AreaID, &sqlItem.AreaLabel)
 
 	if err != nil {
 		return items.Item{}, logg.Errorf("Error while checking if the Item is available: %w ", err)
@@ -309,7 +302,8 @@ func (db *DB) ItemIDs() (ids []uuid.UUID, err error) {
 func (db *DB) insertNewItem(item items.Item) error {
 	updatePicture(&item.Picture, &item.PreviewPicture)
 
-	sqlStatement := `INSERT INTO item (id, label, description, picture, preview_picture, quantity, weight, qrcode, box_id, shelf_id, area_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	sqlStatement := `INSERT INTO item (id, label, description, picture, preview_picture, quantity, weight,
+       qrcode, box_id, shelf_id, area_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	result, err := db.Sql.Exec(sqlStatement, item.BasicInfo.ID.String(),
 		item.BasicInfo.Label, item.BasicInfo.Description, item.BasicInfo.Picture,
 		item.BasicInfo.PreviewPicture, item.Quantity, item.Weight, item.BasicInfo.QRCode,
@@ -329,30 +323,29 @@ func (db *DB) insertNewItem(item items.Item) error {
 }
 
 // update the item based on the id
-func (db *DB) UpdateItem(ctx context.Context, item items.Item) error {
+func (db *DB) UpdateItem(item items.Item) error {
 	updatePicture(&item.Picture, &item.PreviewPicture)
 
-	sqlStatement := `UPDATE item Set label = ?, description = ?, picture = ?, preview_picture = ?, quantity = ?, weight = ?, qrcode = ? WHERE id = ?`
-	result, err := db.Sql.ExecContext(ctx, sqlStatement, item.Label, item.Description, item.Picture, item.PreviewPicture, item.Quantity, item.Weight, item.QRCode, item.ID.String())
+	sqlStatement := `UPDATE item SET 
+			label = ?, description = ?, picture = ?, preview_picture = ?, quantity = ?, 
+			weight = ?, qrcode = ?, box_id = ?, shelf_id = ?, area_id = ? WHERE id = ?`
+
+	result, err := db.Sql.Exec(sqlStatement,
+		item.BasicInfo.Label, item.BasicInfo.Description, item.BasicInfo.Picture,
+		item.BasicInfo.PreviewPicture, item.Quantity, item.Weight, item.BasicInfo.QRCode,
+		item.BoxID.String(), item.ShelfID.String(), item.AreaID.String(), item.BasicInfo.ID.String())
 	if err != nil {
-		logg.Err(err)
-		return err
+		return logg.Errorf("Error while executing update item statement: %w", err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		logg.Err(err)
-		return err
+		return logg.Errorf("Error checking rows affected while executing update item statement: %w", err)
 	}
-	if rowsAffected == 0 {
-		err := errors.New(fmt.Sprintf("the Record with the id: %s was not found that should not happened while updating", item.ID.String()))
-		logg.Debug(err)
-		return err
-	} else if rowsAffected != 1 {
-		err := errors.New(fmt.Sprintf("the id: %s has unexpected effected number of rows (more than one or less than 0)", item.ID.String()))
-		logg.Err(err)
-		return err
+	if rowsAffected != 1 {
+		return logg.Errorf("Unexpected number of rows affected during update: %d for ID %s", rowsAffected, item.BasicInfo.ID.String())
 	}
+
 	return nil
 }
 
@@ -394,40 +387,6 @@ func (db *DB) Items() ([][]string, error) {
 		log.Printf("Error during rows iteration: %v", err)
 	}
 	return itemsArray, nil
-}
-
-// @TO_DELETE
-// this is dynamic function but not ready
-// am not really convinced from repeating the process every time i want to retrieve the data,
-func (db *DB) ItemExperement(query string, refs []interface{}) {
-	rows, err := db.Sql.Query(query)
-	if err != nil {
-		log.Printf("Error querying user records: %v", err)
-		return
-	}
-	defer rows.Close()
-
-	var results [][]interface{}
-
-	for rows.Next() {
-		err := rows.Scan(refs...)
-		if err != nil {
-			log.Printf("Error scanning item: %v", err)
-			continue
-		}
-
-		// Copy the data from refs to a new slice to store the results
-		row := make([]interface{}, len(refs))
-		for i, ref := range refs {
-			row[i] = *ref.(*interface{})
-		}
-		results = append(results, row)
-	}
-
-	if err := rows.Err(); err != nil {
-		log.Printf("Error during rows iteration: %v", err)
-	}
-	fmt.Print(results)
 }
 
 // delete one item or more
@@ -534,11 +493,101 @@ func (db *DB) ItemListCounter(queryString string) (count int, err error) {
 	return count, nil
 }
 
-//
-// func (db *DB) ItemExtraInfo(id uuid.UUID) (shelfRows []common.ListRow, err error) {
-//
-//   stmt := "" + "SELECT " + ALL_FTS_COLS + " " + "FROM item_fts WHERE id = " + id + " ;"
-//   rows, err := db.Sql.Query(stmt)
-//   item := SQLListRow{}
-// 	defer rows.Close()
-// }
+// @TODELETE after 01/03.2025
+func (db *DB) AddItemToArea(itemID uuid.UUID, toAreaID uuid.UUID) error {
+	item, err := db.ItemById(itemID)
+	area, err := db.AreaById(toAreaID)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+
+	item.AreaID = area.ID
+	item.AreaLabel = area.Label
+
+	err = db.UpdateItem(*item)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+
+	return nil
+}
+
+// @TODELETE after 01/03/2025
+func (db *DB) AddItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
+	item, err := db.ItemById(itemID)
+	shelf, err := db.Shelf(toShelfID)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+
+	item.ShelfID = shelf.ID
+	item.ShelfLabel = shelf.Label
+
+	err = db.UpdateItem(*item)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+
+	return nil
+}
+
+// @TODELETE after 01/03/2025
+func (db *DB) AddItemToBox(itemID uuid.UUID, boxID uuid.UUID) error {
+	item, err := db.ItemById(itemID)
+	box, err := db.BoxById(boxID)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	item.BoxID = box.ID
+	item.BoxLabel = box.Label
+
+	err = db.UpdateItem(*item)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+	return nil
+}
+
+// @TODELETE after 01/03/2025
+func (db *DB) MoveItemToObject(itemID uuid.UUID, objectID uuid.UUID, objectType string) error {
+	item, err := db.ItemById(itemID)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+
+	switch objectType {
+	case "area":
+		area, err := db.AreaById(objectID)
+		if err != nil {
+			return logg.WrapErr(err)
+		}
+		item.AreaID = area.ID
+		item.AreaLabel = area.Label
+
+	case "shelf":
+		shelf, err := db.Shelf(objectID)
+		if err != nil {
+			return logg.WrapErr(err)
+		}
+		item.ShelfID = shelf.ID
+		item.ShelfLabel = shelf.Label
+
+	case "box":
+		box, err := db.BoxById(objectID)
+		if err != nil {
+			return logg.WrapErr(err)
+		}
+		item.BoxID = box.ID
+		item.BoxLabel = box.Label
+
+	default:
+		return logg.WrapErr(fmt.Errorf("invalid object type: %s", objectType))
+	}
+
+	err = db.UpdateItem(*item)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+
+	return nil
+}

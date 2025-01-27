@@ -10,8 +10,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"regexp"
-	"strings"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gofrs/uuid/v5"
@@ -51,8 +49,6 @@ func (db *DB) PrintItemRecords() {
 		return
 	}
 	defer rows.Close()
-
-	fmt.Println("User records:")
 
 	for rows.Next() {
 
@@ -273,35 +269,6 @@ func (db *DB) PrintShelvesRecords() {
 	}
 }
 
-// 💀💀 this function will delete all the search relevant tables
-// don't use it if you don't know how it works 💀💀
-// func (db *DB) dropFTS5TablesAndTriggers() error {
-// 	_, err := db.Sql.Exec(`
-//         DROP TABLE IF EXISTS item_fts;
-//         DROP TABLE IF EXISTS box_fts;
-//         DROP TRIGGER IF EXISTS item_ai;
-//         DROP TRIGGER IF EXISTS item_au;
-//         DROP TRIGGER IF EXISTS item_ad;
-//         DROP TRIGGER IF EXISTS box_ai;
-//         DROP TRIGGER IF EXISTS box_au;
-//         DROP TRIGGER IF EXISTS box_ad;
-//     `)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to drop FTS5 tables and triggers: %w", err)
-// 	}
-// 	return nil
-// }
-
-// 💀💀 this function will delete all the Records form the item_fts table
-// don't use it if you don't know how it works 💀💀
-// func (db *DB) clearItemFTS() error {
-// 	_, err := db.Sql.Exec("DELETE FROM item_fts;")
-// 	if err != nil {
-// 		return fmt.Errorf("failed to clear item_fts: %w", err)
-// 	}
-// 	return nil
-// }
-
 const SEED = 1234
 
 func (db *DB) InsertSampleItems() {
@@ -448,99 +415,43 @@ func (db *DB) ShelfListRowsPaginated(page int, rows int) (shelfRows []*common.Li
 	return shelfRows, foundResults, nil
 }
 
-// ShelfListRowsPaginated returns always a slice with the number of rows specified.
-func (db *DB) ShelfListRowsPaginated2(limit int, offset int) (shelfRows []*common.ListRow, count int, err error) {
-	i := 0
-	count, err = db.ShelfListCounter("")
-	shelfRows = make([]*common.ListRow, count)
-
-	queryNoSearch := `
-		SELECT
-			id, label, area_id, area_label, preview_picture
-		FROM shelf_fts
-			ORDER BY label ASC
-		LIMIT ? OFFSET ?;`
-	results, err := db.Sql.Query(queryNoSearch, limit, offset)
+func (db *DB) insertDummyData() {
+	db.InsertSampleItems()
+	db.InsertSampleBoxes()
+	db.InsertSampleShelves()
+	db.InsertSampleAreas()
+	itemIDs, err := db.ItemIDs()
 	if err != nil {
-		return shelfRows, count, logg.WrapErr(err)
+		logg.WrapErr(err)
 	}
-
-	for results.Next() {
-		listRow := SQLListRow{}
-		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
-		if err != nil {
-			return shelfRows, count, logg.WrapErr(err)
-		}
-		shelfRows[i], err = listRow.ToListRow()
-		if err != nil {
-			return shelfRows, count, logg.WrapErr(err)
-		}
-		i += 1
-	}
-	if results.Err() != nil {
-		return shelfRows, count, logg.WrapErr(err)
-	}
-
-	return shelfRows, count, nil
-}
-
-// ShelfSearchListRowsPaginated always returns a slice with the number of rows specified.
-//
-// If rows=5 returns 3 results with `found=2` the last 2 rows of `shelfRows` will be nil pointers.
-//
-// `rows` and `page` must be 1 or above.
-//
-// Empty `search == ""` works the same as ShelfListRowsPaginated.
-func (db *DB) ShelfSearchListRowsPaginated(page int, rows int, search string) (shelfRows []*common.ListRow, found int, err error) {
-	if page < 1 {
-		return shelfRows, found, logg.NewError(fmt.Sprintf("invalid page '%d', only positive page numbers starting from 1 are valid", page))
-	}
-
-	if rows < 1 {
-		return shelfRows, found, logg.NewError(fmt.Sprintf("invalid rows '%d', needs at least 1 row", rows))
-	}
-
-	if search == "" {
-		return db.ShelfListRowsPaginated(page, rows)
-	}
-
-	shelfRows = make([]*common.ListRow, rows)
-
-	limit := rows
-	offset := (page - 1) * rows
-
-	searchTrimmed := strings.TrimSpace(search)
-	re := regexp.MustCompile(`\s+`)
-	searchModified := re.ReplaceAllString(searchTrimmed, "*")
-	querySearch := fmt.Sprintf(`
-		SELECT
-			id, label, area_id, area_label, preview_picture
-		FROM shelf_fts
-		WHERE label MATCH '%s*'
-		LIMIT ? OFFSET ?;`, searchModified)
-
-	results, err := db.Sql.Query(querySearch, limit, offset)
+	boxIDs, err := db.BoxIDs()
 	if err != nil {
-		return shelfRows, found, logg.WrapErr(err)
+		logg.WrapErr(err)
 	}
-
-	i := 0
-	for results.Next() {
-		listRow := SQLListRow{}
-		err = results.Scan(&listRow.ID, &listRow.Label, &listRow.AreaID, &listRow.AreaLabel, &listRow.PreviewPicture)
-		if err != nil {
-			return shelfRows, found, logg.WrapErr(err)
-		}
-		shelfRows[i], err = listRow.ToListRow()
-		if err != nil {
-			return shelfRows, found, logg.WrapErr(err)
-		}
-		i += 1
-		found += 1
+	shelfRows, _, err := db.ShelfListRowsPaginated(1, 3)
+	if err != nil {
+		logg.WrapErr(err)
 	}
-	if results.Err() != nil {
-		return shelfRows, found, logg.WrapErr(err)
+	areaIDs, err := db.AreaIDs()
+	if err != nil {
+		logg.WrapErr(err)
 	}
-
-	return shelfRows, found, nil
+	db.MoveItemToBox(itemIDs[0], boxIDs[0])
+	db.MoveItemToBox(itemIDs[1], boxIDs[0])
+	db.MoveItemToBox(itemIDs[2], boxIDs[0])
+	db.MoveItemToBox(itemIDs[3], boxIDs[1])
+	db.MoveItemToBox(itemIDs[4], boxIDs[1])
+	db.MoveItemToShelf(itemIDs[5], shelfRows[0].ID)
+	db.MoveItemToShelf(itemIDs[6], shelfRows[0].ID)
+	db.MoveBoxToShelf(boxIDs[0], shelfRows[1].ID)
+	db.MoveBoxToShelf(boxIDs[2], shelfRows[1].ID)
+	db.MoveBoxToBox(boxIDs[3], boxIDs[5])
+	db.MoveBoxToBox(boxIDs[3], boxIDs[5])
+	db.MoveBoxToBox(boxIDs[5], boxIDs[6])
+	db.MoveItemToArea(itemIDs[0], areaIDs[0])
+	db.MoveBoxToArea(boxIDs[0], areaIDs[0])
+	db.MoveShelfToArea(shelfRows[1].ID, areaIDs[0])
+	db.MoveShelfToArea(shelfRows[2].ID, areaIDs[0])
+	// db.MoveShelfToArea(shelfRows[3].ID, areaIDs[0])
+	// db.MoveShelfToArea(shelfRows[4].ID, areaIDs[0])
 }
