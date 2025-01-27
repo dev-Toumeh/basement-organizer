@@ -9,9 +9,6 @@ import (
 	"basement/main/internal/templates"
 	"maps"
 	"net/http"
-
-	"github.com/gofrs/uuid/v5"
-	// "github.com/gofrs/uuid/v5"
 )
 
 // Render Item Root page where you can search the available Items
@@ -100,7 +97,7 @@ func filledItemRows(db ItemDatabase, data common.Data) ([]common.ListRow, error)
 func DetailsTemplate(db ItemDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		errMsgForUser := "the requested Shelf doesn't exist"
+		errMsgForUser := "the requested Item doesn't exist"
 
 		data := common.InitData2(r)
 		data.SetEnvDevelopment(env.Development())
@@ -112,23 +109,6 @@ func DetailsTemplate(db ItemDatabase) http.HandlerFunc {
 		if err != nil {
 			server.WriteInternalServerError("can't query items please comeback later", err, w, r)
 		}
-
-		if item.BoxID != uuid.Nil || item.AreaID != uuid.Nil || item.ShelfID != uuid.Nil {
-			item_fts, err := db.ItemListRowByID(item.ID)
-			if err != nil {
-				logg.Warningf("An Error accrue while fetching item Extra Info", err)
-			}
-			if item_fts.BoxLabel != "" {
-				item.BoxLabel = item_fts.BoxLabel
-			}
-			if item_fts.ShelfLabel != "" {
-				item.ShelfLabel = item_fts.ShelfLabel
-			}
-			if item_fts.AreaLabel != "" {
-				item.AreaLabel = item_fts.AreaLabel
-			}
-		}
-
 		data.SetDetailesData(item.Map())
 		err = templates.Render(w, "item-details-template", data.TypeMap)
 		if err != nil {

@@ -1,6 +1,7 @@
 package items
 
 import (
+	"fmt"
 	"net/http"
 
 	"basement/main/internal/logg"
@@ -89,4 +90,24 @@ func deleteItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
 	logg.Debug("the Item with id: " + newItem.ID.String() + " was created")
 	server.RedirectWithSuccessNotification(w, "/items", "The Item was created successfully")
 	return
+}
+
+func updateItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
+	var errorMessages []string
+	item, err := item(r)
+	if err != nil {
+		logg.Errf("error while parsing item data: %v", err)
+		templates.RenderErrorNotification(w, "Invalid Item data")
+		return
+	}
+	valiedItem, err := validateItem(item, &errorMessages)
+	fmt.Print(valiedItem)
+	err = db.UpdateItem(valiedItem)
+	if err != nil {
+		fmt.Print(err)
+		templates.RenderErrorNotification(w, "Error while updating the Item, please try again later")
+		return
+	}
+	url := "/item/" + item.ID.String()
+	server.RedirectWithSuccessNotification(w, url, "item updated successfully")
 }

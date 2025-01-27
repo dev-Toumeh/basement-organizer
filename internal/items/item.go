@@ -2,8 +2,8 @@ package items
 
 import (
 	"basement/main/internal/common"
-	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/gofrs/uuid/v5"
 )
@@ -21,8 +21,8 @@ type Item struct {
 }
 
 func (i Item) String() string {
-	return fmt.Sprintf("Item[ID=%s, Label=%s, QRCode=%s, Quantity=%d, Weight=%s, BoxID=%s, ShelfID=%s, AreaID=%s]",
-		i.BasicInfo.ID, i.BasicInfo.Label, i.BasicInfo.QRCode, i.Quantity, i.Weight, i.BoxID, i.ShelfID, i.AreaID)
+	return fmt.Sprintf("Item[ID=%s, Label=%s, Quantity=%d, Weight=%s, BoxID=%s, BoxLabel=%s, ShelfID=%s, ShelfLabel=%s, AreaID=%s, AreaLabel=%s]",
+		i.ID, i.Label, i.Quantity, i.Weight, i.BoxID, i.BoxLabel, i.ShelfID, i.ShelfLabel, i.AreaID, i.AreaLabel)
 }
 
 type ItemDatabase interface {
@@ -33,7 +33,7 @@ type ItemDatabase interface {
 	ItemIDs() ([]uuid.UUID, error)
 	ItemExist(field string, value string) bool
 	Items() ([][]string, error)
-	UpdateItem(ctx context.Context, item Item) error
+	UpdateItem(item Item) error
 	DeleteItem(itemId uuid.UUID) error
 	DeleteItems(itemId []uuid.UUID) error
 	InsertSampleItems()
@@ -54,8 +54,11 @@ const (
 	WEIGHT      string = "weight"
 	QRCODE      string = "qrcode"
 	BOX_ID      string = "box_id"
+	BOX_LABEL   string = "box_label"
 	SHELF_ID    string = "shelf_id"
+	SHELF_LABEL string = "shelf_label"
 	AREA_ID     string = "area_id"
+	AREA_LABEL  string = "area_label"
 )
 
 const (
@@ -69,6 +72,8 @@ func (s *Item) Map() map[string]interface{} {
 		"ID":             s.ID,
 		"Label":          s.Label,
 		"Description":    s.Description,
+		"Weight":         s.Weight,
+		"Quantity":       s.Quantity,
 		"Picture":        s.Picture,
 		"PreviewPicture": s.PreviewPicture,
 		"BoxID":          s.BoxID,
@@ -93,4 +98,25 @@ func newItem() *Item {
 		ShelfID:   uuid.Nil,
 		AreaID:    uuid.Nil,
 	}
+}
+
+// this function will pack the request into struct from type Item, so it will be easier to handle it
+func item(r *http.Request) (Item, error) {
+	newItem := Item{
+		BasicInfo: common.BasicInfo{
+			ID:          uuid.FromStringOrNil(r.PostFormValue(ID)),
+			Label:       r.PostFormValue(LABEL),
+			Description: r.PostFormValue(DESCRIPTION),
+			Picture:     common.ParsePicture(r),
+		},
+		Quantity:   common.ParseQuantity(r.PostFormValue(QUANTITY)),
+		Weight:     r.PostFormValue(WEIGHT),
+		BoxID:      uuid.FromStringOrNil(r.PostFormValue(BOX_ID)),
+		BoxLabel:   r.PostFormValue(BOX_LABEL),
+		ShelfID:    uuid.FromStringOrNil(r.PostFormValue(SHELF_ID)),
+		ShelfLabel: r.PostFormValue(SHELF_LABEL),
+		AreaID:     uuid.FromStringOrNil(r.PostFormValue(AREA_ID)),
+		AreaLabel:  r.PostFormValue(AREA_LABEL),
+	}
+	return newItem, nil
 }

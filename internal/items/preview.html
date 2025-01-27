@@ -34,12 +34,12 @@
             <input name="description" type="text" value="{{ .Description }}"
                  {{ if not .Edit }}readonly{{ end }}>
 
-            <label for="height">Quantity:</label>
-            <input name="height" type="number" step="any" value="{{ .Height }}"
+            <label for="quantity">Quantity:</label>
+            <input name="quantity" type="number" value="{{ .Quantity }}"
                  {{ if not .Edit }}readonly{{ end }}>
 
-            <label for="width">Weight:</label>
-            <input name="width" type="number" step="any" value="{{ .Width }}"
+            <label for="weight">Weight:</label>
+            <input name="weight" type="number" value="{{ .Weight }}"
                  {{ if not .Edit }}readonly{{ end }}>
 
             <label for="qrcode">QRCode:</label>
@@ -56,7 +56,7 @@
     </div>
     
     {{ if .Edit }}
-      <button hx-get="{{ .ID }}?edit=true" hx-target="body" hx-swap="innerHTML">Update</button>
+      <button hx-put="/api/v1/update/item" hx-target="body" hx-swap="innerHTML">Update</button>
       <button type="button" onclick="window.history.back();">Cancel</button>
     {{ else }}
       <button hx-get="{{ .ID }}?edit=true" hx-push-url="true" hx-target="body" hx-swap="innerHTML">Edit</button>

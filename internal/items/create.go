@@ -9,9 +9,7 @@ import (
 	"text/template"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/gofrs/uuid/v5"
 
-	"basement/main/internal/common"
 	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
@@ -165,23 +163,4 @@ func responseGenerator(w http.ResponseWriter, responseMessage []string, success 
 		fmt.Fprintln(w, "something wrong happened please comeback later")
 	}
 	tmp.Execute(w, nil)
-}
-
-// this function will pack the request into struct from type Item, so it will be easier to handle it
-func item(r *http.Request) (Item, error) {
-	newItem := Item{
-		BasicInfo: common.BasicInfo{
-			ID:          uuid.FromStringOrNil(r.PostFormValue(ID)),
-			Label:       r.PostFormValue(LABEL),
-			Description: r.PostFormValue(DESCRIPTION),
-			Picture:     common.ParsePicture(r),
-			QRCode:      r.PostFormValue(QRCODE),
-		},
-		Quantity: common.ParseQuantity(r.PostFormValue(QUANTITY)),
-		Weight:   r.PostFormValue(WEIGHT),
-		BoxID:    uuid.FromStringOrNil(r.PostFormValue(BOX_ID)),
-		ShelfID:  uuid.FromStringOrNil(r.PostFormValue(SHELF_ID)),
-		AreaID:   uuid.FromStringOrNil(r.PostFormValue(AREA_ID)),
-	}
-	return newItem, nil
 }

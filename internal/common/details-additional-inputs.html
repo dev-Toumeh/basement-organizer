@@ -7,8 +7,9 @@
   {{ if or .Box .Item }}
     <div id="box-target">
       <label for="box_id">Is inside of Box:</label>
-      <input type="text" id="box_id" name="box_id" value="{{ .BoxID }}" hidden>
       {{ if $Box }}
+        <input type="text" id="box_id" name="box_id" value="{{ .BoxID }}" hidden>
+        <input type="text" id="box_label" name="box_label" value="{{ .BoxLabel }}" hidden>
         <a id="outerbox-link" href="/box/{{ .BoxID }}" class="clickable" hx-boost="true">{{ .BoxLabel }}</a>
       {{ else }}
         <span id="outerbox-link">None</span>
@@ -30,8 +31,9 @@
   {{ if or .Box .Item }}
     <div id="shelf-target">
       <label for="shelf_id">Is inside of Shelf:</label>
-      <input type="text" id="shelf_id" name="shelf_id" value="{{ .ShelfID }}" hidden>
       {{ if $Shelf }}
+        <input type="text" id="shelf_id" name="shelf_id" value="{{ .ShelfID }}" hidden>
+        <input type="text" id="shelf_label" name="shelf_label" value="{{ .ShelfLabel }}" hidden>
         <a id="outerbox-link" href="/shelf/{{ .ShelfID }}" class="clickable" hx-boost="true">{{ .ShelfLabel }}</a>
       {{ else }}
         <span id="outerbox-link">None</span>
@@ -53,8 +55,9 @@
   {{ if or .Box .Item .Shelf }}
     <div id="area-target">
       <label for="area_id">Is inside of Area:</label>
-      <input type="text" id="area_id" name="area_id" value="{{ .AreaID }}" hidden>
       {{ if $Area }}
+        <input type="text" id="area_id" name="area_id" value="{{ .AreaID }}" hidden>
+        <input type="text" id="area_label" name="area_label" value="{{ .AreaLabel }}" hidden>
         <a id="outerbox-link" href="/area/{{ .AreaID }}" class="clickable" hx-boost="true">{{ .AreaLabel }}</a>
       {{ else }}
         <span id="outerbox-link">None</span>

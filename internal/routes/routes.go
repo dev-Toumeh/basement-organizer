@@ -90,7 +90,6 @@ func itemsRoutes(db items.ItemDatabase) {
 	Handle("/api/v1/read/item/{id}", items.ReadItemHandler(db, func(w io.Writer, data any) {
 		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
 	}))
-	Handle("/api/v1/update/item", items.UpdateItemHandler(db))
 	Handle("/api/v1/move/item", items.MoveItemHandler(db))
 	Handle("/api/v1/delete/item", items.DeleteItemHandler(db))
 	Handle("/api/v1/read/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
@@ -105,8 +104,8 @@ func itemsRoutes2(db items.ItemDatabase) {
 
 	// API's
 	http.Handle("/api/v1/create/item", items.ItemHandler(db))
+	http.Handle("/api/v1/update/item", items.ItemHandler(db))
 	http.Handle("/api/v1/delete/item/{id}", items.ItemHandler(db))
-	http.Handle("/api/v1/update/item/{id}", items.ItemHandler(db))
 }
 
 func boxesRoutes(db *database.DB) {

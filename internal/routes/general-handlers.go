@@ -192,8 +192,9 @@ func Element(db *database.DB) http.HandlerFunc {
 
 func pickerInputElements(thing string, otherthingID string, aHref string, otherthingLabel string) string {
 	label := `<label for="` + thing + `_id">Is inside of ` + common.ToUpper(thing) + `</label>`
-	input := `<input  type="text"  name="` + thing + `_id" value="` + otherthingID + `" hidden>`
+	inputID := `<input  type="text"  name="` + thing + `_id" value="` + otherthingID + `" hidden>`
+	inputLabel := `<input  type="text"  name="` + thing + `_label" value="` + otherthingLabel + `" hidden>`
 	a := `<a href="` + aHref + `" class="clickable" hx-boost="true" style="">` + otherthingLabel + `</a>`
 	button := `<button id="move-btn" hx-target="#place-holder" hx-post="/addto/` + thing + `" hx-push-url="false"> Add to another ` + common.ToUpper(thing) + ` </button>`
-	return label + input + a + button
+	return label + inputID + inputLabel + a + button
 }
