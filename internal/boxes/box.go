@@ -32,23 +32,29 @@ type BoxDatabase interface {
 
 type Box struct {
 	common.BasicInfo
-	OuterBoxID       uuid.UUID        `json:"outerboxid"`
 	Items            []common.ListRow `json:"items"`
 	InnerBoxes       []common.ListRow `json:"innerboxes"`
 	OuterBox         *common.ListRow  `json:"outerbox"`
+	OuterBoxLabel    string           `json:"outer_box_label"`
 	ShelfID          uuid.UUID
+	OuterBoxID       uuid.UUID `json:"outerboxid"`
+	ShelfLabel       string    `json:"shelf_label"`
 	AreaID           uuid.UUID
+	AreaLabel        string            `json:"area_label"`
 	ShelfCoordinates *ShelfCoordinates `json:"shelfcoordinates"`
 }
 
 func (box *Box) Map() map[string]any {
 	m := box.BasicInfo.Map()
-	m["OuterBoxID"] = box.OuterBoxID
 	m["Items"] = templates.SliceToSliceMaps(box.Items)
 	m["InnerBoxes"] = templates.SliceToSliceMaps(box.InnerBoxes)
 	m["OuterBox"] = box.OuterBox
+	m["OuterBoxID"] = box.OuterBoxID
+	m["OuterBoxLabel"] = box.OuterBoxLabel
 	m["ShelfID"] = box.ShelfID
+	m["ShelfLabel"] = box.ShelfLabel
 	m["AreaID"] = box.AreaID
+	m["AreaLabel"] = box.AreaLabel
 	return m
 }
 

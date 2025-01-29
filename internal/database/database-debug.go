@@ -143,7 +143,7 @@ func (db *DB) RepopulateItemFTS() error {
 
 func (db *DB) PrintBoxRecords() {
 	sbox := SQLBox{}
-	query := "SELECT " + ALL_BOX_COLS + " FROM box;"
+	query := fetchBoxQuery(false, "")
 	rows, err := db.Sql.Query(query)
 	if err != nil {
 		logg.Errf("Error querying user records: %v", err)

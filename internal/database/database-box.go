@@ -12,9 +12,12 @@ import (
 
 type SQLBox struct {
 	SQLBasicInfo
-	OuterBoxID sql.NullString
-	ShelfID    sql.NullString
-	AreaID     sql.NullString
+	OuterBoxID    sql.NullString
+	OuterBoxLabel sql.NullString
+	ShelfID       sql.NullString
+	ShelfLabel    sql.NullString
+	AreaID        sql.NullString
+	AreaLabel     sql.NullString
 }
 
 // RowsToScan returns list of pointers for *sql.Rows.Scan() method.
@@ -22,7 +25,8 @@ type SQLBox struct {
 //	// example usage:
 //	rows.Scan(listRow.RowsToScan()...)
 func (b *SQLBox) RowsToScan() []any {
-	s := append(b.SQLBasicInfo.RowsToScan(), &b.OuterBoxID, &b.ShelfID, &b.AreaID)
+	s := append(b.SQLBasicInfo.RowsToScan(), &b.OuterBoxID, &b.OuterBoxLabel,
+		&b.ShelfID, &b.ShelfLabel, &b.AreaID, &b.AreaLabel)
 	return s
 }
 
@@ -39,11 +43,15 @@ func (s *SQLBox) ToBox() (*boxes.Box, error) {
 		return box, logg.WrapErr(err)
 	}
 
-	box.BasicInfo = info
-	box.OuterBoxID = ifNullUUID(s.OuterBoxID)
-	box.ShelfID = ifNullUUID(s.ShelfID)
-	box.AreaID = ifNullUUID(s.AreaID)
-	return box, nil
+	return &boxes.Box{
+		BasicInfo:     info,
+		OuterBoxID:    ifNullUUID(s.OuterBoxID),
+		OuterBoxLabel: ifNullString(s.OuterBoxLabel),
+		ShelfID:       ifNullUUID(s.ShelfID),
+		ShelfLabel:    ifNullString(s.ShelfLabel),
+		AreaID:        ifNullUUID(s.AreaID),
+		AreaLabel:     ifNullString(s.AreaLabel),
+	}, nil
 }
 
 // Create New Item Record
@@ -107,15 +115,15 @@ func (db *DB) UpdateBox(box boxes.Box, ignorePicture bool) error {
 	var stmt string
 	var result sql.Result
 	if ignorePicture {
-		stmt = "UPDATE box SET label = ?, description = ?, qrcode = ?, shelf_id = ?, area_id = ? WHERE id = ?"
-		result, err = db.Sql.Exec(stmt, box.Label, box.Description, box.QRCode, box.ShelfID, box.AreaID, box.ID)
+		stmt = "UPDATE box SET label = ?, description = ?, qrcode = ?, box_id = ?, shelf_id = ?, area_id = ? WHERE id = ?"
+		result, err = db.Sql.Exec(stmt, box.Label, box.Description, box.QRCode, box.OuterBoxID, box.ShelfID, box.AreaID, box.ID)
 	} else {
-		stmt = "UPDATE box SET label = ?, description = ?, picture = ?, preview_picture = ?, qrcode = ?, shelf_id = ?, area_id = ? WHERE id = ?"
+		stmt = "UPDATE box SET label = ?, description = ?, picture = ?, preview_picture = ?, qrcode = ?, box_id = ?, shelf_id = ?, area_id = ? WHERE id = ?"
 		box.PreviewPicture, err = ResizePNG(box.Picture, 50)
 		if err != nil {
 			logg.Errorf("Error while resizing picture of box '%s' to create a preview picture %w", box.Label, err)
 		}
-		result, err = db.Sql.Exec(stmt, box.Label, box.Description, box.Picture, box.PreviewPicture, box.QRCode, box.ShelfID, box.AreaID, box.ID)
+		result, err = db.Sql.Exec(stmt, box.Label, box.Description, box.Picture, box.PreviewPicture, box.QRCode, box.OuterBoxID, box.ShelfID, box.AreaID, box.ID)
 	}
 
 	if err != nil {
@@ -170,7 +178,7 @@ func (db *DB) BoxById(id uuid.UUID) (boxes.Box, error) {
 // Get Box  based on given Field
 func (db *DB) BoxByField(field string, value string) (*boxes.Box, error) {
 	var sqlBox SQLBox
-	stmt := "SELECT " + ALL_BOX_COLS + " FROM box WHERE " + field + " = ?;"
+	stmt := fetchBoxQuery(true, field)
 
 	err := db.Sql.QueryRow(stmt, value).Scan(sqlBox.RowsToScan()...)
 	if err != nil {
@@ -216,7 +224,9 @@ func (db *DB) insertNewBox(box *boxes.Box) (uuid.UUID, error) {
 
 	updatePicture(&box.Picture, &box.PreviewPicture)
 
-	result, err := db.Sql.Exec(sqlStatement, box.ID.String(), box.Label, box.Description, box.Picture, box.PreviewPicture, box.QRCode, box.OuterBoxID.String(), box.ShelfID.String(), box.AreaID.String())
+	result, err := db.Sql.Exec(sqlStatement, box.ID.String(), box.Label, box.Description,
+		box.Picture, box.PreviewPicture, box.QRCode, box.OuterBoxID.String(),
+		box.ShelfID.String(), box.AreaID.String())
 	if err != nil {
 		return uuid.Nil, logg.Errorf("Error while executing create new box statement: %w", err)
 	}
@@ -242,7 +252,10 @@ func (db *DB) MoveBoxToBox(box1 uuid.UUID, box2 uuid.UUID) error {
 	var id sql.NullString
 	db.Sql.QueryRow(stmt, box2.String()).Scan(&id)
 	if id.Valid && id.String == box1.String() {
-		return logg.NewError("can't move box1 (" + box1.String() + ") to box2 (" + box2.String() + "). box2 is already in box1 and they can't be inside eachother at the same time")
+		return logg.NewError(
+			"can't move box1 (" + box1.String() + ") to box2 (" + box2.String() +
+				"). box2 is already in box1 and they can't be inside each other at the same time",
+		)
 	}
 
 	err := db.moveTo("box", box1, "box", box2)

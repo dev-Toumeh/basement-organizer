@@ -4,27 +4,31 @@
 {{ $Shelf := IsIdAvailable .ShelfID }}
 {{ $Area := IsIdAvailable .AreaID }}
 
+
   {{ if or .Box .Item }}
     <div id="box-target">
       <label for="box_id">Is inside of Box:</label>
+      <input type="hidden" id="box_id" name="box_id" value="{{ .BoxID }}">
+      
       {{ if $Box }}
-        <input type="text" id="box_id" name="box_id" value="{{ .BoxID }}" hidden>
         <a id="outerbox-link" href="/box/{{ .BoxID }}" class="clickable" hx-boost="true">{{ .BoxLabel }}</a>
       {{ else }}
         <span id="outerbox-link">None</span>
       {{ end }}
-        <button 
-          id="move-btn"
-          hx-post="/addto/box"
-          hx-target="#place-holder"
-          hx-swap="innerHTML"
-          hx-push-url="false"
-          type="button"
-         {{ if not .Edit }}disabled{{ end }}>
-         Add to{{ if $Box }} another {{ end }} Box
-        </button>
+
+      <button 
+        id="move-btn"
+        hx-post="/addto/box"
+        hx-target="#place-holder"
+        hx-swap="innerHTML"
+        hx-push-url="false"
+        type="button"
+        {{ if not .Edit }}disabled{{ end }}>
+        Add to{{ if $Box }} another {{ end }} Box
+      </button>
     </div>
   {{ end }}
+
   </br>
 
   {{ if or .Box .Item }}

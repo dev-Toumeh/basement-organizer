@@ -1,5 +1,7 @@
 package database
 
+import "fmt"
+
 const (
 	BASIC_INFO_ID              = "id"
 	BASIC_INFO_LABEL           = "label"
@@ -304,3 +306,21 @@ const (
 		"	DELETE FROM area_fts WHERE " + FTS_ID + " = old." + FTS_ID + ";" +
 		"END;"
 )
+
+// fetchBoxQuery returns a formatted SQL query to fetch box details
+func fetchBoxQuery(useBoxID bool, field string) string {
+	query := `
+        SELECT 
+            b.id, b.label, b.description, b.picture, b.preview_picture, b.qrcode, 
+            b.box_id, ob.label, b.shelf_id, s.label, b.area_id, a.label
+        FROM box AS b
+        LEFT JOIN box AS ob ON b.box_id = ob.id
+        LEFT JOIN shelf AS s ON b.shelf_id = s.id
+        LEFT JOIN area AS a ON b.area_id = a.id`
+
+	if useBoxID {
+		query += fmt.Sprintf(" WHERE b.%s = ?;", field)
+	}
+
+	return query
+}

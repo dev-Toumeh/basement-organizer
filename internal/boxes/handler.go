@@ -161,7 +161,7 @@ func CreateHandler(db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			createPage(db).ServeHTTP(w, r)
+			createPage().ServeHTTP(w, r)
 			break
 		case http.MethodPost:
 			createBoxFrom(w, r, db)
@@ -175,13 +175,14 @@ func CreateHandler(db BoxDatabase) http.HandlerFunc {
 }
 
 // createPage renders a page with initial box details to create a new box. No box is created yet in the backend.
-func createPage(db BoxDatabase) http.HandlerFunc {
+func createPage() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authenticated, _ := auth.Authenticated(r)
 		user, _ := auth.UserSessionData(r)
 
 		box := NewBox()
 		data := BoxDetailsPageTemplateData()
+		data.Edit = true
 		data.Box = box
 
 		data.Title = fmt.Sprintf("Box - %s", box.Label)

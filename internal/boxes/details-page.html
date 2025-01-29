@@ -43,86 +43,9 @@
             <input type="text" id="qrcode" name="qrcode" value="{{ .QRCode }}" {{ if not (or .Edit .Create)}}disabled{{end}}>
             <br>
 
-            <label for="box_id">Is inside box:</label>
-            {{ if eq .OuterBoxID.String "00000000-0000-0000-0000-000000000000" }}
-                <span id="outerbox-link">None</span>
-            {{ else }}
-                <a id="outerbox-link" href="/box/{{.OuterBoxID}}" 
-                    class="clickable"
-                    hx-boost="true"
-                >{{ .OuterBox.Label }}</a>
-            {{ end }}
-            <input type="text" id="box_id" name="box_id" value="{{ .OuterBoxID }}" readonly>
-            {{ if .Create }}
-                <button id="move-btn"
-                    hx-post="/box/{{.ID}}/addto/box"
-                    hx-target="#place-holder"
-                    hx-push-url="false"
-                    {{ if not (or .Edit .Create) }}disabled{{ end }}
-                >Add to another box</button>
-            {{ else }}
-                <button id="move-btn"
-                    hx-post="/box/{{.ID}}/moveto/box"
-                    hx-target="#place-holder"
-                    hx-push-url="false"
-                    {{ if not (or .Edit .Create) }}disabled{{ end }}
-                >Move to another box</button>
-            {{ end }}
-            <br>
-
-            <label for="shelf_id">Is inside shelf:</label>
-            {{ if eq .ShelfID.String "00000000-0000-0000-0000-000000000000" }}
-                <span id="shelf-link">None</span>
-            {{ else }}
-                <a id="shelf-link" href="/shelf/{{.ShelfID}}" 
-                    class="clickable"
-                    hx-boost="true"
-                >{{ .ShelfID }}</a>
-            {{ end }}
-            <input type="text" id="shelf_id" name="shelf_id" value="{{ .ShelfID }}" readonly>
-            {{ if .Create }}
-                <button id="move-btn"
-                    hx-post="/box/{{.ID}}/addto/shelf"
-                    hx-target="#place-holder"
-                    hx-push-url="false"
-                    {{ if not (or .Edit .Create) }}disabled{{ end }}
-                >Add to shelf</button>
-            {{ else }}
-                <button id="move-btn"
-                    hx-post="/box/{{.ID}}/moveto/shelf"
-                    hx-target="#place-holder"
-                    hx-push-url="false"
-                    {{ if not (or .Edit .Create) }}disabled{{ end }}
-                >Move to shelf</button>
-            {{ end }}
-            <br>
-
-            <label for="area_id">Is inside area:</label>
-            {{ if eq .AreaID.String "00000000-0000-0000-0000-000000000000" }}
-                <span id="area-link">None</span>
-            {{ else }}
-                <a id="area-link" href="/area/{{.AreaID}}" 
-                    class="clickable"
-                    hx-boost="true"
-                >{{ .AreaID }}</a>
-            {{ end }}
-            <input type="text" id="area_id" name="area_id" value="{{ .AreaID }}" readonly>
-            {{ if .Create }}
-                <button id="move-btn"
-                    hx-post="/box/{{.ID}}/addto/area"
-                    hx-target="#place-holder"
-                    hx-push-url="false"
-                    {{ if not (or .Edit .Create) }}disabled{{ end }}
-                >Add to area</button>
-            {{ else }}
-                <button id="move-btn"
-                    hx-post="/box/{{.ID}}/moveto/area"
-                    hx-target="#place-holder"
-                    hx-push-url="false"
-                    {{ if not (or .Edit .Create) }}disabled{{ end }}
-                >Move to area</button>
-            {{ end }}
-            <br>
+            {{ $addToInputsData := map "Box" true "BoxID" .OuterBoxID "BoxLabel" .OuterBoxLabel "ShelfID" .ShelfID
+               "ShelfLabel" .ShelfLabel  "AreaID" .AreaID "AreaLabel" .AreaLabel  "Edit" .Edit }}
+            {{ template "details-additional-inputs" $addToInputsData.Map }}
 
         </div>
 
