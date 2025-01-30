@@ -4,10 +4,8 @@ import (
 	"basement/main/internal/auth"
 	"basement/main/internal/common"
 	"basement/main/internal/env"
-	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
-	"fmt"
 
 	"maps"
 	"net/http"
@@ -90,66 +88,5 @@ func DetailsTemplate(db ShelfDB) http.HandlerFunc {
 		data := common.MergeMaps(maps)
 
 		templates.Render(w, "shelf-details-page", data)
-	}
-}
-
-// render the Shelf List template with Add option
-func AddListTemplate(db ShelfDB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		if r.Method != http.MethodPost {
-			w.Header().Add("Allow", http.MethodPost)
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			logg.Debug(w, "Method:'", r.Method, "' not allowed")
-			fmt.Fprint(w, "something went wrong please try again later")
-			return
-		}
-
-		data := getTemplateData(r, db, w)
-		data.SetFormHXTarget("this")
-		data.SetRowHXGet("shelves/add-input")
-		data.SetFormID("list-add")
-		data.SetShowLimit(env.Config().ShowTableSize())
-		data.SetPlaceHolder(false)
-
-		data.SetRowAction(true)
-		data.SetRowActionName("Add to")
-		data.SetRowActionHXPostWithID("/shelves/add-input")
-		data.SetRowActionHXTarget("#shelf-target")
-
-		server.MustRender(w, r, "list", data.TypeMap)
-	}
-}
-
-// render an html element from type input Field with the desired Shelf Id and label
-func AddInputTemplate(db ShelfDB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		errMsgForUser := "can't add, please comeback later"
-		id := server.ValidID(w, r, errMsgForUser)
-
-		shelf, err := db.Shelf(id)
-		if err != nil {
-			server.WriteInternalServerError("false request", err, w, r)
-			return
-		}
-
-		inputHTML := fmt.Sprintf(`
-      <label for="shelf_id">Put inside of Shelf</label></br>
-      <input type="text" name="shelf_id" value="%s" hidden>
-      <input type="text" name="label" value="%s" disabled>
-      <button
-       hx-target="#place-holder"
-       hx-post="/shelves/add-list"
-       hx-push-url="false">
-       Add to another Shelf
-      </button>
-      <div id="place-holder" hx-swap-oob="true"></div>
-      `,
-			shelf.ID.String(), shelf.Label)
-
-		w.Header().Set("Content-Type", "text/html")
-
-		w.Write([]byte(inputHTML))
 	}
 }

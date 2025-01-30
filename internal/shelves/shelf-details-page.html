@@ -47,22 +47,15 @@
 
             <label for="cols">Cols:</label>
             <input name="cols" type="number" step="1" value="{{ .Cols }}" {{ if not .Edit }}disabled{{ end }}>
+
+            {{ $addToInputsData := map "Shelf" true "BoxID" ""  "BoxLabel" "" "ShelfID" ""
+               "ShelfLabel" ""  "AreaID" .AreaID "AreaLabel" .AreaLabel  "Edit" .Edit }}
+            {{ template "details-additional-inputs" $addToInputsData.Map }}
+
         </div>
 
-        <div id="image-preview-{{ .ID }}" class="detail-picture">
-            {{ if .Picture }}
-            <label for="picture">Picture:</label>
-            <img class="detail" src="data:image/png;base64,{{ .Picture }}" alt="{{ .Label }}">
-            {{ else }}
-            <p>No image available</p>
-            {{ end }}
-
-            {{ if .Edit }}
-            <input type="file" id="picture-{{ .ID }}" name="picture" accept="image/*">
-            {{ else }}
-            <input type="file" id="picture-{{ .ID }}" name="picture" accept="image/*" disabled>
-            {{ end }}
-        </div>
+        {{ $imagePreview := map "ID"  .ID  "Label"  .Label  "Edit" .Edit "Create" "" "Picture"  .Picture }}
+        {{ template "details-image-preview" $imagePreview.Map }}
     </div>
 
     <!-- Buttons Section -->
@@ -93,4 +86,5 @@
     {{ end }}
 
 </form>
+<div id="place-holder"></div>
 {{ end }}

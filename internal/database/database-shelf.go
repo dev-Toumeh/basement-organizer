@@ -12,12 +12,13 @@ import (
 
 type SQLShelf struct {
 	SQLBasicInfo
-	Height sql.NullFloat64
-	Width  sql.NullFloat64
-	Depth  sql.NullFloat64
-	Rows   sql.NullInt64
-	Cols   sql.NullInt64
-	AreaID sql.NullString
+	Height    sql.NullFloat64
+	Width     sql.NullFloat64
+	Depth     sql.NullFloat64
+	Rows      sql.NullInt64
+	Cols      sql.NullInt64
+	AreaID    sql.NullString
+	AreaLabel sql.NullString
 }
 
 func (s SQLShelf) ToShelf() (*shelves.Shelf, error) {
@@ -33,6 +34,8 @@ func (s SQLShelf) ToShelf() (*shelves.Shelf, error) {
 		Depth:     float32(ifNullFloat64(s.Depth)),
 		Rows:      int(ifNullInt(s.Rows)),
 		Cols:      int(ifNullInt(s.Cols)),
+		AreaId:    ifNullUUID(s.AreaID),
+		AreaLabel: ifNullString(s.AreaLabel),
 		Items:     nil,
 		Boxes:     nil,
 	}, nil
@@ -87,19 +90,11 @@ func (db *DB) createNewShelf(nID uuid.UUID) error {
 		depth,
 		rows,
 		cols) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-	// logg.Debugf("SQL: %s", stmt)
+
 	result, err := db.Sql.Exec(stmt,
-		&id,
-		&label,
-		&description,
-		&picture,
-		&previewPicture,
-		&qrcode,
-		&height,
-		&width,
-		&depth,
-		&rows,
-		&cols,
+		&id, &label, &description, &picture,
+		&previewPicture, &qrcode, &height,
+		&width, &depth, &rows, &cols,
 	)
 
 	if err != nil {
@@ -110,7 +105,7 @@ func (db *DB) createNewShelf(nID uuid.UUID) error {
 		return logg.WrapErr(err)
 	}
 	if rowsAffected != 1 {
-		return logg.Errorf("unexpected number of effected rows, check insirtNewBox")
+		return logg.Errorf("unexpected number of effected rows, check insertNewBox")
 	}
 
 	return nil
@@ -144,8 +139,9 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
             width,
             depth,
             rows,
-            cols
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            cols,
+            area_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
 
 	_, err = db.Sql.Exec(stmt,
@@ -160,6 +156,7 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 		shelf.Depth,
 		shelf.Rows,
 		shelf.Cols,
+		shelf.AreaId,
 	)
 	if err != nil {
 		return logg.Errorf("CreateShelf %w", err)
@@ -173,18 +170,22 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 
 	var sqlShelf SQLShelf
 	stmt := `
-	SELECT
-		id, label, description, picture, preview_picture, qrcode, height, width, depth, rows, cols
-	FROM 
-		shelf
-	WHERE 
-		id = ?;`
+      SELECT
+        s.id, s.label, s.description, s.picture, s.preview_picture, s.qrcode,
+        s.height, s.width, s.depth, s.rows, s.cols, s.area_id, a.label
+      FROM 
+        shelf AS s
+      LEFT JOIN area AS a ON s.area_id = a.id
+      WHERE 
+        s.id = ?;`
 
 	err := db.Sql.QueryRow(stmt, id.String()).Scan(
 		&sqlShelf.SQLBasicInfo.ID, &sqlShelf.SQLBasicInfo.Label, &sqlShelf.SQLBasicInfo.Description,
-		&sqlShelf.SQLBasicInfo.Picture, &sqlShelf.SQLBasicInfo.PreviewPicture, &sqlShelf.SQLBasicInfo.QRCode,
-		&sqlShelf.Height, &sqlShelf.Width, &sqlShelf.Depth, &sqlShelf.Rows, &sqlShelf.Cols,
+		&sqlShelf.SQLBasicInfo.Picture, &sqlShelf.SQLBasicInfo.PreviewPicture,
+		&sqlShelf.SQLBasicInfo.QRCode, &sqlShelf.Height, &sqlShelf.Width, &sqlShelf.Depth,
+		&sqlShelf.Rows, &sqlShelf.Cols, &sqlShelf.AreaID, &sqlShelf.AreaLabel,
 	)
+
 	if err != nil {
 		return nil, logg.WrapErr(err)
 	}
@@ -223,7 +224,8 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
             width = ?,
             depth = ?,
             rows = ?,
-            cols = ?
+            cols = ?,
+            area_id = ?
         WHERE id = ?
     `
 	_, err = db.Sql.Exec(stmt,
@@ -237,6 +239,7 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
 		shelf.Depth,
 		shelf.Rows,
 		shelf.Cols,
+		shelf.AreaId.String(),
 		shelf.ID.String(),
 	)
 	if err != nil {

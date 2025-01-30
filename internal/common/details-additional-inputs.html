@@ -1,9 +1,14 @@
 {{ define "details-additional-inputs"}}
 
-{{ $Box := IsIdAvailable .BoxID }}
-{{ $Shelf := IsIdAvailable .ShelfID }}
-{{ $Area := IsIdAvailable .AreaID }}
+{{ $Box := false }}
+{{ $Shelf := false }}
 
+{{ if not .Shelf }}
+  {{ $Box = IsIdAvailable .BoxID }}
+  {{ $Shelf = IsIdAvailable .ShelfID }}
+{{ end }}
+
+{{ $Area := IsIdAvailable .AreaID }}
 
   {{ if or .Box .Item }}
     <div id="box-target">

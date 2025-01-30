@@ -19,6 +19,7 @@ type Shelf struct {
 	Rows           int
 	Cols           int
 	AreaId         uuid.UUID
+	AreaLabel      string
 }
 
 type ShelfListRow struct {
@@ -76,8 +77,10 @@ func (s *Shelf) Map() map[string]interface{} {
 		"Depth":          s.Depth,
 		"Rows":           s.Rows,
 		"Cols":           s.Cols,
-		"InnerItemsList": s.InnerItemsList,
+		"AreaID":         s.AreaId,
+		"AreaLabel":      s.AreaLabel,
 		"InnerBoxesList": s.InnerBoxesList,
+		"InnerItemsList": s.InnerItemsList,
 	}
 
 	return shelfMap

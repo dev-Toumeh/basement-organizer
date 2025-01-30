@@ -177,8 +177,6 @@ func shelvesRoutes(db shelves.ShelfDB) {
 	Handle("/shelves", shelves.PageTemplate(db))
 	Handle("/shelf/create", shelves.CreateTemplate())
 	Handle("/shelf/{id}", shelves.DetailsTemplate(db))
-	Handle("/shelves/add-list", shelves.AddListTemplate(db))
-	Handle("/shelves/add-input/{id}", shelves.AddInputTemplate(db))
 
 	Handle("/shelf/{id}/innerItems", common.HandleListTemplateInnerThingsData(common.THING_ITEM, common.THING_SHELF))
 	Handle("/shelf/{id}/innerBoxes", common.HandleListTemplateInnerThingsData(common.THING_BOX, common.THING_SHELF))

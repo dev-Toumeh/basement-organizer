@@ -105,6 +105,7 @@ func updateShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
 	}
 	// @Todo validate shelf request data
 	err = db.UpdateShelf(shelf)
+	fmt.Print(err)
 	if err != nil {
 		templates.RenderErrorNotification(w, "Error while updating the shelf, please try again later")
 		return

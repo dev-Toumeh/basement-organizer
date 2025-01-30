@@ -33,34 +33,32 @@
             <input type="text" id="qrcode" name="qrcode" value="{{ .QRCode }}">
 
             <label for="height">Height:</label>
-            <input name="height" type="number" step="any" value="{{ printf "%.2f" .Height }}">
+            <input name="height" type="number" value="{{ printf "%.2f" .Height }}">
 
             <label for="width">Width:</label>
-            <input name="width" type="number" step="any" value="{{ printf "%.2f" .Width }}">
+            <input name="width" type="number" value="{{ printf "%.2f" .Width }}">
 
             <label for="depth">Depth:</label>
-            <input name="depth" type="number" step="any" value="{{ printf "%.2f" .Depth }}">
+            <input name="depth" type="number" value="{{ printf "%.2f" .Depth }}">
 
             <label for="rows">Rows:</label>
-            <input name="rows" type="number" step="any" value="{{ .Rows }}">
+            <input name="rows" type="number" value="{{ .Rows }}">
 
             <label for="cols">Cols:</label>
-            <input name="cols" type="number" step="any" value="{{ .Cols }}">
+            <input name="cols" type="number" value="{{ .Cols }}">
+
+            {{ $addToInputsData := map "Shelf" true "BoxID" ""  "BoxLabel" "" "ShelfID" ""
+               "ShelfLabel" ""  "AreaID" .AreaID "AreaLabel" .AreaLabel  "Edit" true }}
+            {{ template "details-additional-inputs" $addToInputsData.Map }}
 
         </div>
 
-        <div id="image-preview-{{ .ID }}" class="detail-picture">
-            {{ if .Picture }}
-            <label for="picture">Picture:</label>
-            <img class="detail" src="data:image/png;base64,{{ .Picture }}" alt="{{ .Label }}">
-            {{ else }}
-            <p>No image available</p>
-            {{ end }}
-            <input type="file" id="picture-{{ .ID }}" name="picture" accept="image/*" >
-        </div>
+        {{ $imagePreview := map "ID"  .ID  "Label"  .Label  "Edit" true "Create" "" "Picture"  .Picture }}
+        {{ template "details-image-preview" $imagePreview.Map }}
     </div>
 
     <button type="submit">Create</button>
     <button type="button" onclick="window.history.back();">Cancel</button>
 </form>
+<div id="place-holder"></div>
 {{ end }}

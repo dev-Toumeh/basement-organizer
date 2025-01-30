@@ -2,12 +2,9 @@ package common
 
 import (
 	"basement/main/internal/auth"
-	"basement/main/internal/logg"
 	"errors"
 	"fmt"
 	"net/http"
-
-	"github.com/gofrs/uuid/v5"
 )
 
 // Data structure definition
@@ -503,114 +500,6 @@ func (data *Data) GetEdit() bool {
 // Get the Edit state
 func (data *Data) GetTypeMap() map[string]interface{} {
 	return data.TypeMap
-}
-
-// check if the Box is available while previewing the Item
-func (data *Data) IsBoxAvailable() bool {
-	item := data.GetItem()
-	if item == nil {
-		logg.Infof("Item is not set. Please set an Item before checking if the Box is available.")
-		return false
-	}
-
-	boxID, exists := item["BoxID"]
-	if !exists {
-		logg.Infof("BoxID key is missing in the Item.")
-		return false
-	}
-
-	if uuidValue, ok := boxID.(uuid.UUID); ok {
-		if uuidValue == uuid.Nil {
-			return false
-		}
-		return true
-	}
-
-	// If BoxID is a string, parse it as a UUID
-	if boxIDStr, ok := boxID.(string); ok {
-		parsedUUID, err := uuid.FromString(boxIDStr)
-		if err != nil || parsedUUID == uuid.Nil {
-			logg.Infof("BoxID is either invalid or uuid.Nil.")
-			return false
-		}
-		return true
-	}
-
-	// If BoxID is of an unexpected type
-	logg.Infof("BoxID is of an unsupported type.")
-	return false
-}
-
-// check if the Shelf is available while previewing the Item
-func (data *Data) IsShelfAvailable() bool {
-	item := data.GetItem()
-	if item == nil {
-		logg.Warning("Item is not set. Please set an Item before checking if the Shelf is available.")
-		return false
-	}
-
-	ShelfID, exists := item["ShelfID"]
-	if !exists {
-		logg.Warning("ShelfID key is missing in the Item.")
-		return false
-	}
-
-	if uuidValue, ok := ShelfID.(uuid.UUID); ok {
-		if uuidValue == uuid.Nil {
-			return false
-		}
-		return true
-	}
-
-	// If ShelfID is a string, parse it as a UUID
-	if shelfIDStr, ok := ShelfID.(string); ok {
-		parsedUUID, err := uuid.FromString(shelfIDStr)
-		if err != nil || parsedUUID == uuid.Nil {
-			logg.Warning("ShelfID is either invalid or uuid.Nil.")
-			return false
-		}
-		return true
-	}
-
-	// If ShelfID is of an unexpected type
-	logg.Warning("ShelfID is of an unsupported type.")
-	return false
-}
-
-// check if the Area is available while previewing the Item
-func (data *Data) IsAreaAvailable() bool {
-	item := data.GetItem()
-	if item == nil {
-		logg.Warning("Item is not set. Please set an Item before checking if the Area is available.")
-		return false
-	}
-
-	AreaID, exists := item["AreaID"]
-	if !exists {
-		logg.Warning("AreaID key is missing in the Item.")
-		return false
-	}
-
-	if uuidValue, ok := AreaID.(uuid.UUID); ok {
-		if uuidValue == uuid.Nil {
-			return false
-		}
-		return true
-	}
-
-	// If AreaID is a string, parse it as a UUID
-	if AreaIDStr, ok := AreaID.(string); ok {
-		parsedUUID, err := uuid.FromString(AreaIDStr)
-		if err != nil || parsedUUID == uuid.Nil {
-			logg.Warning("AreaID is either invalid or uuid.Nil.")
-			return false
-		}
-		return true
-	}
-
-	// If AreaID is of an unexpected type
-	logg.Warning("AreaID is of an unsupported type.")
-	return false
 }
 
 // SetListRowTemplateOptions sets the ListRowTemplateOptions in the TypeMap.
