@@ -39,10 +39,30 @@ type ItemDatabase interface {
 	InsertSampleItems()
 	ErrorExist() error
 	MoveItemToBox(itemID uuid.UUID, boxID uuid.UUID) error
+	MoveItemToShelf(itemID uuid.UUID, shelfID uuid.UUID) error
+	MoveItemToArea(itemID uuid.UUID, areaID uuid.UUID) error
 
 	// search functions
 	ItemListCounter(queryString string) (count int, err error)
 	ItemListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error)
+
+	// required in common.Database interface
+	InnerListRowsFrom2(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string) ([]common.ListRow, error)
+	InnerListRowsPaginatedFrom(belongsToTable string, belongsToTableID uuid.UUID, listRowsTable string, searchQuery string, limit int, page int) (listRows []common.ListRow, err error)
+	InnerBoxInBoxListCounter(searchString string, inTable string, inTableID uuid.UUID) (count int, err error)
+	InnerShelfInTableListCounter(searchString string, inTable string, inTableID uuid.UUID) (count int, err error)
+	InnerThingInTableListCounter(searchString string, thing int, inTable string, inTableID uuid.UUID) (count int, err error)
+	MoveShelfToArea(shelfID uuid.UUID, toAreaID uuid.UUID) error
+	BoxListCounter(searchQuery string) (count int, err error)
+	ShelfListCounter(searchQuery string) (count int, err error)
+	ShelfListRows(searchQuery string, limit int, page int) (shelfRows []common.ListRow, err error)
+	AreaListCounter(searchQuery string) (count int, err error)
+	BoxListRows(searchQuery string, limit int, page int) ([]common.ListRow, error)
+	AreaListRows(searchQuery string, limit int, page int) (areaRows []common.ListRow, err error)
+	DeleteBox(boxID uuid.UUID) error
+	DeleteShelf(id uuid.UUID) (label string, err error)
+	DeleteShelf2(id uuid.UUID) error
+	DeleteArea(areaID uuid.UUID) error
 }
 
 const (

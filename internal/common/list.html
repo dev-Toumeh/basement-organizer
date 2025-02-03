@@ -142,36 +142,52 @@
         <button 
             {{ if .HXDelete }}
                 hx-delete="{{.HXDelete}}"
-                hx-target="#{{$FormID}}"
-                hx-select="#{{$FormID}}"
             {{ else }}
-                hx-delete="/boxes"
-                hx-target="#item-list"
+                hx-delete="/items"
             {{ end }}
-            hx-swap="innerHTML"
+            hx-target="#{{$FormID}}"
+            hx-select="#{{$FormID}}"
             hx-push-url="false"
         >Delete</button>
-        <button 
-            hx-post="/move-item-to-box"
+        <button
+            hx-post="/items/moveto/box"
             type="button"
-            hx-target="#box-list"
             hx-swap="innerHTML"
             hx-push-url="false"
+            {{ if .MoveButtonHXTarget }}
+                hx-target="{{.MoveButtonHXTarget}}"
+            {{ else }}
+                hx-target="#place-holder"
+                hx-swap="outerHTML"
+            {{ end }}
+            hx-include=":checked"
         >Move to Box</button>
-        <button 
-            hx-post="/move-item-to-shelf"
+        <button
+            hx-post="/items/moveto/shelf"
             type="button"
-            hx-target="#shelf-list"
             hx-swap="innerHTML"
             hx-push-url="false"
-        >Move to Shelf</button>
-        <button 
-            hx-post="/move-item-to-area"
+            {{ if .MoveButtonHXTarget }}
+                hx-target="{{.MoveButtonHXTarget}}"
+            {{ else }}
+                hx-target="#place-holder"
+                hx-swap="outerHTML"
+            {{ end }}
+            hx-include=":checked"
+        >Move to shelf</button>
+        <button
+            hx-post="/items/moveto/area"
             type="button"
-            hx-target="#area-list"
             hx-swap="innerHTML"
             hx-push-url="false"
-        >Move to Area</button>
+            {{ if .MoveButtonHXTarget }}
+                hx-target="{{.MoveButtonHXTarget}}"
+            {{ else }}
+                hx-target="#place-holder"
+                hx-swap="outerHTML"
+            {{ end }}
+            hx-include=":checked"
+        >Move to area</button>
 
     {{ else if eq .RequestOrigin "Boxes" }}
         <button
@@ -229,16 +245,24 @@
             {{ if .HXDelete }}
                 hx-delete="{{.HXDelete}}"
             {{ else }}
-                hx-delete="/api/v1/delete/shelves"
+                hx-delete="/shelves"
             {{ end }}
             hx-target="#{{$FormID}}"
             hx-select="#{{$FormID}}"
             hx-push-url="false"
         >Delete</button>
         <button 
-            hx-get="/api/v1/implement-me"
+            hx-post="/shelves/moveto/area"
             type="button"
+            hx-swap="innerHTML"
             hx-push-url="false"
+            {{ if .MoveButtonHXTarget }}
+                hx-target="{{.MoveButtonHXTarget}}"
+            {{ else }}
+                hx-target="#place-holder"
+                hx-swap="outerHTML"
+            {{ end }}
+            hx-include=":checked"
         >Move to Area</button>
 
     {{ else if eq .RequestOrigin "Areas" }}

@@ -98,9 +98,21 @@ func itemsRoutes(db items.ItemDatabase) {
 }
 
 func itemsRoutes2(db items.ItemDatabase) {
-	Handle("/items", items.PageTemplate(db))
+	Handle("/items", items.ItemsHandler(db))
 	Handle("/item/{id}", items.DetailsTemplate(db))
 	Handle("/items/create", items.CreateTemplate())
+
+	// Move multiple items from list.
+	Handle("/items/moveto/{thing}", common.ListPageMovePicker(common.THING_ITEM, db))
+	Handle("/items/moveto/box/{id}", func(w http.ResponseWriter, r *http.Request) {
+		common.ListPageMovePickerConfirm(db.MoveItemToBox, "/items").ServeHTTP(w, r)
+	})
+	Handle("/items/moveto/shelf/{id}", func(w http.ResponseWriter, r *http.Request) {
+		common.ListPageMovePickerConfirm(db.MoveItemToShelf, "/items").ServeHTTP(w, r)
+	})
+	Handle("/items/moveto/area/{id}", func(w http.ResponseWriter, r *http.Request) {
+		common.ListPageMovePickerConfirm(db.MoveItemToArea, "/items").ServeHTTP(w, r)
+	})
 
 	// API's
 	http.Handle("/api/v1/create/item", items.ItemHandler(db))
@@ -140,7 +152,7 @@ func boxesRoutes(db *database.DB) {
 
 	// Boxes templates
 	Handle("/boxes", boxes.BoxesHandler(db))
-	Handle("/boxes/moveto/{thing}", common.ListPageMovePicker(db))
+	Handle("/boxes/moveto/{thing}", common.ListPageMovePicker(common.THING_BOX, db))
 	Handle("/boxes/moveto/box/{id}", func(w http.ResponseWriter, r *http.Request) {
 		common.ListPageMovePickerConfirm(db.MoveBoxToBox, "/boxes").ServeHTTP(w, r)
 	})
@@ -163,10 +175,9 @@ func boxesRoutes(db *database.DB) {
 		case "shelf":
 			notifications = server.MoveThingToThing(w, r, db.MoveBoxToShelf)
 			break
-			//  @TODO
-			// case "area":
-			// 	notifications = server.MoveThingToThing(w, r, db.MoveBoxToArea)
-			// 	break
+		case "area":
+			notifications = server.MoveThingToThing(w, r, db.MoveBoxToArea)
+			break
 		}
 		server.TriggerNotifications(w, notifications)
 	})
@@ -174,12 +185,18 @@ func boxesRoutes(db *database.DB) {
 
 func shelvesRoutes(db shelves.ShelfDB) {
 	//Template
-	Handle("/shelves", shelves.PageTemplate(db))
+	Handle("/shelves", shelves.ShelvesHandler(db))
 	Handle("/shelf/create", shelves.CreateTemplate())
 	Handle("/shelf/{id}", shelves.DetailsTemplate(db))
 
 	Handle("/shelf/{id}/innerItems", common.HandleListTemplateInnerThingsData(common.THING_ITEM, common.THING_SHELF))
 	Handle("/shelf/{id}/innerBoxes", common.HandleListTemplateInnerThingsData(common.THING_BOX, common.THING_SHELF))
+
+	// Move multiple items from list.
+	Handle("/shelves/moveto/{thing}", common.ListPageMovePicker(common.THING_SHELF, db))
+	Handle("/shelves/moveto/area/{id}", func(w http.ResponseWriter, r *http.Request) {
+		common.ListPageMovePickerConfirm(db.MoveShelfToArea, "/shelves").ServeHTTP(w, r)
+	})
 
 	// Api
 	http.HandleFunc("/api/v1/create/shelf", shelves.ShelfHandler(db))

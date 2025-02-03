@@ -184,46 +184,8 @@ type Database interface {
 	DeleteArea(areaID uuid.UUID) error
 }
 
-const (
-	THING_ITEM = iota
-	THING_BOX
-	THING_SHELF
-	THING_AREA
-)
-
-func ValidThing(thing string) int {
-	switch thing {
-	case "item":
-		return THING_ITEM
-	case "box":
-		return THING_BOX
-	case "shelf":
-		return THING_SHELF
-	case "area":
-		return THING_AREA
-	default:
-		logg.Errorf(`thing "%s" is not valid, using THING_ITEM="%i"`, thing, THING_ITEM)
-		return THING_ITEM
-	}
-}
-
-func ValidThingString(thing int) string {
-	switch thing {
-	case THING_ITEM:
-		return "item"
-	case THING_BOX:
-		return "box"
-	case THING_SHELF:
-		return "shelf"
-	case THING_AREA:
-		return "area"
-	default:
-		logg.Errorf(`thing "%i" is not valid, using "item"`, thing)
-		return "item"
-	}
-}
-
-func ListPageMovePicker(db Database) http.HandlerFunc {
+// fromThingPage: From which page is this requested (THING_ITEM / THING_BOX / THING_SHELF)
+func ListPageMovePicker(fromThingPage int, db Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Uses POST so client can send long list
 		// of IDs of boxes inside PostForm body
@@ -235,6 +197,27 @@ func ListPageMovePicker(db Database) http.HandlerFunc {
 		}
 
 		moveTo := r.PathValue("thing")
+		moveToThing, err := ValidThing(moveTo)
+		if err != nil {
+			server.WriteBadRequestError("\""+moveTo+"\" is not a valid thing", err, w, r)
+			return
+		}
+
+		var from string
+		switch fromThingPage {
+		case THING_ITEM:
+			from = "items"
+		case THING_BOX:
+			from = "boxes"
+		case THING_SHELF:
+			from = "shelves"
+		case THING_AREA:
+			from = "areas"
+		default:
+			err := logg.Errorf(`thing "%i" is not valid, using "item"`, fromThingPage)
+			server.WriteBadRequestError("", err, w, r)
+			return
+		}
 
 		// Request doesn't come from this move template.
 		isRequestFromMovePage := r.FormValue("move") != ""
@@ -255,7 +238,7 @@ func ListPageMovePicker(db Database) http.HandlerFunc {
 				return
 			}
 			if len(toMove) == 0 {
-				server.WriteBadRequestError("No box selected to move", nil, w, r)
+				server.WriteBadRequestError("No "+moveTo+" selected to move", nil, w, r)
 				return
 			}
 		}
@@ -287,7 +270,7 @@ func ListPageMovePicker(db Database) http.HandlerFunc {
 
 		listTmpl := ListTemplate{
 			FormID:       "list-move",
-			FormHXPost:   "/boxes/moveto/" + moveTo,
+			FormHXPost:   "/" + from + "/moveto/" + moveTo,
 			FormHXTarget: "this",
 			ShowLimit:    env.Config().ShowTableSize(),
 
@@ -322,21 +305,20 @@ func ListPageMovePicker(db Database) http.HandlerFunc {
 		listTmpl.Limit = limit
 
 		var count int
-		var err error
 		var rowHXGet string
-		switch moveTo {
-		case "box":
+		switch moveToThing {
+		case THING_BOX:
 			rowHXGet = "/box"
 			count, err = db.BoxListCounter(searchString)
 			break
 
-		case "shelf":
-			rowHXGet = "/shelves"
+		case THING_SHELF:
+			rowHXGet = "/shelf"
 			count, err = db.ShelfListCounter(searchString)
 			break
 
-		case "area":
-			rowHXGet = "/areas"
+		case THING_AREA:
+			rowHXGet = "/area"
 			count, err = db.AreaListCounter(searchString)
 			break
 		}
@@ -354,7 +336,7 @@ func ListPageMovePicker(db Database) http.HandlerFunc {
 				RowHXGet:              rowHXGet,
 				RowAction:             true,
 				RowActionName:         "Move here",
-				RowActionHXPostWithID: "/boxes/moveto/" + moveTo,
+				RowActionHXPostWithID: "/" + from + "/moveto/" + moveTo,
 				RowActionHXTarget:     "#list-move",
 				RowActionType:         "move",
 			}
@@ -403,7 +385,11 @@ func ListTemplateInnerThingsFrom(innerThings int, from int, w http.ResponseWrite
 		return listTmpl, logg.NewError("invalid id")
 	}
 
-	fromTable := ValidThingString(from)
+	fromTable, err := ValidThingString(from)
+	if err != nil {
+		server.WriteBadRequestError(fmt.Sprintf("invalid thing %d", from), logg.WrapErr(err), w, r)
+		return
+	}
 
 	switch innerThings {
 	case THING_ITEM:

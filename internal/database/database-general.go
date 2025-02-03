@@ -448,7 +448,10 @@ func (db *DB) InnerListRowsFrom2(belongsToTable string, belongsToTableID uuid.UU
 //
 //	count, err = InnerThingInTableListCounter("box 1", THING_SHELF, fromTable, id)
 func (db *DB) InnerThingInTableListCounter(searchString string, thing int, inTable string, inTableID uuid.UUID) (count int, err error) {
-	validThing := common.ValidThingString(thing)
+	validThing, err := common.ValidThingString(thing)
+	if err != nil {
+		return count, logg.WrapErr(err)
+	}
 	countQuery := `SELECT COUNT(*) FROM ` + validThing + `_fts WHERE ` + inTable + `_id = ?;`
 
 	if searchString != "" {
