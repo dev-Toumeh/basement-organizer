@@ -16,7 +16,7 @@
 {{ else }}
 <h1>Preview Item</h1>
 {{ end }}
-<form id="box-{{ .ID }}"
+<form id="item-{{ .ID }}"
     class="container"
     hx-encoding="multipart/form-data"
     hx-post="/api/v1/create/item"
@@ -60,8 +60,16 @@
       <button type="button" onclick="window.history.back();">Cancel</button>
     {{ else }}
       <button hx-get="{{ .ID }}?edit=true" hx-push-url="true" hx-target="body" hx-swap="innerHTML">Edit</button>
-      <button hx-get="{{ .ID }}?edit=true" hx-target="body" hx-swap="innerHTML">Delete</button>
     {{ end }}
+
+    {{ if not .Create }}
+        <button hx-delete="/delete-item" 
+            hx-swap="outerHTML"
+            hx-target="#item-{{.ID}}"
+            hx-confirm="Are you sure?"
+        >delete</button>
+    {{ end }}
+
 </form>
 <div id="place-holder"></div>
 {{ end }}

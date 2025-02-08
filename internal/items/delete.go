@@ -2,6 +2,7 @@ package items
 
 import (
 	"basement/main/internal/logg"
+	"basement/main/internal/server"
 	"basement/main/internal/templates"
 	"fmt"
 	"io"
@@ -18,8 +19,8 @@ type Response struct {
 // delete Item based on Id
 func DeleteItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-
+		switch r.Method {
+		case http.MethodPost:
 			ids, err := itemIDS(r)
 			if err != nil {
 				logg.Errf("error while checking the Ids: %v", err)
@@ -35,9 +36,28 @@ func DeleteItemHandler(db ItemDatabase) func(w http.ResponseWriter, r *http.Requ
 			w.Header().Set("HX-Trigger-After-On-Load", "handleDeleteRows")
 			w.WriteHeader(http.StatusOK)
 			templates.RenderSuccessNotification(w, "items was deleted successfully")
-		} else {
+			break
+
+		case http.MethodDelete:
+			w.Header().Add("Allowed", http.MethodGet)
+			id := server.ValidID(w, r, "invalid ID")
+			if id == uuid.Nil {
+				return
+			}
+
+			if err := db.DeleteItem(id); err != nil {
+				server.WriteBadRequestError(logg.CleanLastError(err), err, w, r)
+				return
+			}
+			server.RedirectWithSuccessNotification(w, "/items", "item deleted "+id.String())
+			break
+
+		default:
 			logg.Debug("Invalid Request")
-			http.Error(w, "Invalid Request", http.StatusBadRequest)
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			w.Header().Add("Allowed", http.MethodPost)
+			w.Header().Add("Allowed", http.MethodDelete)
+			break
 		}
 	}
 }

@@ -48,6 +48,7 @@ func getTemplateData(r *http.Request, db ItemDatabase, w http.ResponseWriter) co
 	count, err := db.ItemListCounter(data.GetSearchInputValue())
 	if err != nil {
 		server.WriteInternalServerError("error items counter", err, w, r)
+		return common.Data{}
 	}
 
 	data.SetTitle("Items")
@@ -65,6 +66,7 @@ func getTemplateData(r *http.Request, db ItemDatabase, w http.ResponseWriter) co
 		items, err = filledItemRows(db, data)
 		if err != nil {
 			server.WriteInternalServerError("can't query items please comeback later", err, w, r)
+			return common.Data{}
 		}
 	}
 
@@ -108,6 +110,7 @@ func DetailsTemplate(db ItemDatabase) http.HandlerFunc {
 		item, err := db.ItemById(id)
 		if err != nil {
 			server.WriteInternalServerError("can't query items please comeback later", err, w, r)
+			return
 		}
 		data.SetDetailesData(item.Map())
 		err = templates.Render(w, "item-details-template", data.TypeMap)
