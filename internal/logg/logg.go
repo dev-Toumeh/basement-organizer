@@ -6,6 +6,7 @@
 package logg
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -140,6 +141,47 @@ func Debugf(format string, v ...any) {
 		return
 	}
 	Alog(debugLogger, 3, format, v...)
+}
+
+// DebugJSON logs formatted JSON output with truncated string fields.
+//
+//	data: The data to be processed and logged. This can be of any type.
+//	maxLen: The maximum allowed length for string fields,
+//	        Strings Crossing this length will be truncated.
+func DebugJSON(data interface{}, maxLen int) {
+	truncatedData, err := processDebugJSON(data, maxLen)
+	if err != nil {
+		DebugLite("Failed to process JSON:", err)
+		return
+	}
+	Debug("Debug Data:\n", truncatedData)
+}
+
+// DebugLite is for logs with internal detailed information.
+// This designed for temporary debugging purposes.
+func DebugLite(v ...any) {
+	Alog(debugLogger, 3, fmt.Sprint(v...))
+}
+
+// Debug is for logs with internal detailed information with formatting options.
+// use for for temporary debugging purposes.
+func DebugFLite(format string, v ...any) {
+	Alog(debugLogger, 3, format, v...)
+}
+
+// DebugJSONLite logs formatted JSON output with truncated string fields.
+// use for for temporary debugging purposes.
+//
+//	data: The data to be processed and logged. This can be of any type.
+//	maxLen: The maximum allowed length for string fields,
+//	        Strings Crossing this length will be truncated.
+func DebugJSONLite(data interface{}, maxLen int) {
+	truncatedData, err := processDebugJSON(data, maxLen)
+	if err != nil {
+		DebugLite("Failed to process JSON:", err)
+		return
+	}
+	DebugLite("Debug Data:\n", truncatedData)
 }
 
 // Errorf works similar to fmt.Errorf but adds line number and function name to output.
@@ -338,4 +380,66 @@ func CleanLastError(err error) (out string) {
 
 	// Debug("out: " + out)
 	return out
+}
+
+func processDebugJSON(data interface{}, maxLen int) (string, error) {
+	if data == nil {
+		return "", errors.New("no data to debug")
+	}
+
+	jsonBytes, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+
+	var parsedData interface{}
+	if err := json.Unmarshal(jsonBytes, &parsedData); err != nil {
+		return "", err
+	}
+
+	var truncate func(interface{})
+	truncate = func(v interface{}) {
+		switch vv := v.(type) {
+		case map[string]interface{}:
+			for k, val := range vv {
+				if str, ok := val.(string); ok && len(str) > maxLen {
+					vv[k] = str[:maxLen] + "..."
+				} else {
+					truncate(val)
+				}
+			}
+		case []interface{}:
+			for i, item := range vv {
+				truncate(item)
+				vv[i] = item
+			}
+		}
+	}
+
+	truncate(parsedData)
+
+	// Convert back to JSON string
+	finalJSON, err := json.MarshalIndent(parsedData, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	// ** Insert separators between main objects **
+	if slice, ok := parsedData.([]interface{}); ok {
+		var formattedParts []string
+		separator := "\n\n====================================\n\n"
+
+		for _, obj := range slice {
+			jsonObj, err := json.MarshalIndent(obj, "", "  ")
+			if err != nil {
+				continue
+			}
+			formattedParts = append(formattedParts, string(jsonObj))
+		}
+
+		// Join objects with separator
+		return strings.Join(formattedParts, separator), nil
+	}
+
+	return string(finalJSON), nil
 }
