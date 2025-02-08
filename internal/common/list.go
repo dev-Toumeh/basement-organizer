@@ -199,7 +199,7 @@ func ListPageMovePicker(fromThingPage int, db Database) http.HandlerFunc {
 		moveTo := r.PathValue("thing")
 		moveToThing, err := ValidThing(moveTo)
 		if err != nil {
-			server.WriteBadRequestError("\""+moveTo+"\" is not a valid thing", err, w, r)
+			server.WriteBadRequestError(logg.CleanLastError(err), logg.WrapErr(err), w, r)
 			return
 		}
 
@@ -387,7 +387,7 @@ func ListTemplateInnerThingsFrom(innerThings int, from int, w http.ResponseWrite
 
 	fromTable, err := ValidThingString(from)
 	if err != nil {
-		server.WriteBadRequestError(fmt.Sprintf("invalid thing %d", from), logg.WrapErr(err), w, r)
+		server.WriteBadRequestError(logg.CleanLastError(err), logg.WrapErr(err), w, r)
 		return
 	}
 

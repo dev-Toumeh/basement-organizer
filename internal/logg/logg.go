@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"runtime"
 	"strings"
 )
@@ -24,6 +25,17 @@ const (
 	bggrey = "\033[48;5;243m"
 	bgred  = "\033[48;5;217m"
 )
+
+var regexColor *regexp.Regexp
+
+func init() {
+	var err error
+	// To remove ASCII colors in logs.
+	regexColor, err = regexp.Compile("\033[[0-9;]*m")
+	if err != nil {
+		panic(err.Error())
+	}
+}
 
 var logger = log.New(os.Stdout, "", log.Ltime|log.Lshortfile)
 var errorLogger = log.New(os.Stderr, Red+"ERROR:\t"+Gray, log.Ltime|log.Lshortfile)
@@ -303,4 +315,27 @@ func WantHave(want any, have any, v ...any) string {
 	}
 	msg += info
 	return msg
+}
+
+// CleanLastError returns last error without color codes.
+func CleanLastError(err error) (out string) {
+	msg := err.Error()
+	// Debug("msg: " + msg)
+	out = regexColor.ReplaceAllString(msg, "")
+	outs := strings.Split(out, "\n")
+
+	for _, l := range outs {
+		// Debugf("outs[%d]: %s", i, l)
+		if len(l) != 0 {
+			out = strings.TrimSpace(l)
+			start := strings.Index(out, "]") + 1
+			out = strings.TrimSpace(out[start:])
+			break
+		} else {
+			continue
+		}
+	}
+
+	// Debug("out: " + out)
+	return out
 }
