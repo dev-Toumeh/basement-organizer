@@ -20,7 +20,7 @@ var shelf1 *Shelf = &Shelf{
 	Depth:  60.0,
 	Rows:   4,
 	Cols:   3,
-	AreaId: uuid.Must(uuid.FromString("222e4567-e89b-12d3-a456-426614174001")),
+	AreaID: uuid.Must(uuid.FromString("222e4567-e89b-12d3-a456-426614174001")),
 }
 
 var shelf2 *Shelf = &Shelf{
@@ -37,7 +37,7 @@ var shelf2 *Shelf = &Shelf{
 	Depth:  70.0,
 	Rows:   5,
 	Cols:   4,
-	AreaId: uuid.Must(uuid.FromString("444e4567-e89b-12d3-a456-426614174003")),
+	AreaID: uuid.Must(uuid.FromString("444e4567-e89b-12d3-a456-426614174003")),
 }
 
 type ShelfDatabaseError struct{}

@@ -34,7 +34,7 @@ func (s SQLShelf) ToShelf() (*shelves.Shelf, error) {
 		Depth:     float32(ifNullFloat64(s.Depth)),
 		Rows:      int(ifNullInt(s.Rows)),
 		Cols:      int(ifNullInt(s.Cols)),
-		AreaId:    ifNullUUID(s.AreaID),
+		AreaID:    ifNullUUID(s.AreaID),
 		AreaLabel: ifNullString(s.AreaLabel),
 		Items:     nil,
 		Boxes:     nil,
@@ -156,7 +156,7 @@ func (db *DB) CreateShelf(shelf *shelves.Shelf) error {
 		shelf.Depth,
 		shelf.Rows,
 		shelf.Cols,
-		shelf.AreaId,
+		shelf.AreaID,
 	)
 	if err != nil {
 		return logg.Errorf("CreateShelf %w", err)
@@ -239,7 +239,7 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
 		shelf.Depth,
 		shelf.Rows,
 		shelf.Cols,
-		shelf.AreaId.String(),
+		shelf.AreaID.String(),
 		shelf.ID.String(),
 	)
 	if err != nil {

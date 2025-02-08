@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 
 	"basement/main/internal/areas"
@@ -39,7 +40,6 @@ func AddTo(db *database.DB) http.HandlerFunc {
 				return
 			}
 			data.SetCount(count)
-
 			var rows []common.ListRow
 			if count > 0 {
 				rowOptions := common.ListRowTemplateOptions{
@@ -119,7 +119,7 @@ func AddTo(db *database.DB) http.HandlerFunc {
 		data = common.Pagination2(data)
 		data.SetShowLimit(env.Config().ShowTableSize())
 
-		data.SetFormHXPost(post)
+		data.SetFormHXPost("/addto/" + thing)
 		data.SetFormID(thing + "-list")
 		data.SetFormHXTarget("#" + thing + "-list")
 
@@ -133,67 +133,138 @@ func AddTo(db *database.DB) http.HandlerFunc {
 	}
 }
 
-// return the Chosen Object "item" / "box" / "shelf" / "area"
+// // Handles the HTTP request, extracts parameters,
 func Element(db *database.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		thing := r.PathValue("thing")
-		thingIDFromRequest := r.PathValue("thingid")
-
-		var err error
-		var otherthingLabel string
-		var otherthingID string
-		var otherthingHref string
-
-		switch thing {
-		case "box":
-			var box boxes.Box
-			box, err = db.BoxById(uuid.FromStringOrNil(thingIDFromRequest))
-			if err == nil {
-				otherthingLabel = box.Label
-				otherthingID = box.ID.String()
-				otherthingHref = "/box/" + otherthingID
-			}
-			break
-		case "shelf":
-			var shelf *shelves.Shelf
-			shelf, err = db.Shelf(uuid.FromStringOrNil(thingIDFromRequest))
-
-			if err == nil {
-				otherthingLabel = shelf.Label
-				otherthingID = shelf.ID.String()
-				otherthingHref = "/shelf/" + otherthingID
-			}
-			break
-		case "area":
-			var area areas.Area
-			area, err = db.AreaById(uuid.FromStringOrNil(thingIDFromRequest))
-
-			if err == nil {
-				otherthingLabel = area.Label
-				otherthingID = area.ID.String()
-				otherthingHref = "/area/" + otherthingID
-			}
-			break
-		default:
-			server.WriteInternalServerError("can't move box to \""+thing+"\"", logg.NewError("can't move box to \""+thing+"\""), w, r)
+		thingID := uuid.FromStringOrNil(r.PathValue("thingid"))
+		if thingID == uuid.Nil {
+			server.WriteNotFoundError("Invalid or missing thing ID", fmt.Errorf("empty thing ID"), w, r)
 			return
 		}
 
+		data, err := fetchObjects(db, thing, thingID)
 		if err != nil {
-			server.WriteNotFoundError("can't find "+thing+" "+thingIDFromRequest, err, w, r)
+			server.WriteNotFoundError(fmt.Sprintf("No matching objects found for %s", thing), err, w, r)
+			return
 		}
 
-		inputElements := pickerInputElements(thing, otherthingID, otherthingHref, otherthingLabel)
-		server.TriggerSuccessNotification(w, otherthingLabel+`" was added to the "`+thing+`"`)
-		server.WriteFprint(w, inputElements)
+		var (
+			rendered string
+			boxObj   boxes.Box
+			shelfObj *shelves.Shelf
+			areaObj  areas.Area
+		)
+
+		// Default to empty values if not found
+		boxFound, shelfFound, areaFound := false, false, false
+		for _, m := range data {
+			if val, ok := m["box"]; ok {
+				boxObj = val.(boxes.Box)
+				boxFound = true
+			}
+			if val, ok := m["shelf"]; ok {
+				shelfObj = val.(*shelves.Shelf)
+				shelfFound = true
+			}
+			if val, ok := m["area"]; ok {
+				areaObj = val.(areas.Area)
+				areaFound = true
+			}
+		}
+
+		// Always render three inputs
+		if boxFound {
+			rendered += renderPicker("box", boxObj.ID, boxObj.Label)
+		} else {
+			rendered += renderEmptyPicker("box")
+		}
+		if shelfFound {
+			rendered += renderPicker("shelf", shelfObj.ID, shelfObj.Label)
+		} else {
+			rendered += renderEmptyPicker("shelf")
+		}
+		if areaFound {
+			rendered += renderPicker("area", areaObj.ID, areaObj.Label)
+		} else {
+			rendered += renderEmptyPicker("area")
+		}
+
+		server.TriggerSuccessNotification(w, "Objects were added successfully.")
+		server.WriteFprint(w, rendered)
 		server.WriteFprint(w, `<div id="place-holder" hx-swap-oob="true"></div>`)
 	}
 }
 
-func pickerInputElements(thing string, otherthingID string, aHref string, otherthingLabel string) string {
-	label := `<label for="` + thing + `_id">Is inside of ` + common.ToUpper(thing) + `</label>`
-	inputID := `<input  type="text"  name="` + thing + `_id" value="` + otherthingID + `" hidden>`
-	a := `<a href="` + aHref + `" class="clickable" hx-boost="true" style="">` + otherthingLabel + `</a>`
-	button := `<button id="move-btn" hx-target="#place-holder" hx-post="/addto/` + thing + `" hx-push-url="false"> Add to another ` + common.ToUpper(thing) + ` </button>`
-	return label + inputID + a + button
+// Fetch the requested object and any related objects
+func fetchObjects(db *database.DB, thing string, thingID uuid.UUID) ([]map[string]interface{}, error) {
+	var obj interface{}
+	var err error
+	response := []map[string]interface{}{}
+
+	switch thing {
+	case "box":
+		obj, err = db.BoxById(thingID)
+	case "shelf":
+		obj, err = db.Shelf(thingID)
+	case "area":
+		obj, err = db.AreaById(thingID)
+	default:
+		return nil, fmt.Errorf("unknown type: %s", thing)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if thing == "box" {
+		box := obj.(boxes.Box)
+		response = append(response, map[string]interface{}{"box": box})
+
+		if box.ShelfID != uuid.Nil {
+			if shelf, err := db.Shelf(box.ShelfID); err == nil {
+				response = append(response, map[string]interface{}{"shelf": shelf})
+
+				if shelf.AreaID != uuid.Nil {
+					if area, err := db.AreaById(shelf.AreaID); err == nil {
+						response = append(response, map[string]interface{}{"area": area})
+					}
+				}
+			}
+		}
+	} else if thing == "shelf" {
+		shelf := obj.(*shelves.Shelf)
+		response = append(response, map[string]interface{}{"shelf": shelf})
+
+		if shelf.AreaID != uuid.Nil {
+			if area, err := db.AreaById(shelf.AreaID); err == nil {
+				response = append(response, map[string]interface{}{"area": area})
+			}
+		}
+	} else if thing == "area" {
+		response = append(response, map[string]interface{}{"area": obj})
+	}
+
+	return response, nil
+}
+
+func renderPicker(thing string, id uuid.UUID, label string) string {
+	targetID := thing + "-target"
+	htmlLabel := `<label for="` + thing + `_id">Is inside of ` + common.ToUpper(thing) + `</label>`
+	hidden := `<input type="hidden" name="` + thing + `_id" value="` + id.String() + `">`
+	a := `<a href="/` + thing + `/` + id.String() + `" class="clickable" hx-boost="true">` + label + `</a>`
+	button := `<button hx-post="/addto/` + thing + `" hx-target="#place-holder" hx-swap="innerHTML"
+                hx-push-url="false" type="button">Add to another ` + common.ToUpper(thing) + `</button>`
+
+	return `<div id="` + targetID + `" hx-swap-oob="true">` + htmlLabel + hidden + a + button + `</div>`
+}
+
+func renderEmptyPicker(thing string) string {
+	targetID := thing + "-target"
+	htmlLabel := `<label for="` + thing + `_id">Is inside of ` + common.ToUpper(thing) + `</label>`
+	emptySpan := `<span id='outerbox-link'>None</span>`
+	button := `<button hx-post="/addto/` + thing + `" hx-target="#place-holder" hx-swap="innerHTML"
+                hx-push-url="false" type="button">Add to ` + common.ToUpper(thing) + `</button>`
+
+	return `<div id="` + targetID + `" hx-swap-oob="true">` + htmlLabel + emptySpan + button + `</div>`
 }

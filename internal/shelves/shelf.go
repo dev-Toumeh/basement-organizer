@@ -18,7 +18,7 @@ type Shelf struct {
 	Depth          float32
 	Rows           int
 	Cols           int
-	AreaId         uuid.UUID
+	AreaID         uuid.UUID
 	AreaLabel      string
 }
 
@@ -93,7 +93,7 @@ func (s *Shelf) Map() map[string]interface{} {
 		"Depth":          s.Depth,
 		"Rows":           s.Rows,
 		"Cols":           s.Cols,
-		"AreaID":         s.AreaId,
+		"AreaID":         s.AreaID,
 		"AreaLabel":      s.AreaLabel,
 		"InnerBoxesList": s.InnerBoxesList,
 		"InnerItemsList": s.InnerItemsList,
@@ -135,7 +135,7 @@ func shelf(r *http.Request) (*Shelf, error) {
 		Depth:  common.StringToFloat32(r.PostFormValue(DEPTH)),
 		Rows:   common.StringToInt(r.PostFormValue(ROWS)),
 		Cols:   common.StringToInt(r.PostFormValue(COLS)),
-		AreaId: areaId,
+		AreaID: areaId,
 	}
 	return newShelf, nil
 }
