@@ -40,6 +40,6 @@ func (area Area) Map() map[string]any {
 
 func areaFromPostFormValue(id uuid.UUID, r *http.Request) (area Area, ignorePicture bool) {
 	ignorePicture = server.ParseIgnorePicture(r)
-	area.BasicInfo = common.BasicInfoFromPostFormValue(id, r, ignorePicture)
+	area.BasicInfo = common.BasicInfoFromPostFormValue(id, r, false)
 	return area, ignorePicture
 }

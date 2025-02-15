@@ -79,6 +79,13 @@ func updateArea(w http.ResponseWriter, r *http.Request, db AreaDatabase) {
 		server.WriteNotFoundError(errMsgForUser, err, w, r)
 		return
 	}
+
+	// @TODO: Find a better solution. Picture is not included in request if ignorePicture is true and will be missing in response.
+	area, err = db.AreaById(area.ID)
+	if err != nil {
+		server.WriteNotFoundError("no area found with id: "+id.String(), err, w, r)
+		return
+	}
 	if server.WantsTemplateData(r) {
 		areaTemplate := AreaDetailsPageData{Area: area, Edit: false}
 		err := server.RenderWithSuccessNotification(w, r, "area-details", areaTemplate, "Updated area: "+areaTemplate.Label)
@@ -168,4 +175,3 @@ func createAreaWithID(w http.ResponseWriter, r *http.Request, db AreaDatabase, i
 	}
 	server.RedirectWithSuccessNotification(w, "/areas", "Created new area: "+area.Label)
 }
-
