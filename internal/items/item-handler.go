@@ -102,7 +102,10 @@ func updateItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
 	}
 	valiedItem, err := validateItem(item, &errorMessages)
 	fmt.Print(valiedItem)
-	err = db.UpdateItem(valiedItem)
+
+	ignorePicture := server.ParseIgnorePicture(r)
+
+	err = db.UpdateItem(valiedItem, ignorePicture)
 	if err != nil {
 		fmt.Print(err)
 		templates.RenderErrorNotification(w, "Error while updating the Item, please try again later")

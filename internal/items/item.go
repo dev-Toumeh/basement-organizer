@@ -33,7 +33,7 @@ type ItemDatabase interface {
 	ItemIDs() ([]uuid.UUID, error)
 	ItemExist(field string, value string) bool
 	Items() ([][]string, error)
-	UpdateItem(item Item) error
+	UpdateItem(item Item, ignorePicture bool) error
 	DeleteItem(itemId uuid.UUID) error
 	DeleteItems(itemId []uuid.UUID) error
 	InsertSampleItems()

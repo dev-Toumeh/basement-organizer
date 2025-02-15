@@ -323,17 +323,31 @@ func (db *DB) insertNewItem(item items.Item) error {
 }
 
 // update the item based on the id
-func (db *DB) UpdateItem(item items.Item) error {
-	updatePicture(&item.Picture, &item.PreviewPicture)
+func (db *DB) UpdateItem(item items.Item, ignorePicture bool) error {
+	var err error
+	var sqlStatement string
+	var result sql.Result
+	if ignorePicture {
+		sqlStatement = `UPDATE item SET 
+			label = ?, description = ?, quantity = ?, weight = ?, 
+			qrcode = ?, box_id = ?, shelf_id = ?, area_id = ? WHERE id = ?`
 
-	sqlStatement := `UPDATE item SET 
+		result, err = db.Sql.Exec(sqlStatement,
+			item.BasicInfo.Label, item.BasicInfo.Description, item.Quantity, item.Weight,
+			item.BasicInfo.QRCode, item.BoxID.String(), item.ShelfID.String(), item.AreaID.String(), item.BasicInfo.ID.String())
+	} else {
+		updatePicture(&item.Picture, &item.PreviewPicture)
+
+		sqlStatement = `UPDATE item SET 
 			label = ?, description = ?, picture = ?, preview_picture = ?, quantity = ?, 
 			weight = ?, qrcode = ?, box_id = ?, shelf_id = ?, area_id = ? WHERE id = ?`
 
-	result, err := db.Sql.Exec(sqlStatement,
-		item.BasicInfo.Label, item.BasicInfo.Description, item.BasicInfo.Picture,
-		item.BasicInfo.PreviewPicture, item.Quantity, item.Weight, item.BasicInfo.QRCode,
-		item.BoxID.String(), item.ShelfID.String(), item.AreaID.String(), item.BasicInfo.ID.String())
+		result, err = db.Sql.Exec(sqlStatement,
+			item.BasicInfo.Label, item.BasicInfo.Description, item.BasicInfo.Picture,
+			item.BasicInfo.PreviewPicture, item.Quantity, item.Weight, item.BasicInfo.QRCode,
+			item.BoxID.String(), item.ShelfID.String(), item.AreaID.String(), item.BasicInfo.ID.String())
+	}
+
 	if err != nil {
 		return logg.Errorf("Error while executing update item statement: %w", err)
 	}
@@ -504,7 +518,7 @@ func (db *DB) AddItemToArea(itemID uuid.UUID, toAreaID uuid.UUID) error {
 	item.AreaID = area.ID
 	item.AreaLabel = area.Label
 
-	err = db.UpdateItem(*item)
+	err = db.UpdateItem(*item, false)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
@@ -523,7 +537,7 @@ func (db *DB) AddItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
 	item.ShelfID = shelf.ID
 	item.ShelfLabel = shelf.Label
 
-	err = db.UpdateItem(*item)
+	err = db.UpdateItem(*item, false)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
@@ -541,7 +555,7 @@ func (db *DB) AddItemToBox(itemID uuid.UUID, boxID uuid.UUID) error {
 	item.BoxID = box.ID
 	item.BoxLabel = box.Label
 
-	err = db.UpdateItem(*item)
+	err = db.UpdateItem(*item, false)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
@@ -584,7 +598,7 @@ func (db *DB) MoveItemToObject(itemID uuid.UUID, objectID uuid.UUID, objectType 
 		return logg.WrapErr(fmt.Errorf("invalid object type: %s", objectType))
 	}
 
-	err = db.UpdateItem(*item)
+	err = db.UpdateItem(*item, false)
 	if err != nil {
 		return logg.WrapErr(err)
 	}
