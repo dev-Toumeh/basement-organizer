@@ -103,8 +103,10 @@ func updateShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
 		templates.RenderErrorNotification(w, "Invalid shelf data")
 		return
 	}
+	ignorePicture := server.ParseIgnorePicture(r)
+
 	// @Todo validate shelf request data
-	err = db.UpdateShelf(shelf)
+	err = db.UpdateShelf(shelf, ignorePicture)
 	fmt.Print(err)
 	if err != nil {
 		templates.RenderErrorNotification(w, "Error while updating the shelf, please try again later")

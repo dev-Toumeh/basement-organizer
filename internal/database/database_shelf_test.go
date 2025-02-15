@@ -139,7 +139,7 @@ func TestUpdateShelf(t *testing.T) {
 	shelf.Cols = 5
 	shelf.Picture = VALID_BASE64_PNG
 
-	err = dbTest.UpdateShelf(shelf)
+	err = dbTest.UpdateShelf(shelf, false)
 	assert.Equal(t, err, nil)
 
 	updatedShelf, err := dbTest.Shelf(shelf.ID)

@@ -207,13 +207,43 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 	return shelf, nil
 }
 
-func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
-	err := updatePicture(&shelf.Picture, &shelf.PreviewPicture)
-	if err != nil {
-		logg.Errf("Can't update picture %v", err.Error())
-	}
+func (db *DB) UpdateShelf(shelf *shelves.Shelf, ignorePicture bool) error {
 
-	stmt := `
+	var err error
+	var stmt string
+	if ignorePicture {
+		stmt = `
+        UPDATE shelf SET
+            label = ?,
+            description = ?,
+            qrcode = ?,
+            height = ?,
+            width = ?,
+            depth = ?,
+            rows = ?,
+            cols = ?,
+            area_id = ?
+        WHERE id = ?
+    `
+		_, err = db.Sql.Exec(stmt,
+			shelf.Label,
+			shelf.Description,
+			shelf.QRCode,
+			shelf.Height,
+			shelf.Width,
+			shelf.Depth,
+			shelf.Rows,
+			shelf.Cols,
+			shelf.AreaID.String(),
+			shelf.ID.String(),
+		)
+	} else {
+		err = updatePicture(&shelf.Picture, &shelf.PreviewPicture)
+		if err != nil {
+			logg.Warningf("Can't update picture %v", err.Error())
+		}
+
+		stmt := `
         UPDATE shelf SET
             label = ?,
             description = ?,
@@ -228,22 +258,24 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf) error {
             area_id = ?
         WHERE id = ?
     `
-	_, err = db.Sql.Exec(stmt,
-		shelf.Label,
-		shelf.Description,
-		shelf.Picture,
-		shelf.PreviewPicture,
-		shelf.QRCode,
-		shelf.Height,
-		shelf.Width,
-		shelf.Depth,
-		shelf.Rows,
-		shelf.Cols,
-		shelf.AreaID.String(),
-		shelf.ID.String(),
-	)
+		_, err = db.Sql.Exec(stmt,
+			shelf.Label,
+			shelf.Description,
+			shelf.Picture,
+			shelf.PreviewPicture,
+			shelf.QRCode,
+			shelf.Height,
+			shelf.Width,
+			shelf.Depth,
+			shelf.Rows,
+			shelf.Cols,
+			shelf.AreaID.String(),
+			shelf.ID.String(),
+		)
+	}
+
 	if err != nil {
-		return logg.Errorf("UpdateShelf: %w", err)
+		return logg.WrapErr(err)
 	}
 	return nil
 }

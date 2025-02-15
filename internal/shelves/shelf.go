@@ -38,7 +38,7 @@ type shelfTemplateDetailsData struct {
 type ShelfDB interface {
 	Shelf(id uuid.UUID) (*Shelf, error)
 	CreateShelf(shelf *Shelf) error
-	UpdateShelf(shelf *Shelf) error
+	UpdateShelf(shelf *Shelf, ignorePicture bool) error
 	DeleteShelf(id uuid.UUID) (label string, err error)
 	ShelfListRows(searchString string, limit int, pageNr int) (shelfRows []common.ListRow, err error)
 	ShelfListCounter(queryString string) (count int, err error)
