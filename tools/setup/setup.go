@@ -18,7 +18,7 @@ import (
 
 func LoadConfig() *env.Configuration {
 	c := env.DefaultDevelopmentConfig()
-	env.LoadConfig(&c)
+	env.LoadConfig(c)
 
 	return env.Config()
 }`
