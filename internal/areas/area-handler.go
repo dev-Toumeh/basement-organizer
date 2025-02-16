@@ -168,4 +168,3 @@ func createAreaWithID(w http.ResponseWriter, r *http.Request, db AreaDatabase, i
 	}
 	server.RedirectWithSuccessNotification(w, "/areas", "Created new area: "+area.Label)
 }
-

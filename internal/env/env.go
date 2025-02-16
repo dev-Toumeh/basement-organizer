@@ -28,10 +28,10 @@ var defaultDevConfig Configuration = Configuration{
 	env:              DEVELOPMENT,
 	defaultTableSize: 10,
 	infoLogsEnabled:  true,
-	debugLogsEnabled: false,
+	debugLogsEnabled: true,
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
-	dbPath:           "./internal/database/sqlite-database.db",
+	dbPath:           "./sqlite-database.db",
 }
 
 var defaultProdConfig Configuration = Configuration{
@@ -41,7 +41,7 @@ var defaultProdConfig Configuration = Configuration{
 	debugLogsEnabled: false,
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
-	dbPath:           "./internal/database/sqlite-database-prod-v1.db",
+	dbPath:           "./sqlite-database-prod-v1.db",
 }
 
 var config *Configuration = &defaultDevConfig

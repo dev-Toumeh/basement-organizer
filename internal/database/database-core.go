@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"os"
+	"path/filepath"
 
 	_ "modernc.org/sqlite"
 )
@@ -82,6 +83,12 @@ func (db *DB) createFile(dbFile string) {
 		return
 	}
 
+	// Ensure the directory exists
+	dir := filepath.Dir(dbFile)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		logg.Fatalf("Failed to create directory %s: %v", dir, err)
+	}
+
 	logg.Debugf(`creating "%s"`, dbFile)
 	file, err := os.Create(dbFile)
 	if err != nil {
@@ -89,7 +96,6 @@ func (db *DB) createFile(dbFile string) {
 	}
 	defer file.Close()
 	logg.Infof(`"%s" created`, dbFile)
-
 }
 
 // open the connection and create tables if they don't exist.
