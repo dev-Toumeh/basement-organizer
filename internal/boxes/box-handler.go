@@ -115,7 +115,7 @@ func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	err = db.UpdateBox(box, ignorePicture)
 
 	if err != nil {
-		server.WriteNotFoundError(errMsgForUser, err, w, r)
+		server.WriteNotFoundError(logg.CleanLastError(err), err, w, r)
 		return
 	}
 	// @TODO: Find a better solution?

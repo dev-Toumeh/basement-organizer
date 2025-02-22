@@ -16,6 +16,7 @@ var ErrExist = errors.New("already exists")
 var ErrNotExist = errors.New("does not exist")
 var ErrNotEmpty = errors.New("not empty")
 var ErrNotImplemented = errors.New("is not implemented")
+var ErrIdenticalThing = errors.New("Thing IDs are the same")
 
 // add statement to create new table
 var mainTables = &map[string]string{

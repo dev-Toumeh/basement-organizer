@@ -476,6 +476,18 @@ func (db *DB) ErrorNotEmpty() error {
 	// return logg.WrapErrWithSkip(ErrNotEmpty, 2)  @TODO (Alex) fix it so we can use it without colors
 }
 
+// ErrorIdenticalThing returns a predefined error indicating that the thing IDs can't be the same.
+func (db *DB) ErrorIdenticalThing() error {
+	return ErrIdenticalThing
+}
+
+func identicalThing(id1 uuid.UUID, id2 uuid.UUID) error {
+	if id1 == id2 {
+		return logg.Errorf("id1(\"%s\") == id2(\"%s\") %w", id1.String(), id2.String(), ErrIdenticalThing)
+	}
+	return nil
+}
+
 // Helper function to check for null strings and return empty if null
 func ifNullString(sqlStr sql.NullString) string {
 	if sqlStr.Valid {

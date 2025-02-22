@@ -110,8 +110,11 @@ func (db *DB) UpdateBox(box boxes.Box, ignorePicture bool) error {
 	if !exist {
 		return logg.Errorf("the box does not exist")
 	}
+	err := identicalThing(box.OuterBoxID, box.ID)
+	if err != nil {
+		return logg.Errorf("Can't have \""+box.Label+"\" in itself %w", err)
+	}
 
-	var err error
 	var stmt string
 	var result sql.Result
 	if ignorePicture {
