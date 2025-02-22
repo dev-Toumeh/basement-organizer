@@ -14,7 +14,7 @@ func main() {
 	//	go run ./tools/setup/setup.go
 	//
 	// This will create config.go where LoadConfig() is defined.
-	LoadConfig()
+	env := LoadConfig()
 
 	db := &database.DB{}
 
@@ -22,7 +22,7 @@ func main() {
 	defer db.Sql.Close()
 
 	routes.RegisterRoutes(db)
-	err := templates.InitTemplates("./internal")
+	err := templates.InitTemplates(env.TempPath)
 	if err != nil {
 		logg.Fatal("Templates failed to initialize", err)
 	}

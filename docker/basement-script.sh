@@ -1,7 +1,7 @@
 #!/bin/bash
 
 APP_NAME="basement-organizer"
-INSTALL_DIR="/opt/$APP_NAME"
+INSTALL_DIR="/opt"
 SYMLINK="/usr/local/bin/$APP_NAME"
 
 # Install required packages
@@ -77,11 +77,11 @@ fi
 # Move the application to /opt
 echo "Moving application to $INSTALL_DIR..."
 mkdir -p $INSTALL_DIR
-mv $APP_NAME $INSTALL_DIR/
+cd .. && mv $APP_NAME $INSTALL_DIR/
 
 # Create a symbolic link for easy execution
 echo "Creating symbolic link at $SYMLINK..."
-ln -sf $INSTALL_DIR/$APP_NAME $SYMLINK
+ln -sf $INSTALL_DIR/$APP_NAME/$APP_NAME $SYMLINK
 
 echo "Installation complete."
 echo "You can now run the application using: $APP_NAME"

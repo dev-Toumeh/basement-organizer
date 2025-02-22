@@ -5,7 +5,7 @@ import (
 )
 
 func LoadConfig() *env.Configuration {
-	c := env.DefaultDevelopmentConfig()
+	c := env.DefaultProductionConfig()
 	env.LoadConfig(c)
 
 	return env.Config()
