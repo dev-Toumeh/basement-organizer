@@ -194,6 +194,24 @@ func TestBoxUpdate(t *testing.T) {
 	EmptyTestDatabase()
 }
 
+func TestBoxUpdateBoxInBoxError(t *testing.T) {
+	EmptyTestDatabase()
+	resetTestBoxes()
+	var err error
+
+	_, err = dbTest.insertNewBox(BOX_1)
+	if err != nil {
+		t.Fatalf("error while inserting the box: %v", err)
+	}
+
+	BOX_1.OuterBoxID = BOX_1.ID
+
+	err = dbTest.UpdateBox(*BOX_1, false)
+	assert.NotEqual(t, err, nil)
+
+	EmptyTestDatabase()
+}
+
 func TestBoxUpdateIgnorePicture(t *testing.T) {
 	EmptyTestDatabase()
 	resetTestBoxes()
