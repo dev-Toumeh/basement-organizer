@@ -90,7 +90,7 @@ func LoadConfig(c Configuration) {
 	} else {
 		config.SetDBPath(c.dbPath)
 	}
-  config.TempPath = c.TempPath
+	config.TempPath = c.TempPath
 	loadLog("config loaded", 2)
 }
 
