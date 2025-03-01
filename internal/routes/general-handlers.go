@@ -117,7 +117,7 @@ func AddTo(db *database.DB) http.HandlerFunc {
 		}
 
 		data = common.Pagination2(data)
-		data.SetShowLimit(env.Config().ShowTableSize())
+		data.SetShowLimit(env.CurrentConfig().ShowTableSize())
 
 		data.SetFormHXPost("/addto/" + thing)
 		data.SetFormID(thing + "-list")

@@ -136,7 +136,7 @@ func BoxPicker(pickerType int, db BoxDatabase) http.HandlerFunc {
 		}
 
 		data = common.Pagination2(data)
-		data.SetShowLimit(env.Config().ShowTableSize())
+		data.SetShowLimit(env.CurrentConfig().ShowTableSize())
 
 		data.SetFormHXPost(post)
 		data.SetFormID(thing + "-list")

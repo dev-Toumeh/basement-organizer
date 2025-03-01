@@ -61,7 +61,7 @@ func handleSampleListTemplate(db *database.DB) http.HandlerFunc {
 			// RowHXGet:  "/api/v1/read/item",
 			FormID:    "my-custom-list-template",
 			Rows:      boxesWithOpts,
-			ShowLimit: env.Config().ShowTableSize(),
+			ShowLimit: env.CurrentConfig().ShowTableSize(),
 			// DataInputName:   "id-to-be-moved",
 			AdditionalDataInputs: []common.DataInput{
 				{Key: "return-hidden-input", Value: "false"},

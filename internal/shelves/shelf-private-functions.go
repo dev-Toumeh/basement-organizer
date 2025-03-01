@@ -22,7 +22,7 @@ func getTemplateData(r *http.Request, db ShelfDB, w http.ResponseWriter) common.
 	data.SetSearchInputLabel("Search Shelves")
 	data.SetFormHXGet("/shelves")
 	data.SetRowHXGet("/shelf")
-	data.SetShowLimit(env.Config().ShowTableSize())
+	data.SetShowLimit(env.CurrentConfig().ShowTableSize())
 	data.SetCount(count)
 
 	data = common.Pagination2(data)

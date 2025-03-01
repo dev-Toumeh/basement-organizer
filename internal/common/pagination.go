@@ -141,10 +141,10 @@ func ParsePageNumber(r *http.Request) int {
 func ParseLimit(r *http.Request) int {
 	limit, err := strconv.Atoi(r.FormValue("limit"))
 	if err != nil {
-		limit = env.DefaultTableSize()
+		limit = env.CurrentConfig().DefaultTableSize()
 	}
 	if limit == 0 {
-		limit = env.DefaultTableSize()
+		limit = env.CurrentConfig().DefaultTableSize()
 	}
 	return limit
 }

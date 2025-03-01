@@ -272,7 +272,7 @@ func ListPageMovePicker(fromThingPage int, db Database) http.HandlerFunc {
 			FormID:       "list-move",
 			FormHXPost:   "/" + from + "/moveto/" + moveTo,
 			FormHXTarget: "this",
-			ShowLimit:    env.Config().ShowTableSize(),
+			ShowLimit:    env.CurrentConfig().ShowTableSize(),
 
 			RowAction:            true,
 			RowActionType:        "move",
@@ -398,7 +398,7 @@ func ListTemplateInnerThingsFrom(innerThings int, from int, w http.ResponseWrite
 			FormHXGet:     "/" + fromTable + "/" + id.String() + "/innerItems",
 			FormHXTarget:  "#inner-items",
 			PlaceHolder:   true,
-			ShowLimit:     env.Config().ShowTableSize(),
+			ShowLimit:     env.CurrentConfig().ShowTableSize(),
 			HXDelete:      "/" + fromTable + "/" + id.String() + "/innerItems",
 			RequestOrigin: "Items",
 		}
@@ -447,7 +447,7 @@ func ListTemplateInnerThingsFrom(innerThings int, from int, w http.ResponseWrite
 			FormHXGet:    "/" + fromTable + "/" + id.String() + "/innerBoxes",
 			FormHXTarget: "#inner-boxes",
 			PlaceHolder:  true,
-			ShowLimit:    env.Config().ShowTableSize(),
+			ShowLimit:    env.CurrentConfig().ShowTableSize(),
 			HXDelete:     "/" + fromTable + "/" + id.String() + "/innerBoxes",
 
 			RequestOrigin: "Boxes",
@@ -502,7 +502,7 @@ func ListTemplateInnerThingsFrom(innerThings int, from int, w http.ResponseWrite
 			FormHXGet:     "/" + fromTable + "/" + id.String() + "/innerShelves",
 			FormHXTarget:  "#inner-shelves",
 			PlaceHolder:   false,
-			ShowLimit:     env.Config().ShowTableSize(),
+			ShowLimit:     env.CurrentConfig().ShowTableSize(),
 			HXDelete:      "/" + fromTable + "/" + id.String() + "/innerShelves",
 			RequestOrigin: "Shelves",
 		}
