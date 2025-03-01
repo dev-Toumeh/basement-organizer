@@ -56,7 +56,7 @@ func getTemplateData(r *http.Request, db ItemDatabase, w http.ResponseWriter) co
 	data.SetSearchInputLabel("Search Items")
 	data.SetFormHXGet("/items")
 	data.SetRowHXGet("/items")
-	data.SetShowLimit(env.Config().ShowTableSize())
+	data.SetShowLimit(env.CurrentConfig().ShowTableSize())
 	data.SetCount(count)
 
 	data = common.Pagination2(data)

@@ -17,7 +17,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	env.Config().SetTest()
+	env.CurrentConfig().SetTest()
 
 	code := m.Run()
 

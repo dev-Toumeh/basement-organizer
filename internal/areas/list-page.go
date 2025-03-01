@@ -28,7 +28,7 @@ func listPage(db AreaDatabase) http.HandlerFunc {
 		listTmpl := common.ListTemplate{
 			FormHXGet:     "/areas",
 			PlaceHolder:   true,
-			ShowLimit:     env.Config().ShowTableSize(),
+			ShowLimit:     env.CurrentConfig().ShowTableSize(),
 			HideMoveCol:   true,
 			RequestOrigin: common.ParseOrigin(r),
 		}

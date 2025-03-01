@@ -16,7 +16,7 @@ const DATABASE_TEST_V1_FILE_PATH = "./internal/database/sqlite-database-test-v1.
 var dbTest = &DB{}
 
 func TestMain(m *testing.M) {
-	env.Config().SetTest()
+	env.CurrentConfig().SetTest()
 	setup()
 	defer teardown()
 

@@ -133,7 +133,7 @@ func (db *DB) moveTo(table string, id uuid.UUID, toTable string, toTableID uuid.
 	if rows != 1 {
 		return logg.NewError(fmt.Sprintf("rows should be != 1 but is %d", rows))
 	}
-	logg.Debugf("moved %s to %s", id, toTableID)
+	// logg.Debugf("moved %s to %s", id, toTableID)
 	return nil
 }
 

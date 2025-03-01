@@ -24,8 +24,8 @@ const (
 //
 // Creates "constants.go" file defined in "TEMPLATES_CONSTRANTS_PATH".
 func main() {
-	env.Config().SetDebugLogsEnabled(true)
-	env.Config().SetInfoLogsEnabled(true)
+	env.CurrentConfig().SetDebugLogsEnabled(true)
+	env.CurrentConfig().SetInfoLogsEnabled(true)
 	template, paths, err := templates.ParseDirectory(TEMPLATES_DIR)
 	if err != nil {
 		panic(err)

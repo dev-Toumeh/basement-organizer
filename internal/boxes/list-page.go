@@ -28,7 +28,7 @@ func listPage(db BoxDatabase) http.HandlerFunc {
 		listTmpl := common.ListTemplate{
 			FormHXGet:     "/boxes",
 			PlaceHolder:   true,
-			ShowLimit:     env.Config().ShowTableSize(),
+			ShowLimit:     env.CurrentConfig().ShowTableSize(),
 			RequestOrigin: common.ParseOrigin(r),
 		}
 
