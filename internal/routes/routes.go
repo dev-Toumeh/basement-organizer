@@ -10,6 +10,7 @@ import (
 	"basement/main/internal/boxes"
 	"basement/main/internal/common"
 	"basement/main/internal/database"
+	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
@@ -52,7 +53,7 @@ func RegisterRoutes(db *database.DB) {
 }
 
 func staticRoutes() {
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/opt/basement-organizer/internal/static"))))
 	Handle("/", common.Handle404NotFoundPage)
 	Handle("/auth", AuthPage)
 }

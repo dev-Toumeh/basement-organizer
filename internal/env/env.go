@@ -22,6 +22,7 @@ type Configuration struct {
 	errorLogsEnabled bool
 	useMemoryDB      bool
 	dbPath           string
+	StaticPath       string
 	TempPath         string
 }
 
@@ -33,6 +34,7 @@ var defaultDevConfig Configuration = Configuration{
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
 	dbPath:           "./internal/database/sqlite-database.db",
+	StaticPath:       "/internal/static",
 	TempPath:         "./internal",
 }
 
@@ -44,6 +46,7 @@ var defaultProdConfig Configuration = Configuration{
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
 	dbPath:           "/opt/basement-organizer/internal/database/sqlite-database-prod-v1.db",
+	StaticPath:       "/opt/basement-organizer/internal/static",
 	TempPath:         "/opt/basement-organizer/internal",
 }
 
