@@ -10,7 +10,6 @@ import (
 	"basement/main/internal/boxes"
 	"basement/main/internal/common"
 	"basement/main/internal/database"
-	"basement/main/internal/env"
 	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"

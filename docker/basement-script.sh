@@ -1,26 +1,28 @@
 #!/bin/bash
+set -e
 
 APP_NAME="basement-organizer"
-INSTALL_DIR="/opt"
+BIN_DEST="/opt/$APP_NAME"
 SYMLINK="/usr/local/bin/$APP_NAME"
 
 # Install required packages
-apt update && apt install -y vim curl git wget unzip ca-certificates npm 
-npm install -g nodemon
+apt update && apt install -y vim curl git wget unzip ca-certificates
 
-# Install Go if not installed or outdated
-GO_VERSION="go1.22.1"
 GO_URL="https://go.dev/dl/${GO_VERSION}.linux-amd64.tar.gz"
+GO_VERSION="go1.22.1"
 USR_LOCAL="/usr/local"
 
-if ! command -v go &> /dev/null || [[ $(go version) != *"${GO_VERSION}"* ]]; then
+# Check if Go is installed and matches the expected version
+if ! command -v go &> /dev/null || [[ "$(go version 2>/dev/null)" != *"${GO_VERSION}"* ]]; then
     echo "Installing Go ${GO_VERSION}..."
     wget -q ${GO_URL} -O go.tar.gz
     rm -rf ${USR_LOCAL}/go && tar -C ${USR_LOCAL} -xzf go.tar.gz
     rm go.tar.gz
     export PATH=${USR_LOCAL}/go/bin:$PATH
     echo "export PATH=${USR_LOCAL}/go/bin:\$PATH" >> ~/.bashrc
+    echo "export PATH=${USR_LOCAL}/go/bin:\$PATH" >> ~/.profile
     source ~/.bashrc
+    echo "Go ${GO_VERSION} installed successfully."
 else
     echo "Go ${GO_VERSION} is already installed."
 fi
@@ -29,59 +31,49 @@ fi
 if ! command -v google-chrome &> /dev/null; then
     echo "Chrome not found. Installing..."
     wget -q -O google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-    dpkg -i google-chrome.deb || apt-get -f install -y
+    apt install ./google-chrome.deb -y
     rm google-chrome.deb
 else
     echo "Chrome is already installed."
 fi
 
-# Clone the repository if it doesn't exist
-if [ ! -d "$APP_NAME" ]; then
-    echo "Cloning the repository..."
-    git clone --branch debian-script --single-branch https://github.com/dev-Toumeh/basement-organizer.git
-    # git clone https://github.com/dev-Toumeh/basement-organizer.git
+# Check if the repository exists in /opt
+if [ -d "$BIN_DEST" ]; then
+    echo "Using existing repository at $BIN_DEST."
 else
-    echo "Repository already exists. Skipping cloning."
+    echo "Repository not found at $BIN_DEST. Cloning repository..."
+    mkdir -p "$BIN_DEST"
+    git clone --branch debian-script --single-branch https://github.com/dev-Toumeh/basement-organizer.git "$BIN_DEST"
 fi
 
-# Change into the project directory
-cd "$APP_NAME" || exit
+cd "$BIN_DEST" || exit
 
-# Install Node.js dependencies if package.json exists
-if [ -f package.json ]; then
-    echo "Installing Node.js dependencies..."
-    npm install
-fi
-
-# Install Go dependencies if go.mod exists
 echo "Installing Go dependencies..."
 go mod tidy
 
-# Ensure internal/static/js directory exists
-mkdir -p internal/static/js
-
-# Copy htmx.min.js if not already present
+# Ensure internal/static/js exists and copy htmx.min.js if missing
 if [ ! -f internal/static/js/htmx.min.js ]; then
-    echo "Copying htmx.min.js..."
-    cp ./node_modules/htmx.org/dist/htmx.min.js internal/static/js/htmx.min.js
+    echo "Downloading htmx.min.js..."
+    mkdir -p internal/static/js
+    wget -O internal/static/js/htmx.min.js https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js
 else
-    echo "htmx.min.js already exists. Skipping copy."
+    echo "htmx.min.js already exists. Skipping download."
 fi
 
-# Build the Go application
-if [ -f main.go ]; then
-    echo "Building the Go application..."
-    go build -o $APP_NAME
+# Check if the binary already exists
+if [ -f "$BIN_DEST/$APP_NAME" ]; then
+    echo "Deleting the old Binary $BIN_DEST/$APP_NAME."
 fi
 
-# Move the application to /opt
-echo "Moving application to $INSTALL_DIR..."
-mkdir -p $INSTALL_DIR
-cd .. && mv $APP_NAME $INSTALL_DIR/
+echo "Building the Go application..."
+go build -o "$BIN_DEST/$APP_NAME" .
 
-# Create a symbolic link for easy execution
-echo "Creating symbolic link at $SYMLINK..."
-ln -sf $INSTALL_DIR/$APP_NAME/$APP_NAME $SYMLINK
+# Ensure the symbolic link is created
+if [ ! -L "$SYMLINK" ]; then
+    echo "Creating symbolic link at $SYMLINK..."
+    ln -s "$BIN_DEST/$APP_NAME" "$SYMLINK"
+else
+    echo "Symbolic link $SYMLINK already exists."
+fi
+echo "Installation complete. You can now run the application using: $APP_NAME"
 
-echo "Installation complete."
-echo "You can now run the application using: $APP_NAME"
