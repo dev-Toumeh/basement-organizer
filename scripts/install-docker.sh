@@ -15,5 +15,4 @@ fi
 
 echo "Container name set to: $BASE_NAME"
 # Run container, print a message before executing git commands in the script
-docker run -it --name "$BASE_NAME" -v "$DIR/basement-script.sh:/app/basement-script.sh" -p 8101:8101 --entrypoint /bin/bash -w /app debian:bookworm
-
+docker run -it --name "$BASE_NAME" -v "$DIR/install-debian.sh:/app/install-debian.sh" -p 8101:8101 --entrypoint /bin/bash -w /app -e SUDO=" " debian:bookworm
