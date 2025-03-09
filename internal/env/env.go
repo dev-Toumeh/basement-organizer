@@ -29,8 +29,6 @@ type Configuration struct {
 	errorLogsEnabled bool
 	useMemoryDB      bool
 	dbPath           string
-	StaticPath       string
-	TempPath         string
 }
 
 // Copy of preset development config.
@@ -42,12 +40,10 @@ var defaultDevConfig Configuration = Configuration{
 	env:              env_dev,
 	defaultTableSize: 10,
 	infoLogsEnabled:  true,
-	debugLogsEnabled: true,
+	debugLogsEnabled: false,
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
 	dbPath:           "./internal/database/sqlite-database.db",
-	StaticPath:       "/internal/static",
-	TempPath:         "./internal",
 }
 
 // Copy of preset production config.
@@ -62,9 +58,7 @@ var defaultProdConfig Configuration = Configuration{
 	debugLogsEnabled: false,
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
-	dbPath:           "/opt/basement-organizer/internal/database/sqlite-database-prod-v1.db",
-	StaticPath:       "/opt/basement-organizer/internal/static",
-	TempPath:         "/opt/basement-organizer/internal",
+	dbPath:           "./internal/database/sqlite-database-prod-v1.db",
 }
 
 // CurrentConfig returns the currently applied config instance across the project.
@@ -122,7 +116,6 @@ func ApplyConfig(c Configuration) {
 	if !allApplied {
 		logg.Fatalf("Not all Config settings were applied in \"%s()\"", applyConfigFuncName)
 	}
-	config.TempPath = c.TempPath
 	loadLog("config loaded", 2)
 }
 
