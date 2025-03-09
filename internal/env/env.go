@@ -29,6 +29,8 @@ type Configuration struct {
 	errorLogsEnabled bool
 	useMemoryDB      bool
 	dbPath           string
+	staticPath       string
+	templatePath     string
 }
 
 // Copy of preset development config.
@@ -44,6 +46,8 @@ var defaultDevConfig Configuration = Configuration{
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
 	dbPath:           "./internal/database/sqlite-database.db",
+	staticPath:       "./internal/static",
+	templatePath:     "./internal",
 }
 
 // Copy of preset production config.
@@ -58,7 +62,9 @@ var defaultProdConfig Configuration = Configuration{
 	debugLogsEnabled: false,
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
-	dbPath:           "./internal/database/sqlite-database-prod-v1.db",
+	dbPath:           "./internal/database/sqlite-database.db",
+	staticPath:       "/opt/basement-organizer/internal/static/",
+	templatePath:     "/opt/basement-organizer/internal/",
 }
 
 // CurrentConfig returns the currently applied config instance across the project.
@@ -96,6 +102,8 @@ func ApplyConfig(c Configuration) {
 	} else {
 		configInstance.SetDbPath(c.dbPath)
 	}
+	configInstance.SetTemplatePath(c.templatePath)
+	configInstance.SetStaticPath(c.staticPath)
 
 	switch c.env {
 	case env_dev:
@@ -152,6 +160,36 @@ func (c *Configuration) SetDbPath(path string) *Configuration {
 	return c
 }
 
+// SetTemplatePath sets the path to the configured template directory.
+func (c *Configuration) SetTemplatePath(path string) *Configuration {
+	if path == "" {
+		logg.Fatal("Can't set TemplatePath to \"\".")
+	}
+	c.templatePath = path
+	loadLog("set TemplatePath to "+path, 1)
+	return c
+}
+
+// SetStaticPath sets the path to the configured static files directory.
+func (c *Configuration) SetStaticPath(path string) *Configuration {
+	if path == "" {
+		logg.Fatal("Can't set StaticPath to \"\".")
+	}
+	c.staticPath = path
+	loadLog("set StaticPath to "+path, 1)
+	return c
+}
+
+// TemplatePath returns the path to the configured template directory.
+func (c *Configuration) TemplatePath() string {
+	return c.templatePath
+}
+
+// StaticPath returns the path to the configured static files directory.
+func (c *Configuration) StaticPath() string {
+	return c.staticPath
+}
+
 // DbPath returns the path to the configured database.
 func (c *Configuration) DbPath() string {
 	return c.dbPath
@@ -160,7 +198,7 @@ func (c *Configuration) DbPath() string {
 // SetShowTableSize sets if the table size option should be shown in the list template.
 func (c *Configuration) SetShowTableSize(show bool) *Configuration {
 	c.showTableSize = show
-	loadLog(fmt.Sprintf("set showTablesize to %v", show), 2)
+	loadLog(fmt.Sprintf("set showTableSize to %v", show), 2)
 	return c
 }
 
