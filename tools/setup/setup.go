@@ -1,4 +1,3 @@
-package main
 
 import (
 	"basement/main/internal/logg"

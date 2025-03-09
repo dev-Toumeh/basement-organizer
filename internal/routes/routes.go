@@ -52,7 +52,7 @@ func RegisterRoutes(db *database.DB) {
 }
 
 func staticRoutes() {
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/opt/basement-organizer/internal/static"))))
 	Handle("/", common.Handle404NotFoundPage)
 	Handle("/auth", AuthPage)
 }
