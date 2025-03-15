@@ -7,7 +7,7 @@
     "internal/static/js/htmx.min.js"
   ],
   "verbose": false,
-  "exec": "go run .",
+  "exec": "go run -tags dev .",
   "env": {
     "NODE_ENV": "development"
   },
