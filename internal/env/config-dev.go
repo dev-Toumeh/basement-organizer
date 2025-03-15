@@ -6,6 +6,7 @@ const configFile string = "config-dev.conf"
 
 var defaultDevConfigPreset Configuration = Configuration{
 	env:              env_dev,
+	alwaysAuthorized: true,
 	defaultTableSize: 10,
 	infoLogsEnabled:  true,
 	debugLogsEnabled: false,

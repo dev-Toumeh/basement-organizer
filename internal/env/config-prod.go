@@ -6,6 +6,7 @@ const configFile string = "config.conf"
 
 var defaultProdConfigPreset Configuration = Configuration{
 	env:              env_prod,
+	alwaysAuthorized: true, // temporary until auth is done
 	defaultTableSize: 15,
 	infoLogsEnabled:  true,
 	debugLogsEnabled: false,
