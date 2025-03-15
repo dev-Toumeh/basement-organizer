@@ -2,7 +2,9 @@ package env
 
 import (
 	"basement/main/internal/logg"
-	"fmt"
+	"os"
+	"runtime"
+	"strings"
 )
 
 type environment int
@@ -13,52 +15,28 @@ const (
 	env_test
 )
 
-const ignoreConfigFieldChecks string = "fields,methods,env"   // Don't check for setter and getter methods for these fields in Configuration struct.
-const ignoreConfigMethodChecks string = "Fields,Methods,Init" // Don't check if these methods were called in ApplyConfig().
+func LoadConfig() *Configuration {
+	c := configInstance
 
-// Every field needs to have a setter and getter method except ignored fields.
-// Example field: defaultTableSize needs to implement SetDefaultTablesize() and DefaultTableSize().
-type Configuration struct {
-	fields           []string
-	methods          []string
-	env              environment
-	defaultTableSize int
-	showTableSize    bool
-	infoLogsEnabled  bool
-	debugLogsEnabled bool
-	errorLogsEnabled bool
-	useMemoryDB      bool
-	dbPath           string
-}
+	err := c.Init()
+	if err != nil {
+		logg.Fatal("LoadConfig failed" + err.Error())
+	}
 
-// Copy of preset development config.
-func DefaultDevelopmentConfig() Configuration {
-	return defaultDevConfig
-}
+	// use defaults
+	_, err = os.Stat(configFile)
+	if err != nil {
+		applyConfig(*c)
+		CreateFileFromConfiguration(configFile, c)
+		return c
+	}
 
-var defaultDevConfig Configuration = Configuration{
-	env:              env_dev,
-	defaultTableSize: 10,
-	infoLogsEnabled:  true,
-	debugLogsEnabled: false,
-	errorLogsEnabled: true,
-	useMemoryDB:      false,
-	dbPath:           "./internal/database/sqlite-database.db",
-}
+	// override options from config file
+	applyConfigFileOptions(configFile, c)
 
-// Copy of preset production config.
-func DefaultProductionConfig() Configuration {
-	return defaultProdConfig
-}
+	applyConfig(*c)
 
-var defaultProdConfig Configuration = Configuration{
-	env:              env_prod,
-	defaultTableSize: 15,
-	infoLogsEnabled:  true,
-	debugLogsEnabled: false,
-	errorLogsEnabled: true,
-	useMemoryDB:      false,
-	dbPath:           "./internal/database/sqlite-database-prod-v1.db",
+	return CurrentConfig()
 }
 
 // CurrentConfig returns the currently applied config instance across the project.
@@ -66,18 +44,11 @@ func CurrentConfig() *Configuration {
 	return configInstance
 }
 
-var configInstance *Configuration = &Configuration{}
-
 // Keeps track if config was already loaded.
 var configLoaded = false
 
-// ApplyConfig uses a copy of a config, checks for correctness and applies the options to the currently shared config instance.
-func ApplyConfig(c Configuration) {
-	missingMethods := configInstance.Init()
-	if missingMethods {
-		logg.Fatal("config has missing methods")
-	}
-
+// applyConfig uses a copy of a config, checks for correctness and applies the options to the currently shared config instance.
+func applyConfig(c Configuration) {
 	// logg.Debugf("configInstance.Methods() %v", configInstance.Methods())
 	if configLoaded {
 		logg.InfoForceOutput(4, "reload config")
@@ -89,6 +60,7 @@ func ApplyConfig(c Configuration) {
 	configInstance.SetErrorLogsEnabled(c.errorLogsEnabled)
 	configInstance.SetShowTableSize(c.showTableSize)
 	configInstance.SetDefaultTableSize(c.defaultTableSize)
+	// configInstance.SetConfigFile(c.configFile)
 
 	if c.useMemoryDB {
 		configInstance.SetDbPath(":memory:")
@@ -109,194 +81,66 @@ func ApplyConfig(c Configuration) {
 		break
 	}
 
-	applyConfigFuncName := "ApplyConfig"
-	funcs := calledFunctionsFrom("./internal/env/env.go", applyConfigFuncName)
-	// logg.Infof("applied methods %v", funcs)
-	allApplied := checkIfAllSettingsWereApplied(configInstance, funcs)
-	if !allApplied {
-		logg.Fatalf("Not all Config settings were applied in \"%s()\"", applyConfigFuncName)
-	}
+	thisFile, thisFunc := thisFuncAndFileName()
+	validateInternals(thisFile, thisFunc)
 	loadLog("config loaded", 2)
 }
 
-func (c Configuration) Description() string {
-	return fmt.Sprintf("environment config: isProduction=%t, isDevelopment=%t, defaultTableSize=%d, showTableSize=%v", Production(), Development(), configInstance.defaultTableSize, configInstance.showTableSize)
-}
-
-// SetDevelopment sets environment setting to development.
-//
-// This setting is for making development tasks easier by reducing
-// checks, validation strictness, adding more logging information etc.
-func (c *Configuration) SetDevelopment() *Configuration {
-	c.env = env_dev
-	loadLog("environment is development", 1)
-	return c
-}
-
-// Development returns true if development environment is set.
-// Default is false.
-func Development() bool {
-	return configInstance.env == env_dev
-}
-
-// SetDbPath sets the path to the configured database.
-func (c *Configuration) SetDbPath(path string) *Configuration {
-	if c.useMemoryDB {
-		logg.Fatal("Can't set DB path. It is set to use memory")
+func CreateFileFromConfiguration(path string, config *Configuration) {
+	logg.Info("creating config file \"" + path + "\"")
+	lines := make([]string, len(config.fieldValues)+1)
+	lines[0] = "# Default config values, uncomment and change to override"
+	i := 1
+	for k, v := range config.fieldValues {
+		lines[i] = "#" + k + "=" + string(v.Value)
+		logg.Debug(lines[i])
+		i++
 	}
-	if path == "" {
-		logg.Fatal("Can't set DB path to \"\".")
+
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		panic("can't create config file \"" + path + "\": " + err.Error())
 	}
-	c.dbPath = path
-	loadLog("set dbpath to "+path, 1)
-	return c
-}
+	defer file.Close()
 
-// DbPath returns the path to the configured database.
-func (c *Configuration) DbPath() string {
-	return c.dbPath
-}
-
-// SetShowTableSize sets if the table size option should be shown in the list template.
-func (c *Configuration) SetShowTableSize(show bool) *Configuration {
-	c.showTableSize = show
-	loadLog(fmt.Sprintf("set showTablesize to %v", show), 2)
-	return c
-}
-
-// ShowTableSize returns true if the table size option should be shown in the list template.
-func (c *Configuration) ShowTableSize() bool {
-	return c.showTableSize
-}
-
-// SetDefaultTableSize sets the default amount of shown rows in a table on a page with a list.
-func (c *Configuration) SetDefaultTableSize(size int) *Configuration {
-	if size < 1 {
-		logg.Fatalf("size must be above 1 but is %d", size)
+	_, err = file.WriteString(strings.Join(lines, "\n"))
+	if err != nil {
+		panic("can't write config file to disk \"" + path + "\": " + err.Error())
 	}
-	c.defaultTableSize = size
-	loadLog(fmt.Sprintf("set tablesize to %d", size), 2)
-	return c
 }
 
-// DefaultTableSize returns the default amount of shown rows in a table on a page with a list.
-func (c *Configuration) DefaultTableSize() int {
-	return configInstance.defaultTableSize
-}
-
-// SetUseMemoryDB sets if DB should use memory instead of files.
-func (c *Configuration) SetUseMemoryDB(useMemory bool) *Configuration {
-	c.useMemoryDB = useMemory
-	loadLog(fmt.Sprintf("set use memory db to %v", c.useMemoryDB), 2)
-	return c
-}
-
-// UseMemoryDB returns true if DB should use memory instead of file.
-func (c *Configuration) UseMemoryDB() bool {
-	return configInstance.useMemoryDB
-}
-
-// SetProduction sets environment setting to production.
-//
-// This is setting is for production use.
-// Enables all checks, increases strictness, removes debug logging, etc.
-func (c *Configuration) SetProduction() *Configuration {
-	c.env = env_prod
-	if configLoaded {
-		logg.InfoForceOutput(4, "environment is production")
-	}
-	return c
-}
-
-// Production returns true if production environment is set.
-// Default is true.
-func Production() bool {
-	return configInstance.env == env_prod
-}
-
-// SetTest sets environment setting to test.
-//
-// This is setting is for experimental testing.
-func (c *Configuration) SetTest() *Configuration {
-	c.env = env_test
-	loadLog("environment set to TEST", 1)
-	return c
-}
-
-func (c *Configuration) SetInfoLogsEnabled(enabled bool) *Configuration {
-	c.infoLogsEnabled = enabled
-	if enabled {
-		logg.EnableInfoLoggerS()
-	} else {
-		logg.DisableInfoLoggerS()
-	}
-	loadLog(fmt.Sprintf("set info logs enabled = %v ", enabled), 3)
-	return c
-}
-
-func (c *Configuration) InfoLogsEnabled() bool {
-	return logg.InfoLoggerEnabled()
-}
-
-func (c *Configuration) SetDebugLogsEnabled(enabled bool) *Configuration {
-	c.debugLogsEnabled = enabled
-	if enabled {
-		logg.EnableDebugLoggerS()
-	} else {
-		logg.DisableDebugLoggerS()
-	}
-	loadLog(fmt.Sprintf("set debug logs enabled = %v ", enabled), 3)
-	return c
-}
-
-func (c *Configuration) DebugLogsEnabled() bool {
-	return logg.DebugLoggerEnabled()
-}
-
-func (c *Configuration) SetErrorLogsEnabled(enabled bool) *Configuration {
-	c.errorLogsEnabled = enabled
-	if enabled {
-		logg.EnableErrorLoggerS()
-	} else {
-		logg.DisableErrorLoggerS()
-	}
-	loadLog(fmt.Sprintf("set error logs enabled = %v ", enabled), 3)
-	return c
-}
-
-func (c *Configuration) ErrorLogsEnabled() bool {
-	return logg.ErrorLoggerEnabled()
-}
-
-func loadLog(s string, l int) {
-	if configLoaded {
-		if logg.DebugLoggerEnabled() {
-			logg.Alog(logg.DebugLogger(), l+2, s)
+// applyConfigFileOptions only applies options that are valid.
+// Will exit program on error with error message.
+func applyConfigFileOptions(configFile string, c *Configuration) {
+	parsed := parseConfigFile(configFile, c)
+	errs := applyParsedOptions(c, parsed)
+	if len(errs) != 0 {
+		errorMessages := ""
+		for i, e := range errs {
+			nl := ""
+			if i != 0 {
+				nl = "\n"
+			}
+			errorMessages += nl + logg.CleanLastError(e)
 		}
+		logg.Fatalf("config parser for \"%s\" has encountered errors\n%s", configFile, errorMessages)
+	}
+
+	errs = validateOptions(c)
+	if len(errs) > 0 {
+		for _, e := range errs {
+			logg.Err(e)
+		}
+		logg.Fatalf("config check failed for \"%s\"", configFile)
 	}
 }
 
-// var configurations = make(map[string]string)
-
-// DescribeDevelopmentOverride adds a label and description for a development config change.
-//
-// Use this to document and track environment-specific settings when custom logic is applied. Returns an error if the label already exists.
-//
-// Example:
-// err := DescribeDevelopmentOverride("SkipPasswordValidations", "Disables password validations (password length, password strength) for registering a user.")
-// func DescribeDevelopmentOverride(label string, description string) error {
-// 	val, ok := configurations[label]
-// 	if ok {
-// 		return errors.New(fmt.Sprintf("Environment configuration '%v' already exists. Description:'%v'\n", label, val))
-// 	}
-// 	configurations[label] = description
-// 	return nil
-// }
-
-func (config *Configuration) Fields() []string {
-	return config.fields
-}
-
-func (config *Configuration) Methods() []string {
-	return config.methods
+// returns full path file name and the function name of the caller.
+func thisFuncAndFileName() (fileName string, funcName string) {
+	pc, fileName, _, _ := runtime.Caller(1)
+	fullFuncName := runtime.FuncForPC(pc).Name()
+	funSplit := strings.Split(fullFuncName, "/")
+	shortFuncName := funSplit[len(funSplit)-1]
+	noPackageShortFuncName := strings.Split(shortFuncName, ".")[1]
+	return fileName, noPackageShortFuncName
 }

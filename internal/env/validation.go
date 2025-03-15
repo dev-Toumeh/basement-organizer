@@ -9,86 +9,32 @@ import (
 	"os"
 	"reflect"
 	"slices"
-	"strings"
 )
 
-// Init returns false if some Get or Set methods are missing from struct.
-func (config *Configuration) Init() bool {
-	cfg := *config
-	t := reflect.TypeOf(cfg)
-	fmt.Println(t.Kind())
-	if t.Kind() != reflect.Struct {
-		panic("invalid config struct")
-	}
-	configStructName := t.Name()
-
-	v := reflect.ValueOf(cfg)
-	vv, ok := v.Interface().(Configuration)
-	if ok {
-		vvvt := reflect.TypeOf(&vv)
-		// logg.Infof("method nums: \"%d\"", vvvt.NumMethod())
-
-		excludeMethods := strings.Split(ignoreConfigMethodChecks, ",")
-		// vvvv := reflect.ValueOf(&vv)
-		for i := 0; i < vvvt.NumMethod(); i++ {
-			methodName := vvvt.Method(i).Name
-			// logg.Infof("method: \"%s\"=\"%v\"", methodName, vvvv.Method(i))
-			if slices.Contains(excludeMethods, methodName) {
-				continue
-			}
-			// logg.Debug(methodName)
-			config.methods = append(config.methods, methodName)
-		}
-	}
-
-	hasMissing := false
-	excludeFields := strings.Split(ignoreConfigFieldChecks, ",")
-	for i := 0; i < v.NumField(); i++ {
-		fieldName := t.Field(i).Name
-		// logg.Infof("field: \"%s\"=\"%v\"", fieldName, v.Field(i))
-		if slices.Contains(excludeFields, fieldName) {
-			continue
-		}
-
-		expectedPublicFieldSetter := "Set" + strings.ToUpper(fieldName[:1]) + fieldName[1:]
-		expectedPublicFieldGetter := strings.ToUpper(fieldName[:1]) + fieldName[1:]
-
-		if !slices.Contains(config.methods, expectedPublicFieldSetter) {
-			hasMissing = true
-			logg.Err("Missing method \"" + expectedPublicFieldSetter + "\" in \"type " + configStructName + " struct {...}\". Implement this method.")
-		}
-		if !slices.Contains(config.methods, expectedPublicFieldGetter) {
-			hasMissing = true
-			logg.Err("Missing method \"" + expectedPublicFieldGetter + "\" in \"type " + configStructName + " struct {...}\". Implement this method.")
-		}
-
-		config.fields = append(config.fields, fieldName)
-	}
-
-	return hasMissing
+type fieldMetaData struct {
+	Setter string
+	Getter string
+	Kind   reflect.Kind
+	Value  string
 }
 
-func checkIfAllSettingsWereApplied(c *Configuration, appliedMethods []string) bool {
-	allApplied := true
-	for _, m := range c.Methods() {
-
-		if m[:3] != "Set" {
-			continue
-		}
-
-		// logg.Debugf("check method: %v", m)
-		applied := slices.Contains(appliedMethods, m)
-		if !applied {
-			logg.Warning("Forgot to apply method \"" + m + "\" ?")
-			allApplied = false
-		}
-	}
-
-	return allApplied
+func validateInternals(applyConfigFileName string, applyConfigFuncName string) {
+	developmentChecks(applyConfigFileName, applyConfigFuncName)
+	validateOptions(configInstance)
 }
 
+// internal config checks
+func developmentChecks(applyConfigFileName string, applyConfigFuncName string) {
+	funcs := calledFunctionsFrom(applyConfigFileName, applyConfigFuncName)
+	// logg.Infof("applied methods %v", funcs)
+	allApplied := checkIfAllFieldSettersWereApplied(configInstance, funcs)
+	if !allApplied {
+		logg.Fatalf("Not all Config settings were applied in \"%s: %s()\"", applyConfigFileName, applyConfigFuncName)
+	}
+}
+
+// collects all functions that were called in applyFunctionName.
 func calledFunctionsFrom(filename string, applyFunctionName string) []string {
-
 	// Read the file
 	src, err := os.ReadFile(filename)
 	if err != nil {
@@ -104,14 +50,14 @@ func calledFunctionsFrom(filename string, applyFunctionName string) []string {
 
 	foundAppliedSetters := []string{}
 
-	// Find the function "ApplyConfig()"
+	// Find the function "applyFunctionName"
 	ast.Inspect(node, func(n ast.Node) bool {
 		fn, ok := n.(*ast.FuncDecl)
 		if !ok || fn.Name.Name != applyFunctionName {
 			return true // Continue scanning
 		}
 
-		// Find all function calls inside "ApplyConfig()"
+		// Find all function calls inside
 		ast.Inspect(fn.Body, func(n ast.Node) bool {
 			call, ok := n.(*ast.CallExpr)
 			if !ok {
@@ -132,4 +78,71 @@ func calledFunctionsFrom(filename string, applyFunctionName string) []string {
 	})
 
 	return foundAppliedSetters
+}
+
+func checkIfAllFieldSettersWereApplied(c *Configuration, appliedMethods []string) bool {
+	allApplied := true
+	for _, m := range c.Methods() {
+
+		// ignore methods that don't start with "Set"
+		if m[:3] != "Set" {
+			continue
+		}
+
+		// logg.Debugf("check method: %v", m)
+		applied := slices.Contains(appliedMethods, m)
+		if !applied {
+			logg.Warning("Forgot to apply method \"" + m + "\" ?")
+			allApplied = false
+		}
+	}
+
+	return allApplied
+}
+
+func validateOptions(config *Configuration) (errors []error) {
+	logg.Debug("validate combination of config options")
+	var err error
+	err = validateDefaultTableSize(config)
+	if err != nil {
+		errors = append(errors, err)
+	}
+	err = validateDBOptions(config)
+	if err != nil {
+		errors = append(errors, err)
+	}
+	return errors
+}
+
+func validateDefaultTableSize(config *Configuration) (err error) {
+	// fmt.Printf("config.defaultTableSize=%d\n", config.defaultTableSize)
+	validTableSize := config.defaultTableSize > 0
+
+	if !validTableSize {
+		err = logg.NewError(fmt.Sprintf("defaultTableSize must be above 0. defaultTableSize=%d", config.defaultTableSize))
+	}
+	return err
+}
+
+// validateDBOptions checks for consistency between different options regarding DB.
+func validateDBOptions(config *Configuration) (err error) {
+	invalidMemoryDB := (config.dbPath == ":memory:") && (config.useMemoryDB == false)
+	invalidMemoryDB2 := (config.dbPath != ":memory:") && (config.useMemoryDB == true)
+	emptyFileDBPath := (config.dbPath == "") && (config.useMemoryDB == false)
+
+	usedOptions := fmt.Sprintf("Invalid options combination: \"dbPath=%s\" \"useMemoryDB=%t\"", config.dbPath, config.useMemoryDB)
+	if emptyFileDBPath {
+		msg := usedOptions + ". Can't set empty DB path without in-memory db. "
+		return logg.NewError(msg)
+	}
+	if invalidMemoryDB {
+		msg := usedOptions + ". Can't set DB path to \":memory:\". It's reserved only for in-memory db. "
+		return logg.NewError(msg)
+	}
+
+	if invalidMemoryDB2 {
+		msg := usedOptions + ". For using in-memory db, path must be set to \":memory:\". "
+		return logg.NewError(msg)
+	}
+	return nil
 }
