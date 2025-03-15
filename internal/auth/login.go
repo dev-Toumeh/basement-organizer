@@ -124,13 +124,13 @@ func LoginForm(w http.ResponseWriter, r *http.Request) {
 
 // Authenticated shows if user is authenticated and has "authenticated" value in session cookie.
 func Authenticated(r *http.Request) (authenticated bool, hasAuthenticatedCookieValue bool) {
-	if env.Development() { // Always authenticated.
+	if env.CurrentConfig().AlwaysAuthorized() { // Always authenticated.
 		return true, true
 	}
-	// session, _ := store.Get(r, COOKIE_NAME)
-	// authenticated, hasAuthenticatedCookieValue = session.Values["authenticated"].(bool)
-	// log.Println("session authenticated", session.Values["authenticated"])
-	return true, true
+	session, _ := store.Get(r, COOKIE_NAME)
+	authenticated, hasAuthenticatedCookieValue = session.Values["authenticated"].(bool)
+	logg.Debug("session authenticated ", session.Values["authenticated"])
+	return
 }
 
 func saveSession(w http.ResponseWriter, r *http.Request, user User) {
