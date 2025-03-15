@@ -21,6 +21,7 @@ type Configuration struct {
 	methods          []string                 // not part of user configuration
 	fieldValues      map[string]fieldMetaData // not part of user configuration
 	env              environment              // not part of user configuration
+	alwaysAuthorized bool
 	defaultTableSize int
 	showTableSize    bool
 	infoLogsEnabled  bool
@@ -306,4 +307,19 @@ func (c *Configuration) TemplatePath() string {
 // StaticPath returns the path to the configured static files directory.
 func (c *Configuration) StaticPath() string {
 	return c.staticPath
+}
+
+// if SetAlwaysAuthorized is set to true, all authorization checks will be skipped.
+func (c *Configuration) SetAlwaysAuthorized(state bool) *Configuration {
+	c.alwaysAuthorized = state
+	loadLog(fmt.Sprintf("set alwaysAuthorized to %t", state), 2)
+	if state && Production() {
+		logg.Warning("alwaysAuthorized=true, all auth checks will be skipped")
+	}
+	return c
+}
+
+// if AlwaysAuthorized is true, all authorization checks will be skipped.
+func (c *Configuration) AlwaysAuthorized() bool {
+	return c.alwaysAuthorized
 }

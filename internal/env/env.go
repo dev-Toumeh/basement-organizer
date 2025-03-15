@@ -82,6 +82,7 @@ func applyConfig(c Configuration) {
 		configInstance.SetTest()
 		break
 	}
+	configInstance.SetAlwaysAuthorized(c.alwaysAuthorized)
 
 	thisFile, thisFunc := thisFuncAndFileName()
 	validateInternals(thisFile, thisFunc)
