@@ -28,6 +28,8 @@ type Configuration struct {
 	errorLogsEnabled bool
 	useMemoryDB      bool
 	dbPath           string
+	staticPath       string
+	templatePath     string
 }
 
 // Init returns false if some Get or Set methods are missing from struct.
@@ -274,4 +276,34 @@ func loadLog(s string, l int) {
 			logg.Alog(logg.DebugLogger(), l+1, s)
 		}
 	}
+}
+
+// SetTemplatePath sets the path to the configured template directory.
+func (c *Configuration) SetTemplatePath(path string) *Configuration {
+	if path == "" {
+		logg.Fatal("Can't set TemplatePath to \"\".")
+	}
+	c.templatePath = path
+	loadLog("set TemplatePath to "+path, 1)
+	return c
+}
+
+// SetStaticPath sets the path to the configured static files directory.
+func (c *Configuration) SetStaticPath(path string) *Configuration {
+	if path == "" {
+		logg.Fatal("Can't set StaticPath to \"\".")
+	}
+	c.staticPath = path
+	loadLog("set StaticPath to "+path, 1)
+	return c
+}
+
+// TemplatePath returns the path to the configured template directory.
+func (c *Configuration) TemplatePath() string {
+	return c.templatePath
+}
+
+// StaticPath returns the path to the configured static files directory.
+func (c *Configuration) StaticPath() string {
+	return c.staticPath
 }

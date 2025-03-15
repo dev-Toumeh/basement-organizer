@@ -12,6 +12,8 @@ var defaultDevConfigPreset Configuration = Configuration{
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
 	dbPath:           "./internal/database/sqlite-database.db",
+	staticPath:       "./internal/static",
+	templatePath:     "./internal",
 }
 
 // Copy of preset development config.

@@ -12,6 +12,8 @@ var defaultProdConfigPreset Configuration = Configuration{
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
 	dbPath:           "./internal/database/sqlite-database-prod-v1.db",
+	staticPath:       "/opt/basement-organizer/internal/static/",
+	templatePath:     "/opt/basement-organizer/internal/",
 }
 
 // Copy of preset production config.

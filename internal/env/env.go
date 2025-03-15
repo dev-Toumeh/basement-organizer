@@ -68,6 +68,8 @@ func applyConfig(c Configuration) {
 	} else {
 		configInstance.SetDbPath(c.dbPath)
 	}
+	configInstance.SetTemplatePath(c.templatePath)
+	configInstance.SetStaticPath(c.staticPath)
 
 	switch c.env {
 	case env_dev:
