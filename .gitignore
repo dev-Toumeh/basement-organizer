@@ -10,5 +10,3 @@ __debug*
 
 config-dev.conf
 config.conf
-
-config.go
