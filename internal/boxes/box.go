@@ -16,7 +16,7 @@ type BoxDatabase interface {
 	MoveBoxToBox(box1 uuid.UUID, box2 uuid.UUID) error
 	MoveBoxToShelf(boxID uuid.UUID, toShelfID uuid.UUID) error
 	MoveBoxToArea(boxID uuid.UUID, toAreaID uuid.UUID) error
-	UpdateBox(box Box, ignorePicture bool) error
+	UpdateBox(box Box, ignorePicture bool, pictureFormat string) error
 	DeleteBox(boxId uuid.UUID) error
 	BoxById(id uuid.UUID) (Box, error)
 	BoxIDs() ([]uuid.UUID, error)

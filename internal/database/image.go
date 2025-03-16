@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"image"
+	"image/jpeg"
 	"image/png"
 	"io"
 	"math"
@@ -79,6 +80,60 @@ func ResizePNG2(input io.Reader, output io.Writer, fitLongestSideToPixel int) er
 
 	// Encode to `output`:
 	err = png.Encode(output, dst)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+
+	return nil
+}
+
+// ResizeJPEG resizes a JPEG image while keeping its aspect ratio.
+// The longest side will fit the pixel value of `fitLongestSideToPixel`.
+func ResizeJPEG(input64 string, fitLongestSideToPixel int) (string, error) {
+	pic, err := Base64StringToByte(input64)
+	if err != nil {
+		return "", logg.WrapErr(err)
+	}
+
+	picreader := bytes.NewReader(pic)
+	var output []byte
+	buf := bytes.NewBuffer(output)
+
+	err = ResizeJPEG2(picreader, buf, fitLongestSideToPixel)
+	if err != nil {
+		return "", logg.WrapErr(err)
+	}
+	return ByteToBase64String(buf.Bytes()), nil
+}
+
+// ResizeJPEG2 resizes a JPEG image (read from `input`) while keeping its aspect ratio.
+// The longest side will fit the pixel value of `fitLongestSideToPixel`.
+func ResizeJPEG2(input io.Reader, output io.Writer, fitLongestSideToPixel int) error {
+	// Decode the image (from JPEG to image.Image):
+	src, err := jpeg.Decode(input)
+	if err != nil {
+		return logg.WrapErr(err)
+	}
+
+	// Calculate scale and new dimensions:
+	var scale float64
+	var newX, newY int
+	if src.Bounds().Max.X > src.Bounds().Max.Y {
+		scale = float64(src.Bounds().Max.X) / float64(fitLongestSideToPixel)
+	} else {
+		scale = float64(src.Bounds().Max.Y) / float64(fitLongestSideToPixel)
+	}
+	newX = int(math.Round(float64(src.Bounds().Max.X) / scale))
+	newY = int(math.Round(float64(src.Bounds().Max.Y) / scale))
+
+	dst := image.NewRGBA(image.Rect(0, 0, newX, newY))
+
+	// Resize:
+	draw.NearestNeighbor.Scale(dst, dst.Rect, src, src.Bounds(), draw.Over, nil)
+
+	// Encode to `output` in JPEG format:
+	// You can pass &jpeg.Options{Quality: 80} (or another value) for quality customization.
+	err = jpeg.Encode(output, dst, nil)
 	if err != nil {
 		return logg.WrapErr(err)
 	}

@@ -92,6 +92,20 @@ func ParsePicture(r *http.Request) string {
 	return base64.StdEncoding.EncodeToString(readbytes)
 }
 
+func ParsePictureFormat(r *http.Request) (string, error) {
+	logg.Info("Parsing multipart/form-data for picture format")
+	_, header, err := r.FormFile("picture")
+	var picFormat string
+	if header != nil {
+		picFormat = header.Header.Get("Content-Type")
+		logg.Debugf("picture filename: %s, content-type: %s", header.Filename, picFormat)
+	}
+	if err != nil {
+		return "", logg.WrapErr(err)
+	}
+	return picFormat, nil
+}
+
 // parseQuantity returns by default at least 1
 func ParseQuantity(value string) int64 {
 	intValue, err := strconv.ParseInt(value, 10, 64)

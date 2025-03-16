@@ -105,7 +105,7 @@ func (db *DB) BoxIDs() (ids []uuid.UUID, err error) {
 }
 
 // update box data
-func (db *DB) UpdateBox(box boxes.Box, ignorePicture bool) error {
+func (db *DB) UpdateBox(box boxes.Box, ignorePicture bool, pictureFormat string) error {
 	exist := db.BoxExistById(box.ID)
 	if !exist {
 		return logg.Errorf("the box does not exist")
@@ -122,7 +122,16 @@ func (db *DB) UpdateBox(box boxes.Box, ignorePicture bool) error {
 		result, err = db.Sql.Exec(stmt, box.Label, box.Description, box.QRCode, box.OuterBoxID, box.ShelfID, box.AreaID, box.ID)
 	} else {
 		stmt = "UPDATE box SET label = ?, description = ?, picture = ?, preview_picture = ?, qrcode = ?, box_id = ?, shelf_id = ?, area_id = ? WHERE id = ?"
-		box.PreviewPicture, err = ResizePNG(box.Picture, 50)
+		switch pictureFormat {
+		case "image/jpeg":
+			box.PreviewPicture, err = ResizeJPEG(box.Picture, 50)
+			break
+		case "image/png":
+			box.PreviewPicture, err = ResizePNG(box.Picture, 50)
+			break
+		default:
+			return logg.NewError("Unsupported picture format " + pictureFormat + " for '" + box.Label + "%s'")
+		}
 		if err != nil {
 			return logg.Errorf("Error while resizing picture of box '%s' to create a preview picture %w", box.Label, err)
 		}

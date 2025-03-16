@@ -182,7 +182,7 @@ func TestBoxUpdateO(t *testing.T) {
 	logg.EnableDebugLogger()
 	logg.EnableInfoLogger()
 	logg.EnableErrorLogger()
-	err = dbTest.UpdateBox(*testBox, false)
+	err = dbTest.UpdateBox(*testBox, false, "image/png")
 	if err != nil {
 		t.Fatalf("error while updating the box: %v", err)
 	}
@@ -231,7 +231,7 @@ func TestBoxUpdateBoxInBoxError(t *testing.T) {
 
 	BOX_1.OuterBoxID = BOX_1.ID
 
-	err = dbTest.UpdateBox(*BOX_1, false)
+	err = dbTest.UpdateBox(*BOX_1, false, "image/png")
 	assert.NotEqual(t, err, nil)
 
 	EmptyTestDatabase()
@@ -262,7 +262,7 @@ func TestBoxUpdateIgnorePicture(t *testing.T) {
 	assert.NotEqual(t, oldPicture, testBox.Picture)
 	assert.NotEqual(t, oldPreviewPicture, testBox.PreviewPicture)
 
-	err = dbTest.UpdateBox(*testBox, true)
+	err = dbTest.UpdateBox(*testBox, true, "image/png")
 	if err != nil {
 		t.Fatalf("error while updating the box: %v", err)
 	}
@@ -305,7 +305,7 @@ func TestBoxUpdateRemovePicture(t *testing.T) {
 	assert.NotEqual(t, oldPicture, testBox.Picture)
 	assert.NotEqual(t, oldPreviewPicture, testBox.PreviewPicture)
 
-	err = dbTest.UpdateBox(*testBox, false)
+	err = dbTest.UpdateBox(*testBox, false, "image/png")
 	if err != nil {
 		t.Fatalf("error while updating the box: %v", err)
 	}
@@ -343,7 +343,7 @@ func TestBoxUpdateShelf(t *testing.T) {
 	assert.Equal(t, err, nil)
 	box.ShelfID = SHELF_2.ID
 
-	dbTest.UpdateBox(*box, true)
+	dbTest.UpdateBox(*box, true, "image/png")
 	boxrow, err = dbTest.BoxListRowByID(box.ID)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, boxrow.ShelfID, SHELF_2.ID)

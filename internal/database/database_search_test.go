@@ -52,10 +52,10 @@ func TestVirtualBoxUpdate(t *testing.T) {
 	}
 
 	testbox.Label = "new testbox label"
-	dbTest.UpdateBox(*testbox, true)
+	dbTest.UpdateBox(*testbox, true, "image/png")
 
 	outerBox.Label = "new outerbox label"
-	dbTest.UpdateBox(*outerBox, true)
+	dbTest.UpdateBox(*outerBox, true, "image/png")
 
 	// Get the box_fts to check if the outerbox_label  was updated
 	afterUpdate, err := dbTest.BoxListRowByID(testbox.ID)
@@ -92,11 +92,11 @@ func TestVirtualBoxUpdateIgnorePicture(t *testing.T) {
 
 	testbox.Label = "new testbox label"
 	testbox.Picture = ""
-	dbTest.UpdateBox(*testbox, true)
+	dbTest.UpdateBox(*testbox, true, "image/png")
 
 	outerBox.Label = "new outerbox label"
 	outerBox.Picture = ""
-	dbTest.UpdateBox(*outerBox, true)
+	dbTest.UpdateBox(*outerBox, true, "image/png")
 
 	// Get the box_fts to check if the outerbox_label  was updated
 	afterUpdate, err := dbTest.BoxListRowByID(testbox.ID)
