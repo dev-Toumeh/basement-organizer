@@ -124,6 +124,7 @@ func boxesRoutes(db *database.DB) {
 	boxes.RegisterDBInstance(db)
 	// Box templates
 	Handle("/box/create", boxes.CreateHandler(db))
+	Handle("/box/createauto", boxes.BoxHandler(db))
 	Handle("/box/{id}", boxes.BoxHandler(db))
 	Handle("/box/{id}/boxDetailsForm", boxes.RenderBoxDetailsForm(db))
 	Handle("/box/{id}/innerBoxes", common.HandleListTemplateInnerThingsData(common.THING_BOX, common.THING_BOX))
