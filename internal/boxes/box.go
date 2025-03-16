@@ -118,27 +118,26 @@ func (b *Box) MarshalJSON() ([]byte, error) {
 func (b Box) String() string {
 	// @TODO: Shorteing picture to now blow up logs with base64 encoding.
 	// A little dirty but is ok for now.
-	var shortenPicture bool
+	bCopy := b
+	shortenPicture := false
 	if env.Development() {
 		shortenPicture = true
-	} else {
-		shortenPicture = false
 	}
 	if shortenPicture {
-		b.Picture = common.ShortenPictureForLogs(b.Picture)
-		b.PreviewPicture = common.ShortenPictureForLogs(b.PreviewPicture)
-		if b.OuterBox != nil {
-			b.OuterBox.PreviewPicture = common.ShortenPictureForLogs(b.OuterBox.PreviewPicture)
+		bCopy.Picture = common.ShortenPictureForLogs(bCopy.Picture)
+		bCopy.PreviewPicture = common.ShortenPictureForLogs(bCopy.PreviewPicture)
+		if bCopy.OuterBox != nil {
+			bCopy.OuterBox.PreviewPicture = common.ShortenPictureForLogs(bCopy.OuterBox.PreviewPicture)
 		}
-		for i := range b.InnerBoxes {
-			b.InnerBoxes[i].PreviewPicture = common.ShortenPictureForLogs(b.InnerBoxes[i].PreviewPicture)
+		for i := range bCopy.InnerBoxes {
+			bCopy.InnerBoxes[i].PreviewPicture = common.ShortenPictureForLogs(bCopy.InnerBoxes[i].PreviewPicture)
 		}
-		for i := range b.Items {
-			b.Items[i].PreviewPicture = common.ShortenPictureForLogs(b.Items[i].PreviewPicture)
+		for i := range bCopy.Items {
+			bCopy.Items[i].PreviewPicture = common.ShortenPictureForLogs(bCopy.Items[i].PreviewPicture)
 		}
 	}
 
-	data, err := json.Marshal(b)
+	data, err := json.Marshal(bCopy)
 	if err != nil {
 		logg.Err("Can't JSON box to string:", err)
 		return ""

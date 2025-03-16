@@ -99,7 +99,7 @@ func (db *DB) UpdateArea(area areas.Area, ignorePicture bool) error {
 	} else {
 		area.PreviewPicture, err = ResizePNG(area.Picture, 50)
 		if err != nil {
-			logg.Errorf("Error while resizing picture of area '%s' to create a preview picture %w", area.Label, err)
+			return logg.Errorf("Error while resizing picture of area '%s' to create a preview picture %w", area.Label, err)
 		}
 		stmt = "UPDATE area SET label = ?, description = ?, picture = ?, preview_picture = ?, qrcode = ? WHERE id = ?"
 		result, err = db.Sql.Exec(stmt, area.Label, area.Description, area.Picture, area.PreviewPicture, area.QRCode, area.ID)

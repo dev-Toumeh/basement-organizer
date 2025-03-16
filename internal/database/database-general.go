@@ -242,11 +242,11 @@ func (db *DB) listRowsPaginatedFrom(listRowsTable string, searchQuery string, li
 		if err != nil {
 			return []common.ListRow{}, fmt.Errorf("error while scanning %s row: %w", listRowsTable, err)
 		}
-		shelfRow, err := sqlListRow.ToListRow()
+		row, err := sqlListRow.ToListRow()
 		if err != nil {
 			return []common.ListRow{}, fmt.Errorf("error while converting a %s row to ListRow: %w", listRowsTable, err)
 		}
-		listRows = append(listRows, *shelfRow)
+		listRows = append(listRows, *row)
 	}
 
 	return listRows, nil
@@ -313,11 +313,11 @@ func (db *DB) InnerListRowsPaginatedFrom(belongsToTable string, belongsToTableID
 		if err != nil {
 			return []common.ListRow{}, fmt.Errorf("error while scanning %s row: %w", belongsToTable, err)
 		}
-		shelfRow, err := sqlListRow.ToListRow()
+		row, err := sqlListRow.ToListRow()
 		if err != nil {
 			return []common.ListRow{}, fmt.Errorf("error while converting a %s row to ListRow: %w", belongsToTable, err)
 		}
-		listRows = append(listRows, *shelfRow)
+		listRows = append(listRows, *row)
 	}
 
 	return listRows, nil

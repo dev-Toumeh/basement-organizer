@@ -124,7 +124,7 @@ func (db *DB) UpdateBox(box boxes.Box, ignorePicture bool) error {
 		stmt = "UPDATE box SET label = ?, description = ?, picture = ?, preview_picture = ?, qrcode = ?, box_id = ?, shelf_id = ?, area_id = ? WHERE id = ?"
 		box.PreviewPicture, err = ResizePNG(box.Picture, 50)
 		if err != nil {
-			logg.Errorf("Error while resizing picture of box '%s' to create a preview picture %w", box.Label, err)
+			return logg.Errorf("Error while resizing picture of box '%s' to create a preview picture %w", box.Label, err)
 		}
 		result, err = db.Sql.Exec(stmt, box.Label, box.Description, box.Picture, box.PreviewPicture, box.QRCode, box.OuterBoxID, box.ShelfID, box.AreaID, box.ID)
 	}

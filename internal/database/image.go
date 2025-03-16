@@ -38,7 +38,7 @@ func updatePicture(picture *string, previewPicture *string) error {
 func ResizePNG(input64 string, fitLongestSideToPixel int) (string, error) {
 	pic, err := Base64StringToByte(input64)
 	if err != nil {
-		logg.WrapErr(err)
+		return "", logg.WrapErr(err)
 	}
 
 	picreader := bytes.NewReader(pic)

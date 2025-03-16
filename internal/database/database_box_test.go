@@ -1,6 +1,9 @@
 package database
 
 import (
+	"basement/main/internal/common"
+	"basement/main/internal/logg"
+	"fmt"
 	"slices"
 	"testing"
 
@@ -152,11 +155,14 @@ func TestBoxIDs(t *testing.T) {
 	}
 }
 
-func TestBoxUpdate(t *testing.T) {
+func TestBoxUpdateO(t *testing.T) {
 	EmptyTestDatabase()
 	resetTestBoxes()
 
 	testBox := BOX_1
+	assert.NotEqual(t, testBox.Picture, "")
+	assert.Equal(t, testBox.Picture, VALID_BASE64_PNG)
+	assert.Equal(t, testBox.PreviewPicture, "")
 	_, err := dbTest.insertNewBox(testBox)
 	if err != nil {
 		t.Fatalf("error while inserting the box: %v", err)
@@ -164,12 +170,18 @@ func TestBoxUpdate(t *testing.T) {
 
 	oldLabel := testBox.Label
 	oldDescr := testBox.Description
+	oldPre := testBox.PreviewPicture
 
 	testBox.Description = "updated"
 	testBox.Label = "updated"
+	testBox.Picture = VALID_BASE64_PNG_2
 	assert.NotEqual(t, oldDescr, testBox.Description)
 	assert.NotEqual(t, oldLabel, testBox.Label)
+	assert.NotEqual(t, oldPre, "")
 
+	logg.EnableDebugLogger()
+	logg.EnableInfoLogger()
+	logg.EnableErrorLogger()
 	err = dbTest.UpdateBox(*testBox, false)
 	if err != nil {
 		t.Fatalf("error while updating the box: %v", err)
@@ -185,11 +197,24 @@ func TestBoxUpdate(t *testing.T) {
 	assert.Equal(t, testBox.Label, updatedBox.Label)
 	assert.Equal(t, testBox.Description, updatedBox.Description)
 	assert.Equal(t, testBox.Picture, updatedBox.Picture)
+	assert.NotEqual(t, updatedBox.PreviewPicture, "")
+	assert.NotEqual(t, oldPre, updatedBox.PreviewPicture)
 	assert.Equal(t, testBox.QRCode, updatedBox.QRCode)
 	assert.Equal(t, testBox.OuterBoxID, updatedBox.OuterBoxID)
 
 	assert.NotEqual(t, oldLabel, updatedBox.Label)
 	assert.NotEqual(t, oldDescr, updatedBox.Description)
+
+	row, err := dbTest.listRowByID("box_fts", testBox.ID)
+	assert.NotEqual(t, row.PreviewPicture, "")
+	assert.Equal(t, row.PreviewPicture, updatedBox.PreviewPicture)
+	rows, err := dbTest.BoxListRows("", 1, 1)
+	assert.NotEqual(t, rows[0].PreviewPicture, "")
+	fmt.Println(rows[0].PreviewPicture)
+	frows, err := common.FilledRows(dbTest.BoxListRows, "", 1, 1, 1, common.ListRowTemplateOptions{})
+	assert.NotEqual(t, frows[0].PreviewPicture, "")
+	assert.NotEqual(t, frows[0].PreviewPicture, oldPre)
+	assert.Equal(t, frows[0].PreviewPicture, updatedBox.PreviewPicture)
 
 	EmptyTestDatabase()
 }
