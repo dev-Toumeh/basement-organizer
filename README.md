@@ -1,51 +1,83 @@
+
 # basement-organizer
-
-
-<!--toc:start-->
 - [basement-organizer](#basement-organizer)
-  - [The Problem](#the-problem)
-  - [The Idea](#the-idea)
-  - [Example](#example)
-  - [What it Should Do](#what-it-should-do)
-  - [Goal](#goal)
-  - [Start Development](#start-development)
-<!--toc:end-->
+  - [Overview](#overview)
+  - [Installation](#Installation)
+  - [Contribution](#contribution)
 
 Overview, detailed information and decisions can be found in [ Technical Documentation ](docs/Technical_Documentation.md).
 
-## The Problem
-- When sorting things into boxes at home and storing them in the basement, over time it's hard to remember where things are and in which box. I also don't want to constantly go to the basement to open every box searching for something.
+## Overview
+  basement-organizer is an open-source web app designed for local,
+   private use to organize your basement using boxes, shelves, and designated areas,
+   allows you to search for items without opening every box.
+   The app provides a simple, effective solution for keeping your basement orderly and accessible,
+   unlike many complex tracking systems built for commercial use.
 
-## The Idea
-- To be able to store boxes with contents in the basement and find the contents later.
-- Or to virtually look through the contents of the boxes without actually finding and opening them.
+## Automated Installation
+### Linux Debian
+ **Step 1**: Install wget (if not already installed)
+```bash
+  sudo apt update && sudo apt install wget
+```
+ **Step 2**: Download the installation script
+```bash
+wget -O install-debian.sh "https://raw.githubusercontent.com/dev-Toumeh/basement-organizer/dev/scripts/install-debian.sh"
+```
+ **Step 3**: Execute the installation script using sudo
+```bash
+sudo bash install-debian.sh
+```
 
-## Example
-- I have a box containing an old keyboard, an old router, and some hard drives.
-- I enter these items into the app.
-- I set a label (e.g., "old devices") and specify where the box is located (e.g., basement).
-- Then, a label with a QR code can be generated for printing, which can later be scanned with a smartphone to know what's inside the box without opening it.
+### Docker
+ **Step 1**: Install wget (if not already installed)
+```bash
+  sudo apt update && sudo apt install wget
+```
+ **Step 2**: Download the installation scripts
+```bash
+wget -O install-debian.sh "https://raw.githubusercontent.com/dev-Toumeh/basement-organizer/dev/scripts/install-debian.sh"
+wget -O install-docker.sh "https://raw.githubusercontent.com/dev-Toumeh/basement-organizer/dev/scripts/install-docker.sh"
+```
+ **Step 3**: Execute the installation script using sudo
+```bash
+sudo bash install-docker.sh
+```
+## Manual Installation
+### Dependencies
 
-## What it Should Do
-- Web app - mobile and desktop browser compatible.
-- Should be synchronized.
-- Can be self-hosted.
-- Ability to generate QR codes or read and import existing QR codes.
-- Capable of printing labels with a label printer (preferably not manually).
-- Ability to search for contents (e.g., searching for `keyboard` should return the box and its location).
-- Ability to define places, like rooms.
-- Boxes (or any kind of container) can be assigned to any location.
-- Ability to see what's inside a container.
-- Ability to assign contents to containers.
-- Ability to add and change descriptions to contents (maybe also images, documents like manuals, documentation, invoices, etc.).
-- offline use (no internet acces) ? https://github.com/dev-Toumeh/basement-organizer/issues/3
+Before installing the application, ensure your system has the following dependencies:
 
-## Goal
-- To develop a simple way to quickly enter and find things.
-- For home use.
-- Not overloaded with features.
-- Whether on the go with a smartphone or at home on a PC.
+Go 1.22.1 or later: The application is built using Go. This dependency is required to compile and execute the program.
 
-## Start Development
-For development see [Getting Started](docs/getting_started.md)
+Git: The source code is hosted in a Git repository. Git is required to clone the repository and fetch updates.
 
+HTMX: Lightweight JavaScript library that enables dynamic, server-driven user interfaces using HTML attributes.
+
+### Steps
+
+
+- clone the repository
+```bash
+git clone https://github.com/dev-Toumeh/basement-organizer.git
+```
+- download the HTMX library package
+   - run the following command in the repository root directory:
+    ```bash
+        wget -O internal/static/js/htmx.min.js https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js
+    ```
+   - or download it manually from https://htmx.org/docs/#installing and place it in /path/to/directory/internal/static/js/
+
+- to build the Binary run the following command in the repository root directory:
+```bash
+go build -o basement -tags prod .
+```
+- run the application:
+```bash
+./basement
+```
+- Launch your browser and navigate to the following URL:
+http://localhost:8101
+
+## contribution
+### For development see [Getting Started](docs/getting_started.md)
