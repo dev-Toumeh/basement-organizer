@@ -112,15 +112,17 @@ func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 
 	var err error
 	box, ignorePicture := boxFromPostFormValue(id, r)
-	picFormat, err2 := common.ParsePictureFormat(r)
-	if err2 != nil {
-		server.WriteNotFoundError(logg.CleanLastError(err), err, w, r)
-		return
+	pictureFormat := ""
+	if !ignorePicture {
+		pictureFormat, err = common.ParsePictureFormat(r)
+		if err != nil {
+			logg.Debug("no picture format")
+		}
 	}
-	err = db.UpdateBox(box, ignorePicture, picFormat)
+	err = db.UpdateBox(box, ignorePicture, pictureFormat)
 
 	if err != nil {
-		server.WriteNotFoundError(logg.CleanLastError(err), err, w, r)
+		server.WriteNotFoundError("Can't update box. "+logg.CleanLastError(err), err, w, r)
 		return
 	}
 	// @TODO: Find a better solution?

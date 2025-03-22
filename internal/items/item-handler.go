@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
@@ -104,11 +105,17 @@ func updateItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
 	fmt.Print(valiedItem)
 
 	ignorePicture := server.ParseIgnorePicture(r)
+	pictureFormat := ""
+	if !ignorePicture {
+		pictureFormat, _ = common.ParsePictureFormat(r)
+		if err != nil {
+			logg.Debug("no picture format")
+		}
+	}
 
-	err = db.UpdateItem(valiedItem, ignorePicture)
+	err = db.UpdateItem(valiedItem, ignorePicture, pictureFormat)
 	if err != nil {
-		fmt.Print(err)
-		templates.RenderErrorNotification(w, "Error while updating the Item, please try again later")
+		server.WriteNotFoundError("Can't update item. "+logg.CleanLastError(err), err, w, r)
 		return
 	}
 	url := "/item/" + item.ID.String()

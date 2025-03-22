@@ -8,6 +8,7 @@ import (
 	"basement/main/internal/server"
 	"bytes"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -323,7 +324,7 @@ func (db *DB) insertNewItem(item items.Item) error {
 }
 
 // update the item based on the id
-func (db *DB) UpdateItem(item items.Item, ignorePicture bool) error {
+func (db *DB) UpdateItem(item items.Item, ignorePicture bool, pictureFormat string) error {
 	var err error
 	var sqlStatement string
 	var result sql.Result
@@ -336,7 +337,14 @@ func (db *DB) UpdateItem(item items.Item, ignorePicture bool) error {
 			item.BasicInfo.Label, item.BasicInfo.Description, item.Quantity, item.Weight,
 			item.BasicInfo.QRCode, item.BoxID.String(), item.ShelfID.String(), item.AreaID.String(), item.BasicInfo.ID.String())
 	} else {
-		updatePicture(&item.Picture, &item.PreviewPicture)
+		item.PreviewPicture, err = ResizeImage(item.Picture, 50, pictureFormat)
+		if err != nil {
+			if errors.Is(err, UnsupportedImageFormat) {
+				return logg.NewError(logg.CleanLastError(err) + err.Error())
+			} else {
+				return logg.Errorf("Error while resizing picture of item '%s' to create a preview picture %w", item.Label, err)
+			}
+		}
 
 		sqlStatement = `UPDATE item SET 
 			label = ?, description = ?, picture = ?, preview_picture = ?, quantity = ?, 
@@ -518,7 +526,7 @@ func (db *DB) AddItemToArea(itemID uuid.UUID, toAreaID uuid.UUID) error {
 	item.AreaID = area.ID
 	item.AreaLabel = area.Label
 
-	err = db.UpdateItem(*item, false)
+	err = db.UpdateItem(*item, false, "image/png")
 	if err != nil {
 		return logg.WrapErr(err)
 	}
@@ -537,7 +545,7 @@ func (db *DB) AddItemToShelf(itemID uuid.UUID, toShelfID uuid.UUID) error {
 	item.ShelfID = shelf.ID
 	item.ShelfLabel = shelf.Label
 
-	err = db.UpdateItem(*item, false)
+	err = db.UpdateItem(*item, false, "image/png")
 	if err != nil {
 		return logg.WrapErr(err)
 	}
@@ -555,7 +563,7 @@ func (db *DB) AddItemToBox(itemID uuid.UUID, boxID uuid.UUID) error {
 	item.BoxID = box.ID
 	item.BoxLabel = box.Label
 
-	err = db.UpdateItem(*item, false)
+	err = db.UpdateItem(*item, false, "image/png")
 	if err != nil {
 		return logg.WrapErr(err)
 	}
@@ -598,7 +606,7 @@ func (db *DB) MoveItemToObject(itemID uuid.UUID, objectID uuid.UUID, objectType 
 		return logg.WrapErr(fmt.Errorf("invalid object type: %s", objectType))
 	}
 
-	err = db.UpdateItem(*item, false)
+	err = db.UpdateItem(*item, false, "image/png")
 	if err != nil {
 		return logg.WrapErr(err)
 	}

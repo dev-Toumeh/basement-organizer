@@ -10,7 +10,7 @@ import (
 
 type AreaDatabase interface {
 	CreateArea(newArea Area) (uuid.UUID, error)
-	UpdateArea(area Area, ignorePicture bool) error
+	UpdateArea(area Area, ignorePicture bool, pictureFormat string) error
 	DeleteArea(id uuid.UUID) error
 	AreaById(id uuid.UUID) (Area, error)
 	AreaIDs() ([]uuid.UUID, error)

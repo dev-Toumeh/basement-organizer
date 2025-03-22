@@ -2,7 +2,6 @@ package database
 
 import (
 	"basement/main/internal/common"
-	"basement/main/internal/logg"
 	"fmt"
 	"slices"
 	"testing"
@@ -179,9 +178,6 @@ func TestBoxUpdateO(t *testing.T) {
 	assert.NotEqual(t, oldLabel, testBox.Label)
 	assert.NotEqual(t, oldPre, "")
 
-	logg.EnableDebugLogger()
-	logg.EnableInfoLogger()
-	logg.EnableErrorLogger()
 	err = dbTest.UpdateBox(*testBox, false, "image/png")
 	if err != nil {
 		t.Fatalf("error while updating the box: %v", err)
@@ -305,7 +301,7 @@ func TestBoxUpdateRemovePicture(t *testing.T) {
 	assert.NotEqual(t, oldPicture, testBox.Picture)
 	assert.NotEqual(t, oldPreviewPicture, testBox.PreviewPicture)
 
-	err = dbTest.UpdateBox(*testBox, false, "image/png")
+	err = dbTest.UpdateBox(*testBox, false, "")
 	if err != nil {
 		t.Fatalf("error while updating the box: %v", err)
 	}
