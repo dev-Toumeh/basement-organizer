@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
@@ -105,12 +106,22 @@ func updateShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
 	}
 	ignorePicture := server.ParseIgnorePicture(r)
 
+	pictureFormat := ""
+	if !ignorePicture {
+		pictureFormat, err = common.ParsePictureFormat(r)
+		if err != nil {
+			logg.Debug("no picture format")
+		}
+	}
+
 	// @Todo validate shelf request data
-	err = db.UpdateShelf(shelf, ignorePicture)
+	err = db.UpdateShelf(shelf, ignorePicture, pictureFormat)
 	fmt.Print(err)
 	if err != nil {
-		templates.RenderErrorNotification(w, "Error while updating the shelf, please try again later")
+		server.WriteBadRequestError("Can't update shelf. "+logg.CleanLastError(err), err, w, r)
 		return
+		// templates.RenderErrorNotification(w, "Error while updating the shelf, please try again later")
+		// return
 	}
 	url := "/shelf/" + shelf.ID.String()
 	server.RedirectWithSuccessNotification(w, url, "Shelf updated successfully")

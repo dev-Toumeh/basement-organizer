@@ -50,7 +50,7 @@ func TestUpdateItem(t *testing.T) {
 	item.Label = "Updated Item Label"
 	item.Description = "Updated Description"
 
-	err = dbTest.UpdateItem(*item, true)
+	err = dbTest.UpdateItem(*item, true, "image/png")
 	assert.Equal(t, err, nil)
 	retrievedItem, err := dbTest.ItemById(item.ID)
 	assert.Equal(t, err, nil)

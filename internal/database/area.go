@@ -5,6 +5,7 @@ import (
 	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/gofrs/uuid/v5"
@@ -84,7 +85,7 @@ func (db *DB) AreaIDs() (ids []uuid.UUID, err error) {
 }
 
 // update area data
-func (db *DB) UpdateArea(area areas.Area, ignorePicture bool) error {
+func (db *DB) UpdateArea(area areas.Area, ignorePicture bool, pictureFormat string) error {
 	exist := db.AreaExists(area.ID)
 	if !exist {
 		return logg.Errorf("the area does not exist")
@@ -97,9 +98,13 @@ func (db *DB) UpdateArea(area areas.Area, ignorePicture bool) error {
 		stmt = "UPDATE area SET label = ?, description = ?, qrcode = ? WHERE id = ?"
 		result, err = db.Sql.Exec(stmt, area.Label, area.Description, area.QRCode, area.ID)
 	} else {
-		area.PreviewPicture, err = ResizePNG(area.Picture, 50)
+		area.PreviewPicture, err = ResizeImage(area.Picture, 50, pictureFormat)
 		if err != nil {
-			return logg.Errorf("Error while resizing picture of area '%s' to create a preview picture %w", area.Label, err)
+			if errors.Is(err, UnsupportedImageFormat) {
+				return logg.NewError(logg.CleanLastError(err) + err.Error())
+			} else {
+				return logg.Errorf("Error while resizing picture of item '%s' to create a preview picture %w", area.Label, err)
+			}
 		}
 		stmt = "UPDATE area SET label = ?, description = ?, picture = ?, preview_picture = ?, qrcode = ? WHERE id = ?"
 		result, err = db.Sql.Exec(stmt, area.Label, area.Description, area.Picture, area.PreviewPicture, area.QRCode, area.ID)

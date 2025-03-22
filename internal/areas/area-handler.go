@@ -2,6 +2,7 @@ package areas
 
 import (
 	"basement/main/internal/auth"
+	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
@@ -74,9 +75,19 @@ func updateArea(w http.ResponseWriter, r *http.Request, db AreaDatabase) {
 	}
 
 	area, ignorePicture := areaFromPostFormValue(id, r)
-	err := db.UpdateArea(area, ignorePicture)
+
+	pictureFormat := ""
+	if !ignorePicture {
+		var err error
+		pictureFormat, err = common.ParsePictureFormat(r)
+		if err != nil {
+			logg.Debug("no picture format")
+		}
+	}
+
+	err := db.UpdateArea(area, ignorePicture, pictureFormat)
 	if err != nil {
-		server.WriteNotFoundError(errMsgForUser, err, w, r)
+		server.WriteNotFoundError(errMsgForUser+" "+logg.CleanLastError(err), err, w, r)
 		return
 	}
 

@@ -4,6 +4,8 @@ import (
 	"basement/main/internal/logg"
 	"bytes"
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"image"
 	"image/jpeg"
 	"image/png"
@@ -12,6 +14,8 @@ import (
 
 	"golang.org/x/image/draw"
 )
+
+var UnsupportedImageFormat error = errors.New("Unsupported picture format")
 
 // updatePicture checks for valid base64 encoding and creates a resized preview image
 // in `previewPicture` with max side length of 50 pixel.
@@ -85,6 +89,21 @@ func ResizePNG2(input io.Reader, output io.Writer, fitLongestSideToPixel int) er
 	}
 
 	return nil
+}
+
+func ResizeImage(input64 string, fitLongestSideToPixel int, format string) (string, error) {
+	switch format {
+	case "image/jpeg":
+		return ResizeJPEG(input64, 50)
+	case "image/png":
+		return ResizePNG(input64, fitLongestSideToPixel)
+	case "":
+		logg.Debug("remove image")
+		return "", nil
+	default:
+		// logg.Warningf("%s", UnsupportedImageFormat.Error())
+		return "", logg.WrapErr(fmt.Errorf("%w %s", UnsupportedImageFormat, format))
+	}
 }
 
 // ResizeJPEG resizes a JPEG image while keeping its aspect ratio.

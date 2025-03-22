@@ -70,7 +70,7 @@ func (db *boxDatabaseError) ErrorExist() error {
 	return ErrMock
 }
 
-func (db *boxDatabaseError) UpdateBox(box Box, updatePicture bool) error {
+func (db *boxDatabaseError) UpdateBox(box Box, updatePicture bool, pictureFormat string) error {
 	return errors.New("AAAAA")
 }
 
@@ -177,7 +177,7 @@ func (db *boxDatabaseSuccess) ErrorExist() error {
 	return nil
 }
 
-func (db *boxDatabaseSuccess) UpdateBox(box Box, updatePicture bool) error {
+func (db *boxDatabaseSuccess) UpdateBox(box Box, updatePicture bool, pictureFormat string) error {
 	return nil
 }
 

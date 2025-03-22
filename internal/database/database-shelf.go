@@ -5,6 +5,7 @@ import (
 	"basement/main/internal/logg"
 	"basement/main/internal/shelves"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/gofrs/uuid/v5"
@@ -207,7 +208,7 @@ func (db *DB) Shelf(id uuid.UUID) (*shelves.Shelf, error) {
 	return shelf, nil
 }
 
-func (db *DB) UpdateShelf(shelf *shelves.Shelf, ignorePicture bool) error {
+func (db *DB) UpdateShelf(shelf *shelves.Shelf, ignorePicture bool, pictureFormat string) error {
 
 	var err error
 	var stmt string
@@ -238,9 +239,13 @@ func (db *DB) UpdateShelf(shelf *shelves.Shelf, ignorePicture bool) error {
 			shelf.ID.String(),
 		)
 	} else {
-		err = updatePicture(&shelf.Picture, &shelf.PreviewPicture)
+		shelf.PreviewPicture, err = ResizeImage(shelf.Picture, 50, pictureFormat)
 		if err != nil {
-			logg.Warningf("Can't update picture %v", err.Error())
+			if errors.Is(err, UnsupportedImageFormat) {
+				return logg.NewError(logg.CleanLastError(err) + err.Error())
+			} else {
+				return logg.Errorf("Error while resizing picture of shelf '%s' to create a preview picture %w", shelf.Label, err)
+			}
 		}
 
 		stmt := `

@@ -5,6 +5,7 @@ import (
 	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/gofrs/uuid/v5"
@@ -122,18 +123,13 @@ func (db *DB) UpdateBox(box boxes.Box, ignorePicture bool, pictureFormat string)
 		result, err = db.Sql.Exec(stmt, box.Label, box.Description, box.QRCode, box.OuterBoxID, box.ShelfID, box.AreaID, box.ID)
 	} else {
 		stmt = "UPDATE box SET label = ?, description = ?, picture = ?, preview_picture = ?, qrcode = ?, box_id = ?, shelf_id = ?, area_id = ? WHERE id = ?"
-		switch pictureFormat {
-		case "image/jpeg":
-			box.PreviewPicture, err = ResizeJPEG(box.Picture, 50)
-			break
-		case "image/png":
-			box.PreviewPicture, err = ResizePNG(box.Picture, 50)
-			break
-		default:
-			return logg.NewError("Unsupported picture format " + pictureFormat + " for '" + box.Label + "%s'")
-		}
+		box.PreviewPicture, err = ResizeImage(box.Picture, 50, pictureFormat)
 		if err != nil {
-			return logg.Errorf("Error while resizing picture of box '%s' to create a preview picture %w", box.Label, err)
+			if errors.Is(err, UnsupportedImageFormat) {
+				return logg.NewError(logg.CleanLastError(err) + err.Error())
+			} else {
+				return logg.Errorf("Error while resizing picture of box '%s' to create a preview picture %w", box.Label, err)
+			}
 		}
 		result, err = db.Sql.Exec(stmt, box.Label, box.Description, box.Picture, box.PreviewPicture, box.QRCode, box.OuterBoxID, box.ShelfID, box.AreaID, box.ID)
 	}
