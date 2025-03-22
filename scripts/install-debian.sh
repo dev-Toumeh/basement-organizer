@@ -55,7 +55,7 @@ if [ ! -f internal/static/js/htmx.min.js ]; then
 fi
 
 echo "Building the Go application..."
-go build -o "$APP_NAME" .
+go build -o "$APP_NAME" -tags prod .
 
 echo "Removing existing $OPT_DEST if it exists..."
 $SUDO rm -rf "$OPT_DEST"
@@ -69,4 +69,3 @@ echo "Creating symbolic link at $SYMLINK..."
 $SUDO ln -s "$OPT_DEST/$APP_NAME" "$SYMLINK"
 
 echo "Installation complete. You can now run the application using: $APP_NAME"
-
