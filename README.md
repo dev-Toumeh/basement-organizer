@@ -2,7 +2,8 @@
 # basement-organizer
 - [basement-organizer](#basement-organizer)
   - [Overview](#overview)
-  - [Installation](#Installation)
+  - [Automated Installation](#automated-installation )
+  - [Manual Installation](#manual-installation)
   - [Contribution](#contribution)
 
 Overview, detailed information and decisions can be found in [ Technical Documentation ](docs/Technical_Documentation.md).
@@ -18,7 +19,7 @@ Overview, detailed information and decisions can be found in [ Technical Documen
 ### Linux Debian
  **Step 1**: Install wget (if not already installed)
 ```bash
-  sudo apt update && sudo apt install wget
+sudo apt update && sudo apt install wget
 ```
  **Step 2**: Download the installation script
 ```bash
@@ -64,13 +65,13 @@ git clone https://github.com/dev-Toumeh/basement-organizer.git
 - download the HTMX library package
    - run the following command in the repository root directory:
     ```bash
-        wget -O internal/static/js/htmx.min.js https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js
+    wget -O internal/static/js/htmx.min.js https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js
     ```
-   - or download it manually from https://htmx.org/docs/#installing and place it in /path/to/directory/internal/static/js/
+   - or download it manually from https://htmx.org/docs/#installing and place it in ./internal/static/js/
 
 - to build the Binary run the following command in the repository root directory:
 ```bash
-go build -o basement -tags prod .
+go build -o basement -tags dev .
 ```
 - run the application:
 ```bash
