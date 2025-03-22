@@ -2,7 +2,12 @@
 
 package env
 
-const configFile string = "config.conf"
+import (
+    "os"
+)
+
+const configFile string = "config-dev.conf"
+var homeDir string = os.Getenv("HOME")
 
 var defaultProdConfigPreset Configuration = Configuration{
 	env:              env_prod,
@@ -12,10 +17,9 @@ var defaultProdConfigPreset Configuration = Configuration{
 	debugLogsEnabled: false,
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
-	dbPath:           "./internal/database/sqlite-database-prod-v1.db",
-	staticPath:       "/opt/basement-organizer/internal/static/",
-	templatePath:     "/opt/basement-organizer/internal/",
-}
+	dbPath:           homeDir + "/.local/share/basement-organizer/internal/database/sqlite-database.db",
+	staticPath:       homeDir + "/.local/share/basement-organizer/internal/static",
+	templatePath:     homeDir + "/.local/share/basement-organizer/internal",
 
 // Copy of preset production config.
 func DefaultProductionConfig() Configuration {
