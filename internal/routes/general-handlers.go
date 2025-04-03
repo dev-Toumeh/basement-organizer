@@ -22,7 +22,7 @@ import (
 func AddTo(db *database.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		data := common.InitData(r)
+		data := common.InitData(r, true)
 		thing := r.PathValue("thing")
 
 		var err error

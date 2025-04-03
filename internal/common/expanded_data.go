@@ -20,28 +20,23 @@ type Data struct {
 	TypeMap        map[string]any
 }
 
-func InitData(r *http.Request) (data Data) {
-	data = Data{
+// InitData generates an initialized Data object to render templates, including auth, pagination, and other context.
+//
+//	r:              The incoming HTTP request containing user session and query parameters.
+//	withPagination: If true, includes pagination-related fields (page number, search input, limit).
+func InitData(r *http.Request, withPagination bool) Data {
+	data := Data{
 		TypeMap: make(map[string]any),
 	}
-	data.SetPageNumber(ParsePageNumber(r))
-	data.SetSearchInputValue(SearchString(r))
-	data.SetLimit(ParseLimit(r))
 
-	user, _ := auth.UserSessionData(r)
-	authenticated, _ := auth.Authenticated(r)
-	data.SetUser(user)
-	data.SetAuthenticated(authenticated)
-
-	return data
-}
-
-// init main Data for non Paginated Templates
-func InitData2(r *http.Request) (data *Data) {
-	data = &Data{
-		TypeMap: make(map[string]any),
+	if withPagination {
+		data.SetPageNumber(ParsePageNumber(r))
+		data.SetSearchInputValue(SearchString(r))
+		data.SetLimit(ParseLimit(r))
+	} else {
+		data.SetEdit(CheckEditMode(r))
 	}
-	data.SetEdit(CheckEditMode(r))
+
 	user, _ := auth.UserSessionData(r)
 	authenticated, _ := auth.Authenticated(r)
 	data.SetUser(user)

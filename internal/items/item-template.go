@@ -43,7 +43,7 @@ func CreateTemplate() http.HandlerFunc {
 
 // Prepare the necessary Data for the items-list-rows
 func getTemplateData(r *http.Request, db ItemDatabase, w http.ResponseWriter) common.Data {
-	data := common.InitData(r)
+	data := common.InitData(r, true)
 
 	count, err := db.ItemListCounter(data.GetSearchInputValue())
 	if err != nil {
@@ -101,7 +101,7 @@ func DetailsTemplate(db ItemDatabase) http.HandlerFunc {
 
 		errMsgForUser := "the requested Item doesn't exist"
 
-		data := common.InitData2(r)
+		data := common.InitData(r, false)
 		data.SetEnvDevelopment(env.Development())
 		id := server.ValidID(w, r, errMsgForUser)
 		if id.IsNil() {

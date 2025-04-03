@@ -10,7 +10,7 @@ import (
 
 // Prepare the necessary Data for the Shelf-list-rows
 func getTemplateData(r *http.Request, db ShelfDB, w http.ResponseWriter) common.Data {
-	data := common.InitData(r)
+	data := common.InitData(r, true)
 
 	count, err := db.ShelfListCounter(data.GetSearchInputValue())
 	if err != nil {
