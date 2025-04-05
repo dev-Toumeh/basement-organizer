@@ -1,0 +1,33 @@
+{{ define "shelves-page" }}
+{{ template "open-html-tag" .}}
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    {{ template "shelves-page-content" . }}
+    {{ template "shelves-js" .}}
+</body>
+{{ template "close-html-tag" .}}
+{{ end }}
+
+{{ define "shelves-page-content" }}
+  <h1>Shelf list</h1>
+  <button hx-post="/shelf/create" 
+          hx-target="body"
+          hx-swap="outerHTML"
+          hx-push-url="true">
+          Create Shelf
+  </button>
+
+  {{ template "list" . }}
+{{ end }}
+
+{{ define "shelves-js" }}
+    <script>
+    </script>
+{{end}}
+
+
+
+
+

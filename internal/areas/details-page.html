@@ -1,0 +1,117 @@
+{{ define "area-details-page" }}
+{{ template "open-html-tag" . }} 
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    <div class="scrollable-content">
+        <h1>area details</h1>
+        {{ if .NotFound }}
+            <p>area "{{.ID}}" doesn't exist.</p>
+            <br>
+            <p style="text-align: center">:^(</p>
+        {{ else }}
+            {{ template "area-details" . }}
+            <h2>items</h2>
+            {{ template "list" .InnerItemsList }}
+            <h2>boxes</h2>
+            {{ template "list" .InnerBoxesList }}
+            <h2>shelves</h2>
+            {{ template "list" .InnerShelvesList }}
+            <div id="place-holder"></div>
+        {{ end }}
+     </div>
+</body>
+{{ template "close-html-tag" . }}
+{{end}} 
+
+
+{{ define "area-details" }}
+<form id="area-{{.ID}}"
+    class="container"
+    hx-encoding="multipart/form-data">
+    <div class="info-container">
+        <div class="detail-info">
+            <label for="id">ID:</label>
+            <input name="id" type="text" value="{{.ID}}" readonly>
+
+            <label for="label">Label:</label>
+            <input name="label" type="text" value="{{.Label}}" {{ if not (or .Edit .Create) }}disabled{{end}}>
+
+            <label for="description">Description:</label>
+            <input name="description" type="text" value="{{.Description}}" {{ if not (or .Edit .Create)}}disabled{{end}}>
+
+            <label for="qrcode">QRCode:</label>
+            <input type="text" id="qrcode" name="qrcode" value="{{ .QRCode }}" {{ if not (or .Edit .Create)}}disabled{{end}}>
+            <br>
+        </div>
+
+        {{ $imagePreview := map "ID" .ID "Label" .Label "Edit" .Edit "Create" .Create "Picture" .Picture }}
+        {{ template "details-image-preview" $imagePreview.Map }}
+    </div>  
+
+
+{{ if .EnvDevelopment }}
+<button hx-get="/api/v1/area/{{.ID}}"
+    hx-target="next p" 
+    hx-on:click="document.getElementById('area-api-dev-info').style.display=''"
+    class="dev"
+    type="button"
+>area API info</button>
+
+<div id="area-api-dev-info" 
+    style="outline:solid;font-size:0.7rem;display:none" 
+    class="background-diagonal-stripes">
+
+    <button type="button"
+        hx-on:click="this.parentElement.style.display='none'"
+        class="dev"
+    >close API info</button>
+
+    <div>Development info</div>
+    <div>API data: /api/v1/area/{{.ID}}</div>
+    <p style="overflow:scroll"></p>
+    <div>preview picture
+        <img class="detail" src="data:image/png;base64,{{ .PreviewPicture }}">
+    </div>
+</div>
+{{ end }}
+
+
+{{ if .Create }}
+<button hx-post="/area/create" 
+    >Create area</button>
+<button hx-get="/areas" 
+    hx-target="body"
+    hx-push-url="true"
+>back</button>
+{{ else if .Edit }}
+<button hx-put="/area/{{.ID}}" 
+    hx-select="#area-{{.ID}}"
+    hx-target="#area-{{.ID}}"
+    hx-swap="outerHTML"
+>Update area</button>
+<button hx-get="/area/{{.ID}}"
+    hx-select="#area-{{.ID}}"
+    hx-target="#area-{{.ID}}"
+    hx-swap="outerHTML"
+>cancel</button>
+{{ else }}
+<button hx-get="/area/{{.ID}}?edit=true"
+    hx-select="#area-{{.ID}}"
+    hx-target="#area-{{.ID}}"
+    hx-swap="outerHTML"
+>edit</button>
+{{ end }}
+
+{{ if not .Create }}
+<button hx-delete="/area/{{.ID}}" 
+    hx-swap="outerHTML"
+    hx-select="#area-{{.ID}}"
+    hx-target="#area-{{.ID}}"
+    hx-confirm="Are you sure?"
+>delete</button>
+{{ end }}
+
+</form>
+{{end}}

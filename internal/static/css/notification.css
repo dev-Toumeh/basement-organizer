@@ -1,0 +1,103 @@
+div#notification-container {
+  max-width: 50vw;
+  position: fixed;
+  right: 0.1rem;
+}
+
+div.notification {
+  min-width: 50%;
+  text-align: center;
+  background-color: #3a6fff;
+  color: #fff;
+  border-radius: 0.4rem;
+  padding: 0.1rem;
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.2s ease;
+  opacity: 0;
+  margin-bottom: 0.1rem;
+  border-bottom: outset;
+  white-space: pre-line;
+
+  /* for animation */
+  /*visibility: hidden; /* Hidden by default. Visible on click */
+}
+
+div.notification.warning {
+  background-color: yellow;
+  color: #000;
+}
+
+div.notification.error {
+  background-color: red;
+  color: #fff;
+}
+
+div.notification.success {
+  background-color: green;
+  color: #fff;
+}
+
+div.notification.noshow {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+div.notification.show {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+
+  /* for animation */
+  /*visibility: visible;*/
+  /*-webkit-animation: fadein 0.2s, fadeout 0.2s 2s;*/
+  /*animation: fadein 0.2s, fadeout 0.2s 2s;*/
+}
+
+/* Animations to fade the notification in and out */
+@-webkit-keyframes fadein {
+  from {
+    bottom: 0;
+    opacity: 0;
+  }
+
+  to {
+    bottom: 30px;
+    opacity: 1;
+  }
+}
+
+@keyframes fadein {
+  from {
+    bottom: 0;
+    opacity: 0;
+  }
+
+  to {
+    bottom: 30px;
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes fadeout {
+  from {
+    bottom: 30px;
+    opacity: 1;
+  }
+
+  to {
+    bottom: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes fadeout {
+  from {
+    bottom: 30px;
+    opacity: 1;
+  }
+
+  to {
+    bottom: 0;
+    opacity: 0;
+  }
+}

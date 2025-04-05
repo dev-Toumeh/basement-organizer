@@ -1,0 +1,61 @@
+{{ define "item-create-template" }}
+{{ template "open-html-tag" .}}
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    {{ template "item-create" . }}
+</body>
+{{ template "close-html-tag" .}}
+{{ end }}
+
+
+{{ define "item-create" }}
+
+<h1>Add new Item</h1>
+<form id="item-create"
+    class="container"
+    hx-encoding="multipart/form-data"
+    hx-post="/api/v1/create/item"
+    hx-target="body"
+    hx-swap="innerHTML">
+    <div class="info-container">
+        <div class="detail-info">
+            <input type="hidden" name="id" value="{{ .ID }}">
+
+            <label for="label">Label:</label>
+            <input name="label" type="text" value="{{ .Label }}">
+
+            <label for="description">Description:</label>
+            <input name="description" type="text" value="{{ .Description }}">
+
+            <label for="height">Quantity:</label>
+            <input name="height" type="number" step="any" value="{{ printf "%.2f" .Height }}">
+
+            <label for="width">Weight:</label>
+            <input name="width" type="number" step="any" value="{{ printf "%.2f" .Width }}">
+
+            <label for="qrcode">QRCode:</label>
+            <input type="text" id="qrcode" name="qrcode" value="{{ .QRCode }}">
+
+            {{ $addToInputsData := map "Item" true "BoxID" .BoxID "BoxLabel" .BoxLabel "ShelfID" .ShelfID
+               "ShelfLabel" .ShelfLabel "AreaID" .AreaID "AreaLabel" .AreaLabel "Edit" true }}
+            {{ template "details-additional-inputs" $addToInputsData.Map }}
+        </div>
+
+        <div id="image-preview-{{ .ID }}" class="detail-picture">
+            {{ if .Picture }}
+            <label for="picture">Picture:</label>
+            <img class="detail" src="data:image/png;base64,{{ .Picture }}" alt="{{ .Label }}">
+            {{ else }}
+            <p>No image available</p>
+            {{ end }}
+            <input type="file" id="picture-{{ .ID }}" name="picture" accept="image/*" >
+        </div>
+    </div>
+
+    <button type="submit">Create</button>
+    <button type="button" onclick="window.history.back();">Cancel</button>
+</form>
+<div id="place-holder"></div>
+{{ end }}

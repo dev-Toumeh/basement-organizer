@@ -1,0 +1,13 @@
+{{ define "oob-notification" }} 
+<div 
+    id="notification-container"
+    hx-swap-oob="beforeend"
+>
+    <!--This notification will load inside id="notification-container" no matter what target was set-->
+    <div id="notification-{{.NotificationId}}"
+        class="notification noshow {{.Type}}"
+        hx-on::load="showNotification('notification-{{.NotificationId}}', {{.Duration}})"
+    ><p>{{.Message}}</p></div>
+</div>
+{{end}}
+

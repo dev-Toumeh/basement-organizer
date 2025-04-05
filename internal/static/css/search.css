@@ -1,0 +1,39 @@
+#search-item-form {
+  border: 3px solid black;
+  padding: 10px;
+  height: 55%;
+}
+
+#search-item-form> :first-child {
+  display: block;
+}
+
+#search-item-form input[type="text"] {
+  width: 100%;
+  margin-top: 20px;
+  padding: 10px;
+  text-align: center;
+}
+
+.item-list {
+  width: 100%;
+  border: solid;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+.item-list th {
+  background: cadetblue;
+  text-align: left;
+  border: 1px solid black;
+  overflow: hidden;
+}
+
+.item-list td {
+  overflow: hidden;
+  border: 1px solid black;
+}
+
+.item-list tr:hover {
+  background: #e4e4e4;
+}

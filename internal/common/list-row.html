@@ -1,0 +1,62 @@
+{{ define "list-row" }}
+    {{ $empty := false }}
+    {{ if eq .ID.String "00000000-0000-0000-0000-000000000000" }} {{ $empty = true }} {{ end }}
+
+
+    {{ if $empty }}
+        <tr id="list-row-{{.ID}}">
+            <td colspan="7" style="text-align:center">
+                <span class="empty">empty<img class="preview" style="opacity:0"></span>
+            </td>  
+        </tr>
+    {{ else }}
+        <tr id="list-row-{{.ID}}">
+            <td hx-get="{{.RowHXGet}}/{{.ID}}"
+                    hx-push-url="true"
+                    hx-target="body"
+                    class="clickable"
+                >{{.Label}}</td>
+            <td>{{.BoxLabel}}</td> 
+            <td>{{.ShelfLabel}}</td>
+            <td>{{.AreaLabel}}</td>
+            <td style="text-align: center;">
+                <img class="preview" 
+                    src="data:image/png;base64,{{.PreviewPicture}}" 
+                    {{if .PreviewPicture}}alt="{{.Label}}"{{end}}
+                >
+            </td>
+            {{ if not .RowAction}}
+                {{ if not .HideMoveCol }}
+                <td style="text-align: center;">
+                    <label for="move:{{.ID}}"></label>
+                    <input id="move:{{.ID}}" type="checkbox" name="move:{{.ID}}"></td>
+                {{ end }}
+            <td style="text-align: center;">
+                <label for="delete:{{.ID}}"></label>
+                <input id="delete:{{.ID}}" type="checkbox" name="delete:{{.ID}}"></td>
+            {{ else }}
+            <td style="text-align: center;">
+                <!--hidden inputs with "name=id-to-be-moved" are generated in box-list template
+                    inside div<id="additional-data-container"> to track IDs that were selected to be moved -->
+                <button 
+                    {{ if .RowActionHXPostWithID }}
+                        hx-post="{{ .RowActionHXPostWithID }}/{{.ID}}"
+                    {{ else if .RowActionHXPostWithIDAsQueryParam }}
+                        hx-post="{{ .RowActionHXPostWithIDAsQueryParam }}?id={{.ID}}"
+                    {{ else }}
+                        hx-post="{{ .RowActionHXPost }}"
+                    {{ end }}
+                    hx-include="#additional-data-container"
+                    hx-push-url="false"
+                    {{ if .RowActionHXTarget }}
+                        hx-target="{{.RowActionHXTarget}}"
+                        hx-swap="innerHTML"
+                    {{ else }}
+                        hx-swap="none"
+                    {{ end }}
+                >{{ .RowActionName }}</button>
+            </td>
+            {{ end }}
+        </tr>
+    {{ end }}
+{{ end }}

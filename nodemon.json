@@ -1,0 +1,16 @@
+{
+  "restartable": "rs",
+  "ignore": [
+    ".git",
+    "node_modules/**/node_modules",
+    "internal/templates/constants.go",
+    "internal/static/js/htmx.min.js"
+  ],
+  "verbose": false,
+  "exec": "go run -tags dev .",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "ext": "go html js css json",
+  "signal": "SIGKILL"
+}

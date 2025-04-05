@@ -1,0 +1,64 @@
+{{ define "page" }}
+{{ template "open-html-tag" . }} 
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    <div class="scrollable-content">
+        {{ template "page-content" . }}
+    </div>
+</body>
+{{ template "close-html-tag" . }}
+{{end}} 
+
+{{ define "open-html-tag" }}<!DOCTYPE html><html lang="en">{{ end }}
+{{ define "close-html-tag" }}</html>{{ end }}
+
+{{ define "script" }}
+<!--HTMX from local sources-->
+<script src="/static/js/htmx.min.js"></script>
+<script src="/static/js/custom-functions.js"></script>
+<script src="/static/js/picture.js"></script>
+{{end}}
+
+{{ define "head" }}
+<head>
+    <title>{{ with .Title}}{{.}}{{else}}no title{{end}}</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {{ template "script" . }}
+    <link rel="stylesheet" href="/static/css/layout.css" />
+    <link rel="manifest" href="/static/manifest.json" />
+    <link
+        rel="icon"
+        href="/static/basement-organizer-icon512.png"
+        type="image/png"
+    />
+    {{ block "head-extras" . }}{{end}}
+    {{ block "style" . }}{{end}}
+</head>
+{{ end }}
+
+{{ define "default-style" }}<style></style>{{end}} 
+
+{{ define "notification-container" }}
+<div id="notification-container"></div>
+{{ end }}
+
+{{ define "page-content"  }}
+    {{ .PageText }}
+{{end}}
+
+{{ define "oob-notification" }} 
+<div 
+    id="notification-container"
+    hx-swap-oob="beforeend"
+>
+    <!--This notification will load inside id="notification-container" no matter what target was set-->
+    <div id="notification-{{.NotificationId}}"
+        class="notification noshow {{.Type}}"
+        hx-on::load="showNotification('notification-{{.NotificationId}}', {{.Duration}})"
+    >{{.Message}}</div>
+</div>
+{{end}}
+

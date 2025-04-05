@@ -1,0 +1,32 @@
+{{ define "auth-page" }}
+{{ template "open-html-tag" .}}
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    {{ template "auth-page-body" . }}
+</body>
+{{ template "close-html-tag" .}}
+{{ end }}
+
+{{ define "auth-page-body" }}
+<div id="main-container">
+  <div>
+    <button
+        id="login-btn"
+        type="button"
+        hx-get="/login-form" 
+        hx-target="#main-container" 
+    >Login</button>
+    <label for="#login-btn"></label>
+
+    <button
+        id="register-btn"
+        type="button"
+        hx-get="/register-form" 
+        hx-target="#main-container" 
+    >Register</button>
+    <label for="#register-btn"></label>
+  </div>
+</div>
+{{end}}

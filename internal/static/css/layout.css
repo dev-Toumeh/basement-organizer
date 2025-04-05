@@ -1,0 +1,240 @@
+/* @TODO: Import into project to not depend on internet access or Google provider. */
+/*@import url("https://fonts.googleapis.com/css2?family=Roboto&Display=swap"); */
+@import url("navbar.css");
+@import url("containers.css");
+@import url("menu.css");
+@import url("elements.css");
+@import url("form.css");
+@import url("notification.css");
+@import url("search.css");
+
+html {
+  /*scrollbar-gutter: stable;*/
+  /*scroll-behavior: smooth;*/
+  height: -webkit-fill-available;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  /*font-size: 2.8rem;*/
+  background-color: #faf0e6;
+  /*height: 5000px;*/
+  padding-top: var(--navbar-height);  /* room for fixed navbar */
+  display: flex;
+  flex-direction: column;
+  height: -webkit-fill-available;
+  margin: auto;
+}
+
+img {
+  width: 10rem;
+  height: 10rem;
+  object-fit: contain;
+}
+
+img.preview {
+  width: 1rem;
+  height: 1rem;
+  overflow: hidden;
+}
+
+img.detail {
+  min-width: 5rem;
+  min-height: 5rem;
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
+/*td[hx-get]:hover {*/
+/*  cursor: pointer;*/
+/*  background: #c0c0c0;*/
+/*  color: blue;*/
+/*  font-weight: bold;*/
+/*}*/
+
+input[readonly] {
+  background: transparent;
+  border-color: #00000038;
+  border-width: thin;
+}
+
+.flex-horizontal {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.lds-dual-ring,
+.lds-dual-ring:after {
+  box-sizing: border-box;
+}
+
+.lds-dual-ring {
+  display: inline-block;
+  height: 0.9rem;
+  width: 0.9rem;
+}
+
+.lds-dual-ring:after {
+  content: " ";
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0px;
+  border-radius: 90%;
+  border: 1.4px solid currentColor;
+  border-color: currentColor transparent currentColor transparent;
+  animation: lds-dual-ring 1.2s linear infinite;
+}
+
+@keyframes lds-dual-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.scrollable-content {
+  scrollbar-gutter: stable;
+  overflow: overlay;
+}
+
+.container {
+  background: aliceblue;
+  border: solid;
+}
+
+button,
+input[type="submit"] {
+  padding: 7px 12px;
+  background-color: var(--base);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.clickable:hover {
+  filter: brightness(110%);
+  cursor: pointer;
+  /*background: #c0c0c0;*/
+  color: blue;
+}
+
+button.dev,
+input[type="submit"].dev {
+  background-color: var(--dev-item-color);
+}
+
+/**[hx-get]:hover,*/
+/**[hx-post]:hover,*/
+/**[hx-put]:hover,*/
+/**[hx-delete]:hover {*/
+/*  cursor: pointer;*/
+/*  color: blue;*/
+/*}*/
+  /*font-weight: bold;*/
+  /*background: #c0c0c0;*/
+
+/**[attribute^="hx"]:hover {*/
+/*  cursor: pointer;*/
+/*  background: #c0c0c0;*/
+/*  color: blue;*/
+/*  font-weight: bold;*/
+/*}*/
+
+button:hover,
+input[type=submit]:hover {
+  filter: brightness(110%);
+}
+
+button:active,
+input[type=submit]:active {
+  filter: brightness(90%);
+}
+
+/*button:hover {*/
+/*  background-color: var(--base-lighter);*/
+/*}*/
+
+/*button:active,*/
+/*input[type=submit]:active { */
+/*  background-color: var(--base-darker);*/
+/*}*/
+
+button.selected,
+input[type=submit].selected {
+  background-color: var(--selected);
+}
+
+/*button.selected:hover {*/
+/*  background-color: var(--selected-lighter);*/
+/*}*/
+
+/**:not(body):not(html):hover:not(:has(:hover)) {*/
+/*  filter: brightness(110%);*/
+/*}*/
+
+/**:not(body):not(html):active:not(:has(:active)) {*/
+/*  filter: brightness(90%);*/
+/*}*/
+
+
+button:disabled,
+input[type=submit]:disabled {
+  background-color: #99B3B3;
+  cursor: not-allowed;
+  filter: brightness(100%);
+}
+
+#pagination {
+  /*margin-top: auto;*/
+  /*position: sticky;*/
+  /*bottom: 0;*/
+}
+
+/*unicode zero width space character*/
+.empty::before {
+  content: "\200b";
+}
+
+.highlight-nav {
+  outline-style: auto;
+}
+
+.outline {
+    outline: 1px #000 dashed;
+}
+
+:root {
+  --lighter: 10%;
+  --darker: -10%;
+
+  /* #008080 */
+  --base-hue: 180;
+  --base-saturation: 100%;
+  --base-lightness: 25%;
+
+  --base: hsl(var(--base-hue), var(--base-saturation), var(--base-lightness));
+  --base-lighter: hsl(var(--base-hue), var(--base-saturation), calc(var(--base-lightness) + var(--lighter)));
+  --base-darker: hsl(var(--base-hue), var(--base-saturation), calc(var(--base-lightness) + var(--darker)));
+
+  /* #ffa600 */
+  --selected-hue: 39;
+  --selected-lightness: 50%;
+
+  --selected: hsl(var(--selected-hue), var(--base-saturation), var(--selected-lightness));
+  --selected-lighter: hsl(var(--selected-hue), var(--base-saturation), calc(var(--selected-lightness) + var(--lighter)));
+  --selected-darker: hsl(var(--selected-hue), var(--base-saturation), calc(var(--selected-lightness) + var(--darker)));
+
+  --dev-item-color: #e65c00;
+}
+
+
+/*diagonal stripes*/
+.background-diagonal-stripes {
+  background: repeating-linear-gradient(-45deg, #ffffff00, #ffffff00 13px, #c0c0c075 13px, #c0c0c075 15px);
+}

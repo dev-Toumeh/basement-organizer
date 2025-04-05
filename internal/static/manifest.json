@@ -1,0 +1,13 @@
+{
+  "name": "Basement Organizer",
+  "icons": [
+    {
+      "src": "basement-organizer-icon512.png",
+      "type": "image/png",
+      "sizes": "512x512 192x192"
+    }
+  ],
+  "start_url":"/",
+  "display":"minimal-ui",
+  "prefer-related-application":false
+}

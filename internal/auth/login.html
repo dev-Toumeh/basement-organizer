@@ -1,0 +1,35 @@
+{{ define "login-page" }}
+{{ template "open-html-tag" . }}
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    {{ template "login-form" . }}
+</body>
+{{ template "close-html-tag" . }}
+{{end}}
+
+{{ define "login-form" }}
+<form id="form">
+    <label for="username">Username:</label>
+    <input 
+        {{ if .Authenticated }}disabled{{ end }}
+        type="text"
+        id="username"
+        name="username"
+        required>
+    <label for="password">Password:</label>
+    <input 
+        {{ if .Authenticated }}disabled{{ end }}
+        type="password" id="password" name="password" required>
+    <div>
+        <button 
+            hx-post="login"
+            hx-disabled-elt="this"
+            hx-target="this"
+            {{ if .Authenticated }}disabled{{ end }}
+        >Login</button>
+            <!--hx-indicator="#loadingIndicator"-->
+</form>
+<label id="responseLabel"></label>
+{{ end }}

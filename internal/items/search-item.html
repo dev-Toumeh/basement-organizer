@@ -1,0 +1,44 @@
+{{define "search-item-form"}}
+<div id="level-one" style="display: block;">
+    <form id="search-item-form" >
+        <label for="search">search Items</label>
+        <input type="text"
+               hx-post="/api/v1/search/item"
+               hx-trigger="focus, keyup changed delay:500ms"
+               hx-target="#item-list-body"
+               hx-on:keyup="document.getElementById('pagination').innerHTML = '';"
+               name="query">
+        <table class="item-list">
+            <thead>
+                <tr>
+                    <th>Label</th>
+                    <th>Box</th>
+                    <th>Shelf</th>
+                    <th>Area</th>
+                    <th style="width: 10%">Image</th>
+                    <th style="width: 10%">Move</th>
+                    <th style="width: 10%">Delete</th>
+                </tr>
+            </thead>
+            <tbody id="item-list-body">
+            </tbody>
+        </table>
+        <button type="submit"
+                hx-post="/delete-item"
+                hx-swap="none">
+                Delete
+        </button>
+        <button type="submit"
+                hx-swap="innerHTML"
+                hx-target="#level-two"
+                hx-post="/move-item"
+                onclick="handleMoveItems()">
+                Move
+        </button>
+    </form>
+</div>
+    <div id="level-two" style="display: none;"></div>
+    <div id="level-three" style="display: none;"></div>
+    <div id="pagination"></div>
+{{end}}
+

@@ -1,0 +1,22 @@
+{{ define "item-list-units" }}
+    {{ range .Records }}
+        <tr id="item-list-unit-{{.ID}}"> 
+            <td hx-get="/api/v1/read/item/{{.ID}}" 
+                hx-target="#level-two"
+                hx-swap="innerHTML"
+                onclick="htmx.trigger(this, 'htmx:load')"> 
+                {{.Label}}
+            </td>
+            <td>{{.BoxLabel}}</td> 
+            <td>{{.ShelfLabel}}</td>
+            <td>{{.AreaLabel}}</td>
+            <td style="text-align: center;">
+                <img class="preview" 
+                    src="data:image/png;base64,{{.PreviewPicture}}" 
+                    alt="{{.Label}} image preview">
+            </td>
+            <td style="text-align: center;"><input class="move-checkbox" type="checkbox" name="{{.ID}}"></td>
+            <td style="text-align: center;"><input class="delete-checkbox" type="checkbox" name="{{.ID}}"></td>
+        </tr>
+    {{ end }}
+{{end}}

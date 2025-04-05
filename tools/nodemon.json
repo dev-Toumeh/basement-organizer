@@ -1,0 +1,15 @@
+{
+  "restartable": "rs",
+  "watch": [
+    "../internal/templates/**",
+    "./template_constants_generator.go"
+  ],
+  "ignore": [
+    "../internal/templates/constants.go",
+    "../internal/static/htmx.js"
+  ],
+  "verbose": false,
+  "exec": "go run template_constants_generator.go",
+  "ext": "html go",
+  "signal": "SIGKILL"
+}

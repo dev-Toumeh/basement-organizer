@@ -1,0 +1,124 @@
+{{ define "items-page" }}
+{{ template "open-html-tag" .}}
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    {{ template "items-page-content" . }}
+    {{ template "items-js" . }}
+</body>
+{{ template "close-html-tag" . }}
+{{ end }}
+
+{{ define "items-page-content" }}
+
+<div id="main-container">
+    <div class="section-up">
+        <div class="quarter"> </div>
+        <div class="three-quarters">
+          {{ template "notification-container" . }}
+        </div>
+    </div>
+    <div class="section-down">
+        <div class="quarter">
+        <ul>
+            <li>
+                <button
+                    class="menu-button"
+                    hx-get="/template/item-search"
+                    type="button"
+                    hx-swap="innerHTML"
+                    hx-push-url="false"
+                    hx-target=".target">
+                    Search Items
+                </button>
+                <button 
+                    class="menu-button"
+                    hx-get="/template/item-form" 
+                    type="button"
+                    hx-swap="innerHTML"
+                    hx-target=".target"
+                    hx-push-url="false">
+                    Add new Item
+                </button>
+                <button 
+                    class="menu-button"
+                    hx-post="/template/item-dummy" 
+                    type="button"
+                    hx-swap="none"
+                    hx-target="this"
+                    hx-push-url="false">
+                    Add dummy Items
+                </button>
+            </li>
+        </ul>
+        </div>
+        <div class="three-quarters target">
+           {{ template "search-item-form" .}}
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{ define "items-js" }}
+    <script>
+        // responsible of deleting the checked Items
+        document.body.addEventListener('htmx:afterOnLoad', function(event) {
+            handleDeleteRows(event);
+        });
+        
+        function handleDeleteRows(event) {
+            if (event.detail.successful) {
+                const checkedCheckboxes = document.querySelectorAll('input.delete-checkbox:checked');
+                checkedCheckboxes.forEach(checkbox => {
+                    const rowToDelete = checkbox.closest('tr');
+                    if (rowToDelete) {
+                        rowToDelete.remove();
+                    }
+                });
+            } else {
+                console.error('Deletion failed:', event.detail);
+            }
+        }
+
+        // responsible of keeping the button color fixed after click
+        if (typeof buttons == 'undefined') {
+          const buttons = document.querySelectorAll('.menu-button');
+
+          buttons.forEach(button => {
+            button.addEventListener('click', () => {
+              if (!button.classList.contains('clicked')) {
+                buttons.forEach(btn => btn.classList.remove('clicked'));
+                button.classList.add('clicked');
+              }
+            });
+          });
+        }
+
+        // responsible of switching between search-form and the clicked item display/hide
+        function showForm() {
+            document.getElementById('level-one').style.display = 'block';
+            document.getElementById('pagination').style.display = 'block';
+            document.getElementById('level-two').style.display = 'none';
+        }
+
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            if (event.detail.target.id === 'level-two') {
+                document.getElementById('level-one').style.display = 'none';
+                document.getElementById('pagination').style.display = 'none';
+                document.getElementById('level-two').style.display = 'block';
+            }
+        });
+
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            if (event.detail.target.id === 'level-two') {
+                document.getElementById('level-one').style.display = 'none';
+                document.getElementById('pagination').style.display = 'none';
+                document.getElementById('level-two').style.display = 'block';
+            }
+        });
+    </script>
+{{end}}
+
+
+

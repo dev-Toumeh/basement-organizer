@@ -1,0 +1,72 @@
+{{ define "personal-page" }}
+{{ template "open-html-tag" . }}
+{{ template "head" . }}
+<body>
+  <div class="page">
+    {{ template "statusbar" . }}
+    {{ template "personal-page-body" . }}
+  </div>
+</body>
+{{ template "close-html-tag" . }}
+{{end}}
+
+{{ define "personal-page-body" }}
+<div id="main-container">
+    <div>
+        <div>Welcome to {{ with .Title }}{{ . }}{{ end }} Page </div>
+        <div> Hello {{ with .User }}{{ . }}{{ end }}, how is things going? </div>
+    </div>
+    <ul>
+        <li>
+            <button 
+                id="login-btn"
+                type="button"
+                hx-get="/api/v1/create/item" 
+                hx-swap="outerHTML" 
+                hx-target="body" 
+                hx-push-url="false"
+            >Add new Item</button>
+            <label for="login-btn"></label>
+        </li>
+        <li>
+          <form 
+              hx-delete="/api/v1/delete/item"
+              id="form-item"
+              hx-on::after-request="this.reset()"
+              hx-target="#item-container"
+              hx-include="[name='id']">
+              <label for="id">Delete By ID</label>
+              <input type="text" name="id">
+              <button type="submit">Delete</button>
+          </form>
+        </li>
+        <li>
+          <form 
+              hx-get="/item"
+              id="form-item"
+              hx-target="#item-container">
+              <label for="id">Search ID</label>
+              <input type="text" name="id">
+              <button type="submit">Get</button>
+          </form>
+        </li>
+        <li>
+          <form 
+              hx-get="/items-ids"
+              id="form-items"
+              hx-target="#item-container">
+              <label for="id">Search Query</label>
+              <input type="text" name="query" value="id">
+              <button type="submit">Get</button>
+          </form>
+        </li>
+        <li>
+          <div id="item-container"></div>
+        </li>
+        <li>
+          <div class="update-placeholder"></div>
+        </li>
+    </ul>
+</div>
+{{end}}
+

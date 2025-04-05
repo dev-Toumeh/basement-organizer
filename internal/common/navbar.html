@@ -1,0 +1,31 @@
+{{ define "navbar" }}
+<header class="header">
+    <div class="header_content" hx-boost="true" hx-history="restore" hx-push-url="true">
+        <nav class="nav">
+            <ul class="nav_list">
+                {{if .Authenticated }}
+                    <li class="nav_item"><a class="nav_link {{if eq .RequestOrigin "Items"}}highlight-nav{{end}}" href="/items">Items</a></li>
+                    <li class="nav_item"><a class="nav_link {{if eq .RequestOrigin "Boxes"}}highlight-nav{{end}}" href="/boxes">Boxes</a></li>
+                    <li class="nav_item"><a class="nav_link {{if eq .RequestOrigin "Shelves"}}highlight-nav{{end}}" href="/shelves">Shelves</a></li>
+                    <li class="nav_item"><a class="nav_link {{if eq .RequestOrigin "Areas"}}highlight-nav{{end}}" href="/areas">Areas</a></li>
+                    {{ if .EnvDevelopment }}
+                        <li class="nav_item">
+                            <a class="nav_link dev {{if eq .RequestOrigin "Samples"}}highlight-nav{{end}}" href="/sample-page" hx-swap="innerHTML show:html:top" >Samples</a>
+                        </li>
+                        <li class="nav_item">
+                            <a class="nav_link {{if eq .RequestOrigin "Settings"}}highlight-nav{{end}}" href="/settings">
+                                <span class="icon-settings"></span>
+                            </a>
+                        </li>
+                    {{ end }}
+                {{end}}
+            </ul>
+        </nav>
+        <div class="hamburger">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+    </div>
+</header>
+{{end}}

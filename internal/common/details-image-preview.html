@@ -1,0 +1,23 @@
+{{ define "details-image-preview" }}
+<div id="image-preview-{{ .ID }}" class="detail-picture">
+    {{ if .Picture }}
+        <label id="picture-label" for="picture">Picture:</label>
+        <div class="image-container detail">
+            <img id="picture-img" class="detail" src="data:image/png;base64,{{ .Picture }}" alt="{{ .Label }}">
+            <div id="image-overlay" class=""></div>
+        </div>
+    {{ else }}
+        <p>No image available</p>
+    {{ end }}
+        <input {{if and (not .Edit) (not .Create) }}disabled{{end}}
+            hx-on:change="HandleUpdatePicture(this, event, 'update-picture')"
+            type="file" id="picture-{{ .ID }}" name="picture" accept="image/*"
+            >
+        <input {{if and (not .Edit) (not .Create) }}disabled{{end}}
+            id="update-picture" type="checkbox" name="updatepicture" hidden>
+        <button {{if not .Edit }}disabled{{end}}
+            id="remove-picture-button" hx-on:click="RemovePicture(this, event, 'picture-{{ .ID }}')"
+            type="button"
+        >remove picture</button>
+</div>
+{{ end }}

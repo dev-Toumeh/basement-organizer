@@ -1,0 +1,84 @@
+{{ define "settings-page" }}
+{{ template "open-html-tag" . }} 
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    <div class="scrollable-content">
+    {{ template "settings-page-content" . }}
+    </div>
+    {{ template "extra-js" .}}
+</body>
+{{ template "close-html-tag" . }}
+{{end}} 
+
+{{ define "default-style" }}<style></style>{{end}} 
+
+{{ define "settings-page-content"}}
+
+<div id="main-container">
+    <div class="section-up">
+        <div class="quarter">
+           <div id="welcome">{{.User}}</div>
+        </div>
+        <div class="three-quarters">
+          {{ template "notification-container" . }}
+        </div>
+    </div> 
+    <div class="section-down">
+        <div class="quarter">
+            <ul id="settings-ul">
+                <li>
+                    <button
+                        class="menu-button"
+                        type="button"
+                        hx-get="/logout"
+                        hx-target="this">
+                        <span>Logout</span>
+                  </button>
+                </li>
+                    <button
+                        class="menu-button"
+                        hx-get="/update"
+                        type="button"
+                        hx-swap="innerHTML"
+                        hx-push-url="false"
+                        hx-target=".target">
+                        <span>Update Login Data</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="three-quarters target">
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{ define "extra-js" }}
+<script>
+    if (typeof navEl == 'undefined') { 
+     const navEl = document.querySelector(".nav");
+     const hamburgerEl = document.querySelector(".hamburger");
+
+      if (hamburgerEl) {
+        hamburgerEl.addEventListener("click", () => {
+          navEl.classList.toggle("nav--open");
+          hamburgerEl.classList.toggle("hamburger--open");
+        });
+      }
+    }
+
+if (typeof buttons == 'undefined') {
+  const buttons = document.querySelectorAll('.menu-button');
+
+  buttons.forEach(button => {
+    button.addEventListener('click', () => {
+      if (!button.classList.contains('clicked')) { // Check if already clicked
+        buttons.forEach(btn => btn.classList.remove('clicked'));
+        button.classList.add('clicked');
+      }
+    });
+  });
+}
+</script>
+{{end}}
