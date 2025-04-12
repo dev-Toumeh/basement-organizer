@@ -19,22 +19,6 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
-func Handle(route string, handler http.HandlerFunc) {
-	http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-		msg := ""
-		msg = fmt.Sprintf(`%s "%s" http://%s%s%s`, r.Method, route, r.URL.Scheme, r.Host, r.URL)
-		colorMsg := fmt.Sprintf("%s%s%s", logg.Yellow, msg, logg.Reset)
-		logg.Debug(colorMsg)
-		if r.Method == http.MethodPost {
-			// @TODO: Fix. Breaks some post requests because r.ParseForm is empty after this.
-			// r.ParseForm()
-			// colorMsg := fmt.Sprintf("%sPostFormValue: %v%s", logg.Yellow, r.PostForm, logg.Reset)
-			// logg.Debug(colorMsg)
-		}
-		handler.ServeHTTP(w, r)
-	})
-}
-
 func RegisterRoutes(db *database.DB) {
 	common.RegisterDBInstance(db)
 	staticRoutes()
@@ -52,9 +36,9 @@ func RegisterRoutes(db *database.DB) {
 }
 
 func staticRoutes() {
+	HandlePublic("/", Handle404NotFoundPage)
+	HandlePublic("/auth", AuthHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
-	Handle("/", common.Handle404NotFoundPage)
-	Handle("/auth", AuthPage)
 }
 
 func navigationRoutes() {
@@ -64,14 +48,15 @@ func navigationRoutes() {
 }
 
 func authRoutes(db auth.AuthDatabase) {
-	Handle("/login", auth.LoginHandler(db))
-	Handle("/login-form", auth.LoginForm)
-	Handle("/register", auth.RegisterHandler(db))
-	Handle("/register-form", func(w http.ResponseWriter, r *http.Request) {
+	HandlePublic("/login", auth.LoginHandler(db))
+	HandlePublic("/register", auth.RegisterHandler(db))
+	Handle("/logout", auth.LogoutHandler)
+	Handle("/update", auth.UpdateHandler(db))
+
+	HandlePublic("/login-form", auth.LoginForm)
+	HandlePublic("/register-form", func(w http.ResponseWriter, r *http.Request) {
 		server.MustRender(w, r, templates.TEMPLATE_REGISTER_FORM, nil)
 	})
-	Handle("/update", auth.UpdateHandler(db))
-	Handle("/logout", auth.LogoutHandler)
 }
 
 func itemsRoutes(db items.ItemDatabase) {
@@ -115,9 +100,9 @@ func itemsRoutes2(db items.ItemDatabase) {
 	})
 
 	// API's
-	http.Handle("/api/v1/create/item", items.ItemHandler(db))
-	http.Handle("/api/v1/update/item", items.ItemHandler(db))
-	http.Handle("/api/v1/delete/item/{id}", items.ItemHandler(db))
+	Handle("/api/v1/create/item", items.ItemHandler(db))
+	Handle("/api/v1/update/item", items.ItemHandler(db))
+	Handle("/api/v1/delete/item/{id}", items.ItemHandler(db))
 }
 
 func boxesRoutes(db *database.DB) {
