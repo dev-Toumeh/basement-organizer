@@ -6,10 +6,10 @@ const configFile string = "config-dev.conf"
 
 var defaultDevConfigPreset Configuration = Configuration{
 	env:              env_dev,
-	alwaysAuthorized: true,
+	alwaysAuthorized: false,
 	defaultTableSize: 10,
 	infoLogsEnabled:  true,
-	debugLogsEnabled: false,
+	debugLogsEnabled: true,
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
 	dbPath:           "./internal/database/sqlite-database.db",

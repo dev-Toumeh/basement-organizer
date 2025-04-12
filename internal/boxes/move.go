@@ -27,7 +27,7 @@ const (
 func BoxPicker(pickerType int, db BoxDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		data := common.InitData(r)
+		data := common.InitData(r, true)
 		thing := r.PathValue("thing")
 		errMsgForUser := "Can't move " + thing
 		id := server.ValidID(w, r, errMsgForUser)

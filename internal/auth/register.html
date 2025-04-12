@@ -1,8 +1,11 @@
 {{ define "register-page" }}
-{{ template "open-html-tag" . }}
+{{ template "open-html-tag" .}}
 {{ template "head" . }}
-{{ template "statusbar" . }}
-{{ template "register-form" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    {{ template "register-form" . }}
+</body>
 {{ template "close-html-tag" . }}
 {{ end }}
 
@@ -13,18 +16,13 @@
      hx-indicator="#loadingIndicator">
 
     <div id="error-messages" class="error-messages"> 
-        {{ if .ErrorMessages }}
-            {{ range .ErrorMessages }}
-              <div> {{ . }} </div>
-            {{ end }}
-        {{ end }}
+
     </div>
     <label for="username">Username:</label>
     <input 
         type="text" 
         id="username" 
         name="username" 
-        value="{{ if .InputUserData }}{{ .InputUserData.Username }}{{ end }}" 
         required>
 
     <label for="password">Password:</label>
@@ -32,7 +30,6 @@
         type="password" 
         id="password" 
         name="password" 
-        value="{{ if .InputUserData }}{{ .InputUserData.Password }}{{ end }}" 
         required>
 
     <label for="password-confirm">Confirm Password:</label>
@@ -40,10 +37,10 @@
         type="password" 
         id="password-confirm" 
         name="password-confirm"   
-        value="{{ if .InputUserData }}{{ .InputUserData.PasswordConfirm }}{{ end }}" 
         placeholder="Confirm Password" 
         required>
 
     <button id="registerButton" type="submit">Register</button>
 </form>
+<div id="loadingIndicator" class="hidden"></div>
 {{end}}
