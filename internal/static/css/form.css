@@ -103,7 +103,6 @@
 }
 
 .image-container {
-  position: relative; /* Create a positioning context */
   display: inline-block; /* Adjust based on your layout */
   width: fit-content;
 }
