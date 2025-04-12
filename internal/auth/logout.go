@@ -20,7 +20,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	logg.Info("LogoutHandler logged out")
 
 	username, _ := UserSessionData(r)
-	server.RedirectWithSuccessNotification(w, "/login", fmt.Sprintf("Good bye %s", username))
+	server.RedirectWithSuccessNotification(w, "/auth", fmt.Sprintf("Good bye %s", username))
 
 	w.WriteHeader(http.StatusNoContent)
 	fmt.Fprint(w, "logged out")
