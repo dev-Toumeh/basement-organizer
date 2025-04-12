@@ -15,7 +15,7 @@ var defaultProdConfigPreset Configuration = Configuration{
 	alwaysAuthorized: false, // temporary until auth is done
 	defaultTableSize: 15,
 	infoLogsEnabled:  true,
-	debugLogsEnabled: false,
+	debugLogsEnabled: true,
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
 	dbPath:           homeDir + "/.local/share/basement-organizer/internal/database/sqlite-database.db",
