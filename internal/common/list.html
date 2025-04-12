@@ -96,8 +96,9 @@
 
 
 {{ define "list-table" }}
-<table class="list">
-<thead>
+<div style="overflow-x: auto;">
+<table class="list" style="min-width: 600px; white-space: nowrap;">
+    <thead>
     <tr>
         <th>Label</th>
         <th>In Box</th>
@@ -125,6 +126,7 @@
     {{ end }}
 </tbody>
 </table>
+</div>
 {{ end }}
 
 {{ define "selected-input" }}

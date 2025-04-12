@@ -53,6 +53,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	authenticated, _ := auth.Authenticated(r)
 	if authenticated {
 		http.Redirect(w, r, "/items", http.StatusPermanentRedirect)
+		return
 	}
 
 	data := common.InitData(r, false)

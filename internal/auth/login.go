@@ -129,7 +129,7 @@ func Authenticated(r *http.Request) (authenticated bool, hasAuthenticatedCookieV
 	}
 	session, _ := store.Get(r, COOKIE_NAME)
 	authenticated, hasAuthenticatedCookieValue = session.Values["authenticated"].(bool)
-	logg.Debug("session authenticated ", session.Values["authenticated"])
+	logg.Debugf("authenticated: %t, hasAuthenticatedCookieValue: %t", authenticated, hasAuthenticatedCookieValue)
 	return
 }
 

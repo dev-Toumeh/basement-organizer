@@ -342,3 +342,10 @@ function triggerPaginationClickEvent(formID, page) {
     document.getElementById(formID + '-current-page').value = page;
     htmx.trigger("#" + formID, "paginationclick");
 }
+
+function toggleNav(el) {
+  const nav = document.querySelector('.nav');
+  nav.classList.toggle('nav-active');
+  el.classList.toggle('hamburger--open');
+}
+
