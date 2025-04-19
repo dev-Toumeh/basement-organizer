@@ -28,7 +28,6 @@ func parseWithReader(reader io.Reader, config *Configuration) (out map[string]st
 
 	out = make(map[string]string)
 	lines := strings.Split(string(b), "\n")
-	lines = lines[:len(lines)-1]
 	for lnr, l := range lines {
 		opt, err := parseLine(l)
 		if err != nil {

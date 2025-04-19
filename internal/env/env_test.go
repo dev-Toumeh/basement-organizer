@@ -172,6 +172,25 @@ func TestCheckDBConstraints(t *testing.T) {
 	}
 }
 
+func TestApplyLastLine(t *testing.T) {
+	newConfigFromFile := `
+	dbPath=:memory:
+	useMemoryDB=true`
+
+	config := Configuration{
+		dbPath:      "testdb.db",
+		useMemoryDB: false}
+	r := strings.NewReader(newConfigFromFile)
+	out, _ := parseWithReader(r, &config)
+	useMemoryDB, ok := out["useMemoryDB"]
+	if !ok {
+		t.Error("dropped useMemoryDB field")
+	}
+	if useMemoryDB != "true" {
+		t.Errorf("got useMemoryDB: \"%v\" expected \"false\"", useMemoryDB)
+	}
+}
+
 func TestApply(t *testing.T) {
 	oldEnv := env_test
 	oldDefaultTableSize := 1
