@@ -118,7 +118,6 @@ input[type="submit"] {
 }
 
 .clickable:hover {
-   /* @TODO necessary */
   filter: brightness(110%);
   cursor: pointer;
   /*background: #c0c0c0;*/
@@ -149,13 +148,11 @@ input[type="submit"].dev {
 
 button:hover,
 input[type=submit]:hover {
-  /* @TODO fix overlap bug */ 
   filter: brightness(110%);
 }
 
 button:active,
 input[type=submit]:active {
-  /* @TODO fix overlap bug */ 
   filter: brightness(90%) ;
 }
 
@@ -190,7 +187,6 @@ button:disabled,
 input[type=submit]:disabled {
   background-color: #99B3B3;
   cursor: not-allowed;
-  /* TODO: fix overlap bug */
   filter: brightness(100%);
 }
 
