@@ -17,10 +17,10 @@ var defaultTestConfigPreset Configuration = Configuration{
 	templatePath:     "./internal",
 }
 
-// Copy of preset production config.
-func DefaultTestConfig() Configuration {
-	return defaultTestConfig
+// Copy of preset test config.
+func DefaultConfigPreset() Configuration {
+	return defaultTestConfigPreset
 }
 
-var defaultTestConfig = defaultTestConfigPreset
-var configInstance *Configuration = &defaultTestConfig
+var defaultConfig = defaultTestConfigPreset
+var configInstance *Configuration = &defaultConfig

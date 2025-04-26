@@ -80,6 +80,8 @@ func populateFieldValues(config *Configuration, excludeMethodNames string) (miss
 	configRV := reflect.ValueOf(*config)
 	excludeFields := strings.Split(ignore_config_field_checks, ",")
 	config.fieldValues = make(map[string]fieldMetaData)
+	defaultConfigPreset := DefaultConfigPreset()
+	preset := reflect.ValueOf(defaultConfigPreset)
 	for i := 0; i < configRV.NumField(); i++ {
 		fieldName := configRT.Field(i).Name
 		logg.Debugf("field: \"%s\"=\"%v\"", fieldName, configRV.Field(i))
@@ -102,12 +104,13 @@ func populateFieldValues(config *Configuration, excludeMethodNames string) (miss
 
 		config.fields = append(config.fields, fieldName)
 		field := fieldMetaData{
-			Value:  fmt.Sprintf("%v", configRV.Field(i)),
-			Setter: expectedPublicFieldSetter,
-			Getter: expectedPublicFieldGetter,
-			Kind:   configRV.Field(i).Kind(),
+			Value:        fmt.Sprintf("%v", configRV.Field(i)),
+			DefaultValue: fmt.Sprintf("%v", preset.Field(i)),
+			Setter:       expectedPublicFieldSetter,
+			Getter:       expectedPublicFieldGetter,
+			Kind:         configRV.Field(i).Kind(),
 		}
-		logg.Debugf("Init() fieldname: %s, fieldsetter: %s kind: %s", fieldName, field.Setter, field.Kind.String())
+		logg.Debugf("Init() fieldname: %s, fieldsetter: %s kind: %s, value: %s, defaultValue: %s", fieldName, field.Setter, field.Kind.String(), field.Value, field.DefaultValue)
 		config.fieldValues[fieldName] = field
 	}
 	return missingMethods
@@ -119,6 +122,19 @@ func (config *Configuration) Fields() []string {
 
 func (config *Configuration) Methods() []string {
 	return config.methods
+}
+
+func (config *Configuration) FieldValues() map[string]fieldMetaData {
+	return config.fieldValues
+}
+
+func (config *Configuration) DefaultValue(field string) (string, error) {
+	v, ok := config.fieldValues[field]
+	if ok {
+		return v.DefaultValue, nil
+	} else {
+		return "", logg.NewError("no field \"" + field + "\"")
+	}
 }
 
 func (c Configuration) Description() string {

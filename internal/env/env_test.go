@@ -231,7 +231,7 @@ infoLogsEnabled==true # invalid
 	// 	}
 	// }
 
-	applyParsedOptions(config, out)
+	applyParsedOptions(out, config)
 
 	// Check bool conversion
 	if config.debugLogsEnabled != newDebugLogsEnabled {
