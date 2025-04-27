@@ -22,7 +22,7 @@
     <div class="info-container">
         <div class="detail-info">
             <label for="id">ID:</label>
-            <input name="id" type="text" value="{{ .ID }}" {{ if not .Edit }}disabled{{ end }}>
+            <input name="id" type="text" value="{{ .ID }}" readonly>
 
             <label for="label">Label:</label>
             <input name="label" type="text" value="{{ .Label }}" {{ if not .Edit }}disabled{{ end }}>
