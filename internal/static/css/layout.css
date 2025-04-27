@@ -103,6 +103,8 @@ input[readonly] {
   }
 }
 
+/*If used inside a <body>, the last scrolled position will be lost 
+* when using "click to go back" in browser.*/
 .scrollable-content {
   scrollbar-gutter: stable;
   overflow: overlay;

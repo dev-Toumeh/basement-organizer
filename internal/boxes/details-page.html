@@ -4,21 +4,19 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
-    <div class="scrollable-content">
-        <h1>Box details</h1>
-        {{ if .NotFound }}
-            <p>Box "{{.ID}}" doesn't exist.</p>
-            <br>
-            <p style="text-align: center">:^(</p>
-        {{ else }}
-            {{ template "box-details" . }}
-            <div id="place-holder"></div>
-            <h2>Items</h2>
-            {{ template "list" .InnerItemsList }}
-            <h2>Inner Boxes</h2>
-            {{ template "list" .InnerBoxesList }}
-        {{ end }}
-    </div>
+    <h1>Box details</h1>
+    {{ if .NotFound }}
+        <p>Box "{{.ID}}" doesn't exist.</p>
+        <br>
+        <p style="text-align: center">:^(</p>
+    {{ else }}
+        {{ template "box-details" . }}
+        <div id="place-holder"></div>
+        <h2>Items</h2>
+        {{ template "list" .InnerItemsList }}
+        <h2>Inner Boxes</h2>
+        {{ template "list" .InnerBoxesList }}
+    {{ end }}
 </body>
 {{ template "close-html-tag" . }}
 {{end}} 

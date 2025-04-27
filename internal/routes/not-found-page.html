@@ -4,10 +4,8 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
-    <div class="scrollable-content">
-        <h1>Page not found</h1>
-        <p>{{.PageText}}</p>
-    </div>
+    <h1>Page not found</h1>
+    <p>{{.PageText}}</p>
 </body>
 {{ template "close-html-tag" . }}
 {{ end }} 
