@@ -13,6 +13,16 @@ import (
 	"unsafe"
 )
 
+func parseConfig(config *Configuration) map[string]string {
+	config.Init()
+	fv := config.FieldValues()
+	out := make(map[string]string, 0)
+	for k, v := range fv {
+		out[k] = v.Value
+	}
+	return out
+}
+
 func parseConfigFile(configFile string, config *Configuration) (map[string]string, []error) {
 	out := make(map[string]string, 0)
 	errs := make([]error, 0)

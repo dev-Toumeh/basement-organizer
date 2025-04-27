@@ -81,7 +81,7 @@ func TestParseWithReader(t *testing.T) {
 
 	ll := `
 		env=2
-	debugLogsEnabled=true
+	debugLogsEnabled=false
 	dbPath=asdfasdfkj
 	# comment ignored
 	useMemoryDB=true # comment with correctly used option
@@ -252,5 +252,24 @@ infoLogsEnabled==true # invalid
 	// Don't override infoLogsEnabled
 	if config.infoLogsEnabled != oldInfoLogsEnabled {
 		t.Errorf("got config: \"%v\" expected \"%v\"", config.infoLogsEnabled, oldInfoLogsEnabled)
+	}
+}
+
+func TestRollback(t *testing.T) {
+	workingConfig, _ := LoadConfig()
+	oldWorkingConfigParsed := parseConfig(workingConfig)
+
+	// will produce an error and an internal rollback
+	updatedOptions := map[string]string{"defaultTableSize": "0"}
+	errs := ApplyParsedConfigOptions(updatedOptions, workingConfig)
+	if len(errs) == 0 {
+		t.Errorf("got len(errs): \"%d\" expected \"%d\"", len(errs), 0)
+	}
+
+	newWorkingConfigParsed := parseConfig(workingConfig)
+	for k, v := range oldWorkingConfigParsed {
+		if newWorkingConfigParsed[k] != v {
+			t.Errorf("got \"%s\"=\"%s\" expected \"%s\"", k, updatedOptions[k], v)
+		}
 	}
 }

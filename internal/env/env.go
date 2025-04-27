@@ -68,13 +68,15 @@ var configLoaded = false
 // ApplyParsedConfigOptions applies settings from parsed to configuration with validation.
 // On error will roll back to previous working config.
 func ApplyParsedConfigOptions(parsed map[string]string, c *Configuration) []error {
+	backup := *CurrentConfig()
+	logg.Debug("applying parsed config options")
 	errs := applyParsedOptions(parsed, c)
-	*backupConfig = *c
 	if len(errs) > 0 {
 		for _, e := range errs {
 			logg.Err(e)
 		}
-		c = backupConfig
+		applyConfig(backup)
+		c = CurrentConfig()
 		logg.Warning("config rolled back")
 		return errs
 	}
@@ -85,7 +87,8 @@ func ApplyParsedConfigOptions(parsed map[string]string, c *Configuration) []erro
 			logg.Err(e)
 		}
 
-		c = backupConfig
+		applyConfig(backup)
+		c = CurrentConfig()
 		logg.Warning("config rolled back")
 		return errs
 	}
