@@ -75,9 +75,6 @@
                 hx-target="body"
                 hx-swap="innerHTML"
         >Edit</button>
-        <button hx-get="/api/v1/delete/shelf?id={{ .ID }}" >
-         Move
-        </button>
         <button hx-delete="/api/v1/delete/shelf?id={{ .ID }}"
                 hx-swap="outerHTML"
                 hx-confirm="Are you sure?">
