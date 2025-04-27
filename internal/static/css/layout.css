@@ -14,6 +14,12 @@ html {
   height: -webkit-fill-available;
 }
 
+hr {
+  height:0;
+  width:100%;
+  border-bottom:unset;
+}
+
 body {
   font-family: "Roboto", sans-serif;
   /*font-size: 2.8rem;*/
@@ -107,9 +113,17 @@ input[readonly] {
   border: solid;
 }
 
+.heading-with-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 button,
 input[type="submit"] {
   padding: 7px 12px;
+  margin: 1px;
   background-color: var(--base);
   color: white;
   border: none;
@@ -118,7 +132,6 @@ input[type="submit"] {
 }
 
 .clickable:hover {
-   /* @TODO necessary */
   filter: brightness(110%);
   cursor: pointer;
   /*background: #c0c0c0;*/
@@ -149,13 +162,11 @@ input[type="submit"].dev {
 
 button:hover,
 input[type=submit]:hover {
-  /* @TODO fix overlap bug */ 
   filter: brightness(110%);
 }
 
 button:active,
 input[type=submit]:active {
-  /* @TODO fix overlap bug */ 
   filter: brightness(90%) ;
 }
 
@@ -190,7 +201,6 @@ button:disabled,
 input[type=submit]:disabled {
   background-color: #99B3B3;
   cursor: not-allowed;
-  /* TODO: fix overlap bug */
   filter: brightness(100%);
 }
 

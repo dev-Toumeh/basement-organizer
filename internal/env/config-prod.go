@@ -24,9 +24,9 @@ var defaultProdConfigPreset Configuration = Configuration{
 }
 
 // Copy of preset production config.
-func DefaultProductionConfig() Configuration {
-	return defaultProdConfig
+func DefaultConfigPreset() Configuration {
+	return defaultProdConfigPreset
 }
 
-var defaultProdConfig = defaultProdConfigPreset
-var configInstance *Configuration = &defaultProdConfig
+var defaultConfig = defaultProdConfigPreset
+var configInstance *Configuration = &defaultConfig

@@ -81,7 +81,7 @@ func TestParseWithReader(t *testing.T) {
 
 	ll := `
 		env=2
-	debugLogsEnabled=true
+	debugLogsEnabled=false
 	dbPath=asdfasdfkj
 	# comment ignored
 	useMemoryDB=true # comment with correctly used option
@@ -172,6 +172,25 @@ func TestCheckDBConstraints(t *testing.T) {
 	}
 }
 
+func TestApplyLastLine(t *testing.T) {
+	newConfigFromFile := `
+	dbPath=:memory:
+	useMemoryDB=true`
+
+	config := Configuration{
+		dbPath:      "testdb.db",
+		useMemoryDB: false}
+	r := strings.NewReader(newConfigFromFile)
+	out, _ := parseWithReader(r, &config)
+	useMemoryDB, ok := out["useMemoryDB"]
+	if !ok {
+		t.Error("dropped useMemoryDB field")
+	}
+	if useMemoryDB != "true" {
+		t.Errorf("got useMemoryDB: \"%v\" expected \"false\"", useMemoryDB)
+	}
+}
+
 func TestApply(t *testing.T) {
 	oldEnv := env_test
 	oldDefaultTableSize := 1
@@ -212,7 +231,7 @@ infoLogsEnabled==true # invalid
 	// 	}
 	// }
 
-	applyParsedOptions(config, out)
+	applyParsedOptions(out, config)
 
 	// Check bool conversion
 	if config.debugLogsEnabled != newDebugLogsEnabled {
@@ -233,5 +252,24 @@ infoLogsEnabled==true # invalid
 	// Don't override infoLogsEnabled
 	if config.infoLogsEnabled != oldInfoLogsEnabled {
 		t.Errorf("got config: \"%v\" expected \"%v\"", config.infoLogsEnabled, oldInfoLogsEnabled)
+	}
+}
+
+func TestRollback(t *testing.T) {
+	workingConfig, _ := LoadConfig()
+	oldWorkingConfigParsed := parseConfig(workingConfig)
+
+	// will produce an error and an internal rollback
+	updatedOptions := map[string]string{"defaultTableSize": "0"}
+	errs := ApplyParsedConfigOptions(updatedOptions, workingConfig)
+	if len(errs) == 0 {
+		t.Errorf("got len(errs): \"%d\" expected \"%d\"", len(errs), 0)
+	}
+
+	newWorkingConfigParsed := parseConfig(workingConfig)
+	for k, v := range oldWorkingConfigParsed {
+		if newWorkingConfigParsed[k] != v {
+			t.Errorf("got \"%s\"=\"%s\" expected \"%s\"", k, updatedOptions[k], v)
+		}
 	}
 }

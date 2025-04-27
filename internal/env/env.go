@@ -2,8 +2,11 @@ package env
 
 import (
 	"basement/main/internal/logg"
+	"errors"
+	"fmt"
 	"os"
 	"runtime"
+	"sort"
 	"strings"
 )
 
@@ -15,7 +18,7 @@ const (
 	env_test
 )
 
-func LoadConfig() *Configuration {
+func LoadConfig() (*Configuration, error) {
 	c := configInstance
 
 	err := c.Init()
@@ -27,16 +30,31 @@ func LoadConfig() *Configuration {
 	_, err = os.Stat(configFile)
 	if err != nil {
 		applyConfig(*c)
-		CreateFileFromConfiguration(configFile, c)
-		return c
+		err = createFileFromConfiguration(configFile, c)
+		if err != nil {
+			return c, logg.WrapErr(err)
+		}
+		return c, nil
 	}
 
 	// override options from config file
-	applyConfigFileOptions(configFile, c)
+	errs := applyConfigFileOptions(configFile, c)
+	if len(errs) != 0 {
+		return c, logg.WrapErr(errors.Join(errs...))
+	}
 
 	applyConfig(*c)
 
-	return CurrentConfig()
+	return CurrentConfig(), nil
+}
+
+var backupConfig *Configuration = &defaultConfig
+
+func LoadDefault() (*Configuration, error) {
+	logg.Info("load default config")
+	defaultConfig = DefaultConfigPreset()
+	configInstance = &defaultConfig
+	return LoadConfig()
 }
 
 // CurrentConfig returns the currently applied config instance across the project.
@@ -47,8 +65,45 @@ func CurrentConfig() *Configuration {
 // Keeps track if config was already loaded.
 var configLoaded = false
 
+// ApplyParsedConfigOptions applies settings from parsed to configuration with validation.
+// On error will roll back to previous working config.
+func ApplyParsedConfigOptions(parsed map[string]string, c *Configuration) []error {
+	backup := *CurrentConfig()
+	logg.Debug("applying parsed config options")
+	errs := applyParsedOptions(parsed, c)
+	if len(errs) > 0 {
+		for _, e := range errs {
+			logg.Err(e)
+		}
+		applyConfig(backup)
+		c = CurrentConfig()
+		logg.Warning("config rolled back")
+		return errs
+	}
+
+	errs = ValidateOptions(c)
+	if len(errs) > 0 {
+		for _, e := range errs {
+			logg.Err(e)
+		}
+
+		applyConfig(backup)
+		c = CurrentConfig()
+		logg.Warning("config rolled back")
+		return errs
+	}
+	c.Init()
+
+	if configLoaded {
+		logg.InfoForceOutput(4, "config reloaded")
+	}
+	configLoaded = true
+	return nil
+}
+
 // applyConfig uses a copy of a config, checks for correctness and applies the options to the currently shared config instance.
 func applyConfig(c Configuration) {
+	defer configInstance.Init()
 	// logg.Debugf("configInstance.Methods() %v", configInstance.Methods())
 	if configLoaded {
 		logg.InfoForceOutput(4, "reload config")
@@ -89,53 +144,46 @@ func applyConfig(c Configuration) {
 	loadLog("config loaded", 2)
 }
 
-func CreateFileFromConfiguration(path string, config *Configuration) {
+func WriteCurrentConfigToFile() error {
+	return createFileFromConfiguration(configFile, CurrentConfig())
+}
+
+func createFileFromConfiguration(path string, config *Configuration) error {
 	logg.Info("creating config file \"" + path + "\"")
 	lines := make([]string, len(config.fieldValues)+1)
-	lines[0] = "# Default config values, uncomment and change to override"
+	lines[0] = "# Runtime configuration values"
 	i := 1
-	for k, v := range config.fieldValues {
-		lines[i] = "#" + k + "=" + string(v.Value)
-		logg.Debug(lines[i])
+	data := config.FieldValues()
+	for k, v := range data {
+		lines[i] = k + "=" + string(v.Value)
 		i++
 	}
+	sort.Strings(lines)
 
 	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-	if err != nil {
-		panic("can't create config file \"" + path + "\": " + err.Error())
-	}
 	defer file.Close()
-
-	_, err = file.WriteString(strings.Join(lines, "\n"))
 	if err != nil {
-		panic("can't write config file to disk \"" + path + "\": " + err.Error())
+		return logg.WrapErr(fmt.Errorf("can't create config file \""+path+"\". %w", err))
 	}
+
+	out := strings.Join(lines, "\n")
+	logg.Debugf("write to config: \"%s\"", out)
+	_, err = file.WriteString(out)
+	if err != nil {
+		return logg.WrapErr(fmt.Errorf("can't write config file to disk \""+path+"\". %w", err))
+	}
+	return nil
 }
 
 // applyConfigFileOptions only applies options that are valid.
-// Will exit program on error with error message.
-func applyConfigFileOptions(configFile string, c *Configuration) {
-	parsed := parseConfigFile(configFile, c)
-	errs := applyParsedOptions(c, parsed)
+func applyConfigFileOptions(configFile string, c *Configuration) []error {
+	parsed, errs := parseConfigFile(configFile, c)
 	if len(errs) != 0 {
-		errorMessages := ""
-		for i, e := range errs {
-			nl := ""
-			if i != 0 {
-				nl = "\n"
-			}
-			errorMessages += nl + logg.CleanLastError(e)
-		}
-		logg.Fatalf("config parser for \"%s\" has encountered errors\n%s", configFile, errorMessages)
+		errs[len(errs)-1] = logg.WrapErr(errs[len(errs)-1])
+		return errs
 	}
-
-	errs = validateOptions(c)
-	if len(errs) > 0 {
-		for _, e := range errs {
-			logg.Err(e)
-		}
-		logg.Fatalf("config check failed for \"%s\"", configFile)
-	}
+	errs = ApplyParsedConfigOptions(parsed, c)
+	return errs
 }
 
 // returns full path file name and the function name of the caller.

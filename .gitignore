@@ -9,4 +9,5 @@ internal/database/*.db
 __debug*
 
 config-dev.conf
+config-test.conf
 config.conf

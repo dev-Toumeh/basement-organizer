@@ -6,7 +6,7 @@ const configFile string = "config-dev.conf"
 
 var defaultDevConfigPreset Configuration = Configuration{
 	env:              env_dev,
-	alwaysAuthorized: false,
+	alwaysAuthorized: true,
 	defaultTableSize: 10,
 	infoLogsEnabled:  true,
 	debugLogsEnabled: true,
@@ -18,9 +18,9 @@ var defaultDevConfigPreset Configuration = Configuration{
 }
 
 // Copy of preset development config.
-func DevelopmentConfigPreset() Configuration {
+func DefaultConfigPreset() Configuration {
 	return defaultDevConfigPreset
 }
 
-var defaultDevConfig = defaultDevConfigPreset
-var configInstance *Configuration = &defaultDevConfig
+var defaultConfig = defaultDevConfigPreset
+var configInstance *Configuration = &defaultConfig
