@@ -28,7 +28,8 @@ div.notification.warning {
   color: #000;
 }
 
-div.notification.error {
+div.notification.error,
+div.notification.single-error {
   background-color: red;
   color: #fff;
 }

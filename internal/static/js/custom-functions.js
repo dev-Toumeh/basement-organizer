@@ -1,6 +1,7 @@
 const NotificationTypeError = "error";
 const NotificationTypeSuccess = "success";
 const NotificationTypeWarning = "warning";
+const NotificationTypeSingleError = "single-error";
 const NotificationTypeInfo = "";
 /** @typedef {(typeof NotificationTypeError | typeof NotificationTypeSuccess | typeof NotificationTypeWarning | NotificationTypeInfo | undefined)} NotificationType
  * 
@@ -81,6 +82,12 @@ function errorResponseCallback(resInfo) {
             notificationType = NotificationTypeWarning;
             break;
 
+        case status === 422:
+            showNotification = true
+            notificationType = NotificationTypeSingleError;
+            console.log(resInfo);
+            break;
+
         case status >= 400:
             showNotification = true
             notificationType = NotificationTypeError;
@@ -123,7 +130,8 @@ function createAndShowNotification(text, notificationType, duration = 2000, id) 
  * Creates a snackbar element but doesn't append it to the notification-container. 
  *
  * @param {string} text - The message to be displayed in the snackbar.
- * @param notificationType {NotificationTypeError | NotificationTypeInfo | NotificationTypeSuccess | NotificationTypeWarning | undefined } Can be "error" or undefined for info.
+ * @param notificationType {NotificationTypeError | NotificationTypeInfo | NotificationTypeSuccess | NotificationTypeWarning | undefined }
+ * Can be "error" or undefined for info.
  * @param {string} [id] - Optional unique identifier for the snackbar. If not provided, a random ID is generated.
  * @returns {HTMLDivElement} The created snackbar element. */
 function createNotification(text, notificationType, id) {
