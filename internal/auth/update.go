@@ -35,14 +35,8 @@ func updateUser(w http.ResponseWriter, r *http.Request, db AuthDatabase) {
 		Email:           r.PostFormValue(EMAIL),
 	}
 
-	validInputUser, err := validateRegisterInput(inputFromPost)
-	if err != nil {
-		RenderValidateErrorMessages(w, inputFromPost)
-		return
-	}
-
 	// 2. Put the data into struct from type user
-	newUser, err := user(validInputUser)
+	newUser, err := user(inputFromPost)
 	if err != nil {
 		logg.Err(err)
 		templates.RenderErrorNotification(w, FAILED_MESSAGE)

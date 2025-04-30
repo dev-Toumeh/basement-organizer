@@ -1,10 +1,8 @@
 package items
 
 import (
-	"fmt"
 	"net/http"
 
-	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
@@ -48,24 +46,15 @@ func ItemHandler(db ItemDatabase) http.HandlerFunc {
 }
 
 func createItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
-	var responseMessage []string
-	newItem, err := item(r)
-	if err != nil {
-		logg.Err(err)
-		templates.RenderErrorNotification(w, "Error while generating the User please comeback later")
-	}
-	if newItem, err = validateItem(newItem, &responseMessage); err != nil {
-		responseGenerator(w, responseMessage, false)
-		return
-	}
-	if err := db.CreateNewItem(newItem); err != nil {
+  item := Item{}
+	if err := db.CreateNewItem(item); err != nil {
 		if err == db.ErrorExist() {
 			templates.RenderErrorNotification(w, "the Label is already token please choice another one")
 		} else {
 			templates.RenderErrorNotification(w, "Unable to add new item due to technical issues. Please try again later.")
 		}
 	}
-	logg.Debug("the Item with id: " + newItem.ID.String() + " was created")
+	logg.Debug("the Item with id: " + item.ID.String() + " was created")
 	server.RedirectWithSuccessNotification(w, "/items", "The Item was created successfully")
 	return
 }
