@@ -11,6 +11,23 @@ import (
 	"github.com/gofrs/uuid/v5"
 )
 
+// Handles read, create, update, and delete for multiple items.
+func ItemsHandler(db ItemDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			PageTemplate(db).ServeHTTP(w, r)
+			return
+		case http.MethodDelete:
+			server.DeleteThingsFromList(w, r, db.DeleteItem, PageTemplate(db))
+			return
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+	}
+}
+
 // Handles read, create, update, and delete for a single item.
 func ItemHandler(db ItemDatabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -53,8 +70,10 @@ func createItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
 
 	if err := db.CreateNewItem(item); err != nil {
 		if err == db.ErrorExist() {
+			logg.Debugf("the Label is already token please choice another one", err)
 			templates.RenderErrorNotification(w, "the Label is already token please choice another one")
 		} else {
+			logg.Debugf("error while creating new Item: %v", err)
 			templates.RenderErrorNotification(w, "Unable to add new item due to technical issues. Please try again later.")
 		}
 	}
@@ -67,9 +86,10 @@ func updateItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
 	validator, err := ValidateItem(r, w)
 	if err != nil {
 		if err == validator.Err() {
+			logg.Debugf("validation error while updating the Item: %v", err)
 			renderItemTemplate(r, w, validator.ItemFormData(), common.EditMode)
 		} else {
-			logg.Err(err)
+			logg.Debugf("error happened while updating the Item: %v", err)
 			server.TriggerSingleErrorNotification(w, "Error while generating the Item please comeback later")
 		}
 		return
@@ -106,4 +126,33 @@ func deleteItem(w http.ResponseWriter, r *http.Request, db ItemDatabase) {
 		return
 	}
 	server.RedirectWithSuccessNotification(w, "/items", "item deleted "+id.String())
+}
+
+func MoveItem(db ItemDatabase) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+		// server.WriteNotImplementedWarning("Move item", w, r)
+		errMsgForUser := "Can't move item"
+
+		id := server.ValidID(w, r, errMsgForUser)
+		if id.IsNil() {
+			return
+		}
+		id2, err := uuid.FromString(r.PostFormValue("id2"))
+		if err != nil {
+			err = logg.Errorf("%s %w", errMsgForUser, err)
+			server.WriteInternalServerError(errMsgForUser, err, w, r)
+			return
+		}
+		err = db.MoveItemToBox(id, id2)
+		if err != nil {
+			err = logg.Errorf("%s %w", errMsgForUser, err)
+			server.WriteInternalServerError(errMsgForUser, err, w, r)
+			return
+		}
+		logg.Infof("move '%s' to '%s'", id, id2)
+		return
+	}
 }

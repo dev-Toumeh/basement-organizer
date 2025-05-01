@@ -2,7 +2,6 @@ package common
 
 import (
 	"basement/main/internal/auth"
-	"basement/main/internal/logg"
 	"errors"
 	"fmt"
 	"net/http"
@@ -46,7 +45,6 @@ func InitData(r *http.Request, withPagination bool) Data {
 		data.SetEdit(CheckEditMode(r))
 	}
 
-	logg.Debugf("the origin is: %s", data.GetOrigin())
 	user, _ := auth.UserSessionData(r)
 	authenticated, _ := auth.Authenticated(r)
 	data.SetUser(user)

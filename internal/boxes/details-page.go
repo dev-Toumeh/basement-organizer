@@ -3,7 +3,6 @@ package boxes
 import (
 	"basement/main/internal/auth"
 	"basement/main/internal/common"
-	"basement/main/internal/items"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
@@ -19,6 +18,13 @@ type boxDetailsPageTemplate struct {
 	Create         bool
 	InnerItemsList common.ListTemplate
 	InnerBoxesList common.ListTemplate
+}
+
+type SearchInputTemplate struct {
+	SearchInputLabel    string
+	SearchInputHxPost   string
+	SearchInputHxTarget string
+	SearchInputValue    string
 }
 
 // BoxDetailsPageTemplateData returns struct needed for "templates.TEMPLATE_BOX_DETAILS_PAGE" with default values.
@@ -66,7 +72,7 @@ func DetailsPage(db BoxDatabase) http.HandlerFunc {
 		tmpl.User = user
 		tmpl.NotFound = notFound
 
-		searchInput := items.NewSearchInputTemplate()
+		searchInput := NewSearchInputTemplate()
 		searchInput.SearchInputLabel = "Search boxes"
 		searchInput.SearchInputHxTarget = "#box-list"
 		searchInput.SearchInputHxPost = "/boxes"
@@ -146,5 +152,13 @@ func RenderBoxDetailsForm(db BoxDatabase) http.HandlerFunc {
 		common.AddRowOptionsToListRows2(b.Box.InnerBoxes, opts)
 
 		server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS, b.Map())
+	}
+}
+
+func NewSearchInputTemplate() *SearchInputTemplate {
+	return &SearchInputTemplate{SearchInputLabel: "Search",
+		SearchInputHxPost:   "/api/v1/implement-me",
+		SearchInputHxTarget: "#item-list-body",
+		SearchInputValue:    "",
 	}
 }

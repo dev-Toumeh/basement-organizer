@@ -23,7 +23,6 @@ func RegisterRoutes(db *database.DB) {
 	navigationRoutes()
 	authRoutes(db)
 	itemsRoutes(db)
-	itemsRoutes2(db)
 	boxesRoutes(db)
 	shelvesRoutes(db)
 	areaRoutes(db)
@@ -58,18 +57,6 @@ func authRoutes(db auth.AuthDatabase) {
 }
 
 func itemsRoutes(db items.ItemDatabase) {
-	Handle("/api/v1/implement-me", server.ImplementMeHandler)
-	Handle("/template/item-dummy", func(w http.ResponseWriter, r *http.Request) {
-		db.InsertSampleItems()
-		templates.RenderSuccessNotification(w, "dummy items has been added")
-	})
-
-	Handle("/delete-item", items.DeleteItemHandler(db))
-	Handle("/api/v1/move/item", items.MoveItemHandler(db))
-	Handle("/api/v1/delete/item", items.DeleteItemHandler(db))
-}
-
-func itemsRoutes2(db items.ItemDatabase) {
 	Handle("/items", items.ItemsHandler(db))
 	Handle("/item/{id}", items.PreviewTemplate(db))
 	Handle("/item/create", items.CreateTemplate())
