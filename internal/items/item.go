@@ -2,6 +2,8 @@ package items
 
 import (
 	"basement/main/internal/common"
+	"basement/main/internal/logg"
+	"basement/main/internal/validate"
 	"fmt"
 	"net/http"
 
@@ -10,18 +12,18 @@ import (
 
 type Item struct {
 	common.BasicInfo
-	Quantity   int64     `json:"quantity"    validate:"omitempty,numeric,gte=1"`
-	Weight     string    `json:"weight"      validate:"omitempty,numeric"`
-	BoxID      uuid.UUID `json:"box_id"`
-	BoxLabel   string    `json:"box_label"`
-	ShelfID    uuid.UUID `json:"shelf_id"`
-	ShelfLabel string    `json:"shelf_label"`
-	AreaID     uuid.UUID `json:"area_id"`
-	AreaLabel  string    `json:"area_label"`
+	Quantity   int64
+	Weight     float64
+	BoxID      uuid.UUID
+	BoxLabel   string
+	ShelfID    uuid.UUID
+	ShelfLabel string
+	AreaID     uuid.UUID
+	AreaLabel  string
 }
 
 func (i Item) String() string {
-	return fmt.Sprintf("Item[ID=%s, Label=%s, Quantity=%d, Weight=%s, BoxID=%s, BoxLabel=%s, ShelfID=%s, ShelfLabel=%s, AreaID=%s, AreaLabel=%s]",
+	return fmt.Sprintf("Item[ID=%s, Label=%s, Quantity=%d, Weight=%f, BoxID=%s, BoxLabel=%s, ShelfID=%s, ShelfLabel=%s, AreaID=%s, AreaLabel=%s]",
 		i.ID, i.Label, i.Quantity, i.Weight, i.BoxID, i.BoxLabel, i.ShelfID, i.ShelfLabel, i.AreaID, i.AreaLabel)
 }
 
@@ -87,8 +89,8 @@ const (
 )
 
 // return the Item in type map
-func (s *Item) Map() map[string]interface{} {
-	shelfMap := map[string]interface{}{
+func (s *Item) Map() map[string]any {
+	shelfMap := map[string]any{
 		"ID":             s.ID,
 		"Label":          s.Label,
 		"Description":    s.Description,
@@ -113,30 +115,58 @@ func newItem() *Item {
 	return &Item{
 		BasicInfo: s,
 		Quantity:  1,
-		Weight:    "2",
+		Weight:    1.00,
 		BoxID:     uuid.Nil,
 		ShelfID:   uuid.Nil,
 		AreaID:    uuid.Nil,
 	}
 }
 
-// this function will pack the request into struct from type Item, so it will be easier to handle it
-func item(r *http.Request) (Item, error) {
-	newItem := Item{
+// Converts a validated ItemValidate struct into a clean Item struct used for storage
+// or business logic (e.g., database insertion).
+func ToItem(validatedItem validate.ItemValidate) Item {
+	item := Item{
 		BasicInfo: common.BasicInfo{
-			ID:          uuid.FromStringOrNil(r.PostFormValue(ID)),
-			Label:       r.PostFormValue(LABEL),
-			Description: r.PostFormValue(DESCRIPTION),
-			Picture:     common.ParsePicture(r),
+			ID:          validatedItem.ID.UUID(),
+			Label:       validatedItem.Label.String(),
+			Description: validatedItem.Description.String(),
+			Picture:     validatedItem.Picture.String(),
 		},
-		Quantity:   common.ParseQuantity(r.PostFormValue(QUANTITY)),
-		Weight:     r.PostFormValue(WEIGHT),
-		BoxID:      uuid.FromStringOrNil(r.PostFormValue(BOX_ID)),
-		BoxLabel:   r.PostFormValue(BOX_LABEL),
-		ShelfID:    uuid.FromStringOrNil(r.PostFormValue(SHELF_ID)),
-		ShelfLabel: r.PostFormValue(SHELF_LABEL),
-		AreaID:     uuid.FromStringOrNil(r.PostFormValue(AREA_ID)),
-		AreaLabel:  r.PostFormValue(AREA_LABEL),
+		Quantity: validatedItem.Quantity.Int(),
+		Weight:   validatedItem.Weight.Float64(),
+		BoxID:    validatedItem.BoxID.UUID(),
+		ShelfID:  validatedItem.ShelfID.UUID(),
+		AreaID:   validatedItem.AreaID.UUID(),
 	}
-	return newItem, nil
+	return item
+}
+
+// Parses form input from an HTTP request, builds a validate.ItemValidate struct, and runs field-level validation.
+// Returns the validator with error messages if any validations fail.
+func ValidateItem(r *http.Request, w http.ResponseWriter) (validate.Validate, error) {
+	item := validate.ItemValidate{
+		BasicInfoValidate: validate.BasicInfoValidate{
+			ID:          validate.NewUUIDField(r.PostFormValue(ID)),
+			Label:       validate.NewStringField(r.PostFormValue(LABEL)),
+			Description: validate.NewStringField(r.PostFormValue(DESCRIPTION)),
+			Picture:     validate.NewStringField(common.ParsePicture(r)),
+		},
+		Quantity: validate.NewIntField(r.PostFormValue(QUANTITY)),
+		Weight:   validate.NewFloatField(r.PostFormValue(WEIGHT)),
+		BoxID:    validate.NewUUIDField(r.PostFormValue(BOX_ID)),
+		ShelfID:  validate.NewUUIDField(r.PostFormValue(SHELF_ID)),
+		AreaID:   validate.NewUUIDField(r.PostFormValue(AREA_ID)),
+	}
+	logg.DebugJSONLite(item.Map(), 50)
+
+	validator := validate.Validate{Item: item}
+
+	if err := validator.ValidateItem(w, item); err != nil {
+		return validator, err
+	}
+	if validator.HasValidateErrors() {
+		return validator, validator.Err()
+	}
+
+	return validator, nil
 }

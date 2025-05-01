@@ -57,7 +57,7 @@ func (s SQLBasicInfo) ToBasicInfo() (common.BasicInfo, error) {
 type SQLItem struct {
 	SQLBasicInfo
 	Quantity   sql.NullInt64
-	Weight     sql.NullString
+	Weight     sql.NullFloat64
 	BoxID      sql.NullString
 	BoxLabel   sql.NullString
 	ShelfID    sql.NullString
@@ -67,8 +67,8 @@ type SQLItem struct {
 }
 
 func (i SQLItem) String() string {
-	return fmt.Sprintf("SQLItem[ID=%s, Label=%s, QRCode=%s, Quantity=%d, Weight=%s, BoxID=%s, BoxLabel=%s, ShelfID=%s, ShelfLabel=%s, AreaID=%s, AreaLabel=%s]",
-		i.SQLBasicInfo.ID.String, i.SQLBasicInfo.Label.String, i.SQLBasicInfo.QRCode.String, i.Quantity.Int64, i.Weight.String,
+	return fmt.Sprintf("SQLItem[ID=%s, Label=%s, QRCode=%s, Quantity=%d, Weight=%f, BoxID=%s, BoxLabel=%s, ShelfID=%s, ShelfLabel=%s, AreaID=%s, AreaLabel=%s]",
+		i.SQLBasicInfo.ID.String, i.SQLBasicInfo.Label.String, i.SQLBasicInfo.QRCode.String, i.Quantity.Int64, i.Weight.Float64,
 		i.BoxID.String, i.BoxLabel.String, i.ShelfID.String, i.ShelfLabel.String, i.AreaID.String, i.AreaLabel.String)
 }
 
@@ -82,7 +82,7 @@ func (s *SQLItem) ToItem() (*items.Item, error) {
 	return &items.Item{
 		BasicInfo:  info,
 		Quantity:   ifNullInt64(s.Quantity),
-		Weight:     ifNullString(s.Weight),
+		Weight:     ifNullFloat64(s.Weight),
 		BoxID:      ifNullUUID(s.BoxID),
 		BoxLabel:   ifNullString(s.BoxLabel),
 		ShelfID:    ifNullUUID(s.ShelfID),
@@ -182,7 +182,7 @@ func (db *DB) ItemByField(field string, value string) (items.Item, error) {
 
 	query := fmt.Sprintf(`
         SELECT 
-          i.id, i.label, i.description, i.picture, i.preview_picture, i.quantity, i.weight, i.qrcode, 
+          i.id, i.label, i.description, i.picture, i.preview_picture, i.quantity, COALESCE(i.weight, '') AS weight, i.qrcode, 
           COALESCE(i.box_id, '') AS box_id, COALESCE(b.label, '') AS box_label, COALESCE(i.shelf_id, '') AS shelf_id, 
           COALESCE(s.label, '') AS shelf_label, COALESCE(i.area_id, '') AS area_id, COALESCE(a.label, '') AS area_label
         FROM item as i
@@ -302,7 +302,7 @@ func (db *DB) ItemIDs() (ids []uuid.UUID, err error) {
 // it make the code more readable
 func (db *DB) insertNewItem(item items.Item) error {
 	updatePicture(&item.Picture, &item.PreviewPicture)
-
+	logg.Debug(item.Map())
 	sqlStatement := `INSERT INTO item (id, label, description, picture, preview_picture, quantity, weight,
        qrcode, box_id, shelf_id, area_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	result, err := db.Sql.Exec(sqlStatement, item.BasicInfo.ID.String(),
@@ -400,7 +400,7 @@ func (db *DB) Items() ([][]string, error) {
 			return [][]string{}, err
 		}
 
-		formatted := fmt.Sprintf("id: %s, label: %s, description: %s, picture: %s, quantity: %d, weight: %s, qrcode: %s \n",
+		formatted := fmt.Sprintf("id: %s, label: %s, description: %s, picture: %s, quantity: %d, weight: %f, qrcode: %s \n",
 			idStr, item.Label, item.Description, item.Picture, item.Quantity, item.Weight, item.QRCode)
 		itemsArray = append(itemsArray, []string{formatted})
 	}
@@ -419,7 +419,7 @@ func (db *DB) DeleteItems(itemIds []uuid.UUID) error {
 
 	// Create placeholders and arguments
 	placeholders := make([]string, len(itemIds))
-	args := make([]interface{}, len(itemIds))
+	args := make([]any, len(itemIds))
 	for i, id := range itemIds {
 		placeholders[i] = "?"
 		args[i] = id
