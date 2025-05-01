@@ -1,8 +1,6 @@
 package routes
 
 import (
-	"fmt"
-	"io"
 	"net/http"
 
 	"basement/main/internal/areas"
@@ -67,25 +65,15 @@ func itemsRoutes(db items.ItemDatabase) {
 	})
 
 	Handle("/delete-item", items.DeleteItemHandler(db))
-	Handle("/items-ids", items.ReadItemsHandler(db, func(w io.Writer, data any) {
-		templates.Render(w, templates.TEMPLATE_ITEMS_CONTAINER, data)
-	}))
-
-	// Handle("/api/v1/create/item", items.CreateItemHandler(db))
-	Handle("/api/v1/read/item/{id}", items.ReadItemHandler(db, func(w io.Writer, data any) {
-		templates.Render(w, templates.TEMPLATE_ITEM_CONTAINER, data)
-	}))
 	Handle("/api/v1/move/item", items.MoveItemHandler(db))
 	Handle("/api/v1/delete/item", items.DeleteItemHandler(db))
-	Handle("/api/v1/read/items", items.ReadItemsHandler(db, func(w io.Writer, data any) {
-		fmt.Fprint(w, data)
-	}))
 }
 
 func itemsRoutes2(db items.ItemDatabase) {
 	Handle("/items", items.ItemsHandler(db))
-	Handle("/item/{id}", items.DetailsTemplate(db))
-	Handle("/items/create", items.CreateTemplate())
+	Handle("/item/{id}", items.PreviewTemplate(db))
+	Handle("/item/create", items.CreateTemplate())
+	Handle("/item/update/{id}", items.UpdateTemplate(db))
 
 	// Move multiple items from list.
 	Handle("/items/moveto/{thing}", common.ListPageMovePicker(common.THING_ITEM, db))

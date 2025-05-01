@@ -20,7 +20,7 @@ type BasicInfo struct {
 }
 
 func (b BasicInfo) Map() map[string]any {
-	return map[string]interface{}{
+	return map[string]any{
 		"ID":             b.ID,
 		"Label":          b.Label,
 		"Description":    b.Description,
