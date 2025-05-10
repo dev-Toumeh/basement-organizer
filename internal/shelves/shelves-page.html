@@ -4,7 +4,9 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
+    <div class="main-content">
     {{ template "shelves-page-content" . }}
+    </div>
     {{ template "shelves-js" .}}
 </body>
 {{ template "close-html-tag" .}}

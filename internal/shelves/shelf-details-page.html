@@ -4,11 +4,13 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
+    <div class="main-content">
     {{ template "shelf-details" . }}
     <h2>Items</h2>
     {{ template "list" .InnerItemsList }}
     <h2>Boxes</h2>
     {{ template "list" .InnerBoxesList }}
+    </div>
 </body>
 {{ template "close-html-tag" .}}
 {{ end }}

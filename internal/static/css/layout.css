@@ -65,6 +65,11 @@ input[readonly] {
   border-width: thin;
 }
 
+.main-content {
+  /*top right bottom left*/
+  margin: 0 0.5rem 0.5rem 0.5rem;
+}
+
 .flex-horizontal {
   display: flex;
   flex-wrap: wrap;

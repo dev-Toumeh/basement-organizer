@@ -4,8 +4,10 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
+    <div class="main-content">
     {{ template "settings-page-header" . }}
     {{ template "settings-page-content" . }}
+    </div>
 </body>
 {{ template "close-html-tag" . }}
 {{ end }} 

@@ -4,6 +4,7 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
+    <div class="main-content">
     <h1>area details</h1>
     {{ if .NotFound }}
         <p>area "{{.ID}}" doesn't exist.</p>
@@ -19,6 +20,7 @@
         {{ template "list" .InnerShelvesList }}
         <div id="place-holder"></div>
     {{ end }}
+    </div>
 </body>
 {{ template "close-html-tag" . }}
 {{end}} 
