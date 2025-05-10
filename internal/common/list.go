@@ -96,6 +96,7 @@ type PaginationButton struct {
 	PageNumber int
 	Selected   bool
 	Disabled   bool
+	Text       string
 }
 
 type listTemplate2 struct {
