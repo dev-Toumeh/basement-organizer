@@ -80,6 +80,9 @@ type ListRowTemplateOptions struct {
 	RowActionName                     string // button and column header name
 	RowActionHXTarget                 string // hx-target="{{$RowActionHXTarget}}" in action button
 	HideMoveCol                       bool
+	HideBoxLabel                      bool
+	HideShelfLabel                    bool
+	HideAreaLabel                     bool
 }
 
 func (row ListRowTemplateOptions) Map() map[string]any {
@@ -93,5 +96,8 @@ func (row ListRowTemplateOptions) Map() map[string]any {
 		"RowActionName":                     row.RowActionName,
 		"RowActionHXTarget":                 row.RowActionHXTarget,
 		"HideMoveCol":                       row.HideMoveCol,
+		"HideBoxLabel":                      row.HideBoxLabel,
+		"HideShelfLabel":                    row.HideShelfLabel,
+		"HideAreaLabel":                     row.HideAreaLabel,
 	}
 }
