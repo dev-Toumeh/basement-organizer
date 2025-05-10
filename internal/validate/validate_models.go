@@ -63,4 +63,10 @@ type ValidateMessages struct {
 	PreviewPictureError string
 	QuantityError       string
 	WeightError         string
+	QRCodeError         string
+	HeightError         string
+	WidthError          string
+	DepthError          string
+	RowsError           string
+	ColsError           string
 }

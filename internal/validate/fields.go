@@ -15,8 +15,8 @@ import (
 
 // StringField
 type StringField struct {
-	input               string
-	value               string
+	Input               string
+	Value               string
 	DefaultMaxLength    int64
 	DefaultMinLength    int64
 	DefaultRegexPattern string
@@ -27,33 +27,33 @@ func NewStringField(input string) StringField {
 	sanitized := html.EscapeString(trimmed)
 
 	return StringField{
-		input:               input,
-		value:               sanitized,
+		Input:               input,
+		Value:               sanitized,
 		DefaultMaxLength:    255,
 		DefaultMinLength:    1,
 		DefaultRegexPattern: `^[\p{L}\p{N} _.-]+$`,
 	}
 }
 
-func (s StringField) String() string   { return s.value }
-func (s StringField) IsEmpty() bool    { return s.value == "" }
+func (s StringField) String() string   { return s.Value }
+func (s StringField) IsEmpty() bool    { return s.Value == "" }
 func (s StringField) MaxLength() error { return s.MaxLengthCustom(s.DefaultMaxLength) }
 func (s StringField) MaxLengthCustom(limit int64) error {
-	if int64(len(s.value)) > limit {
+	if int64(len(s.Value)) > limit {
 		return fmt.Errorf("string exceeds maximum length of %d", limit)
 	}
 	return nil
 }
 func (s StringField) MinLength() error { return s.MinLengthCustom(s.DefaultMinLength) }
 func (s StringField) MinLengthCustom(limit int64) error {
-	if int64(len(s.value)) < limit {
+	if int64(len(s.Value)) < limit {
 		return fmt.Errorf("string shorter than minimum length of %d", limit)
 	}
 	return nil
 }
 func (s StringField) MatchesRegex() error { return s.MatchesRegexCustom(s.DefaultRegexPattern) }
 func (s StringField) MatchesRegexCustom(pattern string) error {
-	matched, err := regexp.MatchString(pattern, s.value)
+	matched, err := regexp.MatchString(pattern, s.Value)
 	if err != nil {
 		return fmt.Errorf("regex error: %w", err)
 	}
@@ -69,8 +69,8 @@ func (s StringField) IsEmailFormat() error {
 
 func (s StringField) ValidatePictureFormat() error {
 	allowed := map[string]bool{"image/png": true, "image/jpeg": true, "image/jpg": true}
-	if !allowed[strings.TrimSpace(s.input)] {
-		return fmt.Errorf("unsupported image format: %s", s.input)
+	if !allowed[strings.TrimSpace(s.Input)] {
+		return fmt.Errorf("unsupported image format: %s", s.Input)
 	}
 	return nil
 }
@@ -81,7 +81,7 @@ type IntField struct {
 	input           string
 	DefaultMaxValue int64
 	DefaultMinValue int64
-	err             error
+	Err             error
 }
 
 func NewIntField(input string) IntField {
@@ -91,7 +91,7 @@ func NewIntField(input string) IntField {
 		value:           val,
 		DefaultMaxValue: math.MaxInt64,
 		DefaultMinValue: 0,
-		err:             err,
+		Err:             err,
 	}
 }
 
@@ -100,25 +100,25 @@ func (n IntField) IsZeroOrPositive() error {
 	if n.value < 0 {
 		return errors.New("integer value is negative")
 	}
-	return n.err
+	return n.Err
 }
 func (n IntField) IsPositive() error {
 	if n.value <= 0 {
 		return errors.New("integer value is not positive")
 	}
-	return n.err
+	return n.Err
 }
 func (n IntField) MinValueCustom(min int64) error {
 	if n.value < min {
 		return fmt.Errorf("integer value less than minimum (%d)", min)
 	}
-	return n.err
+	return n.Err
 }
 func (n IntField) MaxValueCustom(max int64) error {
 	if n.value > max {
 		return fmt.Errorf("integer value greater than maximum (%d)", max)
 	}
-	return n.err
+	return n.Err
 }
 func (n IntField) MinValue() error { return n.MinValueCustom(n.DefaultMinValue) }
 func (n IntField) MaxValue() error { return n.MaxValueCustom(n.DefaultMaxValue) }
@@ -176,19 +176,19 @@ func (n FloatField) MaxValueCustom(max float64) error {
 func (f FloatField) IsEmpty() bool { return f.input == "" }
 
 type UUIDField struct {
-	value uuid.UUID
-	input string
-	err   error
+	Value uuid.UUID
+	Input string
+	Err   error
 }
 
 // NewUUIDField
 func NewUUIDField(input string) UUIDField {
 	input = strings.TrimSpace(input)
 	value, err := uuid.FromString(input)
-	return UUIDField{value: value, input: input, err: err}
+	return UUIDField{Value: value, Input: input, Err: err}
 }
 
-func (u UUIDField) UUID() uuid.UUID { return u.value }
-func (u UUIDField) IsValid() error  { return u.err }
-func (u UUIDField) IsNil() bool     { return u.value == uuid.Nil }
-func (s UUIDField) IsEmpty() bool   { return s.input == "" }
+func (u UUIDField) UUID() uuid.UUID { return u.Value }
+func (u UUIDField) IsValid() error  { return u.Err }
+func (u UUIDField) IsNil() bool     { return u.Value == uuid.Nil }
+func (s UUIDField) IsEmpty() bool   { return s.Input == "" }

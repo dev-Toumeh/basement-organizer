@@ -12,6 +12,12 @@ func (v *ValidateMessages) Map() map[string]any {
 		"PreviewPictureError": v.PreviewPictureError,
 		"QuantityError":       v.QuantityError,
 		"WeightError":         v.WeightError,
+		"QRCodeError":         v.QRCodeError,
+		"HeightError":         v.HeightError,
+		"WidthError":          v.WidthError,
+		"DepthError":          v.DepthError,
+		"RowsError":           v.RowsError,
+		"ColsError":           v.ColsError,
 	}
 }
 
@@ -81,20 +87,28 @@ func (v *Validate) BoxFormData() map[string]any {
 
 // ShelfFormData returns a map combining the ShelfValidate fields and the validation error messages.
 // It is used to render the form with the current input values and validation feedback.
-func (v *Validate) ShelfFormData() map[string]any {
+func (v *Validate) ShelfFormData(edit bool) map[string]any {
 	data := v.Shelf.Map()
 	for key, value := range v.Messages.Map() {
 		data[key] = value
+	}
+	if edit {
+		data["Edit"] = true
 	}
 	return data
 }
 
 // AreaFormData returns a map combining the AreaValidate fields and the validation error messages.
 // It is used to render the form with the current input values and validation feedback.
-func (v *Validate) AreaFormData() map[string]any {
+func (v *Validate) AreaFormData(edit bool) map[string]any {
 	data := v.Area.Map()
 	for key, value := range v.Messages.Map() {
 		data[key] = value
+	}
+	if edit {
+		data["Edit"] = true
+	} else {
+		data["Create"] = true
 	}
 	return data
 }
