@@ -12,10 +12,10 @@ var homeDir string = os.Getenv("HOME")
 
 var defaultProdConfigPreset Configuration = Configuration{
 	env:              env_prod,
-	alwaysAuthorized: false, // temporary until auth is done
+	alwaysAuthorized: false,
 	defaultTableSize: 15,
 	infoLogsEnabled:  true,
-	debugLogsEnabled: true,
+	debugLogsEnabled: false,
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
 	dbPath:           homeDir + "/.local/share/basement-organizer/internal/database/sqlite-database.db",
