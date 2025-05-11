@@ -505,9 +505,9 @@ func ifNullFloat64(sqlFloat sql.NullFloat64) float64 {
 }
 
 // Helper function to check for null strings and return empty if null
-func ifNullInt(sqlInt sql.NullInt64) int {
+func ifNullInt(sqlInt sql.NullInt64) int64 {
 	if sqlInt.Valid {
-		return int(sqlInt.Int64)
+		return sqlInt.Int64
 	}
 	return 0
 }

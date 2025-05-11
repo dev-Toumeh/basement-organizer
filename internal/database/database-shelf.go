@@ -30,11 +30,11 @@ func (s SQLShelf) ToShelf() (*shelves.Shelf, error) {
 
 	return &shelves.Shelf{
 		BasicInfo: info,
-		Height:    float32(ifNullFloat64(s.Height)),
-		Width:     float32(ifNullFloat64(s.Width)),
-		Depth:     float32(ifNullFloat64(s.Depth)),
-		Rows:      int(ifNullInt(s.Rows)),
-		Cols:      int(ifNullInt(s.Cols)),
+		Height:    ifNullFloat64(s.Height),
+		Width:     ifNullFloat64(s.Width),
+		Depth:     ifNullFloat64(s.Depth),
+		Rows:      ifNullInt(s.Rows),
+		Cols:      ifNullInt(s.Cols),
 		AreaID:    ifNullUUID(s.AreaID),
 		AreaLabel: ifNullString(s.AreaLabel),
 		Items:     nil,
