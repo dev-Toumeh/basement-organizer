@@ -574,3 +574,38 @@ func (data *Data) SetOrigin(origin string) {
 func (d *Data) GetOrigin() string {
 	return d.Origin
 }
+
+func (d *Data) SetInnerItemsList(w http.ResponseWriter, r *http.Request) error {
+	tmpl, err := ListTemplateInnerThingsFrom(THING_ITEM, THING_BOX, w, r)
+	if err == nil {
+		d.TypeMap["InnerItemsList"] = tmpl
+	}
+	return err
+}
+
+// THING_BOX → boxes inside a box
+func (d *Data) SetInnerBoxesList(w http.ResponseWriter, r *http.Request) error {
+	tmpl, err := ListTemplateInnerThingsFrom(THING_BOX, THING_BOX, w, r)
+	if err == nil {
+		d.TypeMap["InnerBoxesList"] = tmpl
+	}
+	return err
+}
+
+// THING_SHELF → boxes inside a shelf
+func (d *Data) SetShelfInnerBoxesList(w http.ResponseWriter, r *http.Request) error {
+	tmpl, err := ListTemplateInnerThingsFrom(THING_BOX, THING_SHELF, w, r)
+	if err == nil {
+		d.TypeMap["InnerBoxesList"] = tmpl
+	}
+	return err
+}
+
+// THING_SHELF → shelves inside an area
+func (d *Data) SetInnerShelvesList(w http.ResponseWriter, r *http.Request) error {
+	tmpl, err := ListTemplateInnerThingsFrom(THING_AREA, THING_SHELF, w, r)
+	if err == nil {
+		d.TypeMap["InnerShelvesList"] = tmpl
+	}
+	return err
+}

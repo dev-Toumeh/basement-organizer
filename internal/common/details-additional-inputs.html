@@ -29,7 +29,7 @@
       hx-swap="innerHTML"
       hx-push-url="false"
       type="button"
-      {{ if not .Edit }}disabled{{ end }}>
+      {{ if .Preview }}disabled{{ end }}>
       Add to{{ if $Box }} another {{ end }} Box
     </button>
   </div>
@@ -54,7 +54,7 @@
       hx-swap="innerHTML"
       hx-push-url="false"
       type="button"
-      {{ if not .Edit }}disabled{{ end }}>
+      {{ if .Preview }}disabled{{ end }}>
       Add to{{ if $Shelf }} another {{ end }} Shelf
     </button>
   </div>
@@ -78,7 +78,7 @@
       hx-swap="innerHTML"
       hx-push-url="false"
       type="button"
-      {{ if not .Edit }}disabled{{ end }}>
+      {{ if .Preview }}disabled{{ end }}>
       Add to{{ if $Area }} another {{ end }} Area
     </button>
   </div>
