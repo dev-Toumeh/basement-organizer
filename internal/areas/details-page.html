@@ -11,7 +11,9 @@
             <br>
             <p style="text-align: center">:^(</p>
         {{ else }}
+            <div id="validation-id">
             {{ template "area-details" . }}
+            </div>
             <h2>items</h2>
             {{ template "list" .InnerItemsList }}
             <h2>boxes</h2>
@@ -32,18 +34,15 @@
     hx-encoding="multipart/form-data">
     <div class="info-container">
         <div class="detail-info">
-            <label for="id">ID:</label>
-            <input name="id" type="text" value="{{.ID}}" readonly>
+            <input name="id" type="text" value="{{ .ID }}" hidden>
 
             <label for="label">Label:</label>
+            {{ if .LabelError }}<div class="error-message">{{ .LabelError }}</div>{{ end }}
             <input name="label" type="text" value="{{.Label}}" {{ if not (or .Edit .Create) }}disabled{{end}}>
 
             <label for="description">Description:</label>
+            {{ if .DescriptionError }}<div class="error-message">{{ .DescriptionError }}</div>{{ end }}
             <input name="description" type="text" value="{{.Description}}" {{ if not (or .Edit .Create)}}disabled{{end}}>
-
-            <label for="qrcode">QRCode:</label>
-            <input type="text" id="qrcode" name="qrcode" value="{{ .QRCode }}" {{ if not (or .Edit .Create)}}disabled{{end}}>
-            <br>
         </div>
 
         {{ $imagePreview := map "ID" .ID "Label" .Label "Edit" .Edit "Create" .Create "Picture" .Picture }}
@@ -80,6 +79,7 @@
 
 {{ if .Create }}
 <button hx-post="/area/create" 
+    hx-target="#validation-id"
     >Create area</button>
 <button hx-get="/areas" 
     hx-target="body"
