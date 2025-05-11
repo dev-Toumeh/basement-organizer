@@ -5,10 +5,29 @@ import (
 	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"basement/main/internal/templates"
+	"basement/main/internal/validate"
 	"encoding/json"
 	"fmt"
+	"maps"
+	"net/http"
 
 	"github.com/gofrs/uuid/v5"
+)
+
+const (
+	ID          string = "id"
+	LABEL       string = "label"
+	DESCRIPTION string = "description"
+	PICTURE     string = "picture"
+	QUANTITY    string = "quantity"
+	WEIGHT      string = "weight"
+	QRCODE      string = "qrcode"
+	BOX_ID      string = "box_id"
+	BOX_LABEL   string = "box_label"
+	SHELF_ID    string = "shelf_id"
+	SHELF_LABEL string = "shelf_label"
+	AREA_ID     string = "area_id"
+	AREA_LABEL  string = "area_label"
 )
 
 type BoxDatabase interface {
@@ -32,16 +51,16 @@ type BoxDatabase interface {
 
 type Box struct {
 	common.BasicInfo
-	Items            []common.ListRow `json:"items"`
-	InnerBoxes       []common.ListRow `json:"innerboxes"`
-	OuterBox         *common.ListRow  `json:"outerbox"`
-	OuterBoxLabel    string           `json:"outer_box_label"`
+	Items            []common.ListRow
+	InnerBoxes       []common.ListRow
+	OuterBox         *common.ListRow
+	OuterBoxLabel    string
 	ShelfID          uuid.UUID
-	OuterBoxID       uuid.UUID `json:"outerboxid"`
-	ShelfLabel       string    `json:"shelf_label"`
+	OuterBoxID       uuid.UUID
+	ShelfLabel       string
 	AreaID           uuid.UUID
-	AreaLabel        string            `json:"area_label"`
-	ShelfCoordinates *ShelfCoordinates `json:"shelfcoordinates"`
+	AreaLabel        string
+	ShelfCoordinates *ShelfCoordinates
 }
 
 func (box *Box) Map() map[string]any {
@@ -59,11 +78,11 @@ func (box *Box) Map() map[string]any {
 }
 
 type ShelfCoordinates struct {
-	ID      uuid.UUID `json:"id"`
-	ShelfID uuid.UUID `json:"shelfid"`
-	Label   string    `json:"label"       validate:"required,lte=128"`
-	Row     int       `json:"row"`
-	Col     int       `json:"col"`
+	ID      uuid.UUID
+	ShelfID uuid.UUID
+	Label   string
+	Row     int
+	Col     int
 }
 
 // type BoxTemplateData struct {
@@ -144,4 +163,60 @@ func (b Box) String() string {
 	}
 	s := fmt.Sprintf("%s", data)
 	return s
+}
+
+func (tmpl boxDetailsPageTemplate) Map() map[string]any {
+	data := make(map[string]any, 0)
+	maps.Copy(data, tmpl.PageTemplate.Map())
+	maps.Copy(data, tmpl.Box.Map())
+	data["Edit"] = tmpl.Edit
+	data["Create"] = tmpl.Create
+	return data
+}
+
+// ValidateBox parses form input from an HTTP request,
+// performs field-level validation, and returns both the validation result and a Box struct if valid.
+// If any validation fails, it returns the validator with error details
+func ValidateBox(w http.ResponseWriter, r *http.Request) (box Box, validator validate.Validate, err error) {
+	vbox := validate.BoxValidate{
+		BasicInfoValidate: validate.BasicInfoValidate{
+			ID:             validate.NewUUIDField(r.PostFormValue(ID)),
+			Label:          validate.NewStringField(r.PostFormValue(LABEL)),
+			Description:    validate.NewStringField(r.PostFormValue(DESCRIPTION)),
+			Picture:        validate.NewStringField(common.ParsePicture(r)),
+			PreviewPicture: validate.NewStringField(common.ParsePicture(r)),
+		},
+		ShelfID:    validate.NewUUIDField(r.PostFormValue(SHELF_ID)),
+		OuterBoxID: validate.NewUUIDField(r.PostFormValue(BOX_ID)),
+		AreaID:     validate.NewUUIDField(r.PostFormValue(AREA_ID)),
+	}
+	logg.DebugJSON(vbox, 50)
+
+	validator = validate.Validate{Box: vbox}
+
+	// used to return actual errors
+	if err = validator.ValidateBox(w, vbox); err != nil {
+		return box, validator, err
+	}
+
+	// return validation errors
+	if validator.HasValidateErrors() {
+		return box, validator, validator.Err()
+	}
+
+	// no error found return struct from type Item
+	box = Box{
+		BasicInfo: common.BasicInfo{
+			ID:             vbox.ID.Value,
+			Label:          vbox.Label.Value,
+			Description:    vbox.Description.Value,
+			Picture:        vbox.Picture.Value,
+			PreviewPicture: vbox.PreviewPicture.Value,
+		},
+		ShelfID:    vbox.ShelfID.Value,
+		OuterBoxID: vbox.OuterBoxID.Value,
+		AreaID:     vbox.AreaID.Value,
+	}
+
+	return box, validator, nil
 }

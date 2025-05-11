@@ -1,15 +1,12 @@
 package boxes
 
 import (
-	"basement/main/internal/auth"
 	"basement/main/internal/common"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
 	"fmt"
 	"net/http"
-
-	"github.com/gofrs/uuid/v5"
 )
 
 var boxDB BoxDatabase
@@ -81,6 +78,38 @@ func readBoxFromRequest(w http.ResponseWriter, r *http.Request, db BoxDatabase) 
 	return box, err
 }
 
+// CreateHandler
+//
+//	GET = create new box page
+//	POST = submit new box from create box page
+func CreateHandler(db BoxDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			createPage().ServeHTTP(w, r)
+			break
+		case http.MethodPost:
+			createBoxFrom(w, r, db)
+			break
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			w.Header().Add("Allowed", http.MethodGet)
+			w.Header().Add("Allowed", http.MethodPost)
+		}
+	}
+}
+
+// createPage renders a Box Details Page with initial details, No box is created yet in the Backend.
+func createPage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		box := NewBox()
+		renderBoxTemplate(w, r, box.Map(), common.CreateMode)
+
+	}
+}
+
+// createBox generates a Box filled with random data and stores it in db.
 func createBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	box := NewBox()
 	logg.Debug("create box: ", box)
@@ -103,46 +132,63 @@ func createBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 	}
 }
 
-func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
-	errMsgForUser := "Can't update box."
-	id := server.ValidID(w, r, errMsgForUser)
-	if id.IsNil() {
+// createBoxFrom parses the submitted form values, builds a Box, and inserts it into db.
+func createBoxFrom(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
+
+	box, validator, err := ValidateBox(w, r)
+	if err != nil {
+		if err == validator.Err() {
+			logg.Debugf("validation error while creating the Box: %v", validator.Messages.Map())
+			renderBoxTemplate(w, r, validator.BoxFormData(), common.CreateMode)
+		} else {
+			logg.Debugf("error happened while creating the Box: %v", err)
+			server.TriggerSingleErrorNotification(w, "Error while creating the Box please comeback later")
+		}
 		return
 	}
 
-	var err error
-	box, ignorePicture := boxFromPostFormValue(id, r)
-	pictureFormat := ""
-	if !ignorePicture {
+	logg.Debug("create box: ", box)
+	_, err = db.CreateBox(&box)
+	server.RedirectWithSuccessNotification(w, "/boxes", "Created new box: "+box.Label)
+}
+
+// updateBox update existing Box Record in the Database
+func updateBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
+	const errMsgForUser = "Can't update box."
+
+	// ── Validate input ────────────────────────────────────────────────
+	box, validator, err := ValidateBox(w, r)
+	if err != nil {
+		if err == validator.Err() {
+			logg.Debugf("validation error while updating the Box: %v", validator.Messages.Map())
+			renderBoxTemplate(w, r, validator.BoxFormData(), common.EditMode)
+		} else {
+			logg.Debugf("error happened while updating the Box: %v", err)
+			server.WriteNotFoundError("error while creating the box", err, w, r)
+		}
+		return
+	}
+
+	// ── Picture handling ─────────────────────────────────────────────
+	ignorePicture, pictureFormat := false, ""
+	if _, _, fh := r.FormFile("picture"); fh != nil {
 		pictureFormat, err = common.ParsePictureFormat(r)
 		if err != nil {
 			logg.Debug("no picture format")
-		}
-	}
-	err = db.UpdateBox(box, ignorePicture, pictureFormat)
-
-	if err != nil {
-		server.WriteNotFoundError("Can't update box. "+logg.CleanLastError(err), err, w, r)
-		return
-	}
-	// @TODO: Find a better solution?
-	// This is done because box is missing OuterBox field after it's parsed.
-	box, err = db.BoxById(id)
-	if err != nil {
-		server.WriteInternalServerError("can't get box after update succeeded, should not happen!", err, w, r)
-		return
-	}
-	if server.WantsTemplateData(r) {
-		boxTemplate := boxDetailsPageTemplate{Box: box, Edit: false}
-		err := server.RenderWithSuccessNotification(w, r, templates.TEMPLATE_BOX_DETAILS, boxTemplate.Map(), fmt.Sprintf("Updated box: %v", boxTemplate.Label))
-		if err != nil {
-			server.WriteInternalServerError(errMsgForUser, err, w, r)
-			return
+			ignorePicture = true
 		}
 	} else {
-		server.WriteJSON(w, box)
+		ignorePicture = true
 	}
+
+	// ── Update in DB ────────────────────────────────────────────────
+	if err = db.UpdateBox(box, ignorePicture, pictureFormat); err != nil {
+		server.WriteNotFoundError(errMsgForUser+" "+logg.CleanLastError(err), err, w, r)
+		return
+	}
+
 	logg.Debug("Updated Box: ", box)
+	server.RedirectWithSuccessNotification(w, "/box/"+box.ID.String()+"", "Updated box: "+box.Label)
 }
 
 // deleteBox deletes a single box.
@@ -158,75 +204,4 @@ func deleteBox(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
 		return
 	}
 	server.RedirectWithSuccessNotification(w, "/boxes", fmt.Sprintf("%s deleted", id))
-}
-
-// CreateHandler
-//
-//	GET = create new box page
-//	POST = submit new box from create box page
-func CreateHandler(db BoxDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			createPage().ServeHTTP(w, r)
-			break
-		case http.MethodPost:
-			createBoxFrom(w, r, db)
-			break
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			w.Header().Add("Allowed", http.MethodGet)
-			w.Header().Add("Allowed", http.MethodPost)
-		}
-	}
-}
-
-// createPage renders a page with initial box details to create a new box. No box is created yet in the backend.
-func createPage() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		authenticated, _ := auth.Authenticated(r)
-		user, _ := auth.UserSessionData(r)
-
-		box := NewBox()
-		data := BoxDetailsPageTemplateData()
-		data.Edit = true
-		data.Box = box
-
-		data.Title = fmt.Sprintf("Box - %s", box.Label)
-		data.Authenticated = authenticated
-		data.User = user
-		data.Create = true
-
-		dataForTemplate := data.Map()
-
-		dataForTemplate["ListRows"] = templates.SliceToSliceMaps(box.Items)
-
-		server.MustRender(w, r, templates.TEMPLATE_BOX_DETAILS_PAGE, dataForTemplate)
-	}
-}
-
-// createBoxFrom creates a box from an existing one.
-func createBoxFrom(w http.ResponseWriter, r *http.Request, db BoxDatabase) {
-	id := server.ValidID(w, r, "can't create new box")
-	if id == uuid.Nil {
-		return
-	}
-	box, _ := boxFromPostFormValue(id, r)
-	logg.Debug("create box: ", box)
-	id, err := db.CreateBox(&box)
-	if err != nil {
-		server.WriteNotFoundError("error while creating the box", err, w, r)
-		return
-	}
-	server.RedirectWithSuccessNotification(w, "/boxes", "Created new box: "+box.Label)
-}
-
-// boxFromPostFormValue returns items.Box without references to inner boxes, outer box and items.
-func boxFromPostFormValue(id uuid.UUID, r *http.Request) (box Box, ignorePicture bool) {
-	ignorePicture = server.ParseIgnorePicture(r)
-	box.BasicInfo = common.BasicInfoFromPostFormValue(id, r, ignorePicture)
-	box.OuterBoxID = uuid.FromStringOrNil(r.PostFormValue("box_id"))
-	box.ShelfID = uuid.FromStringOrNil(r.PostFormValue("shelf_id"))
-	box.AreaID = uuid.FromStringOrNil(r.PostFormValue("area_id"))
-	return box, ignorePicture
 }
