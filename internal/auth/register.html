@@ -9,38 +9,32 @@
 {{ template "close-html-tag" . }}
 {{ end }}
 
-{{define "register-form"}}
-<form id="form" name="form" 
-     hx-post="register"
-     hx-disabled-elt="#registerButton"
-     hx-indicator="#loadingIndicator">
 
-    <div id="error-messages" class="error-messages"> 
+{{ define "register-form" }}
+<div class="auth-wrapper">
+  <div class="auth-form">
+    <h2>Register</h2>
+    <form id="form" name="form"
+          hx-post="register"
+          hx-disabled-elt="#registerButton"
+          hx-indicator="#loadingIndicator">
 
-    </div>
-    <label for="username">Username:</label>
-    <input 
-        type="text" 
-        id="username" 
-        name="username" 
-        required>
+      <div id="error-messages" class="error-message"></div>
 
-    <label for="password">Password:</label>
-    <input 
-        type="password" 
-        id="password" 
-        name="password" 
-        required>
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required>
 
-    <label for="password-confirm">Confirm Password:</label>
-    <input 
-        type="password" 
-        id="password-confirm" 
-        name="password-confirm"   
-        placeholder="Confirm Password" 
-        required>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required>
 
-    <button id="registerButton" type="submit">Register</button>
-</form>
-<div id="loadingIndicator" class="hidden"></div>
-{{end}}
+      <label for="password-confirm">Confirm Password</label>
+      <input type="password" id="password-confirm" name="password-confirm" required>
+
+      <button id="registerButton" type="submit">Register</button>
+      <p>Already have an account? <a href="/login">Login</a></p>
+    </form>
+    <div id="loadingIndicator" class="hidden"></div>
+  </div>
+</div>
+{{ end }}
+

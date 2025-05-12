@@ -10,26 +10,20 @@
 {{ end }}
 
 {{ define "login-form" }}
-<form id="form">
-    <label for="username">Username:</label>
-    <input 
-        {{ if .Authenticated }}disabled{{ end }}
-        type="text"
-        id="username"
-        name="username"
-        required>
-    <label for="password">Password:</label>
-    <input 
-        {{ if .Authenticated }}disabled{{ end }}
-        type="password" id="password" name="password" required>
-    <div>
-        <button 
-            hx-post="login"
-            hx-disabled-elt="this"
-            hx-target="this"
-            {{ if .Authenticated }}disabled{{ end }}
-        >Login</button>
-            <!--hx-indicator="#loadingIndicator"-->
-</form>
-<label id="responseLabel"></label>
+<div class="auth-wrapper">
+  <div class="auth-form">
+    <h2>Login</h2>
+    <form id="form">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required {{ if .Authenticated }}disabled{{ end }}>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required {{ if .Authenticated }}disabled{{ end }}>
+
+      <button hx-post="login" hx-disabled-elt="this" hx-target="this" {{ if .Authenticated }}disabled{{ end }}>Login</button>
+    </form>
+    <label id="responseLabel" class="error-message"></label>
+    <p>Need to register? <a href="/register">Register</a></p>
+  </div>
+</div>
 {{ end }}
