@@ -53,6 +53,9 @@ func listPage(db AreaDatabase) http.HandlerFunc {
 		listTmpl.CurrentPageNumber = data["PageNumber"].(int)
 		listTmpl.Limit = limit
 		listTmpl.PaginationButtons = data["Pages"].([]common.PaginationButton)
+		listTmpl.HideBoxLabel = true
+		listTmpl.HideShelfLabel = true
+		listTmpl.HideAreaLabel = true
 
 		// box-list-row to fill box-list template
 		var rows []common.ListRow
@@ -60,8 +63,11 @@ func listPage(db AreaDatabase) http.HandlerFunc {
 		// rows found
 		if count > 0 {
 			rowTemplateOptions := common.ListRowTemplateOptions{
-				HideMoveCol: true,
-				RowHXGet:    "/area",
+				HideMoveCol:    true,
+				RowHXGet:       "/area",
+				HideBoxLabel:   true,
+				HideShelfLabel: true,
+				HideAreaLabel:  true,
 			}
 			rows, err = common.FilledRows(db.AreaListRows, searchString, limit, pageNr, count, rowTemplateOptions)
 			if err != nil {

@@ -97,6 +97,14 @@
   flex-grow: 0.9;
 }
 
+div.config-field {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 0.9;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
 .detail-picture {
   display: flex;
   flex-direction: column;

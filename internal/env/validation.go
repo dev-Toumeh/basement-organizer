@@ -12,15 +12,16 @@ import (
 )
 
 type fieldMetaData struct {
-	Setter string
-	Getter string
-	Kind   reflect.Kind
-	Value  string
+	Setter       string
+	Getter       string
+	Kind         reflect.Kind
+	Value        string
+	DefaultValue string
 }
 
 func validateInternals(applyConfigFileName string, applyConfigFuncName string) {
 	developmentChecks(applyConfigFileName, applyConfigFuncName)
-	validateOptions(configInstance)
+	ValidateOptions(configInstance)
 }
 
 // internal config checks
@@ -100,7 +101,7 @@ func checkIfAllFieldSettersWereApplied(c *Configuration, appliedMethods []string
 	return allApplied
 }
 
-func validateOptions(config *Configuration) (errors []error) {
+func ValidateOptions(config *Configuration) (errors []error) {
 	logg.Debug("validate combination of config options")
 	var err error
 	err = validateDefaultTableSize(config)

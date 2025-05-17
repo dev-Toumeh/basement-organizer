@@ -4,7 +4,7 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
-    <div class="scrollable-content">
+    <div class="scrollable-content main-content">
         <h1>area details</h1>
         {{ if .NotFound }}
             <p>area "{{.ID}}" doesn't exist.</p>
@@ -12,7 +12,7 @@
             <p style="text-align: center">:^(</p>
         {{ else }}
             <div id="validation-id">
-            {{ template "area-details" . }}
+                {{ template "area-details" . }}
             </div>
             <h2>items</h2>
             {{ template "list" .InnerItemsList }}
@@ -22,10 +22,10 @@
             {{ template "list" .InnerShelvesList }}
             <div id="place-holder"></div>
         {{ end }}
-     </div>
+    </div>
 </body>
 {{ template "close-html-tag" . }}
-{{end}} 
+{{ end }}
 
 
 {{ define "area-details" }}
@@ -48,7 +48,6 @@
         {{ $imagePreview := map "ID" .ID "Label" .Label "Edit" .Edit "Create" .Create "Picture" .Picture }}
         {{ template "details-image-preview" $imagePreview.Map }}
     </div>  
-
 
 {{ if .EnvDevelopment }}
 <button hx-get="/api/v1/area/{{.ID}}"
@@ -75,7 +74,6 @@
     </div>
 </div>
 {{ end }}
-
 
 {{ if .Create }}
 <button hx-post="/area/create" 
@@ -114,4 +112,4 @@
 {{ end }}
 
 </form>
-{{end}}
+{{ end }}

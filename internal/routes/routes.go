@@ -40,6 +40,9 @@ func staticRoutes() {
 
 func navigationRoutes() {
 	Handle("/settings", SettingsPage)
+	Handle("/settings/configuration", SettingsPageConfiguration)
+	Handle("/settings/configuration/default/{option}", SettingsPageConfigurationDefaultValue)
+	Handle("/settings/configuration/update", SettingsConfigurationUpdateHandler)
 	Handle("/sample-page", SamplePage)
 	Handle("/personal-page", PersonalPage)
 }

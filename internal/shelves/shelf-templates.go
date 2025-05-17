@@ -18,6 +18,7 @@ func PageTemplate(db ShelfDB) http.HandlerFunc {
 		data.SetPlaceHolder(true)
 		data.SetEnvDevelopment(env.Development())
 		data.SetRequestOrigin("Shelves")
+		data.TypeMap["HideAreaLabel"] = false
 		server.MustRender(w, r, "shelves-page", data.TypeMap)
 	}
 }

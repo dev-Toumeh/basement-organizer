@@ -4,13 +4,14 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
-    <div id="validation-id">
+    <div id="validation-id" class="main-content">
     {{ template "shelf-details" . }}
-    </div>
+    <div >
     <h2>Items</h2>
     {{ template "list" .InnerItemsList }}
     <h2>Boxes</h2>
     {{ template "list" .InnerBoxesList }}
+    </div>
 </body>
 {{ template "close-html-tag" .}}
 {{ end }}
@@ -84,9 +85,6 @@
                 hx-target="body"
                 hx-swap="innerHTML"
         >Edit</button>
-        <button hx-get="/api/v1/delete/shelf?id={{ .ID }}" >
-         Move
-        </button>
         <button hx-delete="/api/v1/delete/shelf?id={{ .ID }}"
                 hx-swap="outerHTML"
                 hx-confirm="Are you sure?">

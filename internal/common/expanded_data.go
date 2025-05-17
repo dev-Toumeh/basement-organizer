@@ -541,6 +541,9 @@ func (data *Data) GetListRowTemplateOptions() ListRowTemplateOptions {
 				RowActionName:                     optionsMap["RowActionName"].(string),
 				RowActionHXTarget:                 optionsMap["RowActionHXTarget"].(string),
 				HideMoveCol:                       optionsMap["HideMoveCol"].(bool),
+				HideBoxLabel:                      optionsMap["HideBoxLabel"].(bool),
+				HideShelfLabel:                    optionsMap["HideShelfLabel"].(bool),
+				HideAreaLabel:                     optionsMap["HideAreaLabel"].(bool),
 			}
 		}
 	}

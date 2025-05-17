@@ -56,6 +56,14 @@ func Pagination(data map[string]any, count int, limit int, pageNr int) map[strin
 		nextPage = totalPages
 	}
 
+	nextnextPage := nextPage + 1
+	if nextnextPage < 1 {
+		nextnextPage = 1
+	}
+	if nextnextPage > totalPages {
+		nextnextPage = totalPages
+	}
+
 	prevPage := currPage - 1
 	if prevPage < 1 {
 		prevPage = 1
@@ -64,15 +72,44 @@ func Pagination(data map[string]any, count int, limit int, pageNr int) map[strin
 		prevPage = totalPages
 	}
 
+	prevprevPage := prevPage - 1
+	if prevprevPage < 1 {
+		prevprevPage = 1
+	}
+	if prevprevPage > totalPages {
+		prevprevPage = totalPages
+	}
+
 	logg.Debugf("currentPage %d", currPage)
 
 	pages := make([]PaginationButton, 0)
 
+	numberFmt := "%d"
+	if totalPages >= 10 {
+		numberFmt = "%02d"
+	}
+	if totalPages >= 100 {
+		numberFmt = "%03d"
+	}
+	if totalPages >= 1000 {
+		numberFmt = "%04d"
+	}
+
 	// more pagination
+	firstPage := 1
 	disablePrev := false
 	disableNext := false
 	disableFirst := false
 	disableLast := false
+	disablePrevprev := false
+	disableNextnext := false
+	nextPageText := fmt.Sprintf(numberFmt, nextPage)
+	prevPageText := fmt.Sprintf(numberFmt, prevPage)
+	nextnextPageText := fmt.Sprintf(numberFmt, nextnextPage)
+	prevprevPageText := fmt.Sprintf(numberFmt, prevprevPage)
+	firstPageText := fmt.Sprintf(numberFmt, firstPage)
+	currPageText := fmt.Sprintf(numberFmt, currPage)
+	lastPageText := fmt.Sprintf(numberFmt, totalPages)
 	if currPage == nextPage {
 		disableNext = true
 	}
@@ -85,41 +122,24 @@ func Pagination(data map[string]any, count int, limit int, pageNr int) map[strin
 	if currPage == 1 {
 		disableFirst = true
 	}
-
-	pages = append(pages, PaginationButton{PageNumber: 1, Disabled: disableFirst})
-
-	if totalPages >= 10 {
-		disabled := false
-		prevFive := currPage - 5
-		if prevFive < 1 {
-			prevFive = 1
-		}
-		if currPage == prevFive {
-			disabled = true
-		}
-
-		pages = append(pages, PaginationButton{PageNumber: prevFive, Disabled: disabled})
+	if nextnextPage == nextPage {
+		disableNextnext = true
 	}
-	pages = append(pages, PaginationButton{PageNumber: prevPage, Disabled: disablePrev})
-	pages = append(pages, PaginationButton{PageNumber: currPage, Selected: true})
-	pages = append(pages, PaginationButton{PageNumber: nextPage, Disabled: disableNext})
-
-	if totalPages >= 10 {
-		disabled := false
-		nextFive := currPage + 5
-		if nextFive > totalPages {
-			nextFive = totalPages
-		}
-		if currPage == nextFive {
-			disabled = true
-		}
-		pages = append(pages, PaginationButton{PageNumber: nextFive, Disabled: disabled})
+	if prevprevPage == prevPage {
+		disablePrevprev = true
 	}
-	pages = append(pages, PaginationButton{PageNumber: totalPages, Disabled: disableLast})
+
+	pages = append(pages, PaginationButton{PageNumber: firstPage, Disabled: disableFirst, Text: firstPageText})
+	pages = append(pages, PaginationButton{PageNumber: prevprevPage, Disabled: disablePrevprev, Text: prevprevPageText})
+	pages = append(pages, PaginationButton{PageNumber: prevPage, Disabled: disablePrev, Text: prevPageText})
+	pages = append(pages, PaginationButton{PageNumber: currPage, Selected: true, Text: currPageText})
+	pages = append(pages, PaginationButton{PageNumber: nextPage, Disabled: disableNext, Text: nextPageText})
+	pages = append(pages, PaginationButton{PageNumber: nextnextPage, Disabled: disableNextnext, Text: nextnextPageText})
+	pages = append(pages, PaginationButton{PageNumber: totalPages, Disabled: disableLast, Text: lastPageText})
 
 	// Putting required data for templates together.
 	data["Pages"] = pages
-	data["Limit"] = fmt.Sprint(limit)
+	data["Limit"] = limit
 	data["NextPage"] = nextPage
 	data["PrevPage"] = prevPage
 	data["PageNumber"] = currPage
@@ -172,101 +192,16 @@ func Pagination2(data Data) Data {
 	count := data.GetCount()
 	limit := data.GetLimit()
 	pageNr := data.GetPageNumber()
-	totalPages := int(math.Ceil(float64(count) / float64(limit)))
-	if totalPages < 1 {
-		totalPages = 1
-	}
 
-	logg.Debugf("limit: %d, totalPages: %d, results: %d", limit, totalPages, count)
-
-	currPage := 1
-	if pageNr > totalPages {
-		currPage = totalPages
-	} else {
-		currPage = pageNr
-	}
-
-	if totalPages == 0 {
-		totalPages = 1
-	}
-
-	nextPage := currPage + 1
-	if nextPage < 1 {
-		nextPage = 1
-	}
-	if nextPage > totalPages {
-		nextPage = totalPages
-	}
-
-	prevPage := currPage - 1
-	if prevPage < 1 {
-		prevPage = 1
-	}
-	if prevPage > totalPages {
-		prevPage = totalPages
-	}
-
-	logg.Debugf("currentPage %d", currPage)
-
-	pages := make([]PaginationButton, 0)
-
-	// more pagination
-	disablePrev := false
-	disableNext := false
-	disableFirst := false
-	disableLast := false
-	if currPage == nextPage {
-		disableNext = true
-	}
-	if currPage == totalPages {
-		disableLast = true
-	}
-	if currPage == prevPage {
-		disablePrev = true
-	}
-	if currPage == 1 {
-		disableFirst = true
-	}
-
-	pages = append(pages, PaginationButton{PageNumber: 1, Disabled: disableFirst})
-
-	if totalPages >= 10 {
-		disabled := false
-		prevFive := currPage - 5
-		if prevFive < 1 {
-			prevFive = 1
-		}
-		if currPage == prevFive {
-			disabled = true
-		}
-
-		pages = append(pages, PaginationButton{PageNumber: prevFive, Disabled: disabled})
-	}
-	pages = append(pages, PaginationButton{PageNumber: prevPage, Disabled: disablePrev})
-	pages = append(pages, PaginationButton{PageNumber: currPage, Selected: true})
-	pages = append(pages, PaginationButton{PageNumber: nextPage, Disabled: disableNext})
-
-	if totalPages >= 10 {
-		disabled := false
-		nextFive := currPage + 5
-		if nextFive > totalPages {
-			nextFive = totalPages
-		}
-		if currPage == nextFive {
-			disabled = true
-		}
-		pages = append(pages, PaginationButton{PageNumber: nextFive, Disabled: disabled})
-	}
-	pages = append(pages, PaginationButton{PageNumber: totalPages, Disabled: disableLast})
-	move := false
+	paginationData := Pagination(data.GetTypeMap(), count, limit, pageNr)
 
 	// Putting required data for templates together.
-	data.SetPages(pages)
-	data.SetNextPage(nextPage)
-	data.SetPrevPage(prevPage)
-	data.SetPageNumber(currPage)
-	data.SetPaginationButtons(pages)
-	data.SetMove(move)
+	data.SetPages(paginationData["Pages"].([]PaginationButton))
+	data.SetNextPage(paginationData["NextPage"].(int))
+	data.SetPrevPage(paginationData["PrevPage"].(int))
+	data.SetPageNumber(paginationData["PageNumber"].(int))
+	data.SetPaginationButtons(paginationData["Pages"].([]PaginationButton))
+	data.SetMove(paginationData["Move"].(bool))
 	data.SetPagination(true)
 
 	return data

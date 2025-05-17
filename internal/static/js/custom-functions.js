@@ -289,8 +289,10 @@ function checkboxChangedCallback(event) {
         const checkbox = event.target;
         if (checkbox.checked) {
             checkbox.setAttribute("checked", "");
+            checkbox.value = "true";
         } else {
             checkbox.removeAttribute("checked");
+            checkbox.value = "false";
         }
     }
 }

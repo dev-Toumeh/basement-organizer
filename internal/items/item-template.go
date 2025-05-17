@@ -16,6 +16,9 @@ func PageTemplate(db ItemDatabase) http.HandlerFunc {
 		data.SetEnvDevelopment(env.Development())
 		data.SetPlaceHolder(true)
 		data.SetRequestOrigin("Items")
+		data.TypeMap["HideBoxLabel"] = false
+		data.TypeMap["HideShelfLabel"] = false
+		data.TypeMap["HideAreaLabel"] = false
 		server.MustRender(w, r, "item-page-template", data.TypeMap)
 	}
 }

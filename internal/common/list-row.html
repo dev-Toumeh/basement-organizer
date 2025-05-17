@@ -11,20 +11,30 @@
         </tr>
     {{ else }}
         <tr id="list-row-{{.ID}}">
-            <td hx-get="{{.RowHXGet}}/{{.ID}}"
-                    hx-push-url="true"
-                    hx-target="body"
-                    class="clickable"
-                >{{.Label}}</td>
-            <td>{{.BoxLabel}}</td> 
-            <td>{{.ShelfLabel}}</td>
-            <td>{{.AreaLabel}}</td>
             <td style="text-align: center;">
                 <img class="preview" 
                     src="data:image/png;base64,{{.PreviewPicture}}" 
                     {{if .PreviewPicture}}alt="{{.Label}}"{{end}}
                 >
             </td>
+            <td hx-get="{{.RowHXGet}}/{{.ID}}"
+                    hx-push-url="true"
+                    hx-target="body"
+                    class="clickable"
+                >{{.Label}}</td>
+
+            {{ if eq .HideBoxLabel false }}
+                <td>{{.BoxLabel}}</td> 
+            {{ end }}
+
+            {{ if eq .HideShelfLabel false }}
+                <td>{{.ShelfLabel}}</td>
+            {{ end }}
+
+            {{ if eq .HideAreaLabel false }}
+                <td>{{.AreaLabel}}</td>
+            {{ end }}
+
             {{ if not .RowAction}}
                 {{ if not .HideMoveCol }}
                 <td style="text-align: center;">
@@ -59,4 +69,8 @@
             {{ end }}
         </tr>
     {{ end }}
+{{ end }}
+
+{{ define "table-cell" }}
+<td>{{.BoxLabel}}</td> 
 {{ end }}
