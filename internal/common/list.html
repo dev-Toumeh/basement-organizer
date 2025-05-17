@@ -56,7 +56,7 @@
             {{ $firstButtonIndex := 1 }}
             {{ $lastButtonIndex := 6 }}
             {{ range $i, $e := .PaginationButtons }}
-                {{ if or (eq $i $firstButtonIndex) (eq $i $lastButtonIndex) }}<span>...</span>{{end}}
+                {{ if or (eq $i $firstButtonIndex) (eq $i $lastButtonIndex) }}<span>..</span>{{end}}
                 <!--Custom paginationclick event triggers form request-->
                 <button type="button"
                     hx-on:click="triggerPaginationClickEvent('{{$FormID}}','{{.PageNumber}}')"

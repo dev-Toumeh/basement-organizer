@@ -216,6 +216,11 @@ input[type=submit]:disabled {
   color: #99B3B3;
 }
 
+button.pagination {
+  padding: 0.2rem 0.5rem;
+  margin: 0.1rem;
+}
+
 #pagination {
   /*margin-top: auto;*/
   /*position: sticky;*/
