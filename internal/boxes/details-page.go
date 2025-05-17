@@ -108,6 +108,7 @@ func renderBoxTemplate(w http.ResponseWriter, r *http.Request, values map[string
 	data.SetDetailesData(values)
 	data.SetTypeMode(typeMode)
 	data.SetOrigin("box")
+	data.SetTitle(common.ToUpper(string(typeMode)) + " Box")
 	err := templates.Render(w, templates.TEMPLATE_BOX_DETAILS_PAGE, data.TypeMap)
 	if err != nil {
 		logg.Warningf("An Error accrue while fetching item Extra Info", err)

@@ -4,7 +4,7 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
-    <div class="scrollable-content">
+    <div>
         {{ if .Create }}
             <h1>Add new Box</h1>
         {{ else if .Edit }}
@@ -56,7 +56,7 @@
 
         </div>
 
-        {{ $imagePreview := map "ID" .ID "Label" .Label "Preview" .Preview "Picture" .Picture }}
+        {{ $imagePreview := map "ID"  .ID  "Label"  .Label  "Edit" .Edit "Create" .Create "Picture" .Picture }}
         {{ template "details-image-preview" $imagePreview.Map }}
     </div>  
 

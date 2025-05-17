@@ -124,6 +124,7 @@ func renderItemTemplate(r *http.Request, w http.ResponseWriter, values map[strin
 	data.SetTypeMode(typeMode)
 	data.SetDetailesData(values)
 	data.SetOrigin("Item")
+	data.SetTitle(common.ToUpper(string(typeMode)) + " Item")
 	err := templates.Render(w, "item-template", data.TypeMap)
 	if err != nil {
 		logg.Warningf("An Error accrue while fetching item Extra Info", err)

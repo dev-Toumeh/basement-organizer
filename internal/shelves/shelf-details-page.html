@@ -18,6 +18,11 @@
 
 
 {{ define "shelf-details" }}
+{{$Preview := false}}
+{{ if not .Edit }}
+  {{$Preview = true }}
+{{ end }}
+
 <h1>Shelf Details</h1>
 <form id="shelf-{{ .ID }}"
     class="container"
@@ -59,7 +64,7 @@
             <input name="cols" type="number" value="{{ .Cols }}" {{ if not .Edit }}disabled{{ end }}>
 
             {{ $addToInputsData := map "Shelf" true "BoxID" ""  "BoxLabel" "" "ShelfID" ""
-               "ShelfLabel" ""  "AreaID" .AreaID "AreaLabel" .AreaLabel  "Edit" .Edit }}
+               "ShelfLabel" ""  "AreaID" .AreaID "AreaLabel" .AreaLabel  "Edit" .Edit "Create" .Create "Preview" $Preview }}
             {{ template "details-additional-inputs" $addToInputsData.Map }}
 
         </div>

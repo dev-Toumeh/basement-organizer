@@ -59,7 +59,7 @@
             {{ template "details-additional-inputs" $addToInputsData.Map }}
         </div>
 
-        {{ $imagePreview := map "ID"  .ID  "Label"  .Label  "Edit" .Edit "Create" "" "Picture"  .Picture }}
+        {{ $imagePreview := map "ID"  .ID  "Label"  .Label  "Edit" .Edit "Create" .Create "Picture"  .Picture }}
         {{ template "details-image-preview" $imagePreview.Map }}
     </div>
 
