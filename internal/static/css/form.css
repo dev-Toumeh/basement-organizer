@@ -111,7 +111,8 @@ div.config-field {
 }
 
 .image-container {
-  display: inline-block; /* Adjust based on your layout */
+  position: relative;
+  display: inline-block;
   width: fit-content;
 }
 
