@@ -136,7 +136,7 @@ var ITEM_1 = &items.Item{
 		QRCode:      "QRCode1",
 	},
 	Quantity: 10,
-	Weight:   "5.5",
+	Weight:   5.5,
 }
 
 var ITEM_2 = &items.Item{
@@ -148,7 +148,7 @@ var ITEM_2 = &items.Item{
 		QRCode:      "QRCode2",
 	},
 	Quantity: 20,
-	Weight:   "10.0",
+	Weight:   10.0,
 }
 
 var ITEM_3 = &items.Item{
@@ -160,7 +160,7 @@ var ITEM_3 = &items.Item{
 		QRCode:      "QRCode3",
 	},
 	Quantity: 15,
-	Weight:   "7.25",
+	Weight:   7.25,
 }
 
 func resetTestItems() {
@@ -173,7 +173,7 @@ func resetTestItems() {
 			QRCode:      "QRCode1",
 		},
 		Quantity: 10,
-		Weight:   "5.5",
+		Weight:   5.5,
 	}
 
 	ITEM_2 = &items.Item{
@@ -185,7 +185,7 @@ func resetTestItems() {
 			QRCode:      "QRCode2",
 		},
 		Quantity: 20,
-		Weight:   "10.0",
+		Weight:   10.0,
 	}
 
 	ITEM_3 = &items.Item{
@@ -197,7 +197,7 @@ func resetTestItems() {
 			QRCode:      "QRCode3",
 		},
 		Quantity: 15,
-		Weight:   "7.25",
+		Weight:   7.25,
 	}
 }
 

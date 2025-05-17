@@ -58,13 +58,18 @@ func ShelfHandler(db ShelfDB) http.HandlerFunc {
 }
 
 func createShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
-	shelf, err := shelf(r)
+
+	shelf, validator, err := ValidateShelf(w, r)
 	if err != nil {
-		logg.Errf("error while parsing the shelf request data: %v", err)
-		templates.RenderErrorNotification(w, "Invalid shelf data")
+		if err == validator.Err() {
+			logg.Warning("validation error while creating the Shelf: %v", validator.Messages.Map())
+			templates.Render(w, "shelf-create", validator.ShelfFormData(false))
+		} else {
+			logg.Debugf("error happened while creating the Shelf: %v", err)
+			server.TriggerSingleErrorNotification(w, "Error while creating the Shelf, please come back later")
+		}
 		return
 	}
-	// @Todo validate shelf request data
 	err = db.CreateShelf(shelf)
 	if err != nil {
 		templates.RenderErrorNotification(w, "Error while creating a new shelf, please try again later")
@@ -73,35 +78,16 @@ func createShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
 	server.RedirectWithSuccessNotification(w, "/shelves", "The Shelf was created successfully")
 }
 
-func readShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
-	// Extract the shelf ID from the request
-	idStr := r.URL.Query().Get("id")
-	if idStr == "" {
-		logg.Errf("Shelf ID is missing in the request")
-		templates.RenderErrorNotification(w, "Shelf was not Found")
-		return
-	}
-	id, err := uuid.FromString(idStr)
-	if err != nil {
-		logg.Errf("Invalid shelf ID: %v", err)
-		templates.RenderErrorNotification(w, "Invalid shelf ID")
-		return
-	}
-	_, err = db.Shelf(id)
-	if err != nil {
-		logg.Errf("Shelf not found: %v", err)
-		templates.RenderErrorNotification(w, "Shelf not found")
-		return
-	}
-	// Render the shelf data (assuming a template exists)
-	templates.Render(w, "", "")
-}
-
 func updateShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
-	shelf, err := shelf(r)
+	shelf, validator, err := ValidateShelf(w, r)
 	if err != nil {
-		logg.Errf("error while parsing shelf data: %v", err)
-		templates.RenderErrorNotification(w, "Invalid shelf data")
+		if err == validator.Err() {
+			logg.Warning("validation error while Updating the Shelf: %v", validator.Messages.Map())
+			templates.Render(w, "shelf-details", validator.ShelfFormData(true))
+		} else {
+			logg.Debugf("error happened while Updating the Shelf: %v", err)
+			server.TriggerSingleErrorNotification(w, "Error while Updating the Shelf, please come back later")
+		}
 		return
 	}
 	ignorePicture := server.ParseIgnorePicture(r)
@@ -114,14 +100,11 @@ func updateShelf(w http.ResponseWriter, r *http.Request, db ShelfDB) {
 		}
 	}
 
-	// @Todo validate shelf request data
 	err = db.UpdateShelf(shelf, ignorePicture, pictureFormat)
 	fmt.Print(err)
 	if err != nil {
 		server.WriteBadRequestError("Can't update shelf. "+logg.CleanLastError(err), err, w, r)
 		return
-		// templates.RenderErrorNotification(w, "Error while updating the shelf, please try again later")
-		// return
 	}
 	url := "/shelf/" + shelf.ID.String()
 	server.RedirectWithSuccessNotification(w, url, "Shelf updated successfully")

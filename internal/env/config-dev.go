@@ -9,7 +9,7 @@ var defaultDevConfigPreset Configuration = Configuration{
 	alwaysAuthorized: true,
 	defaultTableSize: 10,
 	infoLogsEnabled:  true,
-	debugLogsEnabled: false,
+	debugLogsEnabled: true,
 	errorLogsEnabled: true,
 	useMemoryDB:      false,
 	dbPath:           "./internal/database/sqlite-database.db",
@@ -18,9 +18,9 @@ var defaultDevConfigPreset Configuration = Configuration{
 }
 
 // Copy of preset development config.
-func DevelopmentConfigPreset() Configuration {
+func DefaultConfigPreset() Configuration {
 	return defaultDevConfigPreset
 }
 
-var defaultDevConfig = defaultDevConfigPreset
-var configInstance *Configuration = &defaultDevConfig
+var defaultConfig = defaultDevConfigPreset
+var configInstance *Configuration = &defaultConfig

@@ -10,7 +10,7 @@ import (
 
 // Prepare the necessary Data for the Shelf-list-rows
 func getTemplateData(r *http.Request, db ShelfDB, w http.ResponseWriter) common.Data {
-	data := common.InitData(r)
+	data := common.InitData(r, true)
 
 	count, err := db.ShelfListCounter(data.GetSearchInputValue())
 	if err != nil {
@@ -29,7 +29,11 @@ func getTemplateData(r *http.Request, db ShelfDB, w http.ResponseWriter) common.
 	var shelves []common.ListRow
 	if count > 0 {
 
-		data.SetListRowTemplateOptions(common.ListRowTemplateOptions{RowHXGet: "shelf"})
+		data.SetListRowTemplateOptions(common.ListRowTemplateOptions{
+			RowHXGet:       "shelf",
+			HideBoxLabel:   true,
+			HideShelfLabel: true,
+		})
 		shelves, err = filledShelfRows(db, data)
 		if err != nil {
 			server.WriteInternalServerError("cant query shelves please comeback later", err, w, r)

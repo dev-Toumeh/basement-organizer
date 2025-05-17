@@ -51,6 +51,9 @@ type ListTemplate struct {
 	AlternativeView bool // Displays Alternative View button. (unused currently).
 	RequestOrigin   string
 	HideMoveCol     bool
+	HideBoxLabel    bool
+	HideShelfLabel  bool
+	HideAreaLabel   bool
 	MoveButtons     []MoveButton
 }
 
@@ -78,6 +81,9 @@ func (tmpl ListTemplate) Map() map[string]any {
 		"AlternativeView":      tmpl.AlternativeView,
 		"RequestOrigin":        tmpl.RequestOrigin,
 		"HideMoveCol":          tmpl.HideMoveCol,
+		"HideBoxLabel":         tmpl.HideBoxLabel,
+		"HideShelfLabel":       tmpl.HideShelfLabel,
+		"HideAreaLabel":        tmpl.HideAreaLabel,
 		"MoveButtons":          tmpl.MoveButtons,
 	}
 }
@@ -96,6 +102,7 @@ type PaginationButton struct {
 	PageNumber int
 	Selected   bool
 	Disabled   bool
+	Text       string
 }
 
 type listTemplate2 struct {
@@ -315,11 +322,16 @@ func ListPageMovePicker(fromThingPage int, db Database) http.HandlerFunc {
 		case THING_SHELF:
 			rowHXGet = "/shelf"
 			count, err = db.ShelfListCounter(searchString)
+			listTmpl.HideBoxLabel = true
+			listTmpl.HideShelfLabel = true
 			break
 
 		case THING_AREA:
 			rowHXGet = "/area"
 			count, err = db.AreaListCounter(searchString)
+			listTmpl.HideBoxLabel = true
+			listTmpl.HideShelfLabel = true
+			listTmpl.HideAreaLabel = true
 			break
 		}
 
@@ -339,6 +351,9 @@ func ListPageMovePicker(fromThingPage int, db Database) http.HandlerFunc {
 				RowActionHXPostWithID: "/" + from + "/moveto/" + moveTo,
 				RowActionHXTarget:     "#list-move",
 				RowActionType:         "move",
+				HideBoxLabel:          listTmpl.HideBoxLabel,
+				HideShelfLabel:        listTmpl.HideShelfLabel,
+				HideAreaLabel:         listTmpl.HideAreaLabel,
 			}
 			switch moveTo {
 			case "box":

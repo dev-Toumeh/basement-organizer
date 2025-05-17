@@ -69,13 +69,19 @@ func createArea(w http.ResponseWriter, r *http.Request, db AreaDatabase) {
 
 func updateArea(w http.ResponseWriter, r *http.Request, db AreaDatabase) {
 	errMsgForUser := "Can't update area."
-	id := server.ValidID(w, r, errMsgForUser)
-	if id.IsNil() {
+
+	area, validator, err := ValidateArea(w, r)
+	if err != nil {
+		if err == validator.Err() {
+			logg.Warning("validation error while updating the Area: %v", validator.Messages.Map())
+			templates.Render(w, "area-details", validator.AreaFormData(true))
+		} else {
+			logg.Debugf("error happened while updating the Area: %v", err)
+			server.TriggerSingleErrorNotification(w, "Error while updating the Area, please come back later")
+		}
 		return
 	}
-
-	area, ignorePicture := areaFromPostFormValue(id, r)
-
+	ignorePicture := !server.ParseIgnorePicture(r)
 	pictureFormat := ""
 	if !ignorePicture {
 		var err error
@@ -85,7 +91,8 @@ func updateArea(w http.ResponseWriter, r *http.Request, db AreaDatabase) {
 		}
 	}
 
-	err := db.UpdateArea(area, ignorePicture, pictureFormat)
+	err = db.UpdateArea(area, ignorePicture, pictureFormat)
+	logg.Debugf("this is the area: %v", area.Map())
 	if err != nil {
 		server.WriteNotFoundError(errMsgForUser+" "+logg.CleanLastError(err), err, w, r)
 		return
@@ -94,7 +101,7 @@ func updateArea(w http.ResponseWriter, r *http.Request, db AreaDatabase) {
 	// @TODO: Find a better solution. Picture is not included in request if ignorePicture is true and will be missing in response.
 	area, err = db.AreaById(area.ID)
 	if err != nil {
-		server.WriteNotFoundError("no area found with id: "+id.String(), err, w, r)
+		server.WriteNotFoundError("no area found with id: "+area.ID.String(), err, w, r)
 		return
 	}
 	if server.WantsTemplateData(r) {
@@ -161,8 +168,8 @@ func createPage(db AreaDatabase) http.HandlerFunc {
 		authenticated, _ := auth.Authenticated(r)
 		user, _ := auth.UserSessionData(r)
 
-		area := NewArea()
 		data := NewAreaDetailsPageData()
+		area := NewArea()
 		data.Area = area
 
 		data.Title = "area - " + area.Label
@@ -170,6 +177,8 @@ func createPage(db AreaDatabase) http.HandlerFunc {
 		data.User = user
 		data.Create = true
 		data.RequestOrigin = "Areas"
+		data.DescriptionError = ""
+		data.LabelError = ""
 
 		server.MustRender(w, r, "area-details-page", data)
 	}
@@ -177,9 +186,21 @@ func createPage(db AreaDatabase) http.HandlerFunc {
 
 // createAreaWithID creates an area from an existing one.
 func createAreaWithID(w http.ResponseWriter, r *http.Request, db AreaDatabase, id uuid.UUID) {
-	area, _ := areaFromPostFormValue(id, r)
+
+	area, validator, err := ValidateArea(w, r)
+	if err != nil {
+		if err == validator.Err() {
+			logg.Warning("validation error while creating the Area: %v", validator.Messages.Map())
+			templates.Render(w, "area-details", validator.AreaFormData(false))
+		} else {
+			logg.Debugf("error happened while creating the Area: %v", err)
+			server.TriggerSingleErrorNotification(w, "Error while creating the Area, please come back later")
+		}
+		return
+	}
+
 	logg.Debug("create area: ", area)
-	id, err := db.CreateArea(area)
+	id, err = db.CreateArea(area)
 	if err != nil {
 		server.WriteNotFoundError("error while creating the area", err, w, r)
 		return

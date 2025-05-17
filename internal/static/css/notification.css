@@ -2,6 +2,7 @@ div#notification-container {
   max-width: 50vw;
   position: fixed;
   right: 0.1rem;
+  z-index: 1;
 }
 
 div.notification {
@@ -28,7 +29,8 @@ div.notification.warning {
   color: #000;
 }
 
-div.notification.error {
+div.notification.error,
+div.notification.single-error {
   background-color: red;
   color: #fff;
 }

@@ -1,0 +1,79 @@
+{{ define "item-template" }}
+{{ template "open-html-tag" .}}
+{{ template "head" . }}
+<body>
+    {{ template "navbar" . }}
+    {{ template "notification-container" . }}
+    <div class="main-content">
+    {{ template "item-create" . }}
+    </div>
+</body>
+{{ template "close-html-tag" .}}
+{{ end }}
+
+{{ define "item-create" }}
+
+{{ if .Create }}
+  <h1>Add new {{ .Origin }}</h1> 
+{{ else if .Edit }}
+  <h1>Update {{ .Origin }}</h1> 
+{{ else if .Preview }}
+  <h1>Preview {{ .Origin }}</h1> 
+{{ end }}
+<form id="item-create"
+      class="container"
+      hx-encoding="multipart/form-data"
+      {{ if .Edit }}
+          hx-put="/api/v1/update/item"
+      {{ else }}
+          hx-post="/api/v1/create/item"
+      {{ end }}
+      hx-target="body"
+      hx-swap="innerHTML">
+
+    <div class="info-container">
+        <div class="detail-info">
+            <input type="hidden" name="id" value="{{ .ID }}">
+
+            <label for="label">Label:</label>
+            {{ if .LabelError }}<div class="error-message">{{ .LabelError }}</div>{{ end }}
+            <input name="label" type="text" value="{{ .Label }}" {{ if .Preview }}readonly{{ end }}>
+
+            <label for="description">Description:</label>
+            {{ if .DescriptionError }}<div class="error-message">{{ .DescriptionError }}</div>{{ end }}
+            <input name="description" type="text" value="{{ .Description }}" {{ if .Preview }}readonly{{ end }}>
+
+            <label for="quantity">Quantity:</label>
+            {{ if .QuantityError }}<div class="error-message">{{ .QuantityError }}</div>{{ end }}
+            <input name="quantity" type="number" value="{{ .Quantity }}" {{ if .Preview }}readonly{{ end }}>
+
+            <label for="weight">Weight:</label>
+            {{ if .WeightError }}<div class="error-message">{{ .WeightError }}</div>{{ end }}
+            <input name="weight" type="number" value="{{ printf "%.2f" .Weight }}" {{ if .Preview }}readonly{{ end }}>
+
+            <label for="qrcode">QRCode:</label>
+            <input type="text" id="qrcode" name="qrcode" value="{{ .QRCode }}" {{ if .Preview }}readonly{{ end }}>
+
+            {{ $addToInputsData := map "Item" true "BoxID" .BoxID "BoxLabel" .BoxLabel "ShelfID" .ShelfID
+               "ShelfLabel" .ShelfLabel "AreaID" .AreaID "AreaLabel" .AreaLabel "Edit" .Edit "Preview" .Preview "Create" .Create}}
+            {{ template "details-additional-inputs" $addToInputsData.Map }}
+        </div>
+
+        {{ $imagePreview := map "ID"  .ID  "Label"  .Label  "Edit" .Edit "Create" .Create "Picture"  .Picture }}
+        {{ template "details-image-preview" $imagePreview.Map }}
+    </div>
+
+    {{ if .Create }}
+        <button type="submit">Create</button>
+        <button type="button" onclick="window.history.back();">Cancel</button>
+    {{ else if .Edit }}
+        <button hx-put="/api/v1/update/item" hx-target="body" hx-swap="innerHTML">Update</button>
+        <button type="button" onclick="window.history.back();">Cancel</button>
+    {{ else if .Preview }}
+        <button hx-get="/item/update/{{ .ID }}" hx-push-url="true" hx-target="body" hx-swap="innerHTML">Edit</button>
+        <button hx-delete="/api/v1/delete/item/{id}" hx-swap="outerHTML"  hx-confirm="Are you sure?">Delete</button>
+    {{ end }}
+</form>
+<div id="place-holder"></div>
+
+{{ end }}

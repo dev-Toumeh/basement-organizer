@@ -43,6 +43,10 @@ func (e *Notifications) AddError(msg string) {
 	e.Add(msg, "error", 10000)
 }
 
+func (e *Notifications) AddSingleError(msg string) {
+	e.Add(msg, "single-error", 10000)
+}
+
 // Add adds a server notification that is triggered on the client.
 //
 // `notificationType` can be "" (info), "success", "warning", "error".
@@ -53,10 +57,16 @@ func (e *Notifications) Add(msg string, notificationType string, duration int) {
 		duration = 500
 		logg.Infof("duration for server notification is below 500ms (%d), setting to 500", duration)
 	}
-	if notificationType != "" && notificationType != "success" && notificationType != "warning" && notificationType != "error" {
+
+	if notificationType != "" &&
+		notificationType != "success" &&
+		notificationType != "warning" &&
+		notificationType != "error" &&
+		notificationType != "single-error" {
 		logg.Infof(`notificationType "%s" is not valid. Setting default type=""`, notificationType)
 		notificationType = ""
 	}
+
 	e.ServerNotificationEvents = append(e.ServerNotificationEvents, event{Type: notificationType, Message: msg, Duration: duration})
 }
 
@@ -102,8 +112,32 @@ func TriggerErrorNotification(w http.ResponseWriter, message string) {
 	w.Header().Set("HX-Trigger-After-Swap", n.toJSONString())
 }
 
-// TriggerSuccessNotification uses "HX-Trigger-After-Swap" to trigger client side event to create notification.
-// Must be called before any writing to w happens.
+// TriggerSingleErrorNotification generates an error message without replacing the HX target.
+func TriggerSingleErrorNotification(w http.ResponseWriter, message string) {
+	n := Notifications{}
+	n.AddSingleError(message)
+	data, err := json.Marshal(n.ServerNotificationEvents)
+	logg.Debug(string(data))
+
+	if err != nil || len(n.ServerNotificationEvents) == 0 {
+		TriggerUnexpectedErrorNotification(w, err)
+		return
+	}
+
+	w.Header().Set("HX-Trigger", string(data))
+	w.WriteHeader(http.StatusUnprocessableEntity)
+
+	_, _ = w.Write([]byte(n.ServerNotificationEvents[0].Message))
+}
+
+// TriggerUnexpectedErrorNotification sends a generic internal error message to the client.
+func TriggerUnexpectedErrorNotification(w http.ResponseWriter, err error) {
+	logg.WrapErr(err)
+	w.Header().Set("HX-Trigger", `[{"message":"Internal error","type":"error"}]`)
+	w.WriteHeader(http.StatusUnprocessableEntity)
+	_, _ = w.Write([]byte("Internal error"))
+}
+
 func TriggerSuccessNotification(w http.ResponseWriter, message string) {
 	n := Notifications{}
 	n.AddSuccess(message)

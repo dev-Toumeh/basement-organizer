@@ -147,11 +147,11 @@ func TestUpdateShelf(t *testing.T) {
 
 	assert.Equal(t, "Updated Label", updatedShelf.Label)
 	assert.Equal(t, "Updated Description", updatedShelf.Description)
-	assert.Equal(t, float32(2.5), updatedShelf.Height)
-	assert.Equal(t, float32(1.8), updatedShelf.Width)
-	assert.Equal(t, float32(0.7), updatedShelf.Depth)
-	assert.Equal(t, 4, updatedShelf.Rows)
-	assert.Equal(t, 5, updatedShelf.Cols)
+	assert.Equal(t, float64(2.5), updatedShelf.Height)
+	assert.Equal(t, float64(1.8), updatedShelf.Width)
+	assert.Equal(t, float64(0.7), updatedShelf.Depth)
+	assert.Equal(t, int64(4), updatedShelf.Rows)
+	assert.Equal(t, int64(5), updatedShelf.Cols)
 
 	expectedPicture := VALID_BASE64_PNG
 	assert.Equal(t, expectedPicture, updatedShelf.Picture)

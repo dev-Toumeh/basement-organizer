@@ -1,30 +1,30 @@
-{{ define "box-details-page" }}
+{{ define "box-details-page-old" }}
 {{ template "open-html-tag" . }} 
 {{ template "head" . }}
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
-    <div class="scrollable-content">
-        <h1>Box details</h1>
-        {{ if .NotFound }}
-            <p>Box "{{.ID}}" doesn't exist.</p>
-            <br>
-            <p style="text-align: center">:^(</p>
-        {{ else }}
-            {{ template "box-details" . }}
-            <div id="place-holder"></div>
-            <h2>Items</h2>
-            {{ template "list" .InnerItemsList }}
-            <h2>Inner Boxes</h2>
-            {{ template "list" .InnerBoxesList }}
-        {{ end }}
+    <div class="main-content">
+    <h1>Box details</h1>
+    {{ if .NotFound }}
+        <p>Box "{{.ID}}" doesn't exist.</p>
+        <br>
+        <p style="text-align: center">:^(</p>
+    {{ else }}
+        {{ template "box-details" . }}
+        <div id="place-holder"></div>
+        <h2>Items</h2>
+        {{ template "list" .InnerItemsList }}
+        <h2>Inner Boxes</h2>
+        {{ template "list" .InnerBoxesList }}
+    {{ end }}
     </div>
 </body>
 {{ template "close-html-tag" . }}
 {{end}} 
 
 
-{{ define "box-details" }}
+{{ define "box-details-old" }}
 <form id="box-{{.ID}}"
     class="container"
     hx-encoding="multipart/form-data">

@@ -18,6 +18,8 @@ type AreaDetailsPageData struct {
 	InnerShelvesList common.ListTemplate
 	Edit             bool
 	Create           bool
+	DescriptionError string
+	LabelError       string
 }
 
 // NewAreaDetailsPageData returns struct needed for "templates.TEMPLATE_area_DETAILS_PAGE" with default values.

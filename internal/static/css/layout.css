@@ -14,6 +14,12 @@ html {
   height: -webkit-fill-available;
 }
 
+hr {
+  height:0;
+  width:100%;
+  border-bottom:unset;
+}
+
 body {
   font-family: "Roboto", sans-serif;
   /*font-size: 2.8rem;*/
@@ -59,6 +65,11 @@ input[readonly] {
   border-width: thin;
 }
 
+.main-content {
+  /*top right bottom left*/
+  margin: 0 0.5rem 0.5rem 0.5rem;
+}
+
 .flex-horizontal {
   display: flex;
   flex-wrap: wrap;
@@ -97,6 +108,8 @@ input[readonly] {
   }
 }
 
+/*If used inside a <body>, the last scrolled position will be lost 
+* when using "click to go back" in browser.*/
 .scrollable-content {
   scrollbar-gutter: stable;
   overflow: overlay;
@@ -107,9 +120,17 @@ input[readonly] {
   border: solid;
 }
 
+.heading-with-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 button,
 input[type="submit"] {
   padding: 7px 12px;
+  margin: 1px;
   background-color: var(--base);
   color: white;
   border: none;
@@ -153,7 +174,7 @@ input[type=submit]:hover {
 
 button:active,
 input[type=submit]:active {
-  filter: brightness(90%);
+  filter: brightness(90%) ;
 }
 
 /*button:hover {*/
@@ -190,10 +211,25 @@ input[type=submit]:disabled {
   filter: brightness(100%);
 }
 
+button:disabled.pagination,
+input[type=submit]:disabled {
+  color: #99B3B3;
+}
+
+button.pagination {
+  padding: 0.2rem 0.5rem;
+  margin: 0.1rem;
+}
+
 #pagination {
   /*margin-top: auto;*/
   /*position: sticky;*/
   /*bottom: 0;*/
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
 }
 
 /*unicode zero width space character*/

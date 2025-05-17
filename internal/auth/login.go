@@ -129,7 +129,7 @@ func Authenticated(r *http.Request) (authenticated bool, hasAuthenticatedCookieV
 	}
 	session, _ := store.Get(r, COOKIE_NAME)
 	authenticated, hasAuthenticatedCookieValue = session.Values["authenticated"].(bool)
-	logg.Debug("session authenticated ", session.Values["authenticated"])
+	logg.Debugf("authenticated: %t, hasAuthenticatedCookieValue: %t", authenticated, hasAuthenticatedCookieValue)
 	return
 }
 
@@ -143,18 +143,16 @@ func saveSession(w http.ResponseWriter, r *http.Request, user User) {
 
 // UserSessionData returns username and id from stored session.
 func UserSessionData(r *http.Request) (string, string) {
-	// if env.Development() { // "Development User", "10000000-0000-0000-0000-000000000001"
-	// 	return "Development User", "10000000-0000-0000-0000-000000000001"
-	// }
-	//
-	// session, _ := store.Get(r, COOKIE_NAME)
-	// username, ok1 := session.Values["username"].(string)
-	// id, ok2 := session.Values["id"].(string)
-	// if !ok1 || !ok2 {
-	// 	logg.Err("corrupted session, check UserSessionData function")
-	// 	http.RedirectHandler("/logout", http.StatusUnauthorized)
-	// }
-	// return username, id
+	if env.Development() {
+		return "Development User", "10000000-0000-0000-0000-000000000001"
+	}
 
-	return "Development User", "10000000-0000-0000-0000-000000000001"
+	session, _ := store.Get(r, COOKIE_NAME)
+	username, ok1 := session.Values["username"].(string)
+	id, ok2 := session.Values["id"].(string)
+	if !ok1 || !ok2 {
+		logg.Err("corrupted session, check UserSessionData function")
+		http.RedirectHandler("/logout", http.StatusUnauthorized)
+	}
+	return username, id
 }

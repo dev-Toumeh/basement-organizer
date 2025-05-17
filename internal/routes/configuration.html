@@ -1,0 +1,64 @@
+{{ define "configuration" }}
+<form id="configuration"
+    class="container"
+    hx-put="/settings/configuration/update"
+    hx-swap="none"
+    hx-encoding="multipart/form-data">
+    <div class="info-container">
+        <div class="detail-info">
+            {{ range $k, $v := .FieldValues }}
+                {{ $type := "text" }}
+                {{ if eq $v.Kind 1 }} <!--reflect.Bool=1-->
+                    {{ $type = "checkbox"}}
+                {{ else if eq $v.Kind 2}} <!--reflect.Int=2-->
+                    {{ $type = "number"}}
+                {{ end }}
+                <div class="config-field">
+                    <label for="label" style="flex-grow: 1;">{{$k}}</label>
+                    <input id="{{$k}}_input" name="{{$k}}" type="{{$type}}" 
+                        value="{{$v.Value}}" 
+                        {{if eq $v.Value "true"}}checked{{end}}
+                        defaultValue="{{$v.DefaultValue}}" 
+                        hx-on:change="configFieldChanged(this, '{{$k}}_default_button')"
+                    >
+                    <button id="{{$k}}_default_button" type="button" 
+                        hx-on:click="defaultClicked(this, '{{$k}}_input')"
+                        {{if eq $v.Value $v.DefaultValue}}disabled{{end}}
+                    >Default</button>
+                </div>
+                <hr>
+            {{ end }}
+        </div>
+    </div>  
+    <button id="updateButton" type="submit">Update</button>
+</form>
+{{ template "configuration-page-script"}}
+{{ end }}
+
+{{ define "configuration-page-script" }}
+<script>
+async function configFieldChanged(from, id) {
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    await sleep(10);
+    const btn = document.getElementById(id);
+    console.log(from.value);
+    if(from.value === from.attributes.defaultValue.value){
+        btn.disabled = true;
+    } else {
+        btn.disabled = false;
+    }
+}
+
+async function defaultClicked(from, id) {
+    const inp = document.getElementById(id);
+    inp.value = inp.attributes.defaultValue.value;
+    if(inp.value === "true"){
+        inp.checked = true;
+        inp.setAttribute("checked","")
+    } else {
+        inp.checked = false;
+        inp.removeAttribute("checked")
+    }
+    from.disabled = true;}
+</script>
+{{ end }}

@@ -274,7 +274,7 @@ const SEED = 1234
 func (db *DB) InsertSampleItems() {
 	gofakeit.Seed(SEED)
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		newItem := items.Item{
 			BasicInfo: common.BasicInfo{
 				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
@@ -284,7 +284,7 @@ func (db *DB) InsertSampleItems() {
 				QRCode:      gofakeit.HipsterWord(),
 			},
 			Quantity: int64(gofakeit.IntRange(0, 100)),
-			Weight:   fmt.Sprintf("%.2f", gofakeit.Float32Range(0, 100)),
+			Weight:   gofakeit.Float64Range(0, 100),
 		}
 
 		err := db.insertNewItem(newItem)
@@ -299,7 +299,7 @@ func (db *DB) InsertSampleItems() {
 func (db *DB) InsertSampleBoxes() {
 	gofakeit.Seed(SEED + 1)
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		newBox := boxes.Box{
 			BasicInfo: common.BasicInfo{
 				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
@@ -321,7 +321,7 @@ func (db *DB) InsertSampleBoxes() {
 func (db *DB) InsertSampleShelves() {
 	gofakeit.Seed(SEED + 2)
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		newShelf := &shelves.Shelf{
 			BasicInfo: common.BasicInfo{
 				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),
@@ -343,7 +343,7 @@ func (db *DB) InsertSampleShelves() {
 func (db *DB) InsertSampleAreas() {
 	gofakeit.Seed(SEED + 3)
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		newArea := areas.Area{
 			BasicInfo: common.BasicInfo{
 				ID:          uuid.Must(uuid.FromString(gofakeit.UUID())),

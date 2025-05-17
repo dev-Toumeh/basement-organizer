@@ -4,7 +4,9 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
+  <div id="validation-id">
     {{ template "shelf-create" . }}
+  </div>
 </body>
 {{ template "close-html-tag" .}}
 {{ end }}
@@ -17,34 +19,38 @@
     class="container"
     hx-encoding="multipart/form-data"
     hx-post="/api/v1/create/shelf"
-    hx-target="body"
+    hx-target="#validation-id"
     hx-swap="innerHTML">
     <div class="info-container">
         <div class="detail-info">
             <input type="hidden" name="id" value="{{ .ID }}">
 
             <label for="label">Label:</label>
+            {{ if .LabelError }}<div class="error-message">{{ .LabelError }}</div>{{ end }}
             <input name="label" type="text" value="{{ .Label }}">
 
             <label for="description">Description:</label>
+            {{ if .DescriptionError }}<div class="error-message">{{ .DescriptionError }}</div>{{ end }}
             <input name="description" type="text" value="{{ .Description }}">
 
-            <label for="qrcode">QRCode:</label>
-            <input type="text" id="qrcode" name="qrcode" value="{{ .QRCode }}">
-
             <label for="height">Height:</label>
+            {{ if .HeightError }}<div class="error-message">{{ .HeightError }}</div>{{ end }}
             <input name="height" type="number" value="{{ printf "%.2f" .Height }}">
 
             <label for="width">Width:</label>
+            {{ if .WidthError }}<div class="error-message">{{ .WidthError }}</div>{{ end }}
             <input name="width" type="number" value="{{ printf "%.2f" .Width }}">
 
             <label for="depth">Depth:</label>
+            {{ if .DepthError }}<div class="error-message">{{ .DepthError }}</div>{{ end }}
             <input name="depth" type="number" value="{{ printf "%.2f" .Depth }}">
 
             <label for="rows">Rows:</label>
+            {{ if .RowsError }}<div class="error-message">{{ .RowsError }}</div>{{ end }}
             <input name="rows" type="number" value="{{ .Rows }}">
 
             <label for="cols">Cols:</label>
+            {{ if .ColsError }}<div class="error-message">{{ .ColsError }}</div>{{ end }}
             <input name="cols" type="number" value="{{ .Cols }}">
 
             {{ $addToInputsData := map "Shelf" true "BoxID" ""  "BoxLabel" "" "ShelfID" ""

@@ -2,6 +2,8 @@ package shelves
 
 import (
 	"basement/main/internal/common"
+	"basement/main/internal/logg"
+	"basement/main/internal/validate"
 	"net/http"
 
 	"github.com/gofrs/uuid/v5"
@@ -13,11 +15,11 @@ type Shelf struct {
 	Boxes          []*common.ListRow `json:"boxes"`
 	InnerItemsList common.ListTemplate
 	InnerBoxesList common.ListTemplate
-	Height         float32
-	Width          float32
-	Depth          float32
-	Rows           int
-	Cols           int
+	Height         float64
+	Width          float64
+	Depth          float64
+	Rows           int64
+	Cols           int64
 	AreaID         uuid.UUID
 	AreaLabel      string
 }
@@ -81,8 +83,8 @@ const (
 )
 
 // return the Shelf in type map
-func (s *Shelf) Map() map[string]interface{} {
-	shelfMap := map[string]interface{}{
+func (s *Shelf) Map() map[string]any {
+	shelfMap := map[string]any{
 		"ID":             s.ID,
 		"Label":          s.Label,
 		"Description":    s.Description,
@@ -109,33 +111,62 @@ func newShelf() *Shelf {
 		BasicInfo: s,
 		Height:    2.0,
 		Width:     1.0,
-		Depth:     0.5,
+		Depth:     1.0,
 		Rows:      5,
 		Cols:      10,
 	}
 }
 
-// this function will pack the request into struct from type Shelf, so it will be easier to handle it
-func shelf(r *http.Request) (*Shelf, error) {
-	id, areaId, err := common.CheckIDs(r.PostFormValue(ID), r.PostFormValue(AREA_ID))
-	if err != nil {
-		return &Shelf{}, err
+// ValidateShelf parses form input from an HTTP request,
+// performs field-level validation, and returns both the validation result and a Shelf struct if valid.
+// If any validation fails, it returns the validator with error details.
+func ValidateShelf(w http.ResponseWriter, r *http.Request) (shelf *Shelf, validator validate.Validate, err error) {
+	vshelf := validate.ShelfValidate{
+		BasicInfoValidate: validate.BasicInfoValidate{
+			ID:             validate.NewUUIDField(r.PostFormValue(ID)),
+			Label:          validate.NewStringField(r.PostFormValue(LABEL)),
+			Description:    validate.NewStringField(r.PostFormValue(DESCRIPTION)),
+			Picture:        validate.NewStringField(common.ParsePicture(r)),
+			PreviewPicture: validate.NewStringField(common.ParsePicture(r)),
+			QRCode:         validate.NewStringField(r.PostFormValue(QRCODE)),
+		},
+		Height: validate.NewFloatField(r.PostFormValue(HEIGHT)),
+		Width:  validate.NewFloatField(r.PostFormValue(WIDTH)),
+		Depth:  validate.NewFloatField(r.PostFormValue(DEPTH)),
+		Rows:   validate.NewIntField(r.PostFormValue(ROWS)),
+		Cols:   validate.NewIntField(r.PostFormValue(COLS)),
+		AreaID: validate.NewUUIDField(r.PostFormValue(AREA_ID)),
+	}
+	logg.Debug(vshelf)
+
+	validator = validate.Validate{Shelf: vshelf}
+
+	// validate fields
+	if err = validator.ValidateShelf(w, vshelf); err != nil {
+		return shelf, validator, err
 	}
 
-	newShelf := &Shelf{
-		BasicInfo: common.BasicInfo{
-			ID:             id,
-			Label:          r.PostFormValue(LABEL),
-			Description:    r.PostFormValue(DESCRIPTION),
-			Picture:        common.ParsePicture(r),
-			PreviewPicture: "",
-		},
-		Height: common.StringToFloat32(r.PostFormValue(HEIGHT)),
-		Width:  common.StringToFloat32(r.PostFormValue(WIDTH)),
-		Depth:  common.StringToFloat32(r.PostFormValue(DEPTH)),
-		Rows:   common.StringToInt(r.PostFormValue(ROWS)),
-		Cols:   common.StringToInt(r.PostFormValue(COLS)),
-		AreaID: areaId,
+	if validator.HasValidateErrors() {
+		return shelf, validator, validator.Err()
 	}
-	return newShelf, nil
+
+	// pack into Shelf struct
+	shelf = &Shelf{
+		BasicInfo: common.BasicInfo{
+			ID:             vshelf.ID.UUID(),
+			Label:          vshelf.Label.String(),
+			Description:    vshelf.Description.String(),
+			Picture:        vshelf.Picture.String(),
+			PreviewPicture: vshelf.PreviewPicture.String(),
+			QRCode:         vshelf.QRCode.String(),
+		},
+		Height: vshelf.Height.Float64(),
+		Width:  vshelf.Width.Float64(),
+		Depth:  vshelf.Depth.Float64(),
+		Rows:   vshelf.Rows.Int(),
+		Cols:   vshelf.Cols.Int(),
+		AreaID: vshelf.AreaID.UUID(),
+	}
+
+	return shelf, validator, nil
 }

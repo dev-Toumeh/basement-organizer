@@ -107,12 +107,26 @@ func ParsePictureFormat(r *http.Request) (string, error) {
 }
 
 // parseQuantity returns by default at least 1
-func ParseQuantity(value string) int64 {
-	intValue, err := strconv.ParseInt(value, 10, 64)
+func ParseQuantity(value string) int {
+	intValue, err := strconv.ParseInt(value, 10, 0)
 	if err != nil {
 		return 1
 	}
-	return intValue
+	return int(intValue)
+}
+
+func ParseToFloat32(value string) float32 {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		logg.Debugf("empty float input")
+		return 0.0
+	}
+	f, err := strconv.ParseFloat(value, 32)
+	if err != nil {
+		logg.Debugf("invalid float input: %s", value)
+		return 0.0
+	}
+	return float32(f)
 }
 
 // MergeMaps takes a slice of maps with string keys and any value types, returning a single merged map

@@ -52,13 +52,17 @@
             <label for="{{$FormID}}-current-page" hidden>current page</label>
             <input id="{{$FormID}}-current-page" type="text" name="page" 
                 value="{{$CurrentPageNumber}}" hidden>
+
+            {{ $firstButtonIndex := 1 }}
+            {{ $lastButtonIndex := 6 }}
             {{ range $i, $e := .PaginationButtons }}
+                {{ if or (eq $i $firstButtonIndex) (eq $i $lastButtonIndex) }}<span>..</span>{{end}}
                 <!--Custom paginationclick event triggers form request-->
                 <button type="button"
                     hx-on:click="triggerPaginationClickEvent('{{$FormID}}','{{.PageNumber}}')"
-                    {{if .Selected}}class="selected"{{end}}
+                    {{if .Selected}}class="selected pagination"{{else}}class="pagination"{{end}}
                     {{if .Disabled}}disabled{{end}}
-                >{{.PageNumber}}</button>
+                >{{.Text}}</button>
             {{ end }}
         </div> 
     {{ end }}
@@ -96,14 +100,25 @@
 
 
 {{ define "list-table" }}
-<table class="list">
-<thead>
+<div style="overflow-x: auto;">
+<table class="list" style="min-width: 600px; white-space: nowrap;">
+    <thead>
     <tr>
-        <th>Label</th>
-        <th>In Box</th>
-        <th>In Shelf</th>
-        <th>In Area</th>
         <th style="width: 10%">Image</th>
+        <th>Label</th>
+
+        {{ if eq .HideBoxLabel false }}
+            <th>In Box</th> 
+        {{ end }}
+
+        {{ if eq .HideShelfLabel false }}
+            <th>In Shelf</th>
+        {{ end }}
+
+        {{ if eq .HideAreaLabel false }}
+            <th>In Area</th>
+        {{ end }}
+
         {{ if .RowAction }}
         <th style="width: 10%">{{.RowActionName}}</th>
         {{ else }}
@@ -125,6 +140,7 @@
     {{ end }}
 </tbody>
 </table>
+</div>
 {{ end }}
 
 {{ define "selected-input" }}

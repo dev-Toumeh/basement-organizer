@@ -10,7 +10,11 @@ import (
 )
 
 func main() {
-	env.LoadConfig()
+	_, err := env.LoadConfig()
+	if err != nil {
+		logg.Err(err)
+		logg.Fatal("can't load config " + logg.CleanLastError(err))
+	}
 
 	db := &database.DB{}
 
@@ -18,7 +22,7 @@ func main() {
 	defer db.Sql.Close()
 
 	routes.RegisterRoutes(db)
-	err := templates.InitTemplates(env.CurrentConfig().TemplatePath())
+	err = templates.InitTemplates(env.CurrentConfig().TemplatePath())
 	if err != nil {
 		logg.Fatal("Templates failed to initialize", err)
 	}

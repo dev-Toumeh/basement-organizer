@@ -4,52 +4,67 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
+    <div id="validation-id" class="main-content">
     {{ template "shelf-details" . }}
+    <div >
     <h2>Items</h2>
     {{ template "list" .InnerItemsList }}
     <h2>Boxes</h2>
     {{ template "list" .InnerBoxesList }}
+    </div>
 </body>
 {{ template "close-html-tag" .}}
 {{ end }}
 
 
 {{ define "shelf-details" }}
+{{$Preview := false}}
+{{ if not .Edit }}
+  {{$Preview = true }}
+{{ end }}
+
 <h1>Shelf Details</h1>
 <form id="shelf-{{ .ID }}"
     class="container"
     hx-encoding="multipart/form-data">
     <div class="info-container">
         <div class="detail-info">
-            <label for="id">ID:</label>
-            <input name="id" type="text" value="{{ .ID }}" {{ if not .Edit }}disabled{{ end }}>
+            <input name="id" type="text" value="{{ .ID }}" hidden>
 
             <label for="label">Label:</label>
+            {{ if .LabelError }}<div class="error-message">{{ .LabelError }}</div>{{ end }}
             <input name="label" type="text" value="{{ .Label }}" {{ if not .Edit }}disabled{{ end }}>
 
             <label for="description">Description:</label>
+            {{ if .DescriptionError }}<div class="error-message">{{ .DescriptionError }}</div>{{ end }}
             <input name="description" type="text" value="{{ .Description }}" {{ if not .Edit }}disabled{{ end }}>
 
             <label for="qrcode">QRCode:</label>
+            {{ if .QRCodeError }}<div class="error-message">{{ .QRCodeError }}</div>{{ end }}
             <input type="text" id="qrcode" name="qrcode" value="{{ .QRCode }}" {{ if not .Edit }}disabled{{ end }}>
 
             <label for="height">Height:</label>
-            <input name="height" type="number" step="any" value="{{ .Height }}" {{ if not .Edit }}disabled{{ end }}>
+            {{ if .HeightError }}<div class="error-message">{{ .HeightError }}</div>{{ end }}
+            <input name="height" type="number" value="{{ .Height }}" {{ if not .Edit }}disabled{{ end }}>
 
             <label for="width">Width:</label>
-            <input name="width" type="number" step="any" value="{{ .Width }}" {{ if not .Edit }}disabled{{ end }}>
+            {{ if .WidthError }}<div class="error-message">{{ .WidthError }}</div>{{ end }}
+            <input name="width" type="number" value="{{ .Width }}" {{ if not .Edit }}disabled{{ end }}>
 
             <label for="depth">Depth:</label>
-            <input name="depth" type="number" step="any" value="{{ .Depth }}" {{ if not .Edit }}disabled{{ end }}>
+            {{ if .DepthError }}<div class="error-message">{{ .DepthError }}</div>{{ end }}
+            <input name="depth" type="number" value="{{ .Depth }}" {{ if not .Edit }}disabled{{ end }}>
 
             <label for="rows">Rows:</label>
-            <input name="rows" type="number" step="1" value="{{ .Rows }}" {{ if not .Edit }}disabled{{ end }}>
+            {{ if .RowsError }}<div class="error-message">{{ .RowsError }}</div>{{ end }}
+            <input name="rows" type="number" value="{{ .Rows }}" {{ if not .Edit }}disabled{{ end }}>
 
             <label for="cols">Cols:</label>
-            <input name="cols" type="number" step="1" value="{{ .Cols }}" {{ if not .Edit }}disabled{{ end }}>
+            {{ if .ColsError }}<div class="error-message">{{ .ColsError }}</div>{{ end }}
+            <input name="cols" type="number" value="{{ .Cols }}" {{ if not .Edit }}disabled{{ end }}>
 
             {{ $addToInputsData := map "Shelf" true "BoxID" ""  "BoxLabel" "" "ShelfID" ""
-               "ShelfLabel" ""  "AreaID" .AreaID "AreaLabel" .AreaLabel  "Edit" .Edit }}
+               "ShelfLabel" ""  "AreaID" .AreaID "AreaLabel" .AreaLabel  "Edit" .Edit "Create" .Create "Preview" $Preview }}
             {{ template "details-additional-inputs" $addToInputsData.Map }}
 
         </div>
@@ -61,9 +76,9 @@
     <!-- Buttons Section -->
     {{ if .Edit }}
         <button hx-put="/api/v1/update/shelf"
-                hx-target="#shelf-{{ .ID }}"
+                hx-target="#validation-id"
                 hx-push-url="false"
-                hx-swap="outerHTML"
+                hx-swap="innerHTML"
         >Update</button>
         <button type="button"
                 hx-get="/shelf/{{ .ID }}"
@@ -75,9 +90,6 @@
                 hx-target="body"
                 hx-swap="innerHTML"
         >Edit</button>
-        <button hx-get="/api/v1/delete/shelf?id={{ .ID }}" >
-         Move
-        </button>
         <button hx-delete="/api/v1/delete/shelf?id={{ .ID }}"
                 hx-swap="outerHTML"
                 hx-confirm="Are you sure?">

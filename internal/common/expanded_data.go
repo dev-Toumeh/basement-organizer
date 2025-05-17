@@ -7,6 +7,14 @@ import (
 	"net/http"
 )
 
+type Mode string
+
+const (
+	CreateMode  Mode = "create"
+	EditMode    Mode = "edit"
+	PreviewMode Mode = "preview"
+)
+
 // Data structure definition
 type Data struct {
 	ListTemplate,
@@ -17,31 +25,26 @@ type Data struct {
 	NotFound       bool
 	EnvDevelopment bool
 	RequestOrigin  string
+	Origin         string
 	TypeMap        map[string]any
 }
 
-func InitData(r *http.Request) (data Data) {
-	data = Data{
+// InitData generates an initialized Data object to render templates, including auth, pagination, and other context.
+//
+//	r:              The incoming HTTP request containing user session and query parameters.
+//	withPagination: If true, includes pagination-related fields (page number, search input, limit).
+func InitData(r *http.Request, withPagination bool) Data {
+	data := Data{
 		TypeMap: make(map[string]any),
 	}
-	data.SetPageNumber(ParsePageNumber(r))
-	data.SetSearchInputValue(SearchString(r))
-	data.SetLimit(ParseLimit(r))
-
-	user, _ := auth.UserSessionData(r)
-	authenticated, _ := auth.Authenticated(r)
-	data.SetUser(user)
-	data.SetAuthenticated(authenticated)
-
-	return data
-}
-
-// init main Data for non Paginated Templates
-func InitData2(r *http.Request) (data *Data) {
-	data = &Data{
-		TypeMap: make(map[string]any),
+	if withPagination {
+		data.SetPageNumber(ParsePageNumber(r))
+		data.SetSearchInputValue(SearchString(r))
+		data.SetLimit(ParseLimit(r))
+	} else {
+		data.SetEdit(CheckEditMode(r))
 	}
-	data.SetEdit(CheckEditMode(r))
+
 	user, _ := auth.UserSessionData(r)
 	authenticated, _ := auth.Authenticated(r)
 	data.SetUser(user)
@@ -473,9 +476,9 @@ func (data *Data) SetDetailesData(value map[string]any) {
 }
 
 // retrieves Item value for the template
-func (data *Data) GetItem() map[string]interface{} {
+func (data *Data) GetItem() map[string]any {
 	if raw, exists := data.TypeMap["Item"]; exists {
-		if val, ok := raw.(map[string]interface{}); ok {
+		if val, ok := raw.(map[string]any); ok {
 			return val
 		}
 	}
@@ -498,8 +501,25 @@ func (data *Data) GetEdit() bool {
 }
 
 // Get the Edit state
-func (data *Data) GetTypeMap() map[string]interface{} {
+func (data *Data) GetTypeMap() map[string]any {
 	return data.TypeMap
+}
+
+// Define which type of template to render (preview, create, update)
+// options - CreateMode - EditMode - PreviewMode
+func (d *Data) SetTypeMode(mode Mode) {
+	d.TypeMap["Create"] = false
+	d.TypeMap["Edit"] = false
+	d.TypeMap["Preview"] = false
+
+	switch mode {
+	case CreateMode:
+		d.TypeMap["Create"] = true
+	case EditMode:
+		d.TypeMap["Edit"] = true
+	case PreviewMode:
+		d.TypeMap["Preview"] = true
+	}
 }
 
 // SetListRowTemplateOptions sets the ListRowTemplateOptions in the TypeMap.
@@ -510,7 +530,7 @@ func (data *Data) SetListRowTemplateOptions(value ListRowTemplateOptions) {
 // GetListRowTemplateOptions retrieves the ListRowTemplateOptions from the TypeMap.
 func (data *Data) GetListRowTemplateOptions() ListRowTemplateOptions {
 	if val, exists := data.TypeMap["ListRowTemplateOptions"]; exists {
-		if optionsMap, ok := val.(map[string]interface{}); ok {
+		if optionsMap, ok := val.(map[string]any); ok {
 			return ListRowTemplateOptions{
 				RowHXGet:                          optionsMap["RowHXGet"].(string),
 				RowAction:                         optionsMap["RowAction"].(bool),
@@ -521,8 +541,74 @@ func (data *Data) GetListRowTemplateOptions() ListRowTemplateOptions {
 				RowActionName:                     optionsMap["RowActionName"].(string),
 				RowActionHXTarget:                 optionsMap["RowActionHXTarget"].(string),
 				HideMoveCol:                       optionsMap["HideMoveCol"].(bool),
+				HideBoxLabel:                      optionsMap["HideBoxLabel"].(bool),
+				HideShelfLabel:                    optionsMap["HideShelfLabel"].(bool),
+				HideAreaLabel:                     optionsMap["HideAreaLabel"].(bool),
 			}
 		}
 	}
 	return ListRowTemplateOptions{}
+}
+
+// SetOrigin determines which object type (Item, Box, Shelf, or Area) the request URL belongs to
+// by extracting the first segment of the path and assigning it to the Origin field.
+func (data *Data) SetOrigin(origin string) {
+
+	data.TypeMap["Origin"] = origin
+	// parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	// if len(parts) > 0 {
+	// 	data.Origin = parts[0]
+	// 	switch strings.ToLower(parts[0]) {
+	// 	case "item", "items":
+	// 		data.TypeMap["Origin"] = "Item"
+	// 	case "box", "boxes":
+	// 		data.TypeMap["Origin"] = "Box"
+	// 	case "shelf", "shelves":
+	// 		data.TypeMap["Origin"] = "Shelf"
+	// 	case "area", "areas":
+	// 		data.TypeMap["Origin"] = "Area"
+	// 	default:
+	// 		data.TypeMap["Origin"] = ""
+	// 	}
+	// }
+}
+
+// determines from where the request come(Item, Box, Shelf, or Area)
+func (d *Data) GetOrigin() string {
+	return d.Origin
+}
+
+func (d *Data) SetInnerItemsList(w http.ResponseWriter, r *http.Request) error {
+	tmpl, err := ListTemplateInnerThingsFrom(THING_ITEM, THING_BOX, w, r)
+	if err == nil {
+		d.TypeMap["InnerItemsList"] = tmpl
+	}
+	return err
+}
+
+// THING_BOX → boxes inside a box
+func (d *Data) SetInnerBoxesList(w http.ResponseWriter, r *http.Request) error {
+	tmpl, err := ListTemplateInnerThingsFrom(THING_BOX, THING_BOX, w, r)
+	if err == nil {
+		d.TypeMap["InnerBoxesList"] = tmpl
+	}
+	return err
+}
+
+// THING_SHELF → boxes inside a shelf
+func (d *Data) SetShelfInnerBoxesList(w http.ResponseWriter, r *http.Request) error {
+	tmpl, err := ListTemplateInnerThingsFrom(THING_BOX, THING_SHELF, w, r)
+	if err == nil {
+		d.TypeMap["InnerBoxesList"] = tmpl
+	}
+	return err
+}
+
+// THING_SHELF → shelves inside an area
+func (d *Data) SetInnerShelvesList(w http.ResponseWriter, r *http.Request) error {
+	tmpl, err := ListTemplateInnerThingsFrom(THING_AREA, THING_SHELF, w, r)
+	if err == nil {
+		d.TypeMap["InnerShelvesList"] = tmpl
+	}
+	return err
 }

@@ -1,16 +1,3 @@
-#main-container {
-  background-color: #9b3922;
-  width: 80%;
-  height: 100vh;
-  justify-content: center;
-  border: 2px solid #333;
-  border-radius: 0.4rem;
-  line-height: 2rem;
-  text-align: center;
-  margin-inline: auto;
-  border-bottom: 5px solid #f2613f;
-}
-
 .section-up,
 .section-down {
   display: flex;
@@ -49,3 +36,13 @@
   border-left: 3px solid #f2613f;
   border-right: 2px solid #f2613f;
 }
+
+  #main-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  #main-container > div {
+    text-align: center;
+  }

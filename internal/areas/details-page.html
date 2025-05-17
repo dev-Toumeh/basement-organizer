@@ -4,14 +4,16 @@
 <body>
     {{ template "navbar" . }}
     {{ template "notification-container" . }}
-    <div class="scrollable-content">
+    <div class="scrollable-content main-content">
         <h1>area details</h1>
         {{ if .NotFound }}
             <p>area "{{.ID}}" doesn't exist.</p>
             <br>
             <p style="text-align: center">:^(</p>
         {{ else }}
-            {{ template "area-details" . }}
+            <div id="validation-id">
+                {{ template "area-details" . }}
+            </div>
             <h2>items</h2>
             {{ template "list" .InnerItemsList }}
             <h2>boxes</h2>
@@ -20,10 +22,10 @@
             {{ template "list" .InnerShelvesList }}
             <div id="place-holder"></div>
         {{ end }}
-     </div>
+    </div>
 </body>
 {{ template "close-html-tag" . }}
-{{end}} 
+{{ end }}
 
 
 {{ define "area-details" }}
@@ -32,24 +34,20 @@
     hx-encoding="multipart/form-data">
     <div class="info-container">
         <div class="detail-info">
-            <label for="id">ID:</label>
-            <input name="id" type="text" value="{{.ID}}" readonly>
+            <input name="id" type="text" value="{{ .ID }}" hidden>
 
             <label for="label">Label:</label>
+            {{ if .LabelError }}<div class="error-message">{{ .LabelError }}</div>{{ end }}
             <input name="label" type="text" value="{{.Label}}" {{ if not (or .Edit .Create) }}disabled{{end}}>
 
             <label for="description">Description:</label>
+            {{ if .DescriptionError }}<div class="error-message">{{ .DescriptionError }}</div>{{ end }}
             <input name="description" type="text" value="{{.Description}}" {{ if not (or .Edit .Create)}}disabled{{end}}>
-
-            <label for="qrcode">QRCode:</label>
-            <input type="text" id="qrcode" name="qrcode" value="{{ .QRCode }}" {{ if not (or .Edit .Create)}}disabled{{end}}>
-            <br>
         </div>
 
         {{ $imagePreview := map "ID" .ID "Label" .Label "Edit" .Edit "Create" .Create "Picture" .Picture }}
         {{ template "details-image-preview" $imagePreview.Map }}
     </div>  
-
 
 {{ if .EnvDevelopment }}
 <button hx-get="/api/v1/area/{{.ID}}"
@@ -77,9 +75,9 @@
 </div>
 {{ end }}
 
-
 {{ if .Create }}
 <button hx-post="/area/create" 
+    hx-target="#validation-id"
     >Create area</button>
 <button hx-get="/areas" 
     hx-target="body"
@@ -114,4 +112,4 @@
 {{ end }}
 
 </form>
-{{end}}
+{{ end }}

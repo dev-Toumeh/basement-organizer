@@ -12,7 +12,7 @@ var homeDir string = os.Getenv("HOME")
 
 var defaultProdConfigPreset Configuration = Configuration{
 	env:              env_prod,
-	alwaysAuthorized: true, // temporary until auth is done
+	alwaysAuthorized: false,
 	defaultTableSize: 15,
 	infoLogsEnabled:  true,
 	debugLogsEnabled: false,
@@ -24,9 +24,9 @@ var defaultProdConfigPreset Configuration = Configuration{
 }
 
 // Copy of preset production config.
-func DefaultProductionConfig() Configuration {
-	return defaultProdConfig
+func DefaultConfigPreset() Configuration {
+	return defaultProdConfigPreset
 }
 
-var defaultProdConfig = defaultProdConfigPreset
-var configInstance *Configuration = &defaultProdConfig
+var defaultConfig = defaultProdConfigPreset
+var configInstance *Configuration = &defaultConfig

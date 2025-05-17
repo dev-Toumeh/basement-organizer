@@ -1,13 +1,11 @@
 package items
 
 import (
-	"basement/main/internal/auth"
 	"basement/main/internal/common"
 	"basement/main/internal/env"
 	"basement/main/internal/logg"
 	"basement/main/internal/server"
 	"basement/main/internal/templates"
-	"maps"
 	"net/http"
 )
 
@@ -18,6 +16,9 @@ func PageTemplate(db ItemDatabase) http.HandlerFunc {
 		data.SetEnvDevelopment(env.Development())
 		data.SetPlaceHolder(true)
 		data.SetRequestOrigin("Items")
+		data.TypeMap["HideBoxLabel"] = false
+		data.TypeMap["HideShelfLabel"] = false
+		data.TypeMap["HideAreaLabel"] = false
 		server.MustRender(w, r, "item-page-template", data.TypeMap)
 	}
 }
@@ -25,25 +26,46 @@ func PageTemplate(db ItemDatabase) http.HandlerFunc {
 // Render create Item Template with default values
 func CreateTemplate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		authenticated, _ := auth.Authenticated(r)
-		user, _ := auth.UserSessionData(r)
-
-		page := templates.NewPageTemplate()
-		page.Title = "Add new Item"
-		page.Authenticated = authenticated
-		page.User = user
-
 		item := newItem()
-		data := page.Map()
-		maps.Copy(data, item.Map())
+		renderItemTemplate(r, w, item.Map(), common.CreateMode)
+	}
+}
 
-		templates.Render(w, ITEM_CREATE_TEMPLATE, data)
+// Render Update Item Template
+func UpdateTemplate(db ItemDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := server.ValidID(w, r, "the requested Item doesn't exist")
+		if id.IsNil() {
+			return
+		}
+		item, err := db.ItemById(id)
+		if err != nil {
+			server.WriteInternalServerError("can't query items please comeback later", err, w, r)
+			return
+		}
+		renderItemTemplate(r, w, item.Map(), common.EditMode)
+	}
+}
+
+// Render Preview Item Template
+func PreviewTemplate(db ItemDatabase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := server.ValidID(w, r, "the requested Item doesn't exist")
+		if id.IsNil() {
+			return
+		}
+		item, err := db.ItemById(id)
+		if err != nil {
+			server.WriteInternalServerError("can't query items please comeback later", err, w, r)
+			return
+		}
+		renderItemTemplate(r, w, item.Map(), common.PreviewMode)
 	}
 }
 
 // Prepare the necessary Data for the items-list-rows
 func getTemplateData(r *http.Request, db ItemDatabase, w http.ResponseWriter) common.Data {
-	data := common.InitData(r)
+	data := common.InitData(r, true)
 
 	count, err := db.ItemListCounter(data.GetSearchInputValue())
 	if err != nil {
@@ -55,7 +77,7 @@ func getTemplateData(r *http.Request, db ItemDatabase, w http.ResponseWriter) co
 	data.SetSearchInput(true)
 	data.SetSearchInputLabel("Search Items")
 	data.SetFormHXGet("/items")
-	data.SetRowHXGet("/items")
+	data.SetRowHXGet("/item")
 	data.SetShowLimit(env.CurrentConfig().ShowTableSize())
 	data.SetCount(count)
 
@@ -96,26 +118,15 @@ func filledItemRows(db ItemDatabase, data common.Data) ([]common.ListRow, error)
 	return itemsMaps, nil
 }
 
-func DetailsTemplate(db ItemDatabase) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		errMsgForUser := "the requested Item doesn't exist"
-
-		data := common.InitData2(r)
-		data.SetEnvDevelopment(env.Development())
-		id := server.ValidID(w, r, errMsgForUser)
-		if id.IsNil() {
-			return
-		}
-		item, err := db.ItemById(id)
-		if err != nil {
-			server.WriteInternalServerError("can't query items please comeback later", err, w, r)
-			return
-		}
-		data.SetDetailesData(item.Map())
-		err = templates.Render(w, "item-details-template", data.TypeMap)
-		if err != nil {
-			logg.Warningf("An Error accrue while fetching item Extra Info", err)
-		}
+func renderItemTemplate(r *http.Request, w http.ResponseWriter, values map[string]any, typeMode common.Mode) {
+	data := common.InitData(r, false)
+	data.SetEnvDevelopment(env.Development())
+	data.SetTypeMode(typeMode)
+	data.SetDetailesData(values)
+	data.SetOrigin("Item")
+	data.SetTitle(common.ToUpper(string(typeMode)) + " Item")
+	err := templates.Render(w, "item-template", data.TypeMap)
+	if err != nil {
+		logg.Warningf("An Error accrue while fetching item Extra Info", err)
 	}
 }
